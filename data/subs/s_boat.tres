@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="SubClassData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/sub_class_data.gd" id="1_s"]
+
+[resource]
+script = ExtResource("1_s")
+key = "s_boat"
+display_name = "S-boat"
+crew_min = 3
+crew_max = 4
+length = 67.0
+surface_speed_kn = 14.0
+submerged_speed_kn = 11.0
+acceleration = 0.2
+max_turn_rate = 3.5
+max_dive_rate = 0.55
+periscope_depth = 15.0
+test_depth = 60.0
+crush_depth = 90.0
+bow_tubes = 4
+stern_tubes = 0
+torpedo_capacity = 12

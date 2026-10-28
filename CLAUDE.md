@@ -41,7 +41,8 @@ Godot **4.7.2**, GDScript, Jolt 3D physics. Repo: github.com/landonreekstin/sub-
 ### Layout
 | Path | Holds |
 |---|---|
-| `autoload/` | `net.gd` (host/join/peers), `sim.gd` (ocean world, host-run, replicated) |
+| `autoload/` | `controls.gd` (input map), `net.gd` (host/join, CLI args), `sim.gd` (ocean world, host-run, replicated) |
+| `game/` | `game.gd`: patrol root — builds boat, spawns crew, owns crew state (doors, stations, tubes) and the host-side request RPCs |
 | `sim/` | pure simulation classes (sub, ships, torpedoes) |
 | `interior/` | sub interiors built from primitives, doors, compartments |
 | `stations/` | station base class and each station |
@@ -58,6 +59,14 @@ godot --path . -- --host            # host straight away
 godot --path . -- --join 127.0.0.1  # join straight away
 ```
 Two-player test on one machine: start one with `--host`, one with `--join 127.0.0.1`.
+Testing aids: `--name <n>`, `--spawn x,y,z` (start the local player there, e.g.
+`--spawn 0.6,0.1,-20.2` = torpedo room). F10 leaves to the menu.
+
+### Controls
+WASD + mouse, E interact, Space jump, Q/Esc leave station, Tab next station in a cluster.
+Helm: W/S telegraph, A/D rudder. Dive: W/S depth ±5 (Shift ±1), 1–4 presets.
+Periscope: mouse train, Z power, R raise/lower, F stadimeter. Tubes: L reload, F flood,
+O outer door, A/D gyro, Space fire.
 
 ### Test
 ```

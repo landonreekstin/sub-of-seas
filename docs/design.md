@@ -40,10 +40,10 @@ Bigger crew → bigger boat → more stations spread over more space, so every p
 | Torpedoes carried | 12 | 24 | 40 |
 | Surface / sub speed | 14 / 11 kn | 20 / 9 kn | 17 / 8 kn |
 | Test / crush depth | 60 / 90 m | 90 / 150 m | 90 / 140 m |
-| Dive time | 40 s | 30 s | 60 s |
+| Dive time | 35 s | 30 s | 60 s |
 | Battery endurance (slow) | short | medium | long |
 | Hull compartments | 4 | 7 | 8 |
-| Character | Fragile, quick to dive, cramped; control-room cluster lets 1 person run helm + periscope + sonar | The all-rounder; dedicated sonar room, two torpedo rooms far apart | Huge, slow to dive, big target, lots of ammo and endurance; long runs between stations |
+| Character | Fragile and cramped; control-room cluster lets 1 person run helm + periscope + sonar | The all-rounder; dedicated sonar room, two torpedo rooms far apart | Huge, slow to dive, big target, lots of ammo and endurance; long runs between stations |
 
 Compartments (Gato, fore→aft): Forward Torpedo Room · Officers/Battery (lower deck: battery
 well) · Control Room (lower: pump room) + Conning Tower above (periscope, TDC, helm) ·

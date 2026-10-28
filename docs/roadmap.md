@@ -3,21 +3,21 @@
 Each milestone ends playable and committed. Tick items as they land.
 
 ## M0 — Foundation
-- [ ] Repo, docs, CLAUDE.md
-- [ ] Godot 4.7 project, input map, autoloads (`Net`, `Sim`)
-- [ ] Headless test runner
-- [ ] Main menu: host / join by IP, player name
-- [ ] LAN connect with up to 8 peers, CLI `--host` / `--join <ip>` for testing
+- [x] Repo, docs, CLAUDE.md
+- [x] Godot 4.7 project, input map, autoloads (`Net`, `Sim`)
+- [x] Headless test runner
+- [x] Main menu: host / join by IP, player name
+- [x] LAN connect with up to 8 peers, CLI `--host` / `--join <ip>` for testing
 
 ## M1 — First dive (vertical slice)
-- [ ] Greybox Gato interior: forward torpedo room, control room, conning tower (ladder), engine room, doors
-- [ ] First-person player with networked movement, name tags
-- [ ] Station framework: enter/exit view, one player per station, cluster switching
-- [ ] Ocean sim: sub kinematics (speed, turn, depth), world clock
-- [ ] Helm + dive stations driving the sim (all peers see the result)
-- [ ] Periscope view: rendered ocean, sky, freighter target, rotate/zoom/raise
-- [ ] Torpedo tube: load, fire; torpedo run in sim; hit and sink a freighter
-- [ ] Interior motion: roll/pitch with dive angle and turns
+- [x] Greybox Gato interior: forward torpedo room, control room, conning tower (ladder), engine room, doors
+- [x] First-person player with networked movement, name tags
+- [x] Station framework: enter/exit view, one player per station, cluster switching
+- [x] Ocean sim: sub kinematics (speed, turn, depth), world clock
+- [x] Helm + dive stations driving the sim (all peers see the result)
+- [x] Periscope view: rendered ocean, sky, freighter target, rotate/zoom/raise
+- [x] Torpedo tube: load, fire; torpedo run in sim; hit and sink a freighter (sim-tested; not yet sunk one by hand in-game)
+- [x] Interior motion: roll/pitch with dive angle and turns
 
 ## M2 — The hunter
 - [ ] Destroyer AI: patrol → detect → hunt → depth-charge attack runs

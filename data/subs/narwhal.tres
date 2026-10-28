@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="SubClassData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/sub_class_data.gd" id="1_s"]
+
+[resource]
+script = ExtResource("1_s")
+key = "narwhal"
+display_name = "Narwhal-class"
+crew_min = 6
+crew_max = 8
+length = 113.0
+surface_speed_kn = 17.0
+submerged_speed_kn = 8.0
+acceleration = 0.1
+max_turn_rate = 2.2
+max_dive_rate = 0.35
+periscope_depth = 18.0
+test_depth = 90.0
+crush_depth = 140.0
+bow_tubes = 6
+stern_tubes = 4
+torpedo_capacity = 40
