@@ -12,8 +12,8 @@ var running := false
 var _snap_timer := 0.0
 
 
-func start(sub_class: SubClassData) -> void:
-	world = OceanWorld.new(sub_class, randi())
+func start(sub_class: SubClassData, seed_value := -1) -> void:
+	world = OceanWorld.new(sub_class, randi() if seed_value < 0 else seed_value)
 	world.event.connect(_on_world_event)
 	running = true
 

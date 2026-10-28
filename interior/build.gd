@@ -133,3 +133,48 @@ static func hitbox(owner_node: Node3D, size: Vector3, pos: Vector3) -> StaticBod
 	body.add_child(shape)
 	owner_node.add_child(body)
 	return body
+
+
+## A trigger volume the interaction ray can find but players walk through.
+static func area(owner_node: Node3D, size: Vector3, pos: Vector3) -> Area3D:
+	var a := Area3D.new()
+	a.position = pos
+	a.monitoring = false
+	var shape := CollisionShape3D.new()
+	var bs := BoxShape3D.new()
+	bs.size = size
+	shape.shape = bs
+	a.add_child(shape)
+	owner_node.add_child(a)
+	return a
+
+
+## Simple CPU particles: small glowing quads, for spray, flame and sparks.
+static func particles(parent: Node3D, color: Color, amount: int, lifetime: float, dir: Vector3,
+		speed: float, spread_deg: float, gravity: Vector3, size: float) -> CPUParticles3D:
+	var p := CPUParticles3D.new()
+	var mesh := SphereMesh.new()
+	mesh.radius = size * 0.5
+	mesh.height = size
+	mesh.radial_segments = 6
+	mesh.rings = 3
+	var m := StandardMaterial3D.new()
+	m.albedo_color = color
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.vertex_color_use_as_albedo = true
+	mesh.material = m
+	p.mesh = mesh
+	p.amount = amount
+	p.lifetime = lifetime
+	p.direction = dir
+	p.spread = spread_deg
+	p.initial_velocity_min = speed * 0.7
+	p.initial_velocity_max = speed
+	p.gravity = gravity
+	var fade := Gradient.new()
+	fade.set_color(0, color)
+	fade.set_color(1, Color(color, 0.0))
+	p.color_ramp = fade
+	parent.add_child(p)
+	return p

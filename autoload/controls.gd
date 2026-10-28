@@ -12,6 +12,11 @@ const BINDINGS := {
 	"leave_station": [KEY_Q, KEY_ESCAPE],
 	"next_station": [KEY_TAB],
 	"quit_to_menu": [KEY_F10],
+	"drop_tool": [KEY_G],
+}
+## Mouse-button actions.
+const MOUSE_BINDINGS := {
+	"use_tool": [MOUSE_BUTTON_LEFT],
 }
 
 
@@ -23,4 +28,12 @@ func _ready() -> void:
 		for key: Key in BINDINGS[action]:
 			var ev := InputEventKey.new()
 			ev.physical_keycode = key
+			InputMap.action_add_event(action, ev)
+	for action: String in MOUSE_BINDINGS:
+		if InputMap.has_action(action):
+			continue
+		InputMap.add_action(action)
+		for button: MouseButton in MOUSE_BINDINGS[action]:
+			var ev := InputEventMouseButton.new()
+			ev.button_index = button
 			InputMap.action_add_event(action, ev)

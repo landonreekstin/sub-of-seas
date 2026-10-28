@@ -14,3 +14,14 @@ extends Resource
 @export var tonnage := 6000
 @export var zigzag_angle := 15.0 ## degrees either side of base course
 @export var sink_time := 60.0 ## seconds from fatal hit to gone
+
+@export_group("Anti-submarine")
+@export var asw := false ## hunts subs (has sonar and depth charges)
+@export var lookout_range := 3500.0 ## m at which lookouts can spot a raised periscope
+@export var hydrophone_range := 0.0 ## m at which it can hear a sub at flank speed
+@export var sonar_range := 0.0 ## m of its active sonar (0 = none)
+@export var ping_interval := 6.0 ## s between pings while searching or hunting
+@export var depth_charges := 0
+@export var dc_pattern := 6 ## charges per attack run
+@export var depth_error := 15.0 ## m of error when it sets charge depth
+@export var hunt_speed_kn := 24.0

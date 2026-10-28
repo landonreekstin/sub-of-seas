@@ -9,6 +9,9 @@ var display_name := ""
 var cluster := ""
 var view := Transform3D.IDENTITY ## camera transform, local to this station
 var overlay: Control ## the on-screen panel while the local player mans this station
+var broken := false ## from the hull state; a broken station ignores its controls
+var _sparks: CPUParticles3D
+var _broken_label: Label3D
 
 
 func setup(id: String, title: String, cluster_name := "") -> Station:
@@ -29,7 +32,11 @@ func get_view_transform() -> Transform3D:
 	return global_transform * view
 
 
-func get_prompt(_player: Player) -> String:
+func get_prompt(player: Player) -> String:
+	if broken:
+		if player.held_tool == "wrench":
+			return "%s is BROKEN  —  [LMB] hold to repair" % display_name
+		return "%s is BROKEN  —  needs a wrench" % display_name
 	var occupant := Game.instance.station_occupant(station_id)
 	if occupant != 0 and occupant != multiplayer.get_unique_id():
 		return "%s — manned by %s" % [display_name, Game.instance.crew_name(occupant)]
@@ -37,11 +44,38 @@ func get_prompt(_player: Player) -> String:
 
 
 func interact(player: Player) -> void:
-	player.request_station(self)
+	if not broken:
+		player.request_station(self)
+
+
+func tool_target(tool: String) -> String:
+	return station_id if broken and tool == "wrench" else ""
+
+
+## Sparks and a sign while broken. The hitbox centre is a good place for both.
+func set_broken(b: bool) -> void:
+	if b == broken:
+		return
+	broken = b
+	if _sparks == null:
+		var at := Vector3(0, 1.4, 0)
+		for c in get_children():
+			if c is StaticBody3D:
+				at = c.position
+				break
+		_sparks = Build.particles(self, Color(1.0, 0.85, 0.4), 24, 0.5, Vector3.UP, 2.5, 70.0, Vector3(0, -9, 0), 0.04)
+		_sparks.position = at
+		_broken_label = Build.label(self, "BROKEN", at + Vector3(0, 0.45, 0), 36, Color("#E0533F"))
+		_broken_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+		_broken_label.no_depth_test = true
+	_sparks.emitting = b
+	_broken_label.visible = b
 
 
 ## Send an order for this station to the host, which validates and applies it.
 func order(key: String, value: Variant = null) -> void:
+	if broken:
+		return
 	Game.instance.rq_order.rpc_id(1, station_id, key, value)
 
 

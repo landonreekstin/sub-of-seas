@@ -13,6 +13,14 @@ func _world() -> OceanWorld:
 	return w
 
 
+## At periscope depth with the scope down, so lookouts don't see her and run.
+func _submerged_world() -> OceanWorld:
+	var w := _world()
+	w.sub.depth = GATO.periscope_depth
+	w.sub.ordered_depth = GATO.periscope_depth
+	return w
+
+
 func _run(w: OceanWorld, seconds: float, dt := 0.05) -> void:
 	for i in int(seconds / dt):
 		w.step(dt)
@@ -68,7 +76,7 @@ func test_scope_height() -> bool:
 
 
 func test_torpedo_hits_ship_ahead() -> bool:
-	var w := _world()
+	var w := _submerged_world()
 	var ship := w.add_ship(FREIGHTER, Vector2(0, 1500), 90.0, 0.0)
 	var events: Array[String] = []
 	w.event.connect(func(kind: String, _d: Dictionary) -> void: events.append(kind))
@@ -82,7 +90,7 @@ func test_torpedo_hits_ship_ahead() -> bool:
 
 
 func test_gyro_angle_steers_torpedo() -> bool:
-	var w := _world()
+	var w := _submerged_world()
 	w.add_ship(FREIGHTER, Vector2(0, 1500), 90.0, 0.0)
 	var events: Array[String] = []
 	w.event.connect(func(kind: String, _d: Dictionary) -> void: events.append(kind))
@@ -94,7 +102,7 @@ func test_gyro_angle_steers_torpedo() -> bool:
 
 
 func test_two_hits_sink_a_freighter() -> bool:
-	var w := _world()
+	var w := _submerged_world()
 	var ship := w.add_ship(FREIGHTER, Vector2(0, 1000), 90.0, 0.0)
 	var sunk := []
 	w.event.connect(func(kind: String, d: Dictionary) -> void:

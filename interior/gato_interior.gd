@@ -19,11 +19,21 @@ const PIPE := Color("#D8D2C0")
 const RED := Color("#B23A2E")
 const DARK := Color("#3A3F38")
 const LIGHT := Color("#FFD9A0")
+## Watertight compartments, fore to aft, as the hull damage model sees them.
+const COMPARTMENTS := [
+	{"name": "forward torpedo room", "z0": -22.0, "z1": -8.0},
+	{"name": "control room", "z0": -8.0, "z1": 0.0},
+	{"name": "engine room", "z0": 0.0, "z1": 14.0},
+]
+const DOOR_LINKS := {"fwd": [0, 1], "aft": [1, 2]}
 
 var stations := {} ## station_id -> Station, in build order
 var doors := {} ## door_id -> WatertightDoor
 var spawn_points: Array[Vector3] = []
 var _gauges := {} ## kind -> Array[Label3D]
+var damage: DamageView
+var _lights: Array[OmniLight3D] = []
+var _flicker := 0.0
 
 
 func _ready() -> void:
@@ -39,6 +49,13 @@ func _ready() -> void:
 	_control_room()
 	_conning_tower()
 	_engine_room()
+	damage = DamageView.new()
+	damage.name = "Damage"
+	damage.interior = self
+	add_child(damage)
+	for l in find_children("*", "OmniLight3D", true, false):
+		_lights.append(l)
+		l.set_meta("energy", l.light_energy)
 	for i in 6:
 		spawn_points.append(Vector3(-0.6 + (i % 3) * 0.6, 0.1, -2.6 - (i / 3) * 0.7))
 
@@ -150,6 +167,9 @@ func _torpedo_room() -> void:
 			Build.sphere(t, 0.27, Vector3(0, 3.25, 0), Color("#5D6B4E"))
 		Build.box(self, Vector3(0.75, 0.08, 6.0), Vector3(side * 1.55, 1.75, -15.0), Color("#6B5A44"))
 		Build.box(self, Vector3(0.7, 0.12, 5.8), Vector3(side * 1.55, 1.85, -15.0), Color("#D8D2C0"), false)
+	var rack := ToolRack.new()
+	rack.position = Vector3(1.97, 1.3, -9.4)
+	add_child(rack)
 	# Chain hoist rail down the centre for moving torpedoes.
 	Build.box(self, Vector3(0.12, 0.12, 12.0), Vector3(0, DECK_HEIGHT - 0.2, -15.5), DARK, false)
 
@@ -163,6 +183,10 @@ func _control_room() -> void:
 	# Chart table (navigation station comes in M3).
 	Build.box(self, Vector3(1.0, 0.9, 1.4), Vector3(1.4, 0.45, -1.6), Color("#6B5A44"))
 	Build.box(self, Vector3(0.9, 0.02, 1.3), Vector3(1.4, 0.91, -1.6), Color("#E8DFC4"), false)
+	_add_station(SonarStation.new().setup("sonar", "Sonar"), Vector3(-1.85, 0, -3.7))
+	var rack := ToolRack.new()
+	rack.position = Vector3(1.97, 1.3, -3.6)
+	add_child(rack)
 	# Valve manifold on the port side aft.
 	Build.box(self, Vector3(0.2, 1.4, 2.0), Vector3(-1.9, 1.2, -1.8), DARK)
 	for i in 4:
@@ -227,6 +251,10 @@ func _engine_room() -> void:
 			Build.box(self, Vector3(0.7, 0.25, 0.8), Vector3(x, 1.62, 3.2 + i * 1.08), Color("#6E756C"), false)
 			Build.cyl(self, 0.05, 0.3, Vector3(x, 1.85, 3.2 + i * 1.08), BRASS)
 		Build.cyl(self, 0.18, 9.0, Vector3(side * 1.55, 2.1, 7.0), Color("#3A3A3A"), Vector3.BACK)
+	var rack := ToolRack.new()
+	rack.position = Vector3(-1.97, 1.3, 1.3)
+	rack.rotation.y = PI
+	add_child(rack)
 	Build.label(self, "DIESEL ENGINES — M3", Vector3(0, 1.9, 13.86), 36, Color("#2B2B26")).rotation.y = PI
 
 
@@ -243,9 +271,30 @@ func _gauge_board(pos: Vector3, kinds: Array) -> void:
 		_gauges[kind].append(l)
 
 
-func _process(_delta: float) -> void:
+## Which compartment each station sits in, for the hull damage model.
+func station_compartments() -> Dictionary:
+	var out := {}
+	for sid: String in stations:
+		var z: float = stations[sid].position.z
+		for i in COMPARTMENTS.size():
+			if z >= COMPARTMENTS[i].z0 and z < COMPARTMENTS[i].z1:
+				out[sid] = i
+	return out
+
+
+## Lights stutter after a close depth charge.
+func flicker(strength: float) -> void:
+	_flicker = maxf(_flicker, strength)
+
+
+func _process(delta: float) -> void:
 	if Sim.world == null:
 		return
+	if _flicker > 0.0:
+		_flicker = maxf(0.0, _flicker - delta * 0.8)
+		for l in _lights:
+			var on := _flicker == 0.0 or randf() > _flicker * 0.7
+			l.light_energy = l.get_meta("energy") * (1.0 if on else 0.08)
 	var sub := Sim.world.sub
 	var text := {
 		"depth": "DEPTH   %5.1f m" % sub.depth,

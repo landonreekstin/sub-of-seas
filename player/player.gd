@@ -15,6 +15,12 @@ var peer_id := 1
 var station: Station = null
 var requested_station := ""
 var climbing := false
+var held_tool := "" ## from crew state (host-owned)
+var trauma := 0.0 ## camera shake, 0..1, decays
+
+var _hand: Node3D ## the held tool, in front of the camera (local) or in the hands (others)
+var _tool_fx: CPUParticles3D ## spray or sparks while the tool is working
+var _work_timer := 0.0
 
 var head: Node3D
 var camera: Camera3D
@@ -72,6 +78,7 @@ func _build() -> void:
 	ray = RayCast3D.new()
 	ray.target_position = Vector3(0, 0, -REACH)
 	ray.collision_mask = 1
+	ray.collide_with_areas = true
 	ray.add_exception(self)
 	camera.add_child(ray)
 
@@ -115,6 +122,38 @@ func set_display_name(n: String) -> void:
 	name_tag.text = n
 
 
+## Shows the tool the host says this crewman carries.
+func set_tool(kind: String) -> void:
+	if kind == held_tool:
+		return
+	held_tool = kind
+	if _hand != null:
+		_hand.queue_free()
+		_hand = null
+	if kind == "":
+		return
+	_hand = Tools.model(kind)
+	_tool_fx = null
+	if kind == "extinguisher":
+		_tool_fx = Build.particles(_hand, Color(0.95, 0.97, 1.0, 0.7), 30, 0.5, Vector3.FORWARD, 3.0, 10.0, Vector3(0, -1, 0), 0.08)
+		_tool_fx.position = Vector3(0, 0.2, -0.12)
+	elif kind == "torch":
+		_tool_fx = Build.particles(_hand, Color(0.6, 0.8, 1.0), 30, 0.3, Vector3.FORWARD, 1.5, 60.0, Vector3(0, -6, 0), 0.03)
+		_tool_fx.position = Vector3(0, 0.02, -0.34)
+	if _tool_fx != null:
+		_tool_fx.emitting = false
+	if is_local():
+		_hand.position = Vector3(0.28, -0.26, -0.5)
+		camera.add_child(_hand)
+	else:
+		_hand.position = Vector3(0.3, 1.0, -0.3)
+		add_child(_hand)
+
+
+func add_trauma(amount: float) -> void:
+	trauma = clampf(trauma + amount, 0.0, 1.0)
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	if not is_local():
 		return
@@ -125,14 +164,14 @@ func _unhandled_input(event: InputEvent) -> void:
 			var next := Game.instance.interior.next_in_cluster(station)
 			if next != null:
 				request_station(next)
-		else:
+		elif not station.broken:
 			station.station_input(event)
 		get_viewport().set_input_as_handled()
 		return
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		rotate_y(-event.relative.x * LOOK_SENSITIVITY)
 		head.rotation.x = clampf(head.rotation.x - event.relative.y * LOOK_SENSITIVITY, -1.45, 1.45)
-	elif event is InputEventMouseButton and event.pressed:
+	elif event is InputEventMouseButton and event.pressed and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	elif event.is_action_pressed("leave_station"):
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -140,6 +179,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		var target := _interact_target()
 		if target != null:
 			target.interact(self)
+	elif event.is_action_pressed("drop_tool") and held_tool != "":
+		Game.instance.rq_tool.rpc_id(1, "")
+	elif event.is_action_pressed("use_tool") and held_tool == "pump":
+		_place_pump()
 
 
 func _physics_process(delta: float) -> void:
@@ -150,8 +193,10 @@ func _physics_process(delta: float) -> void:
 		return
 	var input := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
 	var dir := (transform.basis * Vector3(input.x, 0.0, input.y)).normalized()
-	velocity.x = dir.x * SPEED
-	velocity.z = dir.z * SPEED
+	# Wading through flood water is slow.
+	var wade := clampf(Game.instance.interior.damage.water_height_at(position.z) - position.y, 0.0, 1.2) / 1.2
+	velocity.x = dir.x * SPEED * lerpf(1.0, 0.4, wade)
+	velocity.z = dir.z * SPEED * lerpf(1.0, 0.4, wade)
 	if is_on_floor():
 		if Input.is_action_just_pressed("jump"):
 			velocity.y = JUMP
@@ -160,16 +205,55 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if not is_local():
 		return
 	_apply_hull_tilt()
+	_apply_shake(delta)
 	var hud := Game.instance.hud
 	if station != null or climbing:
-		hud.set_prompt("")
+		hud.set_prompt("THIS STATION IS BROKEN — get a wrench on it" if station != null and station.broken else "")
 		return
 	var target := _interact_target()
-	hud.set_prompt(target.get_prompt(self) if target != null else "")
+	var prompt: String = target.get_prompt(self) if target != null else ""
+	if prompt == "" and held_tool != "":
+		prompt = "%s  —  [G] put it down" % Tools.display_name(held_tool)
+	hud.set_prompt(prompt)
+	_use_tool(target, delta)
+
+
+## Holding LMB with the right tool on a target sends work to the host a few times a second.
+func _use_tool(target: Node, delta: float) -> void:
+	var id := ""
+	if held_tool not in ["", "pump"] and Input.is_action_pressed("use_tool") and target != null and target.has_method("tool_target"):
+		id = target.tool_target(held_tool)
+	if _tool_fx != null:
+		_tool_fx.emitting = id != ""
+	if id == "":
+		_work_timer = 0.0
+		return
+	_work_timer += delta
+	if _work_timer >= 0.2:
+		Game.instance.rq_work.rpc_id(1, held_tool, id, _work_timer)
+		_work_timer = 0.0
+	if _hand != null: # a little shake of the working tool
+		_hand.position = Vector3(0.28, -0.26, -0.5) + Vector3(randf_range(-1, 1), randf_range(-1, 1), 0) * 0.006
+
+
+func _place_pump() -> void:
+	if not ray.is_colliding() or ray.get_collision_normal().y < 0.7:
+		Game.instance.hud.show_message("Set the pump down on the deck.", 2.0)
+		return
+	Game.instance.rq_place_pump.rpc_id(1, ray.get_collision_point())
+
+
+## Trauma-based shake: the offset grows with trauma squared, so small knocks stay small.
+func _apply_shake(delta: float) -> void:
+	trauma = maxf(0.0, trauma - delta * 0.9)
+	var s := trauma * trauma
+	var t := Time.get_ticks_msec() * 0.001
+	camera.h_offset = s * 0.12 * sin(t * 37.0) * cos(t * 13.0)
+	camera.v_offset = s * 0.12 * sin(t * 29.0 + 1.3)
 
 
 ## The interior never moves; the sub's pitch and roll are shown by tilting the view.
