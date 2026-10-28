@@ -124,6 +124,7 @@ func _debug_pattern() -> void:
 	for off: Vector2 in [Vector2(4, 30), Vector2(-6, -25), Vector2(8, 5), Vector2(-30, 10), Vector2(50, -40)]:
 		Sim.world.drop_charge(sub.pos + off, sub.depth - 7.0)
 	await get_tree().create_timer(6.0).timeout
+	Sim.world.hull.broken["helm"] = HullState.WRENCH_SECONDS # always something for the wrench
 	for l in Sim.world.hull.leaks:
 		print("debug leak %s at %s" % [l.id, l.p])
 	for f in Sim.world.hull.fires:

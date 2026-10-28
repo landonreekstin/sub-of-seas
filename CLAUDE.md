@@ -64,15 +64,15 @@ godot --path . -- --join 127.0.0.1  # join straight away
 Two-player test on one machine: start one with `--host`, one with `--join 127.0.0.1`.
 Testing aids: `--name <n>`, `--spawn x,y,z` (start the local player there, e.g.
 `--spawn 0.6,0.1,-20.2` = torpedo room), `--port <n>` (default 7000), `--test-charges` (host: fixed seed, and a pattern
-goes off around the boat 3 s in; leak/fire positions are printed). F10 leaves to the menu.
+goes off around the boat 3 s in and the helm is knocked out; leak/fire positions are printed). F10 leaves to the menu.
 
 ### Controls
 WASD + mouse, E interact, Space jump, Q/Esc leave station, Tab next station in a cluster.
 Helm: W/S telegraph, A/D rudder. Dive: W/S depth ±5 (Shift ±1), 1–4 presets.
 Periscope: mouse train, Z power, R raise/lower, F stadimeter. Tubes: L reload, F flood,
 O outer door, A/D gyro, Space fire. Sonar: A/D or mouse train, P active ping.
-Tools: E at a rack takes one, hold LMB on a leak/fire/broken station to work, LMB with the
-pump sets it down, G puts a tool down.
+Tools: E at a rack takes one, hold LMB on a leak/fire/broken station to work, LMB with the pump sets it
+down at your feet (E picks it up), G puts a tool down.
 
 ### Test
 ```

@@ -181,7 +181,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			target.interact(self)
 	elif event.is_action_pressed("drop_tool") and held_tool != "":
 		Game.instance.rq_tool.rpc_id(1, "")
-	elif event.is_action_pressed("use_tool") and held_tool == "pump":
+	elif event.is_action_pressed("use_tool") and held_tool == "pump" and is_on_floor():
 		_place_pump()
 
 
@@ -240,11 +240,13 @@ func _use_tool(target: Node, delta: float) -> void:
 		_hand.position = Vector3(0.28, -0.26, -0.5) + Vector3(randf_range(-1, 1), randf_range(-1, 1), 0) * 0.006
 
 
+## The pump goes on the deck just in front of your feet; no aiming needed.
 func _place_pump() -> void:
-	if not ray.is_colliding() or ray.get_collision_normal().y < 0.7:
-		Game.instance.hud.show_message("Set the pump down on the deck.", 2.0)
-		return
-	Game.instance.rq_place_pump.rpc_id(1, ray.get_collision_point())
+	var fwd := -global_basis.z
+	fwd.y = 0.0
+	var spot := global_position + fwd.normalized() * 0.6
+	spot.x = clampf(spot.x, -1.5, 1.5) # stay clear of the curved hull sides
+	Game.instance.rq_place_pump.rpc_id(1, spot)
 
 
 ## Trauma-based shake: the offset grows with trauma squared, so small knocks stay small.
