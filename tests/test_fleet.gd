@@ -218,3 +218,13 @@ func test_profile_ranks_and_hats() -> bool:
 	runner.check(Profile.RANKS[r][0] == "Petty Officer", "15,000 merit makes petty officer")
 	runner.check(Profile.rank_for(10000 + 5000) == r, "a patrol home counts 5,000")
 	return true
+
+
+func test_voice_encoding_round_trips() -> bool:
+	var s := PackedFloat32Array([0.0, 0.5, -0.5, 1.0, -1.0, 0.123])
+	var back := Voice.decode(Voice.encode(s))
+	var worst := 0.0
+	for i in s.size():
+		worst = maxf(worst, absf(back[i] - s[i]))
+	runner.check(back.size() == s.size() and worst < 0.001, "16-bit voice round trip (worst %.5f)" % worst)
+	return true

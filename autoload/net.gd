@@ -24,6 +24,7 @@ var debug_charges := false ## --test-charges: the host drops a pattern on the bo
 var debug_station := "" ## --station <id>: man this station as soon as you are aboard (testing)
 var debug_look := 0.0 ## --look <deg>: turn the spawned player this far right (testing)
 var debug_win := false ## --test-win: the host sinks everything a few seconds in (objectives, debrief)
+var debug_voice := false ## --test-voice: this player "talks" a 440 Hz tone the whole time
 var debug_air := false ## --test-air: the host starts with foul air, and a fire and thick smoke in the shut-in control room
 
 
@@ -59,6 +60,8 @@ func _ready() -> void:
 				debug_charges = true
 			"--test-air":
 				debug_air = true
+			"--test-voice":
+				debug_voice = true
 			"--test-win":
 				debug_win = true
 			"--station":

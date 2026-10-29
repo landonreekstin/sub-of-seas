@@ -224,6 +224,10 @@ machine keeps tons, ships, patrols and merit (tons + 5,000 per patrol brought ho
 (Seaman, Petty Officer, Chief, Ensign, Lieutenant, Commander), and each rank unlocks a hat;
 the shirt colour is free. Looks and rank travel in crew state; name tags carry the rank.
 
+**Voice (M7, optional).** Hold Caps Lock: the microphone opens only while held, is mixed to
+mono 16 kHz 16-bit (32 KB/s, fine on a LAN) and sent unreliably; each crewman's voice plays
+from his head in 3D, fading over ~30 m. Discord still works alongside.
+
 ## 6. Torpedoes (simplified TDC)
 
 1. Periscope: put the crosshair on the target, use the **stadimeter** (match top of mast to

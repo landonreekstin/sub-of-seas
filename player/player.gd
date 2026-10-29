@@ -90,6 +90,11 @@ func _build() -> void:
 	name_tag.no_depth_test = false
 	add_child(name_tag)
 
+	var voice := Voice.new()
+	voice.name = "Voice"
+	voice.player = self
+	voice.position.y = EYE_HEIGHT
+	add_child(voice)
 	var sync := MultiplayerSynchronizer.new()
 	sync.name = "Sync"
 	var cfg := SceneReplicationConfig.new()
@@ -206,6 +211,7 @@ func _ready() -> void:
 		if Net.debug_spawn != null:
 			global_position = Net.debug_spawn
 		rotation.y = -deg_to_rad(Net.debug_look)
+		($Voice as Voice).test_tone = Net.debug_voice
 		if Net.debug_station != "":
 			_man_on_spawn.call_deferred()
 

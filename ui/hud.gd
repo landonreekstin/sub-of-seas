@@ -16,6 +16,7 @@ var _objective_text: Label
 var _smoke: ColorRect
 var _vignette: ColorRect
 var _blackout: ColorRect
+var _talk: Label
 
 
 func _ready() -> void:
@@ -123,6 +124,16 @@ func set_air(bad: float, smoke: float, knocked: bool) -> void:
 	(_vignette.material as ShaderMaterial).set_shader_parameter("amount", bad)
 	_vignette.visible = bad > 0.01
 	_blackout.visible = knocked
+
+
+func set_talking(on: bool) -> void:
+	if _talk == null:
+		_talk = UiKit.label("● TALKING", 16, UiKit.BAD)
+		_root.add_child(_talk)
+		_talk.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
+		_talk.offset_left = 14
+		_talk.offset_top = -34
+	_talk.visible = on
 
 
 func set_prompt(text: String) -> void:
