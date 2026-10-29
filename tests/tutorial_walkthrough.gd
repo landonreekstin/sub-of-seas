@@ -127,7 +127,7 @@ func _act(i: int) -> void:
 			if _once("a"):
 				g.rq_tool("pump")
 				g.rq_place_pump(Vector3(0, 0, -4))
-		"door": if _once("a"): g.rq_door("fwd")
+		"door": if _once("a"): g.rq_door(_game.tutorial.fwd_door())
 		"air":
 			if _once("a"):
 				g.rq_station_enter("air")

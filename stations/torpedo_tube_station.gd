@@ -4,6 +4,7 @@ extends Station
 ## reload (door shut, tube drained, someone working it) → flood → open outer door → fire.
 
 var tube_index := 0
+var stern := false ## in the after torpedo room, firing astern
 var _lamp: MeshInstance3D
 var _lines: Array[Label] = []
 
@@ -52,7 +53,7 @@ func _process(_delta: float) -> void:
 
 func _build_overlay(root: Control) -> void:
 	var box := UiKit.bottom_panel(root)
-	box.add_child(UiKit.label("TUBE %d — FORWARD TORPEDO ROOM" % (tube_index + 1), 22, UiKit.BRASS))
+	box.add_child(UiKit.label("TUBE %d — %s TORPEDO ROOM" % [tube_index + 1, "AFTER" if stern else "FORWARD"], 22, UiKit.BRASS))
 	_lines.clear()
 	for i in 3:
 		var l := UiKit.label()

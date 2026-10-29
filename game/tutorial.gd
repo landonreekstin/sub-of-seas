@@ -106,7 +106,7 @@ func _build_steps() -> void:
 			"marker": _station("tdc"), "done": _manned("tdc")},
 		{"id": "send", "needs": "tdc", "text": "The TDC has his course and speed, and the gyro angle to hit him. Send it to the tubes: T. Their gyros now follow it.",
 			"marker": _station("tdc"), "done": func() -> bool: return game.crew.tdc.follow},
-		{"id": "tube", "text": "Go forward to the TORPEDO ROOM (through the forward door) and man TUBE 1, top right.",
+		{"id": "tube", "text": "Go forward through officers' country to the FORWARD TORPEDO ROOM and man TUBE 1, top right.",
 			"marker": _station("tube_1"), "done": _manned("tube_1")},
 		{"id": "flood", "needs": "tube_1", "text": "Flood the tube (F), then open the outer door (O).",
 			"marker": _station("tube_1"), "done": func() -> bool:
@@ -133,7 +133,7 @@ func _build_steps() -> void:
 		{"id": "pump", "text": "Pump out the water: take the PORTABLE PUMP from the rack and set it down (LMB) in the wet compartment.",
 			"marker": _rack, "done": func() -> bool: return not hull.call().pumps.is_empty()},
 		{"id": "door", "text": "Shut a WATERTIGHT DOOR (E on the door). Shut doors stop water, fire and smoke spreading.",
-			"marker": func() -> Vector3: return game.interior.doors["fwd"].global_position + Vector3(0, 2.3, 0),
+			"marker": func() -> Vector3: return game.interior.doors[fwd_door()].global_position + Vector3(0, 2.3, 0),
 			"done": func() -> bool: return game.crew.doors.values().has(false)},
 		{"id": "air", "needs": "air", "text": "Down here the crew's breath fouls the air. Go aft to the AIR panel (engine room, starboard) and load a fresh CO2 canister: C.",
 			"marker": _station("air"), "done": func() -> bool: return Sim.world.air.canister_left > 0.0},
@@ -144,6 +144,11 @@ func _build_steps() -> void:
 		{"id": "diesel", "needs": "engine", "text": "Surfaced. Charge the battery: man the DIESEL CONTROLS (engine room, aft end) and start a diesel: 1. Stop them again before you ever dive.",
 			"marker": _station("engine"), "done": func() -> bool: return sub.call().diesels.any(func(d: float) -> bool: return d > 0.0)},
 	]
+
+
+## The door in the control room's forward bulkhead.
+func fwd_door() -> String:
+	return "d%d" % (game.interior.comp_index("control") - 1)
 
 
 func step_number(id: String) -> int:
@@ -162,7 +167,7 @@ func _first_spot(kind: String) -> Vector3:
 
 
 func _rack() -> Vector3:
-	return Vector3(1.9, 2.4, -3.6) # the control room rack (GatoInterior._control_room)
+	return game.interior.racks["control"]
 
 
 func _miss_hint() -> String:
@@ -210,12 +215,13 @@ func _drop_pattern() -> void:
 ## Host, after the pattern: make sure there is one of each job to practise on.
 func _ensure_damage() -> void:
 	var hull := Sim.world.hull
+	var cr := game.interior.comp_index("control")
 	if hull.leaks.is_empty():
-		hull.add_leak(1, 1, Sim.world.rng, 1.0)
+		hull.add_leak(cr, 1, Sim.world.rng, 1.0)
 	if hull.fires.is_empty():
-		hull.add_fire(1, Sim.world.rng)
+		hull.add_fire(cr, Sim.world.rng)
 	hull.broken["helm"] = HullState.WRENCH_SECONDS
-	hull.comps[1].water = maxf(hull.comps[1].water, 0.08)
+	hull.comps[cr].water = maxf(hull.comps[cr].water, 0.08)
 
 
 func _process(_delta: float) -> void:

@@ -62,12 +62,15 @@ func _update_overlay(sol: Dictionary, est: Dictionary) -> void:
 	else:
 		_lines[1].text = ""
 		_lines[2].text = ""
-	if sol.ok:
-		_lines[3].text = "GYRO %+d°   %s" % [roundi(sol.gyro), "SENT — the tubes follow it  [T] stop" if tdc.follow else "[T] send to the tubes"]
-		_lines[3].add_theme_color_override("font_color", UiKit.GOOD)
-	else:
-		_lines[3].text = sol.get("reason", "")
-		_lines[3].add_theme_color_override("font_color", UiKit.WARN)
+	var follow: String = "SENT — the tubes follow it  [T] stop" if tdc.follow else "[T] send to the tubes"
+	var bow: String = "BOW GYRO %+d°" % roundi(sol.gyro) if sol.ok else "BOW: " + sol.get("reason", "")
+	var stern := ""
+	if Sim.world.sub.data.stern_tubes > 0 and est.ok:
+		var aft: Dictionary = Game.instance.tdc_solution(true)
+		stern = "   STERN GYRO %+d°" % roundi(aft.gyro) if aft.ok else "   STERN: " + aft.get("reason", "")
+	var any_ok: bool = sol.ok or stern.begins_with("   STERN GYRO")
+	_lines[3].text = bow + stern + ("   " + follow if any_ok else "")
+	_lines[3].add_theme_color_override("font_color", UiKit.GOOD if any_ok else UiKit.WARN)
 	_bar.size.x = 320.0 * sol.get("quality", 0.0)
 	_bar.color = _quality_color(sol.get("quality", 0.0))
 

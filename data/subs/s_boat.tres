@@ -25,3 +25,4 @@ charge_minutes = 6.0
 flood_seconds = 35.0
 co2_canisters = 5
 spare_parts = 4
+roles = Array[String](["Captain: the conn (helm, periscope, sonar, TDC)", "Torpedoman: the four bow tubes", "Engineer: dive, ballast, diesels, air", "Damage control: tools, doors, pumps"])

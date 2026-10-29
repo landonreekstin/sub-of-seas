@@ -35,6 +35,9 @@ Godot **4.7.2**, GDScript, Jolt 3D physics. Repo: github.com/landonreekstin/sub-
   host is authoritative for sim, AI, damage and stations; clients send intents with
   `@rpc("any_peer")` which the host validates. Player avatars are owner-authoritative and
   synced with `MultiplayerSynchronizer`. The sim state is broadcast from the host at 10 Hz.
+- **Three boats** (`data/subs/`): the host picks one; `SubInterior` builds it from its layout.
+  A client builds the boat when the host's first crew state tells it which (`crew.sub`), so
+  player spawns carry their position (`[id, pos]`) rather than reading the interior.
 - **Damage** lives in the sim too (`OceanWorld.hull`), stepped on the host and replicated in
   the snapshot; the interior just draws it. Crew-side state (who holds which tool, stats,
   the patrol result) is in `Game.crew`.
@@ -48,7 +51,7 @@ Godot **4.7.2**, GDScript, Jolt 3D physics. Repo: github.com/landonreekstin/sub-
 | `game/` | `game.gd`: patrol root — builds boat, spawns crew, owns crew state (doors, stations, tubes) and the host-side request RPCs; `tutorial.gd`: the training patrol's checklist and script |
 | `tools/` | `publish.sh`: export the pack to the NAS drop for the launcher; `ship_gallery.gd`: one ship model close up, for screenshots |
 | `sim/` | pure simulation classes: sub (incl. battery, diesels, ballast, HP air), `air.gd` (CO2/O2, smoke, scrubber), `tdc.gd` (marks → track → gyro), `formations.gd` (convoy, task force, hunter-killer), ships (gunfire on a surfaced boat), torpedoes, depth charges, `detection.gd`, `ship_ai.gd` (escort state machine), `hull.gd` (water, leaks, fires, broken stations) |
-| `interior/` | sub interiors built from primitives, doors, compartments, tool racks, `damage_view.gd` (draws the hull state) |
+| `interior/` | `sub_interior.gd` builds any boat from `LAYOUTS` (compartments fore to aft; the control room ends at z 0), doors, tool racks, parts crate, `damage_view.gd` (draws the hull state) |
 | `stations/` | station base class and each station |
 | `player/` | first-person crew controller, held tools (`tools.gd`) |
 | `world/` | exterior ocean scene, ocean shader, ship models |
@@ -63,6 +66,7 @@ godot --path . -- --host            # host straight away
 godot --path . -- --join 127.0.0.1  # join straight away
 godot --path . -- --training      # host the training patrol (the tutorial)
 godot --path . -- --mission <key>   # host a patrol: convoy, tankers, hunted, carrier, task_force
+godot --path . -- --sub s_boat      # the boat to take out: s_boat, gato (default), narwhal
 ```
 Two-player test on one machine: start one with `--host`, one with `--join 127.0.0.1`.
 Testing aids: `--name <n>`, `--spawn x,y,z` (start the local player there, e.g.
@@ -79,7 +83,8 @@ The build id (commit) is baked into the pack; a host turns away a different buil
 `dev` (running from source). Publish only committed, tested work.
 
 ### Controls
-WASD + mouse, E interact, Space jump, Q/Esc leave station, Tab next station in a cluster.
+WASD + mouse, E interact, Space jump, Q/Esc leave station, Tab next station in a cluster
+(helm/dive; periscope/TDC in the conning tower; the S-boat's conn: helm, periscope, sonar, TDC).
 Helm: W/S telegraph, A/D rudder. Dive: W/S depth ±5 (Shift ±1), 1–4 presets.
 Periscope: mouse train, Z power, R raise/lower, F stadimeter, M mark for the TDC.
 TDC (conning tower, starboard): W/S target speed ±1 kn, A/D course ±5°, C clear marks, T send to the tubes (gyros follow).

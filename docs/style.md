@@ -35,6 +35,10 @@ and update "Current style" in the same commit.
   raked trunked funnel and big bridge, the carrier's flat deck and starboard island, the
   tanker's long low well deck. A hit tanker (and any ship going down) burns orange under a
   column of black smoke.
+- **Compartments:** each reads at a glance. Officers' country: bunks to port, a wardroom
+  table with a cream cloth, brass-handled battery-well hatches underfoot. Crew's mess: two
+  tiers of bunks both sides and a mess table. Maneuvering: dark switch cubicles with brass
+  handles. Torpedo rooms: olive torpedoes racked low, bunks over them.
 - **UI:** typewriter / stencil feel, cream on dark panels, minimal HUD (crosshair, carried
   tool, interaction prompt).
 

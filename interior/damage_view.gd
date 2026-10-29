@@ -4,7 +4,7 @@ extends Node3D
 ## placed pumps and broken stations. Rebuilt from Sim.world.hull every frame (cheap: a
 ## handful of spots), so host and clients show the same thing.
 
-var interior: GatoInterior
+var interior: SubInterior
 var _water: Array[MeshInstance3D] = []
 var _smoke: Array[MeshInstance3D] = [] ## a grey haze hanging under the deckhead
 var _spots := {} ## "kind:id" -> DamageSpot
@@ -16,10 +16,10 @@ func _ready() -> void:
 	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	m.roughness = 0.1
 	m.metallic = 0.3
-	for c: Dictionary in GatoInterior.COMPARTMENTS:
+	for c: Dictionary in interior.compartments:
 		var mi := MeshInstance3D.new()
 		var mesh := BoxMesh.new()
-		mesh.size = Vector3(GatoInterior.HALF_WIDTH * 2.0, 0.02, c.z1 - c.z0 - 0.2)
+		mesh.size = Vector3(SubInterior.HALF_WIDTH * 2.0, 0.02, c.z1 - c.z0 - 0.2)
 		mi.mesh = mesh
 		mi.material_override = m
 		mi.position = Vector3(0, 0, (c.z0 + c.z1) * 0.5)
@@ -28,7 +28,7 @@ func _ready() -> void:
 		_water.append(mi)
 		var sm := MeshInstance3D.new()
 		var sbox := BoxMesh.new()
-		sbox.size = Vector3(GatoInterior.HALF_WIDTH * 2.0 - 0.1, 1.0, c.z1 - c.z0 - 0.1)
+		sbox.size = Vector3(SubInterior.HALF_WIDTH * 2.0 - 0.1, 1.0, c.z1 - c.z0 - 0.1)
 		sm.mesh = sbox
 		var smat := StandardMaterial3D.new()
 		smat.albedo_color = Color(0.35, 0.35, 0.33, 0.0)
@@ -36,7 +36,7 @@ func _ready() -> void:
 		smat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		smat.cull_mode = BaseMaterial3D.CULL_DISABLED
 		sm.material_override = smat
-		sm.position = Vector3(0, GatoInterior.DECK_HEIGHT - 0.5, (c.z0 + c.z1) * 0.5)
+		sm.position = Vector3(0, SubInterior.DECK_HEIGHT - 0.5, (c.z0 + c.z1) * 0.5)
 		sm.visible = false
 		add_child(sm)
 		_smoke.append(sm)
@@ -58,7 +58,7 @@ func _process(delta: float) -> void:
 		sm.visible = s > 0.03
 		# Thickens downward from the deckhead as it builds.
 		sm.scale.y = lerpf(0.4, 2.4, s)
-		sm.position.y = GatoInterior.DECK_HEIGHT - 0.5 * sm.scale.y
+		sm.position.y = SubInterior.DECK_HEIGHT - 0.5 * sm.scale.y
 		(sm.material_override as StandardMaterial3D).albedo_color.a = clampf(s * 0.55, 0.0, 0.5)
 	var seen := {}
 	for l: Dictionary in hull.leaks:
