@@ -19,6 +19,7 @@ config/features=PackedStringArray("4.7", "Forward Plus")
 Controls="*res://autoload/controls.gd"
 Net="*res://autoload/net.gd"
 Sim="*res://autoload/sim.gd"
+Sfx="*res://autoload/sfx.gd"
 
 [display]
 

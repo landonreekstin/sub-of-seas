@@ -15,6 +15,7 @@ var _ocean_near: MeshInstance3D
 var _ocean_far: MeshInstance3D
 var _ships := {} ## ship id -> Node3D
 var _torps := {} ## torpedo id -> Node3D
+var _env: Environment
 
 
 static func to_3d(p: Vector2, y := 0.0) -> Vector3:
@@ -41,6 +42,7 @@ func _ready() -> void:
 	var sky := Sky.new()
 	sky.sky_material = sky_mat
 	var env := Environment.new()
+	_env = env
 	env.background_mode = Environment.BG_SKY
 	env.sky = sky
 	# Flat ambient and no sky reflections: stylised, and keeps the sea from washing out white.
@@ -97,7 +99,8 @@ func _process(_delta: float) -> void:
 	if Sim.world == null:
 		return
 	var sub := Sim.world.sub
-	camera.position = to_3d(sub.pos, maxf(sub.scope_height(), 0.5))
+	var h := sub.scope_height()
+	camera.position = to_3d(sub.pos, maxf(h, 0.5) if h > 0.0 else maxf(h, -4.0))
 	camera.rotation = Vector3(0.0, -deg_to_rad(sub.heading + scope_bearing), 0.0)
 	camera.fov = scope_fov
 	var snap := Vector3(snappedf(camera.position.x, GRID_SNAP), 0.0, snappedf(camera.position.z, GRID_SNAP))
@@ -105,6 +108,8 @@ func _process(_delta: float) -> void:
 	_ocean_far.position = Vector3(snap.x, -0.3, snap.z)
 	_sync_ships()
 	_sync_torpedoes()
+	_feed_wakes()
+	_underwater(sub.scope_height() <= 0.0)
 
 
 func _sync_ships() -> void:
@@ -126,6 +131,33 @@ func _sync_ships() -> void:
 		if not seen.has(id):
 			_ships[id].queue_free()
 			_ships.erase(id)
+
+
+## The ocean shader draws the nearest ships' wakes.
+func _feed_wakes() -> void:
+	var data := PackedVector4Array()
+	var lens := PackedFloat32Array()
+	var near := Sim.world.ships.duplicate()
+	var here := Sim.world.sub.pos
+	near.sort_custom(func(a: ShipState, b: ShipState) -> bool: return a.pos.distance_squared_to(here) < b.pos.distance_squared_to(here))
+	for ship: ShipState in near.slice(0, 16):
+		data.append(Vector4(ship.pos.x, -ship.pos.y, deg_to_rad(ship.heading), ship.speed))
+		lens.append(ship.data.length)
+	data.resize(16)
+	lens.resize(16)
+	for m: ShaderMaterial in [_ocean_near.material_override, _ocean_far.material_override]:
+		m.set_shader_parameter("ships", data)
+		m.set_shader_parameter("ship_len", lens)
+		m.set_shader_parameter("ship_count", mini(near.size(), 16))
+
+
+## With the scope just under, the view is murky green water instead of nothing.
+func _underwater(under: bool) -> void:
+	if under == (_env.fog_density > 0.01):
+		return
+	_env.fog_density = 0.08 if under else 0.00004
+	_env.fog_light_color = Color("#1D4A52") if under else Color("#BFD8E8")
+	_env.fog_sky_affect = 1.0 if under else 0.0
 
 
 func _sync_torpedoes() -> void:

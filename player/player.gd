@@ -21,11 +21,15 @@ var trauma := 0.0 ## camera shake, 0..1, decays
 var _hand: Node3D ## the held tool, in front of the camera (local) or in the hands (others)
 var _tool_fx: CPUParticles3D ## spray or sparks while the tool is working
 var _work_timer := 0.0
+var _tool_sound: AudioStreamPlayer3D ## the torch's hiss or the extinguisher's rush while working
 
 var head: Node3D
 var camera: Camera3D
 var ray: RayCast3D
-var body_mesh: MeshInstance3D
+var body: Node3D ## the sailor below the head: torso, arms and legs that swing as he walks
+var _limbs := {} ## "arm_l", "arm_r", "leg_l", "leg_r" -> pivot Node3D
+var _last_pos := Vector3.ZERO
+var _stride := 0.0
 var name_tag: Label3D
 var _camera_tween: Tween
 
@@ -51,25 +55,20 @@ func _build() -> void:
 	shape.position.y = 0.875
 	add_child(shape)
 
-	var color := Color.from_hsv(fposmod(peer_id * 0.618034, 1.0), 0.45, 0.85)
-	body_mesh = MeshInstance3D.new()
-	var cm := CapsuleMesh.new()
-	cm.radius = 0.3
-	cm.height = 1.4
-	body_mesh.mesh = cm
-	body_mesh.material_override = Build.mat(color)
-	body_mesh.position.y = 0.7
-	add_child(body_mesh)
+	_build_sailor(Color.from_hsv(fposmod(peer_id * 0.618034, 1.0), 0.45, 0.85))
 
 	head = Node3D.new()
 	head.name = "Head"
 	head.position.y = EYE_HEIGHT
 	add_child(head)
+	# A big round head under a white "Dixie cup" sailor's hat; dot eyes, a nose.
 	var face := Build.sphere(head, 0.24, Vector3(0, -0.05, 0), Color("#F0C9A0"))
-	Build.box(face, Vector3(0.5, 0.06, 0.5), Vector3(0, 0.2, 0), Color("#2B3A55"), false) # cap brim
-	Build.cyl(face, 0.2, 0.16, Vector3(0, 0.27, 0), Color("#2B3A55")) # cap
+	Build.cyl(face, 0.2, 0.14, Vector3(0, 0.22, 0), Color("#F2F0E8")) # hat crown
+	var brim := Build.cyl(face, 0.25, 0.06, Vector3(0, 0.17, 0), Color("#F2F0E8")) # rolled brim
+	brim.rotation.x = 0.12
 	Build.box(face, Vector3(0.05, 0.07, 0.02), Vector3(-0.08, 0.03, -0.23), Color.BLACK, false)
 	Build.box(face, Vector3(0.05, 0.07, 0.02), Vector3(0.08, 0.03, -0.23), Color.BLACK, false)
+	Build.sphere(face, 0.045, Vector3(0, -0.04, -0.24), Color("#E3B48C"))
 
 	camera = Camera3D.new()
 	camera.fov = 75.0
@@ -102,6 +101,52 @@ func _build() -> void:
 	add_child(sync)
 
 
+## Peak-like sailor: chunky chambray-blue shirt in the crewman's colour, navy dungarees,
+## black boots, arms and legs on pivots so a walk can swing them.
+func _build_sailor(shirt: Color) -> void:
+	body = Node3D.new()
+	body.name = "Body"
+	add_child(body)
+	var torso := MeshInstance3D.new()
+	var cm := CapsuleMesh.new()
+	cm.radius = 0.27
+	cm.height = 0.8
+	torso.mesh = cm
+	torso.material_override = Build.mat(shirt)
+	torso.position.y = 1.08
+	body.add_child(torso)
+	Build.box(body, Vector3(0.5, 0.12, 0.34), Vector3(0, 0.74, 0), Color("#2B3A55"), false) # belt line
+	for side in [-1.0, 1.0]:
+		var leg := Node3D.new()
+		leg.position = Vector3(side * 0.13, 0.78, 0)
+		body.add_child(leg)
+		Build.cyl(leg, 0.11, 0.62, Vector3(0, -0.34, 0), Color("#2B3A55"))
+		Build.box(leg, Vector3(0.18, 0.12, 0.28), Vector3(0, -0.72, -0.05), Color("#1E1E20"), false)
+		_limbs["leg_l" if side < 0.0 else "leg_r"] = leg
+		var arm := Node3D.new()
+		arm.position = Vector3(side * 0.34, 1.36, 0)
+		body.add_child(arm)
+		Build.cyl(arm, 0.08, 0.55, Vector3(0, -0.28, 0), shirt)
+		Build.sphere(arm, 0.08, Vector3(0, -0.6, 0), Color("#F0C9A0"))
+		_limbs["arm_l" if side < 0.0 else "arm_r"] = arm
+
+
+## Procedural walk for everyone else's sailor: legs and arms swing with ground speed, arms
+## reach forward while manning a station.
+func _animate_body(delta: float) -> void:
+	var v := (global_position - _last_pos) / maxf(delta, 0.001)
+	_last_pos = global_position
+	var speed := Vector2(v.x, v.z).length()
+	_stride += delta * speed * 3.2
+	var swing := sin(_stride) * clampf(speed / SPEED, 0.0, 1.0) * 0.6
+	var at_station: bool = Game.instance.crew.get("stations", {}).values().has(peer_id)
+	_limbs.leg_l.rotation.x = swing
+	_limbs.leg_r.rotation.x = -swing
+	_limbs.arm_l.rotation.x = -1.1 if at_station else -swing * 0.8
+	_limbs.arm_r.rotation.x = -1.1 if at_station else swing * 0.8
+	body.position.y = absf(sin(_stride)) * 0.04 * clampf(speed / SPEED, 0.0, 1.0)
+
+
 func is_local() -> bool:
 	return is_multiplayer_authority()
 
@@ -109,7 +154,8 @@ func is_local() -> bool:
 func _ready() -> void:
 	if is_local():
 		camera.current = true
-		body_mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
+		for m: MeshInstance3D in body.find_children("*", "MeshInstance3D", true, false):
+			m.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
 		head.get_child(0).visible = false
 		name_tag.visible = false
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -141,6 +187,7 @@ func set_tool(kind: String) -> void:
 	if _hand != null:
 		_hand.queue_free()
 		_hand = null
+		_tool_sound = null
 	if kind == "":
 		return
 	_hand = Tools.model(kind)
@@ -236,6 +283,7 @@ func _physics_process(delta: float) -> void:
 
 func _process(delta: float) -> void:
 	if not is_local():
+		_animate_body(delta)
 		return
 	_apply_hull_tilt()
 	_apply_shake(delta)
@@ -263,6 +311,13 @@ func _use_tool(target: Node, delta: float) -> void:
 		id = target.tool_target(held_tool)
 	if _tool_fx != null:
 		_tool_fx.emitting = id != ""
+	if held_tool in ["torch", "extinguisher"]:
+		if id != "" and _tool_sound == null:
+			_tool_sound = Sfx.loop_at(_hand, "torch_loop", Vector3.ZERO, -2.0 if held_tool == "torch" else 2.0)
+			_tool_sound.pitch_scale = 1.0 if held_tool == "torch" else 0.6
+		elif id == "" and _tool_sound != null:
+			_tool_sound.queue_free()
+			_tool_sound = null
 	if id == "":
 		_work_timer = 0.0
 		return

@@ -60,6 +60,10 @@ var _lights: Array[OmniLight3D] = []
 var _flicker := 0.0
 var _rockers: Array[Array] = [[], []] ## per diesel (port, starboard): cylinder-head covers
 var _next_tube := 0
+var _diesel_sound: AudioStreamPlayer3D
+var _motor_sound: AudioStreamPlayer
+var _creak_timer := 5.0
+var _vents_were := false
 
 
 static func create(data: SubClassData) -> SubInterior:
@@ -138,6 +142,13 @@ func build() -> void:
 	for l in find_children("*", "OmniLight3D", true, false):
 		_lights.append(l)
 		l.set_meta("energy", l.light_energy)
+	var er := comp("engine")
+	_diesel_sound = Sfx.loop_at(self, "diesel_loop", Vector3(0, 1.0, (er.z0 + er.z1) * 0.5), -80.0, 8.0)
+	_motor_sound = AudioStreamPlayer.new()
+	_motor_sound.stream = Sfx.stream("motor_loop")
+	_motor_sound.volume_db = -80.0
+	add_child(_motor_sound)
+	_motor_sound.play()
 	for i in 6:
 		spawn_points.append(Vector3(-0.6 + (i % 3) * 0.6, 0.1, ct.z1 - 2.6 - (i / 3) * 0.7))
 
@@ -433,6 +444,19 @@ func station_compartments() -> Dictionary:
 	return out
 
 
+## A close blast shakes paint flakes and dust down from the deckhead all through the boat.
+func shake_loose(strength: float) -> void:
+	for c in compartments:
+		var p := Build.particles(self, Color(0.45, 0.5, 0.42, 0.8), int(10 + 30 * strength), 1.6, Vector3.DOWN, 0.5, 40.0, Vector3(0, -6, 0), 0.018)
+		p.position = Vector3(0, DECK_HEIGHT - 0.1, (c.z0 + c.z1) * 0.5)
+		p.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
+		p.emission_box_extents = Vector3(HALF_WIDTH - 0.3, 0.05, (c.z1 - c.z0) * 0.5 - 0.3)
+		p.one_shot = true
+		p.explosiveness = 0.7
+		p.emitting = true
+		get_tree().create_timer(3.0).timeout.connect(p.queue_free)
+
+
 ## Lights stutter after a close depth charge.
 func flicker(strength: float) -> void:
 	_flicker = maxf(_flicker, strength)
@@ -452,6 +476,7 @@ func _process(delta: float) -> void:
 		var shake := 0.012 if sub.diesels[i] >= 1.0 else (0.006 if sub.diesels[i] > 0.0 else 0.0)
 		for r: MeshInstance3D in _rockers[i]:
 			r.position.y = r.get_meta("y") + randf_range(-shake, shake)
+	_sounds(sub, delta)
 	var text := {
 		"depth": "DEPTH   %5.1f m" % sub.depth,
 		"ordered": "ORDERED %5.0f m" % sub.ordered_depth,
@@ -462,6 +487,29 @@ func _process(delta: float) -> void:
 	for kind: String in _gauges:
 		for l: Label3D in _gauges[kind]:
 			l.text = text[kind]
+
+
+## The boat's own noises: diesels thudding in the engine room, the motors whining with speed,
+## the hull creaking deeper down (a lot past test depth), the klaxon when the vents open.
+func _sounds(sub: SubState, delta: float) -> void:
+	if _diesel_sound == null:
+		return
+	var running := sub.diesels_running()
+	_diesel_sound.volume_db = -80.0 if running == 0 else (-4.0 if running == 2 else -9.0)
+	var on_motors := running == 0 and absf(sub.speed) > 0.1
+	_motor_sound.volume_db = linear_to_db(clampf(absf(sub.speed) / (sub.data.submerged_speed_kn * SubState.KNOT), 0.02, 1.0)) - 6.0 if on_motors else -80.0
+	_motor_sound.pitch_scale = 0.8 + 0.4 * clampf(absf(sub.speed) / 5.0, 0.0, 1.0)
+	if sub.vents_open and not _vents_were:
+		Sfx.play("klaxon")
+	_vents_were = sub.vents_open
+	_creak_timer -= delta
+	if _creak_timer <= 0.0:
+		var deep := sub.depth / float(sub.data.test_depth)
+		_creak_timer = randf_range(6.0, 14.0) / maxf(0.2, deep * deep)
+		if deep > 0.4:
+			var c: Dictionary = compartments[randi() % compartments.size()]
+			Sfx.play_at(self, "creak_%d" % randi_range(1, 3), Vector3(randf_range(-1.8, 1.8), 2.0, randf_range(c.z0, c.z1)),
+				lerpf(-14.0, 0.0, clampf(deep - 0.4, 0.0, 1.0)), randf_range(0.8, 1.1))
 
 
 ## Apply host crew state: doors.
