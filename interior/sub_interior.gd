@@ -469,9 +469,12 @@ func _process(delta: float) -> void:
 	# Lights brown out as the battery runs down, unless the diesels carry the load.
 	var power := 1.0 if sub.diesels_running() > 0 else lerpf(0.3, 1.0, clampf(sub.battery / 0.15, 0.0, 1.0))
 	_flicker = maxf(0.0, _flicker - delta * 0.8)
+	# Rig for red: at night, submerged, the boat runs on red light so eyes stay dark-adapted.
+	var red := Sim.world.conditions.night and not sub.is_surfaced()
 	for l in _lights:
 		var on := _flicker == 0.0 or randf() > _flicker * 0.7
-		l.light_energy = l.get_meta("energy") * power * (1.0 if on else 0.08)
+		l.light_energy = l.get_meta("energy") * power * (1.0 if on else 0.08) * (0.8 if red else 1.0)
+		l.light_color = Color("#FF4A35") if red else LIGHT
 	for i in _rockers.size():
 		var shake := 0.012 if sub.diesels[i] >= 1.0 else (0.006 if sub.diesels[i] > 0.0 else 0.0)
 		for r: MeshInstance3D in _rockers[i]:

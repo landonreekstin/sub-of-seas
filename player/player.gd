@@ -28,6 +28,9 @@ var camera: Camera3D
 var ray: RayCast3D
 var body: Node3D ## the sailor below the head: torso, arms and legs that swing as he walks
 var _limbs := {} ## "arm_l", "arm_r", "leg_l", "leg_r" -> pivot Node3D
+var _shirt_parts: Array[MeshInstance3D] = []
+var _hat: Node3D
+var _look := {}
 var _last_pos := Vector3.ZERO
 var _stride := 0.0
 var name_tag: Label3D
@@ -63,9 +66,7 @@ func _build() -> void:
 	add_child(head)
 	# A big round head under a white "Dixie cup" sailor's hat; dot eyes, a nose.
 	var face := Build.sphere(head, 0.24, Vector3(0, -0.05, 0), Color("#F0C9A0"))
-	Build.cyl(face, 0.2, 0.14, Vector3(0, 0.22, 0), Color("#F2F0E8")) # hat crown
-	var brim := Build.cyl(face, 0.25, 0.06, Vector3(0, 0.17, 0), Color("#F2F0E8")) # rolled brim
-	brim.rotation.x = 0.12
+	_hat = _make_hat(face, "dixie")
 	Build.box(face, Vector3(0.05, 0.07, 0.02), Vector3(-0.08, 0.03, -0.23), Color.BLACK, false)
 	Build.box(face, Vector3(0.05, 0.07, 0.02), Vector3(0.08, 0.03, -0.23), Color.BLACK, false)
 	Build.sphere(face, 0.045, Vector3(0, -0.04, -0.24), Color("#E3B48C"))
@@ -89,6 +90,11 @@ func _build() -> void:
 	name_tag.no_depth_test = false
 	add_child(name_tag)
 
+	var voice := Voice.new()
+	voice.name = "Voice"
+	voice.player = self
+	voice.position.y = EYE_HEIGHT
+	add_child(voice)
 	var sync := MultiplayerSynchronizer.new()
 	sync.name = "Sync"
 	var cfg := SceneReplicationConfig.new()
@@ -113,6 +119,7 @@ func _build_sailor(shirt: Color) -> void:
 	cm.height = 0.8
 	torso.mesh = cm
 	torso.material_override = Build.mat(shirt)
+	_shirt_parts.append(torso)
 	torso.position.y = 1.08
 	body.add_child(torso)
 	Build.box(body, Vector3(0.5, 0.12, 0.34), Vector3(0, 0.74, 0), Color("#2B3A55"), false) # belt line
@@ -126,9 +133,50 @@ func _build_sailor(shirt: Color) -> void:
 		var arm := Node3D.new()
 		arm.position = Vector3(side * 0.34, 1.36, 0)
 		body.add_child(arm)
-		Build.cyl(arm, 0.08, 0.55, Vector3(0, -0.28, 0), shirt)
+		_shirt_parts.append(Build.cyl(arm, 0.08, 0.55, Vector3(0, -0.28, 0), shirt))
 		Build.sphere(arm, 0.08, Vector3(0, -0.6, 0), Color("#F0C9A0"))
 		_limbs["arm_l" if side < 0.0 else "arm_r"] = arm
+
+
+## The look from the player's profile: hat and shirt colour (crew state, so all agree).
+func set_looks(look: Dictionary) -> void:
+	if look == _look or look.is_empty():
+		return
+	_look = look
+	var hue: float = look.get("hue", -1.0)
+	var shirt := Color.from_hsv(fposmod(peer_id * 0.618034, 1.0) if hue < 0.0 else hue, 0.45, 0.85)
+	for m in _shirt_parts:
+		m.material_override = Build.mat(shirt)
+	var face: Node3D = _hat.get_parent()
+	_hat.queue_free()
+	_hat = _make_hat(face, look.get("hat", "dixie"))
+	if is_local():
+		_hat.visible = false
+
+
+static func _make_hat(face: Node3D, kind: String) -> Node3D:
+	var h := Node3D.new()
+	face.add_child(h)
+	var white := Color("#F2F0E8")
+	var navy := Color("#2B3A55")
+	match kind:
+		"watch": # navy knit cap
+			Build.sphere(h, 0.23, Vector3(0, 0.12, 0), navy)
+			Build.cyl(h, 0.235, 0.08, Vector3(0, 0.1, 0), Color("#24304A"))
+		"ball":
+			Build.sphere(h, 0.22, Vector3(0, 0.13, 0), navy)
+			Build.box(h, Vector3(0.26, 0.03, 0.2), Vector3(0, 0.12, -0.24), navy, false)
+		"officer", "skipper": # peaked cap, white top; the skipper's is weathered grey
+			var top := Color("#C9C3B0") if kind == "skipper" else white
+			Build.cyl(h, 0.27, 0.1, Vector3(0, 0.25, 0), top)
+			Build.cyl(h, 0.22, 0.1, Vector3(0, 0.17, 0), Color("#1E1E20"))
+			Build.box(h, Vector3(0.28, 0.025, 0.14), Vector3(0, 0.13, -0.24), Color("#1E1E20"), false)
+			Build.box(h, Vector3(0.1, 0.06, 0.02), Vector3(0, 0.19, -0.22), Color("#C9A04A"), false) # badge
+		_: # white Dixie cup
+			Build.cyl(h, 0.2, 0.14, Vector3(0, 0.22, 0), white)
+			var brim := Build.cyl(h, 0.25, 0.06, Vector3(0, 0.17, 0), white)
+			brim.rotation.x = 0.12
+	return h
 
 
 ## Procedural walk for everyone else's sailor: legs and arms swing with ground speed, arms
@@ -163,6 +211,7 @@ func _ready() -> void:
 		if Net.debug_spawn != null:
 			global_position = Net.debug_spawn
 		rotation.y = -deg_to_rad(Net.debug_look)
+		($Voice as Voice).test_tone = Net.debug_voice
 		if Net.debug_station != "":
 			_man_on_spawn.call_deferred()
 

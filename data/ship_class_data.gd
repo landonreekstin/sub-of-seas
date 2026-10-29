@@ -15,6 +15,7 @@ extends Resource
 @export var zigzag_angle := 15.0 ## degrees either side of base course
 @export var sink_time := 60.0 ## seconds from fatal hit to gone
 @export var role := "merchant" ## merchant | capital | escort | chaser: how the sonar classes it, what missions ask for
+@export var aircraft := 0 ## search planes it keeps in the air (carriers; a cruiser's floatplane)
 @export var burns := false ## a hit sets it ablaze (tankers): a glow on the horizon, slower to sink
 
 @export_group("Guns")

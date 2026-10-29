@@ -14,6 +14,10 @@ config/name="Sub of Seas"
 run/main_scene="res://ui/main_menu.tscn"
 config/features=PackedStringArray("4.7", "Forward Plus")
 
+[audio]
+
+driver/enable_input=true
+
 [autoload]
 
 Controls="*res://autoload/controls.gd"

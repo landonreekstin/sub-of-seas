@@ -12,3 +12,5 @@ start_heading = 90.0
 start_depth = -1.0
 groups = Array[Dictionary]([{"type": "convoy", "ships": ["tanker", "tanker", "tanker"], "escorts": ["kaibokan", "kaibokan"], "pos": Vector2(4500, -1500), "course": 315.0, "speed": 9.0}])
 objectives = Array[Dictionary]([{"kind": "sink_class", "class": "tanker", "count": 2, "text": "Sink 2 tankers"}])
+night = true
+layer_depth = 60.0

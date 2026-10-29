@@ -38,7 +38,9 @@ func _process(_delta: float) -> void:
 	if overlay != null:
 		_lines[0].text = "ORDERED DEPTH  %5.0f m      [W/S] ±5   [Shift] ±1" % sub.ordered_depth
 		_lines[1].text = "DEPTH          %5.1f m      test %d / crush %d" % [sub.depth, sub.data.test_depth, sub.data.crush_depth]
-		_lines[2].text = "[1] surface  [2] periscope depth %d m  [3] 45 m  [4] test depth" % sub.data.periscope_depth
+		var cond := Sim.world.conditions
+		var bt := "   BT: layer at %d m%s" % [roundi(cond.layer_depth), " — WE'RE UNDER IT" if cond.below_layer(sub.depth) else ""] if cond.layer_depth > 0.0 else "   BT: no layer"
+		_lines[2].text = "[1] surface  [2] periscope depth %d m  [3] 45 m  [4] test depth%s" % [sub.data.periscope_depth, bt]
 		_lines[1].add_theme_color_override("font_color", UiKit.BAD if sub.depth > sub.data.test_depth else UiKit.CREAM)
 
 

@@ -12,3 +12,5 @@ start_heading = 0.0
 start_depth = -1.0
 groups = Array[Dictionary]([{"type": "task_force", "ships": ["battleship", "cruiser"], "escorts": ["destroyer", "destroyer", "destroyer"], "pos": Vector2(6000, 7000), "course": 230.0, "speed": 18.0}])
 objectives = Array[Dictionary]([{"kind": "sink_role", "role": "capital", "count": 1, "text": "Sink the battleship or the cruiser"}])
+sea_state = 2
+layer_depth = 80.0

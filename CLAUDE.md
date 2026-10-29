@@ -48,13 +48,13 @@ Godot **4.7.2**, GDScript, Jolt 3D physics. Repo: github.com/landonreekstin/sub-
 | Path | Holds |
 |---|---|
 | `autoload/` | `controls.gd` (input map), `net.gd` (host/join, CLI args), `sim.gd` (ocean world, host-run, replicated), `sfx.gd` (sound one-shots and loops) |
-| `game/` | `game.gd`: patrol root — builds boat, spawns crew, owns crew state (doors, stations, tubes) and the host-side request RPCs; `tutorial.gd`: the training patrol's checklist and script |
+| `game/` | `game.gd`: patrol root — builds boat, spawns crew, owns crew state (doors, stations, tubes) and the host-side request RPCs; `tutorial.gd`: the training patrol's checklist and script; `profile.gd`: each player's career, rank and look (user://profile.cfg) |
 | `assets/` | `textures/` (grey detail maps from `tools/make_textures.py`), `audio/` (sounds from `tools/make_sounds.sh`): generated, regenerate rather than hand-edit |
 | `tools/` | `publish.sh`: export the pack to the NAS drop for the launcher; `ship_gallery.gd`: one ship model close up, for screenshots |
-| `sim/` | pure simulation classes: sub (incl. battery, diesels, ballast, HP air), `air.gd` (CO2/O2, smoke, scrubber), `tdc.gd` (marks → track → gyro), `formations.gd` (convoy, task force, hunter-killer), ships (gunfire on a surfaced boat), torpedoes, depth charges, `detection.gd`, `ship_ai.gd` (escort state machine), `hull.gd` (water, leaks, fires, broken stations) |
+| `sim/` | pure simulation classes: sub (incl. battery, diesels, ballast, HP air), `air.gd` (CO2/O2, smoke, scrubber), `tdc.gd` (marks → track → gyro), `formations.gd` (convoy, task force, hunter-killer), `conditions.gd` (night, sea state, layer), `aircraft.gd` (carrier search planes), `sandbox.gd` (open patrol director), ships (gunfire on a surfaced boat), torpedoes, depth charges, `detection.gd`, `ship_ai.gd` (escort state machine), `hull.gd` (water, leaks, fires, broken stations) |
 | `interior/` | `sub_interior.gd` builds any boat from `LAYOUTS` (compartments fore to aft; the control room ends at z 0), doors, tool racks, parts crate, `damage_view.gd` (draws the hull state) |
 | `stations/` | station base class and each station |
-| `player/` | first-person crew controller, held tools (`tools.gd`) |
+| `player/` | first-person crew controller, held tools (`tools.gd`), proximity voice (`voice.gd`) |
 | `world/` | exterior ocean scene, ocean shader, ship models |
 | `ui/` | main menu, HUD, station overlays, `chart_view.gd` (the plot) |
 | `data/` | `.tres` balance data and their `Resource` scripts: `subs/`, `ships/` (8 classes), `missions/` (patrols: groups + objectives; `MissionData.KEYS` is the menu order) |
@@ -66,13 +66,13 @@ godot --path .                      # main menu
 godot --path . -- --host            # host straight away
 godot --path . -- --join 127.0.0.1  # join straight away
 godot --path . -- --training      # host the training patrol (the tutorial)
-godot --path . -- --mission <key>   # host a patrol: convoy, tankers, hunted, carrier, task_force
+godot --path . -- --mission <key>   # host a patrol: convoy, tankers, hunted, carrier, task_force, sandbox
 godot --path . -- --sub s_boat      # the boat to take out: s_boat, gato (default), narwhal
 ```
 Two-player test on one machine: start one with `--host`, one with `--join 127.0.0.1`.
 Testing aids: `--name <n>`, `--spawn x,y,z` (start the local player there, e.g.
 `--spawn 0.6,0.1,-20.2` = torpedo room), `--address <ip>` (prefill the join box), `--look <deg>` (spawn turned that far right), `--station <id>` (man that station on arrival: `helm`, `dive`, `ballast`, `periscope`, `tdc`, `sonar`, `tube_1`.., `engine`, `air`), `--port <n>` (default 7000), `--test-charges` (host: fixed seed, and a pattern
-goes off around the boat 3 s in and the helm is knocked out; leak/fire positions are printed), `--test-win` (host: every ship sinks 4 s in, so objectives tick and the debrief shows), `--test-air` (host: foul air, and a fire in the shut-in, smoke-filled control room: whoever is in there passes out). F10 leaves to the menu.
+goes off around the boat 3 s in and the helm is knocked out; leak/fire positions are printed), `--test-voice` (this player talks a 440 Hz tone the whole time, to check voice without a microphone), `--test-win` (host: every ship sinks 4 s in, so objectives tick and the debrief shows), `--test-air` (host: foul air, and a fire in the shut-in, smoke-filled control room: whoever is in there passes out). F10 leaves to the menu.
 
 ### Playing with others (Blaney)
 Others play the **published pack**, not the source: `tools/publish.sh` exports one `.pck`
@@ -94,6 +94,7 @@ O outer door, A/D gyro, Space fire. Sonar: A/D or mouse train, P active ping.
 Engine (after end of the engine room): 1/2 start/stop a diesel (surfaced only; stop them before diving).
 Ballast (control room, port aft): V vents (flood to dive), B blow (to surface), X twice emergency blow.
 Air (engine room, starboard fwd): C fresh CO2 canister, O oxygen bleed.
+Voice: hold Caps Lock to talk (proximity: you hear crewmates near you).
 Tools: E at a rack takes one, hold LMB on a leak/fire/broken station to work, LMB with the pump sets it
 down at your feet (E picks it up), G puts a tool down. Wrecked gear needs a spare parts box (crate in the engine room, aft port) fitted with LMB before the wrench.
 

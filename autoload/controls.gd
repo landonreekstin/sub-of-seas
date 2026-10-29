@@ -13,6 +13,7 @@ const BINDINGS := {
 	"next_station": [KEY_TAB],
 	"quit_to_menu": [KEY_F10],
 	"drop_tool": [KEY_G],
+	"voice": [KEY_CAPSLOCK], # push to talk
 }
 ## Mouse-button actions.
 const MOUSE_BINDINGS := {

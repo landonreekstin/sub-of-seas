@@ -18,6 +18,7 @@ var ai: ShipAI = null ## host only, for anti-submarine ships
 var mode := 0 ## ShipAI.Mode, replicated so stations can show it
 var passive := false ## scripted (training): no lookouts, no zig-zag, holds course and speed
 var gun_timer := 0.0 ## host: seconds to its next salvo at a surfaced sub
+var launch_timer := 0.0 ## host: seconds before it can launch another plane
 var leader: ShipState = null ## host: in formation, keeps station on this ship until alerted
 var station_offset := Vector2.ZERO ## (right, ahead) of the leader, metres
 var _zig_timer := 30.0

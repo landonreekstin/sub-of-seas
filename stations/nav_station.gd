@@ -34,7 +34,8 @@ func _build_overlay(root: Control) -> void:
 	_chart.half_width = ZOOMS[_zoom]
 	_chart.clip_contents = true
 	box.add_child(_chart)
-	var help := UiKit.label("CHART   [W/S] zoom   [LMB] pencil mark   [RMB] rub out   red: TDC marks and track   blue: sonar bearings    " + footer(cluster != ""), 14, UiKit.CREAM)
+	var home := "   [H] head home (ends the patrol)" if Game.instance.crew.mission == "sandbox" else ""
+	var help := UiKit.label("CHART   [W/S] zoom   [LMB] pencil mark   [RMB] rub out   red: TDC   blue: sonar%s    %s" % [home, footer(cluster != "")], 14, UiKit.CREAM)
 	help.add_theme_constant_override("outline_size", 5)
 	help.add_theme_color_override("font_outline_color", Color.BLACK)
 	box.add_child(help)
@@ -54,6 +55,9 @@ func on_leave() -> void:
 
 func station_input(event: InputEvent) -> void:
 	if _chart == null:
+		return
+	if key_pressed(event, KEY_H) and Game.instance.crew.mission == "sandbox":
+		order("home")
 		return
 	if key_pressed(event, KEY_W) or (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_WHEEL_UP):
 		_zoom = maxi(_zoom - 1, 0)

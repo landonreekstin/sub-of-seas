@@ -55,6 +55,11 @@ and update "Current style" in the same commit.
   more often deeper, an "ah-OO-gah" klaxon on opening the vents, alarm bell on a close one,
   diesel chug, motor whine rising with speed, hissing leaks, crackling fires.
 - **Hits:** camera shake, lights stutter, paint flakes shake down from the deckhead.
+- **Night:** a deep blue-black sky, cold dim moonlight, black water with silver foam; inside,
+  submerged, the boat rigs for red (`#FF4A35` light). Rough seas are big rolling waves.
+- **Aircraft:** low-wing carrier planes, green-grey with red roundels.
+- **Hats by rank:** white Dixie cup (Seaman), navy watch cap, ball cap, officer's peaked
+  cap with a brass badge, and a salt-stained grey skipper's cap for a Commander.
 - **UI:** typewriter / stencil feel, cream on dark panels, minimal HUD (crosshair, carried
   tool, interaction prompt).
 

@@ -16,6 +16,7 @@ var _objective_text: Label
 var _smoke: ColorRect
 var _vignette: ColorRect
 var _blackout: ColorRect
+var _talk: Label
 
 
 func _ready() -> void:
@@ -125,6 +126,16 @@ func set_air(bad: float, smoke: float, knocked: bool) -> void:
 	_blackout.visible = knocked
 
 
+func set_talking(on: bool) -> void:
+	if _talk == null:
+		_talk = UiKit.label("● TALKING", 16, UiKit.BAD)
+		_root.add_child(_talk)
+		_talk.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
+		_talk.offset_left = 14
+		_talk.offset_top = -34
+	_talk.visible = on
+
+
 func set_prompt(text: String) -> void:
 	_prompt.text = text
 
@@ -157,7 +168,7 @@ func has_debrief() -> bool:
 
 
 ## End-of-patrol screen for everyone aboard.
-func show_debrief(crew: Dictionary) -> void:
+func show_debrief(crew: Dictionary, career := "") -> void:
 	_debrief = UiKit.overlay_root()
 	_root.add_child(_debrief)
 	var dim := ColorRect.new()
@@ -204,6 +215,9 @@ func show_debrief(crew: Dictionary) -> void:
 		"Crew                  %s" % ", ".join(crew.names.values()),
 	]:
 		box.add_child(UiKit.label(line, 18))
+	if career != "":
+		box.add_child(UiKit.label(" ", 8))
+		box.add_child(UiKit.label(career, 18, UiKit.BRASS))
 	box.add_child(UiKit.label(" ", 8))
 	box.add_child(UiKit.label("[F10] back to the menu", 16, UiKit.DIM))
 	_crosshair.visible = false

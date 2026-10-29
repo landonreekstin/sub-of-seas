@@ -60,9 +60,9 @@ Each milestone ends playable and committed. Tick items as they land.
 - [x] Hit feedback: shake, light flicker, sparks, debris
 
 ## M7 — Sandbox and extras
-- [ ] Open-ocean patrol mode with roaming groups
-- [ ] Carrier patrol aircraft
-- [ ] Weather, night, thermocline layer
-- [ ] Persistent crew progression / cosmetics
-- [ ] Optional in-game proximity voice
-- [ ] Builds for friends (needs Godot export templates in nixos-config)
+- [x] Open-ocean patrol mode with roaming groups
+- [x] Carrier patrol aircraft
+- [x] Weather, night, thermocline layer
+- [x] Persistent crew progression / cosmetics
+- [x] Optional in-game proximity voice (push to talk: Caps Lock; checked end to end with a test tone, not yet with a real microphone)
+- [ ] Builds for friends (needs Godot export templates in nixos-config). Linux friends on the homelab are covered by the published pack and the launcher (M2.5); Windows `.exe` builds still need the templates

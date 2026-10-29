@@ -15,7 +15,11 @@ var _ocean_near: MeshInstance3D
 var _ocean_far: MeshInstance3D
 var _ships := {} ## ship id -> Node3D
 var _torps := {} ## torpedo id -> Node3D
+var _planes := {} ## aircraft id -> Node3D
 var _env: Environment
+var _sky: ProceduralSkyMaterial
+var _sun: DirectionalLight3D
+var _look := "" ## the conditions last applied to the sky, sun and sea
 
 
 static func to_3d(p: Vector2, y := 0.0) -> Vector3:
@@ -35,6 +39,7 @@ static func create() -> ExteriorWorld:
 
 func _ready() -> void:
 	var sky_mat := ProceduralSkyMaterial.new()
+	_sky = sky_mat
 	sky_mat.sky_top_color = Color("#3F7FBF")
 	sky_mat.sky_horizon_color = Color("#BFD8E8")
 	sky_mat.ground_horizon_color = Color("#BFD8E8")
@@ -60,6 +65,7 @@ func _ready() -> void:
 	add_child(we)
 
 	var sun := DirectionalLight3D.new()
+	_sun = sun
 	sun.rotation_degrees = Vector3(-35.0, -40.0, 0.0)
 	sun.light_energy = 1.2
 	sun.shadow_enabled = true
@@ -108,7 +114,9 @@ func _process(_delta: float) -> void:
 	_ocean_far.position = Vector3(snap.x, -0.3, snap.z)
 	_sync_ships()
 	_sync_torpedoes()
+	_sync_planes()
 	_feed_wakes()
+	_apply_conditions(Sim.world.conditions)
 	_underwater(sub.scope_height() <= 0.0)
 
 
@@ -151,13 +159,53 @@ func _feed_wakes() -> void:
 		m.set_shader_parameter("ship_count", mini(near.size(), 16))
 
 
+## Night: a dark blue sky, a dim cold moon, black water with silver foam. Sea state sets the
+## height of the waves.
+func _apply_conditions(c: Conditions) -> void:
+	var key := "%s/%d" % [c.night, c.sea_state]
+	if key == _look:
+		return
+	_look = key
+	_sky.sky_top_color = Color("#0B1426") if c.night else Color("#3F7FBF")
+	_sky.sky_horizon_color = Color("#22324A") if c.night else Color("#BFD8E8")
+	_sky.ground_horizon_color = _sky.sky_horizon_color
+	_sky.ground_bottom_color = Color("#050A12") if c.night else Color("#1F4E79")
+	_sun.light_energy = 0.25 if c.night else 1.2
+	_sun.light_color = Color("#9DB4D8") if c.night else Color.WHITE
+	_env.ambient_light_color = Color("#2A3A55") if c.night else Color("#8FA8BF")
+	_env.ambient_light_energy = 0.35 if c.night else 0.55
+	if _env.fog_density < 0.01:
+		_env.fog_light_color = _sky.sky_horizon_color
+	var m := _ocean_near.material_override as ShaderMaterial
+	m.set_shader_parameter("amplitude", [0.3, 0.5, 0.9][c.sea_state])
+	m.set_shader_parameter("horizon_color", Color(0.12, 0.17, 0.26) if c.night else Color(0.55, 0.70, 0.82))
+	m.set_shader_parameter("shallow_color", Color(0.02, 0.08, 0.12) if c.night else Color(0.06, 0.30, 0.38))
+
+
 ## With the scope just under, the view is murky green water instead of nothing.
 func _underwater(under: bool) -> void:
 	if under == (_env.fog_density > 0.01):
 		return
 	_env.fog_density = 0.08 if under else 0.00004
-	_env.fog_light_color = Color("#1D4A52") if under else Color("#BFD8E8")
+	_env.fog_light_color = Color("#1D4A52") if under else _sky.sky_horizon_color
 	_env.fog_sky_affect = 1.0 if under else 0.0
+
+
+func _sync_planes() -> void:
+	var seen := {}
+	for p in Sim.world.planes:
+		seen[p.id] = true
+		var node: Node3D = _planes.get(p.id)
+		if node == null:
+			node = ShipModels.plane()
+			add_child(node)
+			_planes[p.id] = node
+		node.position = to_3d(p.pos, p.altitude)
+		node.rotation = Vector3(0.0, -deg_to_rad(p.heading), sin(Sim.world.time * 0.8 + p.id) * 0.15)
+	for id: int in _planes.keys():
+		if not seen.has(id):
+			_planes[id].queue_free()
+			_planes.erase(id)
 
 
 func _sync_torpedoes() -> void:
