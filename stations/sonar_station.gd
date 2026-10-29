@@ -128,7 +128,7 @@ func _build_overlay(root: Control) -> void:
 		var l := UiKit.label("", 18, UiKit.CREAM if i < 2 else (UiKit.BAD if i == 2 else UiKit.GOOD))
 		box.add_child(l)
 		_lines.append(l)
-	box.add_child(UiKit.label("[P] active ping (gives range, gives us away)    " + footer(cluster != ""), 14, UiKit.DIM))
+	box.add_child(UiKit.label("[M] put this bearing on the chart    [P] active ping (gives range, gives us away)    " + footer(cluster != ""), 14, UiKit.DIM))
 
 
 func _draw_scope() -> void:
@@ -179,3 +179,5 @@ func station_input(event: InputEvent) -> void:
 		trained = fposmod(trained + 5.0, 360.0)
 	elif key_pressed(event, KEY_P):
 		order("ping")
+	elif key_pressed(event, KEY_M):
+		order("plot", trained)

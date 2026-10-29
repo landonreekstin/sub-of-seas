@@ -181,9 +181,7 @@ func _control_room() -> void:
 	# Gauge boards on the forward bulkhead either side of the door.
 	_gauge_board(Vector3(-1.25, 1.7, -7.88), ["depth", "ordered"])
 	_gauge_board(Vector3(1.25, 1.7, -7.88), ["speed", "heading", "battery"])
-	# Chart table (navigation station comes in M3).
-	Build.box(self, Vector3(1.0, 0.9, 1.4), Vector3(1.4, 0.45, -1.6), Color("#6B5A44"))
-	Build.box(self, Vector3(0.9, 0.02, 1.3), Vector3(1.4, 0.91, -1.6), Color("#E8DFC4"), false)
+	_add_station(NavStation.new().setup("nav", "Chart table"), Vector3(1.4, 0, -1.6))
 	_add_station(SonarStation.new().setup("sonar", "Sonar"), Vector3(-1.85, 0, -3.7))
 	var rack := ToolRack.new()
 	rack.position = Vector3(1.97, 1.3, -3.6)

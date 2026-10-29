@@ -208,6 +208,12 @@ or a 4 km run there is no solution. Quality grows with marks, their span and clo
 `T` sends it: the bow tubes' gyros then follow the live solution until someone touches a
 gyro or presses T again.
 
+**Chart table (M3).** North up, centred on the boat: the boat's own track, TDC marks (red
+crosses) and the TDC's estimate of the target's track ten minutes ahead, sonar bearings the
+operator put on the plot with M (blue lines, fading over 3 minutes), and up to 16 numbered
+pencil marks anyone can put down (LMB) or rub out (RMB). Contacts only appear when someone
+marks them, so the chart is where the crew's information meets.
+
 ## 7. Co-op design principles
 
 - **Information lives in one place, action in another.** The periscope sees, the torpedo room

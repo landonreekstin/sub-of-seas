@@ -30,6 +30,8 @@ var _clear_timer := 0.0
 var _work_clock := {} ## peer -> last time a work request was accepted (msec)
 var tutorial: Tutorial
 var _exposure := {} ## peer -> seconds breathing air that knocks you out
+var track: Array[Vector2] = [] ## own track for the chart, sampled on every peer
+var _track_timer := 0.0
 
 
 func _enter_tree() -> void:
@@ -124,6 +126,8 @@ func _initial_crew() -> Dictionary:
 		## The TDC: periscope marks on one target, the operator's nudges, and whether the
 		## tubes' gyros follow its solution.
 		"tdc": {"target": -1, "marks": [], "speed_adj": 0.0, "course_adj": 0.0, "follow": false},
+		"plot": [], ## sonar bearings on the chart: {t, x, y (own position), b}
+		"pencil": [], ## pencil marks on the chart: {x, y}
 	}
 
 
@@ -178,6 +182,12 @@ func _process(delta: float) -> void:
 	if multiplayer.is_server():
 		_host_tick(delta)
 	if Sim.world != null:
+		_track_timer -= delta
+		if _track_timer <= 0.0:
+			_track_timer = 5.0
+			track.append(Sim.world.sub.pos)
+			if track.size() > 720:
+				track.pop_front()
 		var water := Sim.world.hull.water_fraction()
 		hud.set_status("%s  |  crew %d  |  sunk %d (%d t)%s  |  F10 leave" % [
 			GATO.display_name, crew.names.size(), crew.sunk, crew.tonnage,
@@ -387,6 +397,22 @@ func rq_order(station_id: String, key: String, value: Variant) -> void:
 				announce.rpc("Sonar: PING! Every escort out there heard that.")
 			elif key == "classified" and tutorial != null:
 				tutorial.flag("classified")
+			elif key == "plot":
+				crew.plot.append({"t": Sim.world.time, "x": sub.pos.x, "y": sub.pos.y, "b": fposmod(float(value), 360.0)})
+				if crew.plot.size() > 12:
+					crew.plot.pop_front()
+				announce.rpc("Sonar: contact bearing %03d — on the chart." % (roundi(fposmod(float(value), 360.0)) % 360))
+		"nav":
+			if value is Array and value.size() == 2:
+				var at := Vector2(float(value[0]), float(value[1]))
+				if key == "pencil" and crew.pencil.size() < 16:
+					crew.pencil.append({"x": at.x, "y": at.y})
+				elif key == "erase" and not crew.pencil.is_empty():
+					var best := 0
+					for i in crew.pencil.size():
+						if Vector2(crew.pencil[i].x, crew.pencil[i].y).distance_to(at) < Vector2(crew.pencil[best].x, crew.pencil[best].y).distance_to(at):
+							best = i
+					crew.pencil.remove_at(best)
 		_:
 			if station_id.begins_with("tube_"):
 				_tube_order(station_id.trim_prefix("tube_").to_int() - 1, key, value)

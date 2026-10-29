@@ -40,7 +40,7 @@ Each milestone ends playable and committed. Tick items as they land.
 - [x] Ballast/trim station, emergency blow, air banks
 - [x] System breakdowns + spare parts
 - [x] Simplified TDC: stadimeter, marks, solution quality, gyro angle to tube panel
-- [ ] Nav/plot table
+- [x] Nav/plot table
 
 ## M4 — Fleet and missions
 - [ ] All ship classes with distinct behaviour (carrier, battleship, cruiser, kaibokan, sub-chaser, tanker)

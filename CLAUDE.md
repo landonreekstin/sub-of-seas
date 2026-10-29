@@ -52,7 +52,7 @@ Godot **4.7.2**, GDScript, Jolt 3D physics. Repo: github.com/landonreekstin/sub-
 | `stations/` | station base class and each station |
 | `player/` | first-person crew controller, held tools (`tools.gd`) |
 | `world/` | exterior ocean scene, ocean shader, ship models |
-| `ui/` | main menu, HUD, station overlays |
+| `ui/` | main menu, HUD, station overlays, `chart_view.gd` (the plot) |
 | `data/` | `.tres` balance data and their `Resource` scripts |
 | `tests/` | headless test runner + `test_*.gd` |
 
@@ -81,7 +81,8 @@ The build id (commit) is baked into the pack; a host turns away a different buil
 WASD + mouse, E interact, Space jump, Q/Esc leave station, Tab next station in a cluster.
 Helm: W/S telegraph, A/D rudder. Dive: W/S depth ±5 (Shift ±1), 1–4 presets.
 Periscope: mouse train, Z power, R raise/lower, F stadimeter, M mark for the TDC.
-TDC (conning tower, starboard): W/S target speed ±1 kn, A/D course ±5°, C clear marks, T send to the tubes (gyros follow). Tubes: L reload, F flood,
+TDC (conning tower, starboard): W/S target speed ±1 kn, A/D course ±5°, C clear marks, T send to the tubes (gyros follow).
+Chart table (control room, starboard aft): W/S or wheel zoom, LMB pencil mark, RMB rub out. Sonar: M puts the bearing on the chart. Tubes: L reload, F flood,
 O outer door, A/D gyro, Space fire. Sonar: A/D or mouse train, P active ping.
 Engine (after end of the engine room): 1/2 start/stop a diesel (surfaced only; stop them before diving).
 Ballast (control room, port aft): V vents (flood to dive), B blow (to surface), X twice emergency blow.

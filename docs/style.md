@@ -27,6 +27,8 @@ and update "Current style" in the same commit.
   Broken gear sparks under a red BROKEN sign; gear that needs spare parts reads WRECKED.
 - **TDC:** a grey cabinet with a black face: SPEED / COURSE / GYRO in big cream numerals,
   a quality bar under them that runs red → amber → green.
+- **Chart:** cream paper, pale blue-grey 1 km grid, pencil-grey own track and boat, red for
+  the TDC, blue for sonar bearings. Hand-plotted, not a radar screen.
 - **UI:** typewriter / stencil feel, cream on dark panels, minimal HUD (crosshair, carried
   tool, interaction prompt).
 
