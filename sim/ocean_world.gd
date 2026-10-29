@@ -3,11 +3,12 @@ extends RefCounted
 ## The whole ocean simulation, with no rendering: the sub, AI ships and torpedoes.
 ## The host steps it authoritatively; clients step it between snapshots for smoothness.
 
-## kind: "fired" | "hit" | "dud" | "sunk" | "ping" | "splash" | "blast" | "leak" | "lost".
+## kind: "fired" | "hit" | "dud" | "sunk" | "ping" | "splash" | "blast" | "leak" | "power" | "lost".
 ## Only emitted by authoritative steps.
 signal event(kind: String, data: Dictionary)
 
 const SHIP_DIR := "res://data/ships/%s.tres"
+const BATTERY_WARNINGS := [0.2, 0.1] ## announce when the charge falls past these
 
 var time := 0.0
 var sub: SubState
@@ -19,6 +20,7 @@ var lost := "" ## why the boat was lost, once it is
 var dud_chance := 0.05
 var rng := RandomNumberGenerator.new()
 var _next_id := 1
+var _battery_was := 1.0
 
 
 func _init(sub_class: SubClassData, seed_value := 0) -> void:
@@ -121,6 +123,7 @@ func step(dt: float, authoritative := true) -> void:
 		_step_charges(dt)
 		hull.step(dt, rng)
 		_hull_stress(dt)
+		_power_checks()
 		sub.heaviness = hull.water_fraction()
 		_check_lost()
 	else:
@@ -165,6 +168,38 @@ func _step_charges(dt: float) -> void:
 				info.dmg = hull.apply_blast(dist, lerpf(z1, z0, along + 0.5), side if side != 0.0 else 1.0, rng)
 		event.emit("blast", info)
 	charges = left
+
+
+## Engine station "engine" runs the diesels: broken gear stops them, and diving with them
+## running sends seawater down the main induction.
+func set_diesel(i: int, on: bool) -> void:
+	if i < 0 or i >= sub.diesels.size() or hull.is_broken("engine"):
+		return
+	if not on:
+		sub.diesels[i] = 0.0
+	elif sub.diesels[i] == 0.0 and sub.depth <= SubState.INDUCTION_DEPTH:
+		sub.diesels[i] = 0.01 # starts cranking
+
+
+func _power_checks() -> void:
+	var on := sub.diesels.any(func(d: float) -> bool: return d > 0.0)
+	if on and hull.is_broken("engine"):
+		sub.diesels.fill(0.0)
+		event.emit("power", {"text": "The diesels have stopped: the engine controls are wrecked."})
+	elif on and sub.depth > SubState.INDUCTION_DEPTH and lost == "":
+		sub.diesels.fill(0.0)
+		var text := "Seawater down the induction! Diesels flooded. Stop the diesels BEFORE diving."
+		var c: int = hull.station_comp.get("engine", -1)
+		if c >= 0:
+			hull.broken["engine"] = HullState.WRENCH_SECONDS
+			hull.add_leak(c, 0, rng)
+		event.emit("power", {"text": text})
+	for w: float in BATTERY_WARNINGS:
+		if _battery_was > w and sub.battery <= w:
+			event.emit("power", {"text": "Battery at %d%%. Surface and run the diesels to charge." % roundi(w * 100.0)})
+	if _battery_was > 0.0 and sub.battery <= 0.0:
+		event.emit("power", {"text": "Battery flat! The motors have stopped. Surface (dive station, 1) and start the diesels."})
+	_battery_was = sub.battery
 
 
 ## Below test depth the hull starts to give.

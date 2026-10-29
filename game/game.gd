@@ -118,6 +118,7 @@ func _setup_mission() -> void:
 		return
 	var sub := Sim.world.sub
 	sub.depth = sub.data.periscope_depth
+	sub.battery = 0.8
 	sub.ordered_depth = sub.data.periscope_depth
 	sub.telegraph = 1
 	sub.speed = sub.max_speed() * 0.25
@@ -325,6 +326,9 @@ func rq_order(station_id: String, key: String, value: Variant) -> void:
 				sub.periscope_raised = bool(value)
 			elif key == "ranged" and tutorial != null:
 				tutorial.flag("ranged")
+		"engine":
+			if key == "diesel" and value is Array and value.size() == 2:
+				Sim.world.set_diesel(int(value[0]), bool(value[1]))
 		"sonar":
 			if key == "ping":
 				Sim.world.own_ping()
@@ -512,7 +516,7 @@ func _on_sim_event(kind: String, data: Dictionary) -> void:
 			push_crew()
 		"spotted":
 			announce.rpc("The convoy is zig-zagging. They've spotted us!")
-		"leak":
+		"leak", "power":
 			announce.rpc(data.text)
 		"lost":
 			end_patrol("lost", data.reason)

@@ -18,6 +18,9 @@ and update "Current style" in the same commit.
   ships in dark grey (`#5A5F66`), wooden-deck tan.
 - **Readability:** water in compartments is clearly blue and wavy, fire is bright orange with
   glow, broken gear sparks, leaks spray white. Station screens are big and legible.
+- **Power you can see:** interior lights brown out as the battery nears flat (unless the
+  diesels carry the load); diesel cylinder heads shake while running; panel lamps are green
+  for running, blinking amber while cranking, dark when stopped.
 - **UI:** typewriter / stencil feel, cream on dark panels, minimal HUD (crosshair, carried
   tool, interaction prompt).
 

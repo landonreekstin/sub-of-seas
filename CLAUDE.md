@@ -47,7 +47,7 @@ Godot **4.7.2**, GDScript, Jolt 3D physics. Repo: github.com/landonreekstin/sub-
 | `autoload/` | `controls.gd` (input map), `net.gd` (host/join, CLI args), `sim.gd` (ocean world, host-run, replicated) |
 | `game/` | `game.gd`: patrol root — builds boat, spawns crew, owns crew state (doors, stations, tubes) and the host-side request RPCs; `tutorial.gd`: the training patrol's checklist and script |
 | `tools/` | `publish.sh`: export the pack to the NAS drop for the launcher |
-| `sim/` | pure simulation classes: sub, ships, torpedoes, depth charges, `detection.gd`, `ship_ai.gd` (escort state machine), `hull.gd` (water, leaks, fires, broken stations) |
+| `sim/` | pure simulation classes: sub (incl. battery and diesels), ships, torpedoes, depth charges, `detection.gd`, `ship_ai.gd` (escort state machine), `hull.gd` (water, leaks, fires, broken stations) |
 | `interior/` | sub interiors built from primitives, doors, compartments, tool racks, `damage_view.gd` (draws the hull state) |
 | `stations/` | station base class and each station |
 | `player/` | first-person crew controller, held tools (`tools.gd`) |
@@ -82,6 +82,7 @@ WASD + mouse, E interact, Space jump, Q/Esc leave station, Tab next station in a
 Helm: W/S telegraph, A/D rudder. Dive: W/S depth ±5 (Shift ±1), 1–4 presets.
 Periscope: mouse train, Z power, R raise/lower, F stadimeter. Tubes: L reload, F flood,
 O outer door, A/D gyro, Space fire. Sonar: A/D or mouse train, P active ping.
+Engine (after end of the engine room): 1/2 start/stop a diesel (surfaced only; stop them before diving).
 Tools: E at a rack takes one, hold LMB on a leak/fire/broken station to work, LMB with the pump sets it
 down at your feet (E picks it up), G puts a tool down.
 

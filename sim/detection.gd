@@ -8,12 +8,12 @@ const HEARING_RATE := 0.04
 const SURFACED_EXPOSURE := 6.0
 
 
-## Sound the sub makes, 0.1 (creeping) .. ~1.3 (flank on the surface, diesels).
+## Sound the sub makes, 0.1 (creeping) .. ~1.6 (flank on the surface, both diesels).
 static func sub_noise(sub: SubState) -> float:
 	var frac := absf(sub.speed) / (sub.data.submerged_speed_kn * SubState.KNOT)
 	var noise := 0.1 + 0.9 * frac * frac
 	if sub.is_surfaced():
-		noise = 0.6 + 0.7 * minf(frac, 1.0)
+		noise = 0.6 + 0.7 * minf(frac, 1.0) + 0.15 * sub.diesels_running()
 	elif sub.depth < 20.0 and frac > 0.5:
 		noise *= 1.3 # shallow screws cavitate
 	return noise

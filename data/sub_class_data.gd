@@ -18,3 +18,5 @@ extends Resource
 @export var bow_tubes := 6
 @export var stern_tubes := 4
 @export var torpedo_capacity := 24
+@export var battery_endurance_min := 30.0 ## minutes submerged at AHEAD 1/3 on a full battery
+@export var charge_minutes := 8.0 ## minutes to charge flat to full on both diesels, stopped

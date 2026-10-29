@@ -35,7 +35,7 @@ Each milestone ends playable and committed. Tick items as they land.
 - [ ] First two-player session with Blaney (then tune M2 from it)
 
 ## M3 — Survival systems
-- [ ] Battery vs diesel (surface charging), engine station
+- [x] Battery vs diesel (surface charging), engine station
 - [ ] O2 / CO2, scrubbers, knockouts and wake-up
 - [ ] Ballast/trim station, emergency blow, air banks
 - [ ] System breakdowns + spare parts

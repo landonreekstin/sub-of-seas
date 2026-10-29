@@ -14,7 +14,7 @@ Everything here is a starting point. Numbers live in `data/*.tres` and get tuned
    bridge view, navigator plots a course to the patrol area.
 3. **Contact.** Sonar hears screws, or the periscope spots smoke. Identify: freighter? convoy
    with escorts? battleship task force?
-4. **Approach.** Dive, close submerged on battery. Too fast = noisy and battery drains; too slow
+4. **Approach.** Dive, close submerged on battery (Gato: 30 min at 1/3, ~4 min at flank; lights brown out near flat, and a flat battery stops the motors). Too fast = noisy and battery drains; too slow
    = target gets away. Periscope up = risk of being seen.
 5. **Attack.** Periscope marks target; TDC turns that into a gyro angle; captain calls
    "Fire one!"; torpedo room fires. Torpedoes run, hit (or dud, or miss).
@@ -79,7 +79,7 @@ leaving station mode. One player per station; others see who is on it.
 | Sonar | Passive: bearings of contacts by sound, class guess by screws. Active ping: range, but alerts everyone | Hears depth charges hit the water (warning!) |
 | Nav / plot | Chart with own track, marked contacts, mission area | Draw/mark for the team |
 | Torpedo tube | Load (hoist torpedo from rack, ram), flood tube, open outer door, fire | Reload takes ~45 s of hands-on work; 2 people faster |
-| Engine (diesel) | Start/stop, charges battery when surfaced | Can't run submerged; breaks under damage |
+| Engine (diesel) | Start/stop each of two diesels (1/2), battery gauge | Surfaced only: diving with them running floods them (controls broken + a leak). One diesel = 70 % surface speed, two = full; what the screws don't use charges the battery (Gato: flat to full in 8 min stopped) |
 | Electrical | Battery charge, motor switchboard, lights | Battery damaged + seawater = chlorine gas (M3+) |
 | Air | O2 bleed, CO2 scrubbers (absorbent canisters) | Submerged CO2 rises with crew count and time |
 

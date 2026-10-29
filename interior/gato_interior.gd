@@ -34,6 +34,7 @@ var _gauges := {} ## kind -> Array[Label3D]
 var damage: DamageView
 var _lights: Array[OmniLight3D] = []
 var _flicker := 0.0
+var _rockers: Array[Array] = [[], []] ## per diesel (port, starboard): cylinder-head covers
 
 
 func _ready() -> void:
@@ -179,7 +180,7 @@ func _control_room() -> void:
 	_add_station(HelmStation.new().setup("helm", "Helm", "helm_dive"), Vector3(1.8, 0, -6.0))
 	# Gauge boards on the forward bulkhead either side of the door.
 	_gauge_board(Vector3(-1.25, 1.7, -7.88), ["depth", "ordered"])
-	_gauge_board(Vector3(1.25, 1.7, -7.88), ["speed", "heading"])
+	_gauge_board(Vector3(1.25, 1.7, -7.88), ["speed", "heading", "battery"])
 	# Chart table (navigation station comes in M3).
 	Build.box(self, Vector3(1.0, 0.9, 1.4), Vector3(1.4, 0.45, -1.6), Color("#6B5A44"))
 	Build.box(self, Vector3(0.9, 0.02, 1.3), Vector3(1.4, 0.91, -1.6), Color("#E8DFC4"), false)
@@ -248,14 +249,16 @@ func _engine_room() -> void:
 		var x: float = side * 1.3
 		Build.box(self, Vector3(1.1, 1.5, 9.0), Vector3(x, 0.75, 7.0), Color("#4E5550"))
 		for i in 8:
-			Build.box(self, Vector3(0.7, 0.25, 0.8), Vector3(x, 1.62, 3.2 + i * 1.08), Color("#6E756C"), false)
+			var rocker := Build.box(self, Vector3(0.7, 0.25, 0.8), Vector3(x, 1.62, 3.2 + i * 1.08), Color("#6E756C"), false)
+			rocker.set_meta("y", rocker.position.y)
+			_rockers[0 if side < 0.0 else 1].append(rocker)
 			Build.cyl(self, 0.05, 0.3, Vector3(x, 1.85, 3.2 + i * 1.08), BRASS)
 		Build.cyl(self, 0.18, 9.0, Vector3(side * 1.55, 2.1, 7.0), Color("#3A3A3A"), Vector3.BACK)
 	var rack := ToolRack.new()
 	rack.position = Vector3(-1.97, 1.3, 1.3)
 	rack.rotation.y = PI
 	add_child(rack)
-	Build.label(self, "DIESEL ENGINES — M3", Vector3(0, 1.9, 13.86), 36, Color("#2B2B26")).rotation.y = PI
+	_add_station(EngineStation.new().setup("engine", "Diesel controls"), Vector3(0, 0, 13.75), -PI / 2.0)
 
 
 func _gauge_board(pos: Vector3, kinds: Array) -> void:
@@ -290,17 +293,23 @@ func flicker(strength: float) -> void:
 func _process(delta: float) -> void:
 	if Sim.world == null:
 		return
-	if _flicker > 0.0:
-		_flicker = maxf(0.0, _flicker - delta * 0.8)
-		for l in _lights:
-			var on := _flicker == 0.0 or randf() > _flicker * 0.7
-			l.light_energy = l.get_meta("energy") * (1.0 if on else 0.08)
 	var sub := Sim.world.sub
+	# Lights brown out as the battery runs down, unless the diesels carry the load.
+	var power := 1.0 if sub.diesels_running() > 0 else lerpf(0.3, 1.0, clampf(sub.battery / 0.15, 0.0, 1.0))
+	_flicker = maxf(0.0, _flicker - delta * 0.8)
+	for l in _lights:
+		var on := _flicker == 0.0 or randf() > _flicker * 0.7
+		l.light_energy = l.get_meta("energy") * power * (1.0 if on else 0.08)
+	for i in _rockers.size():
+		var shake := 0.012 if sub.diesels[i] >= 1.0 else (0.006 if sub.diesels[i] > 0.0 else 0.0)
+		for r: MeshInstance3D in _rockers[i]:
+			r.position.y = r.get_meta("y") + randf_range(-shake, shake)
 	var text := {
 		"depth": "DEPTH   %5.1f m" % sub.depth,
 		"ordered": "ORDERED %5.0f m" % sub.ordered_depth,
 		"speed": "SPEED   %5.1f kn" % (sub.speed / SubState.KNOT),
 		"heading": "HEADING   %03d°" % (roundi(sub.heading) % 360),
+		"battery": "BATTERY   %3d%%" % roundi(sub.battery * 100.0),
 	}
 	for kind: String in _gauges:
 		for l: Label3D in _gauges[kind]:

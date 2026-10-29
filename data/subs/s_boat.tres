@@ -20,3 +20,5 @@ crush_depth = 90.0
 bow_tubes = 4
 stern_tubes = 0
 torpedo_capacity = 12
+battery_endurance_min = 15.0
+charge_minutes = 6.0
