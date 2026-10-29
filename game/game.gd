@@ -12,6 +12,8 @@ const MENU_SCENE := "res://ui/main_menu.tscn"
 const RELOAD_TIME := 30.0 ## seconds of hands-on work at the tube
 const PING_NOTICE_GAP := 20.0 ## s between "they have us" announcements
 const CLEAR_TIME := 60.0 ## s with no escort hunting nearby before the patrol counts as done
+const PASS_OUT_AFTER := 6.0 ## s breathing air at its worst before a crewman passes out
+const KNOCKED_OUT_TIME := 15.0
 
 static var instance: Game
 
@@ -27,6 +29,7 @@ var _last_ping_notice := -INF
 var _clear_timer := 0.0
 var _work_clock := {} ## peer -> last time a work request was accepted (msec)
 var tutorial: Tutorial
+var _exposure := {} ## peer -> seconds breathing air that knocks you out
 
 
 func _enter_tree() -> void:
@@ -46,6 +49,7 @@ func _ready() -> void:
 	interior.name = "Interior"
 	add_child(interior)
 	Sim.world.hull.setup(GatoInterior.COMPARTMENTS, GatoInterior.DOOR_LINKS, interior.station_compartments())
+	Sim.world.air.setup(GatoInterior.COMPARTMENTS.size(), GATO.co2_canisters)
 	exterior = ExteriorWorld.create()
 	add_child(exterior.viewport)
 	get_viewport().size_changed.connect(_fit_exterior)
@@ -79,6 +83,13 @@ func _ready() -> void:
 		_setup_mission()
 		if Net.debug_charges:
 			_debug_pattern.call_deferred()
+		if Net.debug_air:
+			Sim.world.air.co2 = 4.6
+			Sim.world.air.smoke[1] = 1.0
+			for d: String in crew.doors: # shut in with it: the control room stays thick
+				crew.doors[d] = false
+				Sim.world.hull.doors_open[d] = false
+			Sim.world.hull.add_fire(1, Sim.world.rng)
 		_spawner.spawn(1)
 		_apply_crew()
 		if crew.mission == "training":
@@ -108,6 +119,7 @@ func _initial_crew() -> Dictionary:
 		"time": 0.0,
 		"mission": "patrol", ## "patrol" | "training", set by the host
 		"tutorial": {"step": 0},
+		"knocked": {}, ## peer -> seconds until they come round
 	}
 
 
@@ -118,6 +130,8 @@ func _setup_mission() -> void:
 		return
 	var sub := Sim.world.sub
 	sub.depth = sub.data.periscope_depth
+	sub.ballast = 1.0
+	sub.hp_air = 0.9
 	sub.battery = 0.8
 	sub.ordered_depth = sub.data.periscope_depth
 	sub.telegraph = 1
@@ -279,7 +293,7 @@ func rq_station_enter(station_id: String) -> void:
 	if not multiplayer.is_server() or not interior.stations.has(station_id):
 		return
 	var peer := _sender()
-	if station_occupant(station_id) not in [0, peer]:
+	if station_occupant(station_id) not in [0, peer] or crew.knocked.has(peer):
 		push_crew()
 		return
 	_clear_stations_of(peer)
@@ -329,6 +343,20 @@ func rq_order(station_id: String, key: String, value: Variant) -> void:
 		"engine":
 			if key == "diesel" and value is Array and value.size() == 2:
 				Sim.world.set_diesel(int(value[0]), bool(value[1]))
+		"ballast":
+			if key in ["vent", "shut", "blow", "emergency", "stop"]:
+				sub.ballast_order(key)
+				if key == "emergency" and sub.blowing == 2:
+					announce.rpc("EMERGENCY BLOW! All main ballast tanks blowing.")
+		"air":
+			var air := Sim.world.air
+			if key == "canister":
+				if air.load_canister():
+					announce.rpc("Fresh CO2 absorbent in the scrubber. %d canisters left." % air.canisters)
+				else:
+					announce.rpc("No CO2 absorbent left. Surface to ventilate.")
+			elif key == "bleed":
+				air.bleed = bool(value) and air.o2_bank > 0.0
 		"sonar":
 			if key == "ping":
 				Sim.world.own_ping()
@@ -448,6 +476,8 @@ func _host_tick(delta: float) -> void:
 	var sub := Sim.world.sub
 	if sub.periscope_raised and Sim.world.hull.is_broken("periscope"):
 		sub.periscope_raised = false
+	Sim.world.crew_count = crew.names.size()
+	_breathe(delta)
 	_check_patrol_complete(delta)
 	var reloading := false
 	for i in crew.tubes.size():
@@ -465,6 +495,55 @@ func _host_tick(delta: float) -> void:
 		if _push_timer > 0.25:
 			_push_timer = 0.0
 			push_crew()
+
+
+## Bad air or thick smoke where a crewman stands knocks him out for a while; he comes round
+## in the compartment with the best air.
+func _breathe(delta: float) -> void:
+	var w := Sim.world
+	var changed := false
+	for p: Player in _players.get_children():
+		var peer := p.peer_id
+		if crew.knocked.has(peer):
+			crew.knocked[peer] -= delta
+			if crew.knocked[peer] <= 0.0:
+				crew.knocked.erase(peer)
+				_exposure.erase(peer)
+				wake_at.rpc_id(peer, _best_air_spot())
+				changed = true
+			continue
+		var bad := w.air.badness_in(w.hull.comp_at(p.global_position.z))
+		_exposure[peer] = _exposure.get(peer, 0.0) + delta if bad >= 1.0 else 0.0
+		if _exposure[peer] >= PASS_OUT_AFTER:
+			crew.knocked[peer] = KNOCKED_OUT_TIME
+			crew.tools.erase(peer)
+			_clear_stations_of(peer)
+			announce.rpc("%s passed out!" % crew_name(peer))
+			changed = true
+	if changed:
+		push_crew()
+
+
+func _best_air_spot() -> Vector3:
+	var w := Sim.world
+	var best := 0
+	var best_score := INF
+	for i in w.hull.comps.size():
+		var score: float = w.air.badness_in(i) + w.hull.comps[i].water * 2.0
+		if score < best_score:
+			best_score = score
+			best = i
+	var c: Dictionary = w.hull.comps[best]
+	return Vector3(randf_range(-0.5, 0.5), 0.1, (c.z0 + c.z1) * 0.5 + randf_range(-1.0, 1.0))
+
+
+## Host -> one crewman: you come round here.
+@rpc("authority", "call_local", "reliable")
+func wake_at(pos: Vector3) -> void:
+	if local_player != null:
+		local_player.global_position = pos
+		local_player.velocity = Vector3.ZERO
+	hud.show_message("You come round, coughing.", 3.0)
 
 
 ## Done when every merchant is sunk and no escort has been hunting nearby for a minute.

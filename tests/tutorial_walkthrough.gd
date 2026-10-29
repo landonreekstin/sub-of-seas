@@ -29,6 +29,9 @@ func _process(delta: float) -> bool:
 	if _game == null:
 		if current_scene != null and current_scene.name == "Game":
 			_game = current_scene
+		elif Time.get_ticks_msec() > 30000:
+			push_error("walkthrough: the patrol never started (port %d in use?)" % root.get_node("Net").port)
+			quit(1)
 		return false
 	if _sim.world == null:
 		return false
@@ -45,7 +48,9 @@ func _process(delta: float) -> bool:
 		_did.clear()
 	_step_time += delta
 	if _step_time > STALL or _sim.world.time > TIMEOUT:
-		push_error("walkthrough: stalled on step %d" % i)
+		var sub: SubState = _sim.world.sub
+		push_error("walkthrough: stalled on step %d (depth %.1f ballast %.2f diesels %s broken %s stations %s)" % [
+			i, sub.depth, sub.ballast, sub.diesels, _sim.world.hull.broken.keys(), crew.stations])
 		quit(1)
 		return false
 	_act(i)
@@ -59,44 +64,75 @@ func _once(key: String) -> bool:
 	return true
 
 
+## Picks the tool up again whenever it isn't in hand (passing out drops it).
+func _hold(tool: String) -> void:
+	if _game.crew.tools.get(1, "") != tool and not _game.crew.knocked.has(1):
+		_game.rq_tool(tool)
+
+
 func _act(i: int) -> void:
 	var g: Variant = _game
 	var hull: HullState = _sim.world.hull
-	match i:
-		0: if _once("a"): g.rq_station_enter("helm")
-		1: if _once("a"): g.rq_order("helm", "telegraph", 2)
-		2: if _once("a"): g.rq_station_enter("dive")
-		3: if _once("a"): g.rq_order("dive", "depth", _sim.world.sub.data.periscope_depth)
-		4: if _once("a"): g.rq_station_enter("periscope")
-		5: if _once("a"): g.rq_order("periscope", "raised", true)
-		6: if _once("a"): g.rq_order("periscope", "ranged", true)
-		7: if _once("a"): g.rq_order("periscope", "raised", false)
-		8: if _once("a"): g.rq_station_enter("tube_1")
-		9:
+	# Whatever the pattern broke that this step needs gets fixed first, as a player would.
+	var needs: String = _game.tutorial.steps[i].get("needs", "")
+	if needs != "" and hull.is_broken(needs):
+		_hold("wrench")
+		g.rq_work("wrench", needs, 0.25)
+		return
+	match _game.tutorial.steps[i].id:
+		"helm": if _once("a"): g.rq_station_enter("helm")
+		"ahead": if _once("a"): g.rq_order("helm", "telegraph", 2)
+		"ballast": if _once("a"): g.rq_station_enter("ballast")
+		"vents": if _once("a"): g.rq_order("ballast", "vent", null)
+		"dive": if _once("a"): g.rq_station_enter("dive")
+		"depth": if _once("a"): g.rq_order("dive", "depth", _sim.world.sub.data.periscope_depth)
+		"scope": if _once("a"): g.rq_station_enter("periscope")
+		"raise": if _once("a"): g.rq_order("periscope", "raised", true)
+		"range": if _once("a"): g.rq_order("periscope", "ranged", true)
+		"lower": if _once("a"): g.rq_order("periscope", "raised", false)
+		"tube": if _once("a"): g.rq_station_enter("tube_1")
+		"flood":
 			if _once("a"):
 				g.rq_order("tube_1", "flood", null)
 				g.rq_order("tube_1", "door", null)
-		10: if _once("a"): g.rq_order("tube_1", "fire", null)
-		11: if _once("a"): g.rq_station_enter("sonar")
-		12: if _once("a"): g.rq_order("sonar", "classified", true)
-		13:
+		"fire": if _once("a"): g.rq_order("tube_1", "fire", null)
+		"sonar": if _once("a"): g.rq_station_enter("sonar")
+		"classify": if _once("a"): g.rq_order("sonar", "classified", true)
+		"deep":
 			if _once("a"):
 				g.rq_station_enter("dive")
 				g.rq_order("dive", "depth", 45.0)
 				g.rq_station_enter("helm")
 				g.rq_order("helm", "telegraph", 1)
-		15:
-			if _once("a"):
-				g.rq_tool("torch")
+		"weld":
+			_hold("torch")
 			if not hull.leaks.is_empty():
 				g.rq_work("torch", str(hull.leaks[0].id), 0.25)
-		16:
-			if _once("a"):
-				g.rq_tool("extinguisher")
+		"extinguish":
+			_hold("extinguisher")
 			if not hull.fires.is_empty():
 				g.rq_work("extinguisher", str(hull.fires[0].id), 0.25)
-		17:
+		"wrench":
+			_hold("wrench")
+			g.rq_work("wrench", "helm", 0.25)
+		"pump":
 			if _once("a"):
 				g.rq_tool("pump")
 				g.rq_place_pump(Vector3(0, 0, -4))
-		18: if _once("a"): g.rq_door("fwd")
+		"door": if _once("a"): g.rq_door("fwd")
+		"air":
+			if _once("a"):
+				g.rq_station_enter("air")
+				g.rq_order("air", "canister", null)
+		"up":
+			if _once("a"):
+				g.rq_station_enter("dive")
+				g.rq_order("dive", "depth", 0.0)
+		"blow":
+			if _once("a"):
+				g.rq_station_enter("ballast")
+				g.rq_order("ballast", "blow", null)
+		"diesel":
+			if _once("a"):
+				g.rq_station_enter("engine")
+				g.rq_order("engine", "diesel", [0, true])

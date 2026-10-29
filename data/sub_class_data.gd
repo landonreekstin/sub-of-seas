@@ -20,3 +20,5 @@ extends Resource
 @export var torpedo_capacity := 24
 @export var battery_endurance_min := 30.0 ## minutes submerged at AHEAD 1/3 on a full battery
 @export var charge_minutes := 8.0 ## minutes to charge flat to full on both diesels, stopped
+@export var flood_seconds := 30.0 ## main ballast vents open to decks awash
+@export var co2_canisters := 8 ## CO2 absorbent canisters aboard

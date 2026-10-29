@@ -154,8 +154,21 @@ func add_trauma(amount: float) -> void:
 	trauma = clampf(trauma + amount, 0.0, 1.0)
 
 
+func is_knocked_out() -> bool:
+	return Game.instance.crew.get("knocked", {}).has(peer_id)
+
+
+## How bad the air is where you stand (0..1), and the smoke there.
+func breathing() -> Vector2:
+	if Sim.world == null:
+		return Vector2.ZERO
+	var c := Sim.world.hull.comp_at(global_position.z)
+	var smoke: float = Sim.world.air.smoke[c] if c < Sim.world.air.smoke.size() else 0.0
+	return Vector2(Sim.world.air.badness_in(c), smoke)
+
+
 func _unhandled_input(event: InputEvent) -> void:
-	if not is_local():
+	if not is_local() or is_knocked_out():
 		return
 	if station != null:
 		if event.is_action_pressed("leave_station"):
@@ -192,11 +205,14 @@ func _physics_process(delta: float) -> void:
 		velocity = Vector3.ZERO
 		return
 	var input := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
+	if is_knocked_out():
+		input = Vector2.ZERO
 	var dir := (transform.basis * Vector3(input.x, 0.0, input.y)).normalized()
 	# Wading through flood water is slow.
 	var wade := clampf(Game.instance.interior.damage.water_height_at(position.z) - position.y, 0.0, 1.2) / 1.2
-	velocity.x = dir.x * SPEED * lerpf(1.0, 0.4, wade)
-	velocity.z = dir.z * SPEED * lerpf(1.0, 0.4, wade)
+	var speed := SPEED * lerpf(1.0, 0.4, wade) * lerpf(1.0, 0.55, breathing().x) # bad air makes your legs heavy
+	velocity.x = dir.x * speed
+	velocity.z = dir.z * speed
 	if is_on_floor():
 		if Input.is_action_just_pressed("jump"):
 			velocity.y = JUMP
@@ -211,6 +227,11 @@ func _process(delta: float) -> void:
 	_apply_hull_tilt()
 	_apply_shake(delta)
 	var hud := Game.instance.hud
+	var air := breathing()
+	hud.set_air(air.x, air.y, is_knocked_out())
+	if is_knocked_out():
+		hud.set_prompt("")
+		return
 	if station != null or climbing:
 		hud.set_prompt("THIS STATION IS BROKEN — get a wrench on it" if station != null and station.broken else "")
 		return

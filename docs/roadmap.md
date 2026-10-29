@@ -36,8 +36,8 @@ Each milestone ends playable and committed. Tick items as they land.
 
 ## M3 — Survival systems
 - [x] Battery vs diesel (surface charging), engine station
-- [ ] O2 / CO2, scrubbers, knockouts and wake-up
-- [ ] Ballast/trim station, emergency blow, air banks
+- [x] O2 / CO2, scrubbers, knockouts and wake-up
+- [x] Ballast/trim station, emergency blow, air banks
 - [ ] System breakdowns + spare parts
 - [ ] Simplified TDC: stadimeter, marks, solution quality, gyro angle to tube panel
 - [ ] Nav/plot table

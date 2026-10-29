@@ -16,6 +16,8 @@ var ships: Array[ShipState] = []
 var torpedoes: Array[Torpedo] = []
 var charges: Array[DepthCharge] = []
 var hull := HullState.new()
+var air := AirState.new()
+var crew_count := 1 ## players aboard, set by the host; they breathe
 var lost := "" ## why the boat was lost, once it is
 var dud_chance := 0.05
 var rng := RandomNumberGenerator.new()
@@ -26,6 +28,7 @@ var _battery_was := 1.0
 func _init(sub_class: SubClassData, seed_value := 0) -> void:
 	sub = SubState.new(sub_class)
 	rng.seed = seed_value
+	air.canisters = sub_class.co2_canisters
 
 
 func add_ship(ship_class: ShipClassData, pos: Vector2, course: float, speed_kn: float) -> ShipState:
@@ -122,6 +125,9 @@ func step(dt: float, authoritative := true) -> void:
 		ships = ships.filter(func(s: ShipState) -> bool: return s.sink < 1.0)
 		_step_charges(dt)
 		hull.step(dt, rng)
+		if air.smoke.size() != hull.comps.size():
+			air.smoke.resize(hull.comps.size())
+		air.step(dt, sub.is_surfaced(), crew_count, hull)
 		_hull_stress(dt)
 		_power_checks()
 		sub.heaviness = hull.water_fraction()
@@ -220,6 +226,8 @@ func _check_lost() -> void:
 		lost = "Hull crushed at %d m." % roundi(sub.depth)
 	elif sub.heaviness >= 0.65:
 		lost = "Flooded. She went down with %d%% of the hull full of seawater." % roundi(sub.heaviness * 100.0)
+	elif air.is_lethal():
+		lost = "The air gave out. CO2 %.1f%%, oxygen %.1f%%: nobody was awake to bring her up." % [air.co2, air.o2]
 	if lost != "":
 		event.emit("lost", {"reason": lost})
 
@@ -250,6 +258,7 @@ func to_snapshot() -> Dictionary:
 		"torps": torpedoes.map(func(t: Torpedo) -> Dictionary: return t.to_snapshot()),
 		"dcs": charges.map(func(dc: DepthCharge) -> Array: return dc.to_snapshot()),
 		"hull": hull.to_snapshot(),
+		"air": air.to_snapshot(),
 		"lost": lost,
 	}
 
@@ -286,6 +295,7 @@ func apply_snapshot(s: Dictionary) -> void:
 		dcs.append(dc)
 	charges = dcs
 	hull.apply_snapshot(s.hull)
+	air.apply_snapshot(s.air)
 	lost = s.lost
 
 

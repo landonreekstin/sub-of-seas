@@ -13,12 +13,16 @@ var _debrief: Control
 var _objective: PanelContainer
 var _objective_title: Label
 var _objective_text: Label
+var _smoke: ColorRect
+var _vignette: ColorRect
+var _blackout: ColorRect
 
 
 func _ready() -> void:
 	_root = UiKit.overlay_root()
 	_root.theme = UiKit.theme()
 	add_child(_root)
+	_build_air_layers()
 	_overlay = UiKit.overlay_root()
 	_root.add_child(_overlay)
 
@@ -73,6 +77,48 @@ func set_objective(title: String, text: String) -> void:
 	_objective.visible = title != ""
 	_objective_title.text = title
 	_objective_text.text = text
+
+
+const VIGNETTE_SHADER := """
+shader_type canvas_item;
+uniform float amount : hint_range(0.0, 1.0) = 0.0;
+void fragment() {
+	float d = distance(UV, vec2(0.5)) * 1.6;
+	float a = smoothstep(1.0 - amount * 0.9, 1.25 - amount * 0.6, d) * (0.4 + 0.6 * amount);
+	COLOR = vec4(0.0, 0.0, 0.0, a);
+}
+"""
+
+
+## Full-screen layers for breathing bad air: grey smoke, a dark closing vignette, and the
+## black of passing out.
+func _build_air_layers() -> void:
+	_smoke = ColorRect.new()
+	_smoke.color = Color(0.45, 0.45, 0.43, 0.0)
+	_vignette = ColorRect.new()
+	var m := ShaderMaterial.new()
+	m.shader = Shader.new()
+	m.shader.code = VIGNETTE_SHADER
+	_vignette.material = m
+	_blackout = ColorRect.new()
+	_blackout.color = Color(0, 0, 0, 0.96)
+	_blackout.visible = false
+	var l := UiKit.label("You passed out...", 30, UiKit.DIM)
+	_blackout.add_child(l)
+	l.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	l.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	for c: ColorRect in [_smoke, _vignette, _blackout]:
+		c.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_root.add_child(c)
+		c.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
+
+## `bad` 0..1 (1 = about to pass out), `smoke` 0..1 where you stand.
+func set_air(bad: float, smoke: float, knocked: bool) -> void:
+	_smoke.color.a = clampf(smoke * 0.75, 0.0, 0.75)
+	(_vignette.material as ShaderMaterial).set_shader_parameter("amount", bad)
+	_vignette.visible = bad > 0.01
+	_blackout.visible = knocked
 
 
 func set_prompt(text: String) -> void:

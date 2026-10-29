@@ -77,51 +77,72 @@ func _build_steps() -> void:
 	var sub := func() -> SubState: return Sim.world.sub
 	var hull := func() -> HullState: return Sim.world.hull
 	steps = [
-		{"text": "Welcome aboard. Man the HELM: starboard side of the control room, forward. Walk up and press E.",
+		{"id": "helm", "text": "Welcome aboard. Man the HELM: starboard side of the control room, forward. Walk up and press E.",
 			"marker": _station("helm"), "done": _manned("helm")},
-		{"text": "Ring up AHEAD 2/3 on the engine telegraph: press W twice. Keep the rudder amidships.",
+		{"id": "ahead", "needs": "helm", "text": "Ring up AHEAD 2/3 on the engine telegraph: press W twice. Keep the rudder amidships.",
 			"marker": _station("helm"), "done": func() -> bool: return sub.call().telegraph >= 2},
-		{"text": "Leave the helm (Q) and man the DIVE station across the room, port side.",
+		{"id": "ballast", "text": "To dive, first flood the main ballast tanks. Leave the helm (Q) and man the BALLAST manifold: control room, port side, aft.",
+			"marker": _station("ballast"), "done": _manned("ballast")},
+		{"id": "vents", "needs": "ballast", "text": "Open the vents: press V. The lights go red as the tanks flood and she settles to decks awash.",
+			"marker": _station("ballast"), "done": func() -> bool: return sub.call().vents_open},
+		{"id": "dive", "text": "Leave the manifold (Q) and man the DIVE station, port side forward.",
 			"marker": _station("dive"), "done": _manned("dive")},
-		{"text": "Take her down to periscope depth: press 2. Watch the depth gauge.",
+		{"id": "depth", "needs": "dive", "text": "Take her down to periscope depth: press 2. Watch the depth gauge.",
 			"marker": _station("dive"),
 			"done": func() -> bool: return sub.call().depth >= sub.call().data.periscope_depth - 1.0},
-		{"text": "Climb the ladder (E) to the conning tower and man the PERISCOPE.",
+		{"id": "scope", "text": "Climb the ladder (E) to the conning tower and man the PERISCOPE.",
 			"marker": _station("periscope"), "done": _manned("periscope")},
-		{"text": "Raise the periscope: press R.",
+		{"id": "raise", "needs": "periscope", "text": "Raise the periscope: press R.",
 			"marker": _station("periscope"), "done": func() -> bool: return sub.call().periscope_raised},
-		{"text": "A freighter lies dead ahead. Put the crosshair on it (mouse, Z zooms) and take a range with the stadimeter: F.",
+		{"id": "range", "needs": "periscope", "text": "A freighter lies dead ahead. Put the crosshair on it (mouse, Z zooms) and take a range with the stadimeter: F.",
 			"marker": _station("periscope"), "done": func() -> bool: return _flags.has("ranged")},
-		{"text": "Good. Lower the scope (R): a raised scope is how lookouts spot you.",
+		{"id": "lower", "needs": "periscope", "text": "Good. Lower the scope (R): a raised scope is how lookouts spot you.",
 			"marker": _station("periscope"), "done": func() -> bool: return not sub.call().periscope_raised},
-		{"text": "Go forward to the TORPEDO ROOM (through the forward door) and man TUBE 1, top right.",
+		{"id": "tube", "text": "Go forward to the TORPEDO ROOM (through the forward door) and man TUBE 1, top right.",
 			"marker": _station("tube_1"), "done": _manned("tube_1")},
-		{"text": "Flood the tube (F), then open the outer door (O).",
+		{"id": "flood", "needs": "tube_1", "text": "Flood the tube (F), then open the outer door (O).",
 			"marker": _station("tube_1"), "done": func() -> bool:
 				var t: Dictionary = game.crew.tubes[0]
 				return t.flooded and t.door},
-		{"text": "Target dead ahead, gyro 0. FIRE: Space. Then wait for the hit.",
+		{"id": "fire", "needs": "tube_1", "text": "Target dead ahead, gyro 0. FIRE: Space. Then wait for the hit.",
 			"marker": _station("tube_1"), "done": func() -> bool: return game.crew.sunk >= 1,
 			"hint": _miss_hint},
-		{"text": "Fast screws to the north: an escort! Man the SONAR (control room, port side aft).",
+		{"id": "sonar", "text": "Fast screws to the north: an escort! Man the SONAR (control room, port side aft).",
 			"marker": _station("sonar"), "done": _manned("sonar"), "enter": _spawn_destroyer},
-		{"text": "Train the hydrophone (A/D or mouse) onto the loudest contact until it reads WARSHIP.",
+		{"id": "classify", "needs": "sonar", "text": "Train the hydrophone (A/D or mouse) onto the loudest contact until it reads WARSHIP.",
 			"marker": _station("sonar"), "done": func() -> bool: return _flags.has("classified")},
-		{"text": "He's coming for us. Go deep: DIVE station, press 3 (45 m). And slow to AHEAD 1/3 at the helm (S).",
+		{"id": "deep", "needs": "dive", "text": "He's coming for us. Go deep: DIVE station, press 3 (45 m). And slow to AHEAD 1/3 at the helm (S).",
 			"marker": _station("dive"), "done": func() -> bool:
 				return sub.call().depth >= 40.0 and sub.call().telegraph <= 1},
-		{"text": "Hold depth and keep quiet... Here he comes at 30 knots. Listen on the sonar if you like. Brace for depth charges!",
+		{"id": "run_in", "text": "Hold depth and keep quiet... Here he comes at 30 knots. Listen on the sonar if you like. Brace for depth charges!",
 			"marker": Callable(), "enter": _run_over, "done": func() -> bool: return _pattern_over},
-		{"text": "LEAK! Take a WELDING TORCH from the DAMAGE CONTROL rack (E), then hold LMB on the leak.",
+		{"id": "weld", "text": "LEAK! Take a WELDING TORCH from the DAMAGE CONTROL rack (E), then hold LMB on the leak.",
 			"marker": _first_spot.bind("leak"), "done": func() -> bool: return hull.call().leaks.is_empty()},
-		{"text": "FIRE! Swap for the EXTINGUISHER at the rack and hold LMB on the flames.",
+		{"id": "extinguish", "text": "FIRE! Swap for the EXTINGUISHER at the rack and hold LMB on the flames. Smoke fouls the air: thick enough, it knocks you out.",
 			"marker": _first_spot.bind("fire"), "done": func() -> bool: return hull.call().fires.is_empty()},
-		{"text": "Pump out the water: take the PORTABLE PUMP from the rack and set it down (LMB) in the wet compartment.",
+		{"id": "wrench", "text": "The pattern knocked out the HELM. Take a WRENCH from the rack and hold LMB on the helm until it's fixed.",
+			"marker": _station("helm"), "done": func() -> bool: return not hull.call().is_broken("helm")},
+		{"id": "pump", "text": "Pump out the water: take the PORTABLE PUMP from the rack and set it down (LMB) in the wet compartment.",
 			"marker": _rack, "done": func() -> bool: return not hull.call().pumps.is_empty()},
-		{"text": "Shut a WATERTIGHT DOOR (E on the door). Shut doors stop water and fire spreading.",
+		{"id": "door", "text": "Shut a WATERTIGHT DOOR (E on the door). Shut doors stop water, fire and smoke spreading.",
 			"marker": func() -> Vector3: return game.interior.doors["fwd"].global_position + Vector3(0, 2.3, 0),
 			"done": func() -> bool: return game.crew.doors.values().has(false)},
+		{"id": "air", "needs": "air", "text": "Down here the crew's breath fouls the air. Go aft to the AIR panel (engine room, starboard) and load a fresh CO2 canister: C.",
+			"marker": _station("air"), "done": func() -> bool: return Sim.world.air.canister_left > 0.0},
+		{"id": "up", "needs": "dive", "text": "He's lost us. Bring her up: DIVE station, press 1. The planes take her up to decks awash.",
+			"marker": _station("dive"), "done": func() -> bool: return sub.call().depth <= SubState.AWASH_DEPTH + 0.5},
+		{"id": "blow", "needs": "ballast", "text": "Now blow the tanks dry to surface: BALLAST manifold, B.",
+			"marker": _station("ballast"), "done": func() -> bool: return sub.call().is_surfaced()},
+		{"id": "diesel", "needs": "engine", "text": "Surfaced. Charge the battery: man the DIESEL CONTROLS (engine room, aft end) and start a diesel: 1. Stop them again before you ever dive.",
+			"marker": _station("engine"), "done": func() -> bool: return sub.call().diesels.any(func(d: float) -> bool: return d > 0.0)},
 	]
+
+
+func step_number(id: String) -> int:
+	for i in steps.size():
+		if steps[i].id == id:
+			return i
+	return -1
 
 
 func _first_spot(kind: String) -> Vector3:
@@ -185,6 +206,7 @@ func _ensure_damage() -> void:
 		hull.add_leak(1, 1, Sim.world.rng, 1.0)
 	if hull.fires.is_empty():
 		hull.add_fire(1, Sim.world.rng)
+	hull.broken["helm"] = HullState.WRENCH_SECONDS
 	hull.comps[1].water = maxf(hull.comps[1].water, 0.08)
 
 
@@ -209,7 +231,7 @@ func _script_tick(_i: int) -> void:
 		return
 	var d := _destroyer.pos.distance_to(Sim.world.sub.pos)
 	if not _pattern_dropped:
-		var running_in := step_index() >= 14
+		var running_in := step_index() >= step_number("run_in")
 		if running_in and d < 80.0:
 			_drop_pattern() # right overhead
 		elif d > 300.0 or running_in:
@@ -228,7 +250,7 @@ func _advance(i: int) -> void:
 	_flags.clear() # what happens from here on counts for the next step
 	game.crew.tutorial.step = i + 1
 	if i + 1 >= steps.size():
-		game.end_patrol("training", "Training complete. You ran the whole boat: helm, dive, scope, tubes, sonar and damage control.")
+		game.end_patrol("training", "Training complete. You ran the whole boat: helm, ballast, dive, scope, tubes, sonar, damage control, air and the diesels.")
 	else:
 		game.announce.rpc("✓  Step %d done." % (i + 1))
 	game.push_crew()
@@ -255,6 +277,10 @@ func _update_hud(i: int) -> void:
 	if i >= steps.size():
 		return
 	var text: String = steps[i].text
+	var needs: String = steps[i].get("needs", "")
+	if needs != "" and Sim.world.hull.is_broken(needs):
+		var st: Station = game.interior.stations[needs]
+		text += "\n\nThe %s is BROKEN. Fix it first: a WRENCH from a damage control rack, hold LMB on it." % st.display_name.to_lower()
 	var hint: Variant = steps[i].get("hint")
 	if hint is Callable:
 		var h: String = hint.call()

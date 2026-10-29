@@ -188,10 +188,8 @@ func _control_room() -> void:
 	var rack := ToolRack.new()
 	rack.position = Vector3(1.97, 1.3, -3.6)
 	add_child(rack)
-	# Valve manifold on the port side aft.
-	Build.box(self, Vector3(0.2, 1.4, 2.0), Vector3(-1.9, 1.2, -1.8), DARK)
-	for i in 4:
-		Build.wheel(self, 0.13, Vector3(-1.75, 1.0 + (i % 2) * 0.5, -2.4 + (i / 2) * 1.2), RED, Vector3.RIGHT)
+	# Ballast manifold on the port side aft.
+	_add_station(BallastStation.new().setup("ballast", "Ballast manifold"), Vector3(-1.85, 0, -1.8))
 	# Ladder up to the conning tower.
 	var ladder := Ladder.new()
 	ladder.name = "ladder_ct"
@@ -258,6 +256,7 @@ func _engine_room() -> void:
 	rack.position = Vector3(-1.97, 1.3, 1.3)
 	rack.rotation.y = PI
 	add_child(rack)
+	_add_station(AirStation.new().setup("air", "Air panel"), Vector3(1.8, 0, 1.3))
 	_add_station(EngineStation.new().setup("engine", "Diesel controls"), Vector3(0, 0, 13.75), -PI / 2.0)
 
 

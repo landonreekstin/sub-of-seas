@@ -19,6 +19,7 @@ var port := DEFAULT_PORT ## --port n (the packaged game uses 7845, forwarded ove
 var build := "dev"
 var mission := "patrol" ## "patrol" | "training"; chosen by the host (--training)
 var debug_charges := false ## --test-charges: the host drops a pattern on the boat (testing)
+var debug_air := false ## --test-air: the host starts with foul air, and a fire and thick smoke in the shut-in control room
 
 
 func _ready() -> void:
@@ -44,6 +45,8 @@ func _ready() -> void:
 				cli_start = Mode.HOST
 			"--test-charges":
 				debug_charges = true
+			"--test-air":
+				debug_air = true
 			"--spawn":
 				if i + 1 < args.size():
 					var v := args[i + 1].split_floats(",")

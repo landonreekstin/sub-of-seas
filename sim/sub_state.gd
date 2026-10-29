@@ -17,6 +17,12 @@ const HOTEL_LOAD := 0.15 ## battery draw stopped (lights, pumps, fans) relative 
 const DIESEL_START_TIME := 5.0 ## seconds of cranking before a diesel runs
 const DIESEL_SPEED := [0.0, 0.7, 1.0] ## fraction of surface speed with 0, 1, 2 diesels running
 const INDUCTION_DEPTH := 3.0 ## diesels flood if she goes deeper than this with them on
+const AWASH_DEPTH := 4.5 ## keel depth with main ballast flooded and no way down on the planes
+const BLOW_SECONDS := 20.0 ## main ballast blown dry with the normal blow
+const EMERGENCY_BLOW_SECONDS := 4.0
+const BLOW_AIR := 0.12 ## of the air banks to blow main ballast dry
+const EMERGENCY_AIR := 0.35
+const COMPRESSOR_MINUTES := 10.0 ## surfaced on diesels, empty banks to full
 
 var data: SubClassData
 var pos := Vector2.ZERO
@@ -33,6 +39,10 @@ var heaviness := 0.0 ## fraction of the hull flooded; set by the world from the 
 var battery := 1.0 ## charge 0..1
 var diesels: Array[float] = [0.0, 0.0] ## per engine: 0 stopped, 0..1 cranking, 1 running
 var charge_rate := 0.0 ## battery change per second last step, for gauges (+ charging)
+var ballast := 0.0 ## main ballast tanks: 0 blown dry (rides high) .. 1 flooded (can dive)
+var vents_open := false ## main ballast vents: open floods the tanks
+var blowing := 0 ## 0 no, 1 normal blow, 2 emergency blow
+var hp_air := 1.0 ## high-pressure air banks 0..1
 
 
 func _init(sub_class: SubClassData) -> void:
@@ -96,10 +106,17 @@ func step(dt: float) -> void:
 	pos += direction() * speed * dt
 
 	var before := depth
+	_step_ballast(dt)
 	var dive_rate := data.max_dive_rate * lerpf(0.35, 1.0, flow)
-	depth = move_toward(depth, maxf(ordered_depth, 0.0), dive_rate * dt)
-	# Flooding makes her heavy. Planes and way on hold some of it; past that she sinks.
-	var hold := 0.15 + 0.5 * flow
+	# With the tanks flooded the planes can take her anywhere below awash; while they are
+	# (partly) blown she floats up to wherever her buoyancy puts her.
+	var target := maxf(ordered_depth, AWASH_DEPTH)
+	if ballast < 0.95:
+		target = AWASH_DEPTH * ballast / 0.95
+		dive_rate = maxf(dive_rate, (1.0 - ballast) * 2.5)
+	depth = move_toward(depth, target, dive_rate * dt)
+	# Flooding makes her heavy. Planes, way on and blown tanks hold some of it; past that she sinks.
+	var hold := 0.15 + 0.5 * flow + (1.0 - ballast) * 3.0
 	depth += maxf(0.0, (heaviness - 0.05) * 6.0 - hold) * dt
 	var sink_rate := (depth - before) / dt if dt > 0.0 else 0.0
 	pitch = lerpf(pitch, clampf(-sink_rate * 9.0, -8.0, 8.0), clampf(dt * 0.8, 0.0, 1.0))
@@ -119,11 +136,46 @@ func _step_power(dt: float) -> void:
 	battery = clampf(battery + charge_rate * dt, 0.0, 1.0)
 
 
+func _step_ballast(dt: float) -> void:
+	if blowing > 0:
+		var secs := EMERGENCY_BLOW_SECONDS if blowing == 2 else BLOW_SECONDS
+		var air := (EMERGENCY_AIR if blowing == 2 else BLOW_AIR) * dt / secs
+		if hp_air <= 0.0 or ballast <= 0.0:
+			blowing = 0
+		else:
+			hp_air = maxf(0.0, hp_air - air)
+			ballast = maxf(0.0, ballast - dt / secs)
+	elif vents_open:
+		ballast = minf(1.0, ballast + dt / data.flood_seconds)
+	if is_surfaced() and diesels_running() > 0:
+		hp_air = minf(1.0, hp_air + dt / (COMPRESSOR_MINUTES * 60.0))
+
+
+## Ballast orders from the ballast station: "vent" opens the vents, "blow" / "emergency"
+## shut them and blow with high-pressure air, "stop" stops a blow.
+func ballast_order(key: String) -> void:
+	match key:
+		"vent":
+			vents_open = true
+			blowing = 0
+		"shut":
+			vents_open = false
+		"blow":
+			vents_open = false
+			blowing = 1 if hp_air > 0.0 else 0
+		"emergency":
+			vents_open = false
+			blowing = 2 if hp_air > 0.0 else 0
+		"stop":
+			blowing = 0
+
+
 func to_snapshot() -> Dictionary:
 	return {
 		"p": pos, "h": heading, "s": speed, "d": depth, "od": ordered_depth,
 		"tg": telegraph, "r": rudder, "up": periscope_raised, "pi": pitch, "tr": turn_rate, "hv": heaviness,
 		"bt": battery, "dz": diesels, "cr": charge_rate,
+		"bl": ballast, "vo": vents_open, "bw": blowing, "air": hp_air,
 	}
 
 
@@ -142,3 +194,7 @@ func apply_snapshot(s: Dictionary) -> void:
 	battery = s.bt
 	diesels.assign(s.dz)
 	charge_rate = s.cr
+	ballast = s.bl
+	vents_open = s.vo
+	blowing = s.bw
+	hp_air = s.air

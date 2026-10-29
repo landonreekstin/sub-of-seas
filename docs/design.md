@@ -162,6 +162,21 @@ whatever the dive station orders. Below test depth rivets start to pop (new smal
 Lost when past crush depth or 65 % flooded; the debrief shows time, sinkings, charges felt,
 leaks welded, fires out and repairs.
 
+**Ballast and air (M3).** Main ballast (`SubState.ballast`) is 0 dry .. 1 flooded. Dry, she
+floats; the planes can't take her under. Opening the vents floods the tanks over the class's
+`flood_seconds` and she settles to decks awash (4.5 m), then the dive station takes her down.
+Coming up, the planes stop at awash: blowing the tanks with high-pressure air surfaces her
+(diesels need that: their induction floods below 3 m). A normal blow takes 20 s and 12 % of
+the air banks; the emergency blow (X twice) takes 4 s and 35 %, and the buoyancy of dry tanks
+holds up a flooding boat that would otherwise sink. The compressors refill the banks on the
+diesels. Air (`sim/air.gd`): submerged, CO2 rises 0.08 %/min plus 0.04 per player (4 players:
+3 % in ~12 min) and O2 falls with it. A CO2 canister scrubs 0.6 %/min for 5 min (8 aboard a
+Gato); the oxygen bleed adds 0.8 %/min from a 40-minute bank. Fires make smoke in their room,
+which drifts through open doors. Past 3 % CO2 / under 17 % O2 / in smoke the screen closes in
+and you walk slower; at 6 % / 14 % or in thick smoke you pass out after 6 s, for 15 s, and
+come round in the compartment with the best air. At 8 % / 12 % the boat is lost. Surfacing
+clears everything.
+
 ## 6. Torpedoes (simplified TDC)
 
 1. Periscope: put the crosshair on the target, use the **stadimeter** (match top of mast to

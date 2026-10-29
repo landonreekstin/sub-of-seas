@@ -47,7 +47,7 @@ Godot **4.7.2**, GDScript, Jolt 3D physics. Repo: github.com/landonreekstin/sub-
 | `autoload/` | `controls.gd` (input map), `net.gd` (host/join, CLI args), `sim.gd` (ocean world, host-run, replicated) |
 | `game/` | `game.gd`: patrol root — builds boat, spawns crew, owns crew state (doors, stations, tubes) and the host-side request RPCs; `tutorial.gd`: the training patrol's checklist and script |
 | `tools/` | `publish.sh`: export the pack to the NAS drop for the launcher |
-| `sim/` | pure simulation classes: sub (incl. battery and diesels), ships, torpedoes, depth charges, `detection.gd`, `ship_ai.gd` (escort state machine), `hull.gd` (water, leaks, fires, broken stations) |
+| `sim/` | pure simulation classes: sub (incl. battery, diesels, ballast, HP air), `air.gd` (CO2/O2, smoke, scrubber), ships, torpedoes, depth charges, `detection.gd`, `ship_ai.gd` (escort state machine), `hull.gd` (water, leaks, fires, broken stations) |
 | `interior/` | sub interiors built from primitives, doors, compartments, tool racks, `damage_view.gd` (draws the hull state) |
 | `stations/` | station base class and each station |
 | `player/` | first-person crew controller, held tools (`tools.gd`) |
@@ -66,7 +66,7 @@ godot --path . -- --training      # host the training patrol (the tutorial)
 Two-player test on one machine: start one with `--host`, one with `--join 127.0.0.1`.
 Testing aids: `--name <n>`, `--spawn x,y,z` (start the local player there, e.g.
 `--spawn 0.6,0.1,-20.2` = torpedo room), `--address <ip>` (prefill the join box), `--port <n>` (default 7000), `--test-charges` (host: fixed seed, and a pattern
-goes off around the boat 3 s in and the helm is knocked out; leak/fire positions are printed). F10 leaves to the menu.
+goes off around the boat 3 s in and the helm is knocked out; leak/fire positions are printed), `--test-air` (host: foul air, and a fire in the shut-in, smoke-filled control room: whoever is in there passes out). F10 leaves to the menu.
 
 ### Playing with others (Blaney)
 Others play the **published pack**, not the source: `tools/publish.sh` exports one `.pck`
@@ -83,6 +83,8 @@ Helm: W/S telegraph, A/D rudder. Dive: W/S depth ±5 (Shift ±1), 1–4 presets.
 Periscope: mouse train, Z power, R raise/lower, F stadimeter. Tubes: L reload, F flood,
 O outer door, A/D gyro, Space fire. Sonar: A/D or mouse train, P active ping.
 Engine (after end of the engine room): 1/2 start/stop a diesel (surfaced only; stop them before diving).
+Ballast (control room, port aft): V vents (flood to dive), B blow (to surface), X twice emergency blow.
+Air (engine room, starboard fwd): C fresh CO2 canister, O oxygen bleed.
 Tools: E at a rack takes one, hold LMB on a leak/fire/broken station to work, LMB with the pump sets it
 down at your feet (E picks it up), G puts a tool down.
 

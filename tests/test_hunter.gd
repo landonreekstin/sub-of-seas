@@ -18,6 +18,7 @@ func _world(seed_value := 3) -> OceanWorld:
 	var w := OceanWorld.new(GATO, seed_value)
 	w.hull.setup(COMPS, LINKS, {"helm": 1, "dive": 1, "tube_1": 0})
 	w.sub.depth = 18.0
+	w.sub.ballast = 1.0
 	w.sub.ordered_depth = 18.0
 	return w
 
@@ -45,6 +46,7 @@ func test_detection_numbers() -> bool:
 	dd.speed = 30.0 * SubState.KNOT
 	runner.check(Detection.hearing_factor(dd) < 0.3, "a ship at 30 kn is deaf")
 	w.sub.depth = 100.0
+	w.sub.ballast = 1.0
 	dd.pos = Vector2(0, 2600)
 	runner.check(Detection.ping_chance(dd, w.sub) == 0.0, "out of sonar range")
 	dd.pos = Vector2(0, 80)
@@ -65,6 +67,7 @@ func test_raised_scope_starts_a_search() -> bool:
 func test_hunt_ends_in_depth_charges() -> bool:
 	var w := _world()
 	w.sub.depth = 60.0
+	w.sub.ballast = 1.0
 	w.sub.ordered_depth = 60.0
 	var dd := w.add_ship(DESTROYER, Vector2(0, 1600), 180.0, 14.0)
 	var kinds := {}
@@ -163,6 +166,7 @@ func test_close_blast_damages_the_right_room() -> bool:
 func test_flooded_boat_sinks_and_is_lost() -> bool:
 	var w := _world()
 	w.sub.telegraph = 1
+	w.sub.ballast = 1.0 # dived: dry tanks would float even this much water
 	w.hull.comps[0].water = 0.8
 	w.hull.comps[1].water = 0.6
 	w.hull.doors_open = {"fwd": false, "aft": false}
