@@ -3,7 +3,8 @@ extends RefCounted
 ## The whole ocean simulation, with no rendering: the sub, AI ships and torpedoes.
 ## The host steps it authoritatively; clients step it between snapshots for smoothness.
 
-## kind: "fired" | "hit" | "dud" | "sunk". Only emitted by authoritative steps.
+## kind: "fired" | "hit" | "dud" | "sunk" | "ping" | "splash" | "blast" | "leak" | "lost".
+## Only emitted by authoritative steps.
 signal event(kind: String, data: Dictionary)
 
 const SHIP_DIR := "res://data/ships/%s.tres"
@@ -12,6 +13,9 @@ var time := 0.0
 var sub: SubState
 var ships: Array[ShipState] = []
 var torpedoes: Array[Torpedo] = []
+var charges: Array[DepthCharge] = []
+var hull := HullState.new()
+var lost := "" ## why the boat was lost, once it is
 var dud_chance := 0.05
 var rng := RandomNumberGenerator.new()
 var _next_id := 1
@@ -32,7 +36,47 @@ func add_ship(ship_class: ShipClassData, pos: Vector2, course: float, speed_kn: 
 	ship.speed = speed_kn * SubState.KNOT
 	ship.ordered_speed = ship.speed
 	ships.append(ship)
+	if ship_class.asw:
+		ShipAI.new(ship)
 	return ship
+
+
+## Escort `ship` keeps station at (right, ahead) metres from `guard`.
+func set_escort(ship: ShipState, guard: ShipState, offset: Vector2) -> void:
+	ship.ai.guard = guard
+	ship.ai.guard_offset = offset
+
+
+func drop_charge(pos: Vector2, set_depth: float) -> void:
+	var dc := DepthCharge.new()
+	dc.pos = pos
+	dc.set_depth = clampf(set_depth, 10.0, 160.0)
+	charges.append(dc)
+
+
+## Our own active sonar: ranges and bearings to everything within 6 km, and every
+## escort within 8 km now knows roughly where we are.
+func own_ping() -> void:
+	var echoes := []
+	for ship in ships:
+		var d := ship.pos.distance_to(sub.pos)
+		if ship.is_sinking() or d > 6000.0:
+			continue
+		echoes.append({"b": ShipState.bearing(sub.pos, ship.pos), "r": d * rng.randf_range(0.97, 1.03)})
+		if ship.ai != null and d < 8000.0:
+			ship.ai.report(sub.pos, 300.0, rng, 0.7)
+	event.emit("own_ping", {"echoes": echoes})
+
+
+## Every ship hears about the sub: convoys scatter, escorts come hunting.
+func raise_alarm(pos: Vector2, error: float, awareness := 0.6) -> void:
+	for ship in ships:
+		if ship.is_sinking():
+			continue
+		if ship.ai != null:
+			ship.ai.report(pos, error, rng, awareness)
+		else:
+			ship.alert()
 
 
 func find_ship(id: int) -> ShipState:
@@ -53,6 +97,10 @@ func fire_torpedo(gyro: float, stern := false) -> Torpedo:
 	t.dud = rng.randf() < dud_chance
 	torpedoes.append(t)
 	event.emit("fired", {"id": t.id})
+	# Lookouts may spot the wake and trace it back.
+	for ship in ships:
+		if ship.ai != null and ship.pos.distance_to(sub.pos) < ship.data.lookout_range:
+			ship.ai.report(sub.pos, 350.0, rng, 0.5)
 	return t
 
 
@@ -60,6 +108,8 @@ func step(dt: float, authoritative := true) -> void:
 	time += dt
 	sub.step(dt)
 	for ship in ships:
+		if authoritative:
+			_think(ship, dt)
 		ship.step(dt, rng if authoritative else null)
 	for t in torpedoes:
 		t.step(dt)
@@ -68,6 +118,75 @@ func step(dt: float, authoritative := true) -> void:
 	torpedoes = torpedoes.filter(func(t: Torpedo) -> bool: return t.alive)
 	if authoritative:
 		ships = ships.filter(func(s: ShipState) -> bool: return s.sink < 1.0)
+		_step_charges(dt)
+		hull.step(dt, rng)
+		_hull_stress(dt)
+		sub.heaviness = hull.water_fraction()
+		_check_lost()
+	else:
+		for dc in charges:
+			dc.step(dt)
+
+
+func _think(ship: ShipState, dt: float) -> void:
+	if ship.is_sinking():
+		return
+	if ship.ai != null:
+		ship.ai.step(dt, self, rng)
+		return
+	# Unarmed ships: lookouts only. Seeing a periscope means a radio call.
+	var gain := Detection.awareness_gain(ship, sub)
+	ship.awareness = clampf(ship.awareness + (gain - ShipAI.DECAY) * dt, 0.0, 1.0)
+	if ship.awareness > 0.6 and not ship.alerted:
+		ship.alert()
+		raise_alarm(sub.pos, ship.pos.distance_to(sub.pos) * 0.15)
+		event.emit("spotted", {"ship": ship.id, "name": ship.data.display_name})
+
+
+func _step_charges(dt: float) -> void:
+	var left: Array[DepthCharge] = []
+	for dc in charges:
+		if not dc.step(dt):
+			left.append(dc)
+			continue
+		# Distance to the nearest point of the hull (bow to stern segment), in 3D.
+		var flat := dc.pos - sub.pos
+		var half := sub.direction() * sub.data.length * 0.5
+		var near := Geometry2D.get_closest_point_to_segment(dc.pos, sub.pos - half, sub.pos + half)
+		var dist := Vector3(dc.pos.x - near.x, dc.depth - sub.depth, dc.pos.y - near.y).length()
+		var info := {"x": dc.pos.x, "y": dc.pos.y, "d": dc.depth, "dist": dist, "dmg": []}
+		if dist < DepthCharge.SHAKE and lost == "":
+			# Where along the hull it went off: +0.5 bow .. -0.5 stern, mapped onto the interior.
+			var along := clampf(flat.dot(sub.direction()) / sub.data.length, -0.5, 0.5)
+			var side := signf(flat.dot(Vector2(sub.direction().y, -sub.direction().x)))
+			var z0: float = hull.comps[0].z0 if not hull.comps.is_empty() else 0.0
+			var z1: float = hull.comps[-1].z1 if not hull.comps.is_empty() else 0.0
+			if not hull.comps.is_empty():
+				info.dmg = hull.apply_blast(dist, lerpf(z1, z0, along + 0.5), side if side != 0.0 else 1.0, rng)
+		event.emit("blast", info)
+	charges = left
+
+
+## Below test depth the hull starts to give.
+func _hull_stress(dt: float) -> void:
+	var over := (sub.depth - sub.data.test_depth) / float(sub.data.crush_depth - sub.data.test_depth)
+	if over <= 0.0 or hull.comps.is_empty() or lost != "":
+		return
+	if rng.randf() < 0.05 * over * dt:
+		var c := rng.randi() % hull.comps.size()
+		hull.add_leak(c, 0, rng)
+		event.emit("leak", {"text": "Rivets popping in the %s!" % hull.comps[c].name})
+
+
+func _check_lost() -> void:
+	if lost != "":
+		return
+	if sub.depth >= sub.data.crush_depth:
+		lost = "Hull crushed at %d m." % roundi(sub.depth)
+	elif sub.heaviness >= 0.65:
+		lost = "Flooded. She went down with %d%% of the hull full of seawater." % roundi(sub.heaviness * 100.0)
+	if lost != "":
+		event.emit("lost", {"reason": lost})
 
 
 func _check_hits(t: Torpedo) -> void:
@@ -94,6 +213,9 @@ func to_snapshot() -> Dictionary:
 		"sub": sub.to_snapshot(),
 		"ships": ships.map(func(s: ShipState) -> Dictionary: return s.to_snapshot()),
 		"torps": torpedoes.map(func(t: Torpedo) -> Dictionary: return t.to_snapshot()),
+		"dcs": charges.map(func(dc: DepthCharge) -> Array: return dc.to_snapshot()),
+		"hull": hull.to_snapshot(),
+		"lost": lost,
 	}
 
 
@@ -120,6 +242,16 @@ func apply_snapshot(s: Dictionary) -> void:
 		t.heading = ts.h
 		torps.append(t)
 	torpedoes = torps
+	var dcs: Array[DepthCharge] = []
+	for a: Array in s.dcs:
+		var dc := DepthCharge.new()
+		dc.pos = a[0]
+		dc.depth = a[1]
+		dc.set_depth = INF # clients never detonate
+		dcs.append(dc)
+	charges = dcs
+	hull.apply_snapshot(s.hull)
+	lost = s.lost
 
 
 func _take_id() -> int:

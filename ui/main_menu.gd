@@ -50,7 +50,7 @@ func _ready() -> void:
 	if Net.last_error != "":
 		box.add_child(UiKit.label(Net.last_error, 16, UiKit.BAD))
 		Net.last_error = ""
-	box.add_child(UiKit.label("Host needs UDP port %d open on the LAN." % Net.PORT, 14, UiKit.DIM))
+	box.add_child(UiKit.label("Host needs UDP port %d open on the LAN." % Net.port, 14, UiKit.DIM))
 
 	match Net.cli_start:
 		Net.Mode.HOST:

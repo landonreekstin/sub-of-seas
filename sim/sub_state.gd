@@ -25,6 +25,7 @@ var rudder := 0 ## -3 (full left) .. 3 (full right), index into RUDDER_DEGREES
 var periscope_raised := false
 var turn_rate := 0.0 ## deg/s, for interior roll
 var pitch := 0.0 ## degrees, nose up positive, for interior tilt
+var heaviness := 0.0 ## fraction of the hull flooded; set by the world from the hull
 
 
 func _init(sub_class: SubClassData) -> void:
@@ -71,6 +72,9 @@ func step(dt: float) -> void:
 	var before := depth
 	var dive_rate := data.max_dive_rate * lerpf(0.35, 1.0, flow)
 	depth = move_toward(depth, maxf(ordered_depth, 0.0), dive_rate * dt)
+	# Flooding makes her heavy. Planes and way on hold some of it; past that she sinks.
+	var hold := 0.15 + 0.5 * flow
+	depth += maxf(0.0, (heaviness - 0.05) * 6.0 - hold) * dt
 	var sink_rate := (depth - before) / dt if dt > 0.0 else 0.0
 	pitch = lerpf(pitch, clampf(-sink_rate * 9.0, -8.0, 8.0), clampf(dt * 0.8, 0.0, 1.0))
 
@@ -78,7 +82,7 @@ func step(dt: float) -> void:
 func to_snapshot() -> Dictionary:
 	return {
 		"p": pos, "h": heading, "s": speed, "d": depth, "od": ordered_depth,
-		"tg": telegraph, "r": rudder, "up": periscope_raised, "pi": pitch, "tr": turn_rate,
+		"tg": telegraph, "r": rudder, "up": periscope_raised, "pi": pitch, "tr": turn_rate, "hv": heaviness,
 	}
 
 
@@ -93,3 +97,4 @@ func apply_snapshot(s: Dictionary) -> void:
 	periscope_raised = s.up
 	pitch = s.pi
 	turn_rate = s.tr
+	heaviness = s.hv

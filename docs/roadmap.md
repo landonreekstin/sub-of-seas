@@ -20,13 +20,14 @@ Each milestone ends playable and committed. Tick items as they land.
 - [x] Interior motion: roll/pitch with dive angle and turns
 
 ## M2 — The hunter
-- [ ] Destroyer AI: patrol → detect → hunt → depth-charge attack runs
-- [ ] Detection model (noise, periscope exposure, active sonar)
-- [ ] Sonar station (passive bearings, active ping)
-- [ ] Depth charges → damage: leaks, fires, system damage, shake
-- [ ] Tools: welding torch, portable pump, extinguisher, wrench; tool racks
-- [ ] Compartment water levels + flow through open doors; fire spread
-- [ ] Buoyancy from flooding; crush depth; sub lost → debrief
+- [x] Destroyer AI: patrol → detect → hunt → depth-charge attack runs
+- [x] Detection model (noise, periscope exposure, active sonar)
+- [x] Sonar station (passive bearings, active ping)
+- [x] Depth charges → damage: leaks, fires, system damage, shake
+- [x] Tools: welding torch, portable pump, extinguisher, wrench; tool racks
+- [x] Compartment water levels + flow through open doors; fire spread
+- [x] Buoyancy from flooding; crush depth; sub lost → debrief
+- [ ] Played by hand against the escort (balance: how lethal, how long a hunt lasts)
 
 ## M3 — Survival systems
 - [ ] Battery vs diesel (surface charging), engine station

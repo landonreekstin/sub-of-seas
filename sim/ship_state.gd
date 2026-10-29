@@ -13,6 +13,9 @@ var ordered_speed := 0.0
 var hp := 1.0
 var sink := 0.0 ## 0 afloat .. 1 gone
 var alerted := false
+var awareness := 0.0 ## 0..1, how sure it is that a sub is near (see Detection)
+var ai: ShipAI = null ## host only, for anti-submarine ships
+var mode := 0 ## ShipAI.Mode, replicated so stations can show it
 var _zig_timer := 30.0
 
 
@@ -41,6 +44,8 @@ func step(dt: float, rng: RandomNumberGenerator) -> void:
 	if is_sinking():
 		ordered_speed = 0.0
 		sink = minf(1.0, sink + dt / data.sink_time)
+	elif ai != null:
+		pass # the AI sets course and speed
 	elif rng != null:
 		_zig_timer -= dt
 		if _zig_timer <= 0.0:
@@ -65,7 +70,7 @@ func alert() -> void:
 func to_snapshot() -> Dictionary:
 	return {
 		"id": id, "k": data.key, "p": pos, "h": heading, "c": course,
-		"s": speed, "os": ordered_speed, "hp": hp, "sk": sink,
+		"s": speed, "os": ordered_speed, "hp": hp, "sk": sink, "m": mode,
 	}
 
 
@@ -77,3 +82,9 @@ func apply_snapshot(s: Dictionary) -> void:
 	ordered_speed = s.os
 	hp = s.hp
 	sink = s.sk
+	mode = s.m
+
+
+static func bearing(from: Vector2, to: Vector2) -> float:
+	var d := to - from
+	return fposmod(rad_to_deg(atan2(d.x, d.y)), 360.0)

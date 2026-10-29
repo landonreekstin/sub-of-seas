@@ -131,6 +131,37 @@ counter, and costs time and air.
 depth. Damage falls off with 3D distance; close = several leaks + fires, far = shake and
 lights flicker. Sonar hears the splash a few seconds before.
 
+**How it is built (M2).** Each ship has an *awareness* 0..1 (`sim/detection.gd`): lookouts
+add to it by range, scope height and scope speed (a surfaced boat is six times as visible);
+hydrophones add by the sub's noise (quadratic in speed; shallow and fast cavitates) unless the
+ship itself is going faster than ~14 kn. Awareness decays slowly. Merchants that spot the
+scope radio it: every escort gets a rough position and the convoy zig-zags at full speed.
+Escorts run a small state machine (`sim/ship_ai.gd`): **patrol** (keep station on the convoy)
+→ **search** (head for the rough position at 14 kn, pinging) → **hunt** (echo contact: close
+in, refine) → **attack** (sprint the last 500 m over the predicted position; the sonar is
+blind this close) → **open** (roll the pattern, run out 35 s, turn and hunt again). Contacts
+age; 90 s without a fix drops a hunt back to search. Course and speed of the sub are
+estimated from fixes 20 s or more apart, so turning away during the run is what makes them
+miss. Firing torpedoes inside lookout range gives a rough fix from the wake; our own active
+ping tells every escort within 8 km where we are.
+
+**Sonar station.** The ring shows every contact the hydrophones hear at its true bearing
+(our own speed drowns them out). Training the hydrophone onto a contact classifies its screws
+(merchant/warship, rough knots). `P` pings: range to everything within 6 km, but it gives the
+boat away. Only the operator sees enemy echo-ranging and the splashes of a pattern going in —
+call it out. Everyone hears an echo-ranging ping that finds the hull.
+
+**Damage control (M2).** The hull state (`sim/hull.gd`) holds water per compartment, leaks
+(rate, weld time), fires (grow, spread inside a room and through open doors, break stations
+in that room, drown under 0.45 m of water), placed pumps and broken stations. Racks in each
+compartment hold a welding torch, extinguisher, wrench and portable pump (two pumps aboard).
+Hold LMB with the right tool on a leak, fire or broken station; LMB with a pump sets it
+down on the deck, E picks it up again; G puts any tool down. Water in a room slows walking.
+Total flooding makes the boat heavy: way on and planes hold a little, then she sinks
+whatever the dive station orders. Below test depth rivets start to pop (new small leaks).
+Lost when past crush depth or 65 % flooded; the debrief shows time, sinkings, charges felt,
+leaks welded, fires out and repairs.
+
 ## 6. Torpedoes (simplified TDC)
 
 1. Periscope: put the crosshair on the target, use the **stadimeter** (match top of mast to

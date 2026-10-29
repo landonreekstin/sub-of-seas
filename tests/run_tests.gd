@@ -4,6 +4,7 @@ extends SceneTree
 
 const TEST_FILES: Array[String] = [
 	"res://tests/test_sim.gd",
+	"res://tests/test_hunter.gd",
 ]
 
 var passed := 0

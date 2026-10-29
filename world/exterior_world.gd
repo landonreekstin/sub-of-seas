@@ -146,6 +146,19 @@ func _sync_torpedoes() -> void:
 
 
 ## Water column and flash where a torpedo hit.
+## A depth charge going off: a dome of white water, no flame.
+func water_column(p: Vector2, depth: float) -> void:
+	var fx := Node3D.new()
+	fx.position = to_3d(p)
+	add_child(fx)
+	var h := clampf(40.0 - depth * 0.2, 12.0, 35.0)
+	var dome := Build.sphere(fx, 6.0, Vector3.ZERO, Color(0.92, 0.95, 0.97, 0.9))
+	var tw := fx.create_tween()
+	tw.tween_property(dome, "scale", Vector3(2.2, h / 6.0, 2.2), 1.0).set_ease(Tween.EASE_OUT)
+	tw.tween_property(dome, "scale", Vector3(3.5, 0.05, 3.5), 3.0).set_ease(Tween.EASE_IN)
+	tw.tween_callback(fx.queue_free)
+
+
 func explosion(p: Vector2) -> void:
 	var fx := Node3D.new()
 	fx.position = to_3d(p)

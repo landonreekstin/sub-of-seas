@@ -14,12 +14,19 @@ model details (flooding, list, magazine hits) come into it.
 | Fleet carrier (*Shōkaku*) | 32,000 | 34 kn | none; aircraft | 7 | via escorts, aircraft (M7) |
 | Battleship (*Kongō*) | 32,000 | 30 kn | none vs submerged | 8 | surface guns only |
 | Heavy cruiser (*Takao*) | 15,000 | 35 kn | a few DCs, floatplanes | 4 | low |
-| Destroyer (*Kagerō*) | 2,500 | 35 kn | hydrophones + active sonar, ~16–36 DCs, 2 throwers + racks | 1.5 | very high |
+| Destroyer (*Kagerō*) | 2,500 | 35 kn | hydrophones + active sonar, ~16–36 DCs, 2 throwers + racks | 1.0 | very high |
 | Escort (*Kaibōkan*, Type C/D) | 750–940 | 16.5–17.5 kn | type 93 sonar, 120 DCs, 12 throwers | 1.2 | high |
 | Sub-chaser (Type 13) / motor torpedo boat | 440 / 20–80 | 16–35 kn | light DCs | 0.5 | medium, great spotter |
 
-Depth-charge (Type 95): ~100 kg charge, sinks ~2–3 m/s, settable to 30–150 m. Game: lethal
-radius ~8 m, heavy damage ~20 m, shake ~60 m, falloff with distance.
+Depth-charge (Type 95): ~100 kg charge, sinks ~2–3 m/s, settable to 30–150 m. Game: sinks
+2.6 m/s; distance is measured to the nearest point of the hull: < 8 m three big leaks, likely
+fire and a knocked-out station; < 20 m one or two leaks; < 40 m maybe a small leak; < 90 m
+shake and flickering lights.
+
+A destroyer is a thin-skinned ship: one Mk 14 usually broke one's back, so game HP is 1.0.
+Kagerō game values: lookouts 4.5 km, hydrophones 3 km (deaf above ~20 kn), sonar 2.2 km
+(blind under 120 m — the sub slips under the beam on the final run), 36 charges in patterns
+of 6, set depth ±15 m of the true depth.
 
 ## US submarines (player)
 

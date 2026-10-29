@@ -2,7 +2,7 @@ extends Node
 ## LAN session over ENet: the host is a listen server (and a player), others join by IP.
 ## Command line (after `--`): --host | --join <ip> | --name <name>
 
-const PORT := 7000
+const DEFAULT_PORT := 7000
 const MAX_PLAYERS := 8
 
 enum Mode { NONE, HOST, CLIENT }
@@ -13,6 +13,8 @@ var player_name := "Sailor"
 var last_error := "" ## shown by the main menu after a session ends badly
 var cli_start := Mode.NONE ## set from the command line, consumed by the main menu once
 var debug_spawn: Variant = null ## --spawn x,y,z: start this player there (testing)
+var port := DEFAULT_PORT ## --port n (testing two sessions on one machine)
+var debug_charges := false ## --test-charges: the host drops a pattern on the boat (testing)
 
 
 func _ready() -> void:
@@ -25,6 +27,11 @@ func _ready() -> void:
 				cli_start = Mode.CLIENT
 				if i + 1 < args.size():
 					address = args[i + 1]
+			"--port":
+				if i + 1 < args.size():
+					port = args[i + 1].to_int()
+			"--test-charges":
+				debug_charges = true
 			"--spawn":
 				if i + 1 < args.size():
 					var v := args[i + 1].split_floats(",")
@@ -38,9 +45,9 @@ func start() -> Error:
 	var peer := ENetMultiplayerPeer.new()
 	var err: Error
 	if mode == Mode.HOST:
-		err = peer.create_server(PORT, MAX_PLAYERS - 1)
+		err = peer.create_server(port, MAX_PLAYERS - 1)
 	else:
-		err = peer.create_client(address, PORT)
+		err = peer.create_client(address, port)
 	if err == OK:
 		multiplayer.multiplayer_peer = peer
 	return err

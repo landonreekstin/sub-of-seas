@@ -9,6 +9,7 @@ var _message: Label
 var _status: Label
 var _overlay: Control
 var _message_tween: Tween
+var _debrief: Control
 
 
 func _ready() -> void:
@@ -72,3 +73,47 @@ func show_overlay(c: Control) -> void:
 	if c != null:
 		_overlay.add_child(c)
 	_crosshair.visible = c == null
+
+
+func has_debrief() -> bool:
+	return _debrief != null
+
+
+## End-of-patrol screen for everyone aboard.
+func show_debrief(crew: Dictionary) -> void:
+	_debrief = UiKit.overlay_root()
+	_root.add_child(_debrief)
+	var dim := ColorRect.new()
+	dim.color = Color(0, 0, 0, 0.55)
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_debrief.add_child(dim)
+	var p := UiKit.panel()
+	_debrief.add_child(p)
+	p.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	p.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	p.grow_vertical = Control.GROW_DIRECTION_BOTH
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 8)
+	p.add_child(box)
+	var lost: bool = crew.result == "lost"
+	box.add_child(UiKit.label("BOAT LOST" if lost else "PATROL COMPLETE", 34, UiKit.BAD if lost else UiKit.GOOD))
+	box.add_child(UiKit.label(crew.result_text, 20))
+	box.add_child(UiKit.label(" ", 8))
+	var st: Dictionary = crew.stats
+	var minutes := int(crew.time) / 60
+	for line in [
+		"Time on patrol        %d:%02d" % [minutes, int(crew.time) % 60],
+		"Ships sunk            %d" % crew.sunk,
+		"Tonnage               %d t" % crew.tonnage,
+		"Depth charges felt    %d" % st.charges,
+		"Leaks welded          %d" % st.leaks,
+		"Fires put out         %d" % st.fires,
+		"Repairs               %d" % st.repairs,
+		"Crew                  %s" % ", ".join(crew.names.values()),
+	]:
+		box.add_child(UiKit.label(line, 18))
+	box.add_child(UiKit.label(" ", 8))
+	box.add_child(UiKit.label("[F10] back to the menu", 16, UiKit.DIM))
+	_crosshair.visible = false
+	_prompt.visible = false
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
