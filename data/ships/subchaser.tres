@@ -1,0 +1,35 @@
+[gd_resource type="Resource" script_class="ShipClassData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/ship_class_data.gd" id="1_s"]
+
+[resource]
+script = ExtResource("1_s")
+key = "subchaser"
+display_name = "Sub-chaser"
+kind = "subchaser"
+length = 51.0
+beam = 6.0
+max_speed_kn = 16.0
+cruise_speed_kn = 12.0
+max_turn_rate = 6.0
+hp = 0.5
+tonnage = 440
+zigzag_angle = 30.0
+sink_time = 25.0
+role = "chaser"
+asw = true
+lookout_range = 6000.0
+hydrophone_range = 2000.0
+sonar_range = 1500.0
+ping_interval = 5.0
+depth_charges = 36
+dc_pattern = 4
+depth_error = 20.0
+hunt_speed_kn = 16.0
+search_speed_kn = 16.0
+charge_power = 0.6
+persistence = 0.8
+gun_range = 3000.0
+gun_interval = 4.0
+gun_accuracy = 0.3
+gun_blast = 18.0

@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="ShipClassData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/ship_class_data.gd" id="1_s"]
+
+[resource]
+script = ExtResource("1_s")
+key = "tanker"
+display_name = "Tanker (Maru)"
+kind = "tanker"
+length = 150.0
+beam = 20.0
+max_speed_kn = 14.0
+cruise_speed_kn = 10.0
+max_turn_rate = 1.0
+hp = 2.5
+tonnage = 10000
+zigzag_angle = 15.0
+sink_time = 120.0
+role = "merchant"
+burns = true
+lookout_range = 3500.0

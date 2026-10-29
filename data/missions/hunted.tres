@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="MissionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/mission_data.gd" id="1_m"]
+
+[resource]
+script = ExtResource("1_m")
+key = "hunted"
+title = "Hunter-Killer"
+briefing = "We were spotted at dawn. A hunter-killer group (two sub-chasers and a kaibokan) is sweeping this area for us. Stay alive for 15 minutes until they give up, and sink one of them if you get the chance."
+difficulty = 3
+start_heading = 180.0
+start_depth = 45.0
+battery = 0.7
+groups = Array[Dictionary]([{"type": "hunter_killer", "ships": ["subchaser", "kaibokan", "subchaser"], "pos": Vector2(0, 2500), "course": 180.0, "radius": 3500.0}])
+objectives = Array[Dictionary]([{"kind": "survive", "value": 900, "text": "Survive 15 minutes"}, {"kind": "sink_role", "role": "chaser", "count": 1, "text": "Sink a sub-chaser (bonus)", "bonus": true}])

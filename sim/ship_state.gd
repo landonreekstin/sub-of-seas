@@ -17,6 +17,9 @@ var awareness := 0.0 ## 0..1, how sure it is that a sub is near (see Detection)
 var ai: ShipAI = null ## host only, for anti-submarine ships
 var mode := 0 ## ShipAI.Mode, replicated so stations can show it
 var passive := false ## scripted (training): no lookouts, no zig-zag, holds course and speed
+var gun_timer := 0.0 ## host: seconds to its next salvo at a surfaced sub
+var leader: ShipState = null ## host: in formation, keeps station on this ship until alerted
+var station_offset := Vector2.ZERO ## (right, ahead) of the leader, metres
 var _zig_timer := 30.0
 
 
@@ -47,6 +50,8 @@ func step(dt: float, rng: RandomNumberGenerator) -> void:
 		sink = minf(1.0, sink + dt / data.sink_time)
 	elif ai != null or passive:
 		pass # the AI (or a script) sets course and speed
+	elif rng != null and leader != null and not alerted and not leader.is_sinking():
+		_keep_station()
 	elif rng != null:
 		_zig_timer -= dt
 		if _zig_timer <= 0.0:
@@ -58,6 +63,20 @@ func step(dt: float, rng: RandomNumberGenerator) -> void:
 	var max_turn := data.max_turn_rate * dt
 	heading = fposmod(heading + clampf(turn, -max_turn, max_turn), 360.0)
 	pos += direction() * speed * dt
+
+
+## Formation: steer for our spot relative to the leader, speeding up or easing off to hold it.
+func _keep_station() -> void:
+	var fwd := leader.direction()
+	var right := Vector2(fwd.y, -fwd.x)
+	var spot := leader.pos + right * station_offset.x + fwd * station_offset.y
+	var to := spot - pos
+	var ahead_of_spot := -to.dot(fwd)
+	if to.length() > 120.0:
+		course = bearing(pos, spot + fwd * 400.0)
+	else:
+		course = leader.heading
+	ordered_speed = clampf(leader.speed - ahead_of_spot * 0.004, 0.0, data.max_speed_kn * SubState.KNOT)
 
 
 func alert() -> void:

@@ -11,6 +11,7 @@ const SHAKE := 90.0
 var pos := Vector2.ZERO
 var depth := 0.0
 var set_depth := 30.0
+var power := 1.0 ## charge size: blast distances scale with it (sub-chasers carry small ones)
 
 
 func step(dt: float) -> bool:

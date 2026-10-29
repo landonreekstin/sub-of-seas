@@ -116,6 +116,9 @@ func _sync_ships() -> void:
 			node = ShipModels.build(ship.data)
 			add_child(node)
 			_ships[ship.id] = node
+		var hit := ship.hp < ship.data.hp
+		if hit and not node.has_node("Burning") and (ship.data.burns or ship.is_sinking()):
+			_set_burning(node, ship.data)
 		var bob := sin(Sim.world.time * 0.7 + ship.id) * 0.3
 		node.position = to_3d(ship.pos, bob - ship.sink * 30.0)
 		node.rotation = Vector3(ship.sink * 0.35, -deg_to_rad(ship.heading), ship.sink * 0.5 + sin(Sim.world.time * 0.5 + ship.id) * 0.02)
@@ -143,6 +146,21 @@ func _sync_torpedoes() -> void:
 		if not seen.has(id):
 			_torps[id].queue_free()
 			_torps.erase(id)
+
+
+## Fire and a column of black smoke on a hit tanker, or any ship going down: on the horizon
+## that's the first thing you see.
+func _set_burning(node: Node3D, data: ShipClassData) -> void:
+	var fx := Node3D.new()
+	fx.name = "Burning"
+	node.add_child(fx)
+	var big := data.burns
+	var fire := Build.particles(fx, Color("#FF8A2A"), 40, 1.2, Vector3.UP, 8.0, 25.0, Vector3(0, 2, 0), 6.0 if big else 3.5)
+	fire.position = Vector3(0, 6, data.length * 0.1)
+	fire.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
+	fire.emission_box_extents = Vector3(data.beam * 0.35, 1.0, data.length * (0.3 if big else 0.1))
+	var smoke := Build.particles(fx, Color(0.12, 0.12, 0.12, 0.8), 60, 9.0, Vector3.UP, 9.0, 12.0, Vector3(1.5, 1.0, 0), 14.0 if big else 9.0)
+	smoke.position = Vector3(0, 12, data.length * 0.1)
 
 
 ## Water column and flash where a torpedo hit.

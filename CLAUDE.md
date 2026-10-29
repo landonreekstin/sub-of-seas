@@ -46,14 +46,14 @@ Godot **4.7.2**, GDScript, Jolt 3D physics. Repo: github.com/landonreekstin/sub-
 |---|---|
 | `autoload/` | `controls.gd` (input map), `net.gd` (host/join, CLI args), `sim.gd` (ocean world, host-run, replicated) |
 | `game/` | `game.gd`: patrol root — builds boat, spawns crew, owns crew state (doors, stations, tubes) and the host-side request RPCs; `tutorial.gd`: the training patrol's checklist and script |
-| `tools/` | `publish.sh`: export the pack to the NAS drop for the launcher |
-| `sim/` | pure simulation classes: sub (incl. battery, diesels, ballast, HP air), `air.gd` (CO2/O2, smoke, scrubber), `tdc.gd` (marks → track → gyro), ships, torpedoes, depth charges, `detection.gd`, `ship_ai.gd` (escort state machine), `hull.gd` (water, leaks, fires, broken stations) |
+| `tools/` | `publish.sh`: export the pack to the NAS drop for the launcher; `ship_gallery.gd`: one ship model close up, for screenshots |
+| `sim/` | pure simulation classes: sub (incl. battery, diesels, ballast, HP air), `air.gd` (CO2/O2, smoke, scrubber), `tdc.gd` (marks → track → gyro), `formations.gd` (convoy, task force, hunter-killer), ships (gunfire on a surfaced boat), torpedoes, depth charges, `detection.gd`, `ship_ai.gd` (escort state machine), `hull.gd` (water, leaks, fires, broken stations) |
 | `interior/` | sub interiors built from primitives, doors, compartments, tool racks, `damage_view.gd` (draws the hull state) |
 | `stations/` | station base class and each station |
 | `player/` | first-person crew controller, held tools (`tools.gd`) |
 | `world/` | exterior ocean scene, ocean shader, ship models |
 | `ui/` | main menu, HUD, station overlays, `chart_view.gd` (the plot) |
-| `data/` | `.tres` balance data and their `Resource` scripts |
+| `data/` | `.tres` balance data and their `Resource` scripts: `subs/`, `ships/` (8 classes), `missions/` (patrols: groups + objectives; `MissionData.KEYS` is the menu order) |
 | `tests/` | headless test runner + `test_*.gd` |
 
 ### Run
@@ -62,11 +62,12 @@ godot --path .                      # main menu
 godot --path . -- --host            # host straight away
 godot --path . -- --join 127.0.0.1  # join straight away
 godot --path . -- --training      # host the training patrol (the tutorial)
+godot --path . -- --mission <key>   # host a patrol: convoy, tankers, hunted, carrier, task_force
 ```
 Two-player test on one machine: start one with `--host`, one with `--join 127.0.0.1`.
 Testing aids: `--name <n>`, `--spawn x,y,z` (start the local player there, e.g.
 `--spawn 0.6,0.1,-20.2` = torpedo room), `--address <ip>` (prefill the join box), `--look <deg>` (spawn turned that far right), `--station <id>` (man that station on arrival: `helm`, `dive`, `ballast`, `periscope`, `tdc`, `sonar`, `tube_1`.., `engine`, `air`), `--port <n>` (default 7000), `--test-charges` (host: fixed seed, and a pattern
-goes off around the boat 3 s in and the helm is knocked out; leak/fire positions are printed), `--test-air` (host: foul air, and a fire in the shut-in, smoke-filled control room: whoever is in there passes out). F10 leaves to the menu.
+goes off around the boat 3 s in and the helm is knocked out; leak/fire positions are printed), `--test-win` (host: every ship sinks 4 s in, so objectives tick and the debrief shows), `--test-air` (host: foul air, and a fire in the shut-in, smoke-filled control room: whoever is in there passes out). F10 leaves to the menu.
 
 ### Playing with others (Blaney)
 Others play the **published pack**, not the source: `tools/publish.sh` exports one `.pck`

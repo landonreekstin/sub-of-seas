@@ -184,6 +184,21 @@ jams the tube). Gear caught in a close blast or flooded diesels are WRECKED: som
 spare parts box from stores (engine room; 6 on a Gato), holds LMB to fit it (3 s), then the
 wrench finishes the job. A box put back in stores goes back on the count.
 
+**Fleet and missions (M4).** Eight classes in `data/ships/` (numbers in `docs/ships.md`),
+each with a `role`: merchant (freighter, tanker; tankers burn and take 2.5 hits), capital
+(carrier, battleship, cruiser: fast, zig-zag hard, guns), escort (destroyer, kaibokan: slow
+but a 3 km sonar, 120 charges and 2.5× the patience), chaser (sub-chaser: fast, sharp-eyed,
+small charges at 0.6 power). The sonar classes screws by role. Anything with guns that knows
+about a surfaced boat shells her: salvoes every few seconds, accuracy falling with range, a
+hit does what a depth charge `gun_blast` metres away would (a battleship's is 4 m). Merchants
+and capital ships in a formation keep station on their leader and zig-zag with it until
+alerted, then scatter; escorts keep their screen spots; a hunter-killer group sweeps a box
+side by side, pinging. A patrol (`data/missions/*.tres`) places groups and sets objectives
+(sink tonnage / a class / a role, survive N minutes; some are bonus). It completes when the
+main objectives are done and no escort has hunted nearby for a minute (or at once when it
+was a survive patrol), and ends early if the targets got away (sunk or out of 25 km reach).
+The debrief lists objectives, ships by class and the crew's stats.
+
 ## 6. Torpedoes (simplified TDC)
 
 1. Periscope: put the crosshair on the target, use the **stadimeter** (match top of mast to

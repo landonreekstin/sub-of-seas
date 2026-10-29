@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="MissionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/mission_data.gd" id="1_m"]
+
+[resource]
+script = ExtResource("1_m")
+key = "task_force"
+title = "Battle Line"
+briefing = "A Kongo-class battleship and a Takao-class heavy cruiser with three destroyers, at 18 knots. Do not surface anywhere near them: their guns outrange anything we have. Sink a capital ship."
+difficulty = 5
+start_heading = 0.0
+start_depth = -1.0
+groups = Array[Dictionary]([{"type": "task_force", "ships": ["battleship", "cruiser"], "escorts": ["destroyer", "destroyer", "destroyer"], "pos": Vector2(6000, 7000), "course": 230.0, "speed": 18.0}])
+objectives = Array[Dictionary]([{"kind": "sink_role", "role": "capital", "count": 1, "text": "Sink the battleship or the cruiser"}])

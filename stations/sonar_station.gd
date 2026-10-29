@@ -50,6 +50,11 @@ static func loudness(ship: ShipState, sub: SubState) -> float:
 static func classify(ship: ShipState) -> String:
 	var kn := ship.speed / SubState.KNOT
 	var turns := "turns for about %d knots" % (roundi(kn / 2.0) * 2)
+	match ship.data.role:
+		"capital":
+			return "big heavy screws, four shafts — CAPITAL SHIP, %s" % turns
+		"chaser":
+			return "high, light screws — SMALL WARSHIP, %s" % turns
 	if ship.data.asw:
 		return "fast light screws — WARSHIP, %s" % turns
 	return "slow heavy screws — merchant, %s" % turns

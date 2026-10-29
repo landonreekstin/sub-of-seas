@@ -43,9 +43,9 @@ Each milestone ends playable and committed. Tick items as they land.
 - [x] Nav/plot table
 
 ## M4 — Fleet and missions
-- [ ] All ship classes with distinct behaviour (carrier, battleship, cruiser, kaibokan, sub-chaser, tanker)
-- [ ] Formations: convoy, task force, hunter-killer group
-- [ ] Mission data + mission select; objectives; tonnage scoring; debrief screen
+- [x] All ship classes with distinct behaviour (carrier, battleship, cruiser, kaibokan, sub-chaser, tanker)
+- [x] Formations: convoy, task force, hunter-killer group
+- [x] Mission data + mission select; objectives; tonnage scoring; debrief screen
 
 ## M5 — Three subs
 - [ ] S-boat interior + control-room cluster

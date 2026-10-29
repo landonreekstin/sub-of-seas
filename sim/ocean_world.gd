@@ -58,10 +58,11 @@ func set_escort(ship: ShipState, guard: ShipState, offset: Vector2) -> void:
 	ship.ai.guard_offset = offset
 
 
-func drop_charge(pos: Vector2, set_depth: float) -> void:
+func drop_charge(pos: Vector2, set_depth: float, power := 1.0) -> void:
 	var dc := DepthCharge.new()
 	dc.pos = pos
 	dc.set_depth = clampf(set_depth, 10.0, 160.0)
+	dc.power = power
 	charges.append(dc)
 
 
@@ -139,6 +140,7 @@ func step(dt: float, authoritative := true) -> void:
 		_hull_stress(dt)
 		_power_checks()
 		_wear(dt)
+		_gunnery(dt)
 		sub.heaviness = hull.water_fraction()
 		_check_lost()
 	else:
@@ -171,7 +173,8 @@ func _step_charges(dt: float) -> void:
 		var flat := dc.pos - sub.pos
 		var half := sub.direction() * sub.data.length * 0.5
 		var near := Geometry2D.get_closest_point_to_segment(dc.pos, sub.pos - half, sub.pos + half)
-		var dist := Vector3(dc.pos.x - near.x, dc.depth - sub.depth, dc.pos.y - near.y).length()
+		# A small charge does at 10 m what a big one does at 10 / power.
+		var dist := Vector3(dc.pos.x - near.x, dc.depth - sub.depth, dc.pos.y - near.y).length() / dc.power
 		var info := {"x": dc.pos.x, "y": dc.pos.y, "d": dc.depth, "dist": dist, "dmg": []}
 		if dist < DepthCharge.SHAKE and lost == "":
 			# Where along the hull it went off: +0.5 bow .. -0.5 stern, mapped onto the interior.
@@ -215,6 +218,35 @@ func _power_checks() -> void:
 	if _battery_was > 0.0 and sub.battery <= 0.0:
 		event.emit("power", {"text": "Battery flat! The motors have stopped. Surface (dive station, 1) and start the diesels."})
 	_battery_was = sub.battery
+
+
+## Surfaced near anything with guns that knows she's there, she gets shelled. A hit does
+## what a depth charge `gun_blast` metres away would.
+func _gunnery(dt: float) -> void:
+	if not sub.is_surfaced() or lost != "" or hull.comps.is_empty():
+		return
+	for ship in ships:
+		if ship.data.gun_range <= 0.0 or ship.is_sinking() or ship.passive:
+			continue
+		var knows := ship.alerted or ship.awareness > 0.6 or (ship.ai != null and ship.ai.mode >= ShipAI.Mode.SEARCH)
+		var d := ship.pos.distance_to(sub.pos)
+		if not knows or d > ship.data.gun_range:
+			continue
+		ship.gun_timer -= dt
+		if ship.gun_timer > 0.0:
+			continue
+		ship.gun_timer = ship.data.gun_interval * rng.randf_range(0.8, 1.2)
+		if ship.ai != null:
+			ship.ai.report(sub.pos, 100.0, rng, 1.0)
+		var p_hit := ship.data.gun_accuracy * lerpf(1.0, 0.1, d / ship.data.gun_range)
+		if rng.randf() < p_hit:
+			var z := rng.randf_range(hull.comps[0].z0, hull.comps[-1].z1)
+			var side := -1.0 if rng.randf() < 0.5 else 1.0
+			var dmg := hull.apply_blast(ship.data.gun_blast, z, side, rng)
+			event.emit("blast", {"x": sub.pos.x, "y": sub.pos.y, "d": 0.0, "dist": ship.data.gun_blast, "dmg": dmg, "shell": true, "ship": ship.id})
+		else:
+			var miss := sub.pos + Vector2.from_angle(rng.randf() * TAU) * rng.randf_range(40.0, 250.0)
+			event.emit("shell", {"x": miss.x, "y": miss.y, "ship": ship.id})
 
 
 ## Gear driven hard wears out: chance per second of a breakdown (wrench work, no parts).
@@ -274,6 +306,8 @@ func _check_hits(t: Torpedo) -> void:
 		event.emit("hit", info)
 		if ship.is_sinking():
 			info["tons"] = ship.data.tonnage
+			info["class"] = ship.data.key
+			info["role"] = ship.data.role
 			event.emit("sunk", info)
 		return
 

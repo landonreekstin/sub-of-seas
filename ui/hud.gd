@@ -45,6 +45,10 @@ func _ready() -> void:
 	_message.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
 	_message.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_message.offset_top = 70
+	_message.offset_left = -430
+	_message.offset_right = 430
+	_message.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_message.add_theme_constant_override("outline_size", 8)
 	_message.add_theme_color_override("font_outline_color", Color.BLACK)
 
@@ -169,17 +173,31 @@ func show_debrief(crew: Dictionary) -> void:
 	box.add_theme_constant_override("separation", 8)
 	p.add_child(box)
 	var lost: bool = crew.result == "lost"
-	var title := "BOAT LOST" if lost else ("TRAINING COMPLETE" if crew.result == "training" else "PATROL COMPLETE")
-	box.add_child(UiKit.label(title, 34, UiKit.BAD if lost else UiKit.GOOD))
+	var titles := {"lost": "BOAT LOST", "training": "TRAINING COMPLETE", "escaped": "PATROL OVER", "complete": "PATROL COMPLETE"}
+	var m := MissionData.load_key(crew.mission)
+	box.add_child(UiKit.label(titles.get(crew.result, "PATROL OVER"), 34, UiKit.BAD if lost else (UiKit.WARN if crew.result == "escaped" else UiKit.GOOD)))
+	if m != null:
+		box.add_child(UiKit.label(m.title, 18, UiKit.BRASS))
 	box.add_child(UiKit.label(crew.result_text, 20))
 	box.add_child(UiKit.label(" ", 8))
+	var done := 0
+	for o: Dictionary in crew.get("objectives", []):
+		done += int(o.get("done", false))
+		box.add_child(UiKit.label("%s  %s" % ["✓" if o.get("done", false) else "✗", o.text], 18, UiKit.GOOD if o.get("done", false) else UiKit.DIM))
+	if not crew.get("objectives", []).is_empty():
+		box.add_child(UiKit.label(" ", 8))
 	var st: Dictionary = crew.stats
 	var minutes := int(crew.time) / 60
+	var sunk_list: Array[String] = []
+	for k: String in crew.get("sunk_by", {}):
+		var d: ShipClassData = load("res://data/ships/%s.tres" % k)
+		sunk_list.append("%d × %s" % [crew.sunk_by[k], d.display_name])
 	for line in [
 		"Time on patrol        %d:%02d" % [minutes, int(crew.time) % 60],
-		"Ships sunk            %d" % crew.sunk,
+		"Ships sunk            %d%s" % [crew.sunk, ("  (" + ", ".join(sunk_list) + ")") if not sunk_list.is_empty() else ""],
 		"Tonnage               %d t" % crew.tonnage,
 		"Depth charges felt    %d" % st.charges,
+		"Shell hits taken      %d" % st.get("shells", 0),
 		"Leaks welded          %d" % st.leaks,
 		"Fires put out         %d" % st.fires,
 		"Repairs               %d" % st.repairs,
