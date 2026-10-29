@@ -22,3 +22,4 @@ extends Resource
 @export var charge_minutes := 8.0 ## minutes to charge flat to full on both diesels, stopped
 @export var flood_seconds := 30.0 ## main ballast vents open to decks awash
 @export var co2_canisters := 8 ## CO2 absorbent canisters aboard
+@export var spare_parts := 6 ## spare-parts boxes in stores

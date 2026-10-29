@@ -24,6 +24,7 @@ and update "Current style" in the same commit.
 - **Air you can see:** smoke is a grey haze hanging under the deckhead that thickens downward;
   bad air closes the screen in with a dark vignette, passing out is a black screen. The
   ballast board's "Christmas tree" lights are red for flooded tanks or open vents, green dry.
+  Broken gear sparks under a red BROKEN sign; gear that needs spare parts reads WRECKED.
 - **UI:** typewriter / stencil feel, cream on dark panels, minimal HUD (crosshair, carried
   tool, interaction prompt).
 

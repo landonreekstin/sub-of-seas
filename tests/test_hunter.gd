@@ -194,3 +194,30 @@ func test_snapshot_carries_hunter_state() -> bool:
 	runner.check(c.charges.size() == 1, "charge replicated")
 	runner.check(c.hull.leaks.size() == 1 and c.hull.is_broken("helm"), "hull replicated")
 	return true
+
+
+func test_wrecked_gear_needs_parts_before_the_wrench() -> bool:
+	var h := HullState.new().setup([{"name": "a", "z0": 0.0, "z1": 10.0}], {}, {"helm": 0})
+	h.break_station("helm", true)
+	runner.check(not h.work("wrench", "helm", 10.0) and h.is_broken("helm"), "wrench does nothing to wrecked gear")
+	runner.check(h.work("parts", "helm", HullState.PARTS_SECONDS), "parts fitted")
+	runner.check(h.work("wrench", "helm", HullState.WRENCH_SECONDS) and not h.is_broken("helm"), "then the wrench fixes it")
+	return true
+
+
+func test_hard_driven_gear_wears_out() -> bool:
+	var w := _world()
+	w.hull.setup([{"name": "a", "z0": -10.0, "z1": 10.0}], {}, {"engine": 0, "helm": 0})
+	w.sub.depth = 0.0 # surfaced, on the diesels
+	w.sub.ordered_depth = 0.0
+	w.sub.ballast = 0.0
+	w.sub.diesels.assign([1.0, 1.0])
+	w.sub.telegraph = 4
+	w.sub.rudder = 3
+	var said := []
+	w.event.connect(func(k: String, d: Dictionary) -> void:
+		if k == "breakdown":
+			said.append(d.station))
+	_run(w, 1800.0, 0.5)
+	runner.check(said.has("engine") and said.has("helm"), "half an hour flat out broke something: %s" % [said])
+	return true

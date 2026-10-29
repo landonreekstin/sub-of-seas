@@ -86,7 +86,7 @@ Engine (after end of the engine room): 1/2 start/stop a diesel (surfaced only; s
 Ballast (control room, port aft): V vents (flood to dive), B blow (to surface), X twice emergency blow.
 Air (engine room, starboard fwd): C fresh CO2 canister, O oxygen bleed.
 Tools: E at a rack takes one, hold LMB on a leak/fire/broken station to work, LMB with the pump sets it
-down at your feet (E picks it up), G puts a tool down.
+down at your feet (E picks it up), G puts a tool down. Wrecked gear needs a spare parts box (crate in the engine room, aft port) fitted with LMB before the wrench.
 
 ### Test
 ```

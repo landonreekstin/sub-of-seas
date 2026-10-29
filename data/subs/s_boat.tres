@@ -24,3 +24,4 @@ battery_endurance_min = 15.0
 charge_minutes = 6.0
 flood_seconds = 35.0
 co2_canisters = 5
+spare_parts = 4

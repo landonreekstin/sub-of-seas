@@ -257,6 +257,9 @@ func _engine_room() -> void:
 	rack.rotation.y = PI
 	add_child(rack)
 	_add_station(AirStation.new().setup("air", "Air panel"), Vector3(1.8, 0, 1.3))
+	var crate := PartsCrate.new()
+	crate.position = Vector3(-1.35, 0, 12.9)
+	add_child(crate)
 	_add_station(EngineStation.new().setup("engine", "Diesel controls"), Vector3(0, 0, 13.75), -PI / 2.0)
 
 

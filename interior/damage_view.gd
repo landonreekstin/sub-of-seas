@@ -73,6 +73,7 @@ func _process(delta: float) -> void:
 			_spots.erase(key)
 	for sid: String in interior.stations:
 		interior.stations[sid].set_broken(hull.is_broken(sid))
+		interior.stations[sid].update_broken_label()
 
 
 func _spot(kind: String, id: String, p: Vector3, amount: float, seen: Dictionary) -> void:

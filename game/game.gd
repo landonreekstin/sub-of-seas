@@ -120,6 +120,7 @@ func _initial_crew() -> Dictionary:
 		"mission": "patrol", ## "patrol" | "training", set by the host
 		"tutorial": {"step": 0},
 		"knocked": {}, ## peer -> seconds until they come round
+		"parts": GATO.spare_parts, ## spare-parts boxes left in stores
 	}
 
 
@@ -389,6 +390,9 @@ func _tube_order(i: int, key: String, value: Variant) -> void:
 				t.loaded = false
 				Sim.world.fire_torpedo(float(t.gyro))
 				announce.rpc("Tube %d fired — gyro %+d°" % [i + 1, t.gyro])
+				if Sim.world.rng.randf() < 0.03:
+					Sim.world.hull.break_station("tube_%d" % (i + 1))
+					announce.rpc("Tube %d's firing gear jammed. Wrench!" % (i + 1))
 
 
 # --- Tools and damage control (run on the host) -------------------------------
@@ -403,11 +407,20 @@ func rq_tool(kind: String) -> void:
 	if not multiplayer.is_server():
 		return
 	var peer := _sender()
+	var had: String = crew.tools.get(peer, "")
+	if kind == had:
+		return
+	if kind == "pump" and pumps_free() <= 0:
+		return
+	if kind == "parts":
+		if crew.parts <= 0:
+			return
+		crew.parts -= 1
+	if had == "parts":
+		crew.parts += 1 # put back in stores
 	if kind == "":
 		crew.tools.erase(peer)
 	elif Tools.KINDS.has(kind):
-		if kind == "pump" and crew.tools.get(peer, "") != "pump" and pumps_free() <= 0:
-			return
 		crew.tools[peer] = kind
 	push_crew()
 
@@ -438,6 +451,10 @@ func rq_work(tool: String, target: String, seconds: float) -> void:
 			crew.stats.repairs += 1
 			var st: Station = interior.stations.get(target)
 			announce.rpc("%s repaired the %s." % [who, st.display_name.to_lower() if st != null else target])
+		"parts":
+			crew.tools.erase(peer) # used up
+			var st: Station = interior.stations.get(target)
+			announce.rpc("%s fitted spare parts to the %s. Now a wrench." % [who, st.display_name.to_lower() if st != null else target])
 	push_crew()
 
 
@@ -595,8 +612,9 @@ func _on_sim_event(kind: String, data: Dictionary) -> void:
 			push_crew()
 		"spotted":
 			announce.rpc("The convoy is zig-zagging. They've spotted us!")
-		"leak", "power":
+		"leak", "power", "breakdown":
 			announce.rpc(data.text)
+			push_crew()
 		"lost":
 			end_patrol("lost", data.reason)
 		"hit":

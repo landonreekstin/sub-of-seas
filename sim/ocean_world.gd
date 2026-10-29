@@ -3,12 +3,18 @@ extends RefCounted
 ## The whole ocean simulation, with no rendering: the sub, AI ships and torpedoes.
 ## The host steps it authoritatively; clients step it between snapshots for smoothness.
 
-## kind: "fired" | "hit" | "dud" | "sunk" | "ping" | "splash" | "blast" | "leak" | "power" | "lost".
+## kind: "fired" | "hit" | "dud" | "sunk" | "ping" | "splash" | "blast" | "leak" | "power" | "breakdown" | "lost".
 ## Only emitted by authoritative steps.
 signal event(kind: String, data: Dictionary)
 
 const SHIP_DIR := "res://data/ships/%s.tres"
 const BATTERY_WARNINGS := [0.2, 0.1] ## announce when the charge falls past these
+const BREAKDOWN_TEXT := {
+	"engine": "The diesels are knocking: the engine controls are down. Wrench, engine room!",
+	"periscope": "The periscope's jammed: it shook loose running fast with it up.",
+	"helm": "The steering's jammed hard over at flank! Wrench to the helm!",
+	"sonar": "The sonar head's gone quiet after that ping. It needs a wrench.",
+}
 
 var time := 0.0
 var sub: SubState
@@ -71,6 +77,8 @@ func own_ping() -> void:
 		if ship.ai != null and d < 8000.0:
 			ship.ai.report(sub.pos, 300.0, rng, 0.7)
 	event.emit("own_ping", {"echoes": echoes})
+	if hull.station_comp.has("sonar") and rng.randf() < 0.04:
+		breakdown("sonar")
 
 
 ## Every ship hears about the sub: convoys scatter, escorts come hunting.
@@ -130,6 +138,7 @@ func step(dt: float, authoritative := true) -> void:
 		air.step(dt, sub.is_surfaced(), crew_count, hull)
 		_hull_stress(dt)
 		_power_checks()
+		_wear(dt)
 		sub.heaviness = hull.water_fraction()
 		_check_lost()
 	else:
@@ -197,7 +206,7 @@ func _power_checks() -> void:
 		var text := "Seawater down the induction! Diesels flooded. Stop the diesels BEFORE diving."
 		var c: int = hull.station_comp.get("engine", -1)
 		if c >= 0:
-			hull.broken["engine"] = HullState.WRENCH_SECONDS
+			hull.break_station("engine", true)
 			hull.add_leak(c, 0, rng)
 		event.emit("power", {"text": text})
 	for w: float in BATTERY_WARNINGS:
@@ -206,6 +215,25 @@ func _power_checks() -> void:
 	if _battery_was > 0.0 and sub.battery <= 0.0:
 		event.emit("power", {"text": "Battery flat! The motors have stopped. Surface (dive station, 1) and start the diesels."})
 	_battery_was = sub.battery
+
+
+## Gear driven hard wears out: chance per second of a breakdown (wrench work, no parts).
+func _wear(dt: float) -> void:
+	if lost != "":
+		return
+	var risks := {
+		"engine": sub.diesels_running() / (25.0 * 60.0),
+		"periscope": (1.0 / 180.0) if sub.periscope_raised and not sub.is_surfaced() and absf(sub.speed) > 5.0 * SubState.KNOT else 0.0,
+		"helm": (1.0 / 600.0) if absi(sub.rudder) == 3 and sub.telegraph == 4 else 0.0,
+	}
+	for sid: String in risks:
+		if hull.station_comp.has(sid) and not hull.is_broken(sid) and rng.randf() < risks[sid] * dt:
+			breakdown(sid)
+
+
+func breakdown(sid: String) -> void:
+	hull.break_station(sid)
+	event.emit("breakdown", {"station": sid, "text": BREAKDOWN_TEXT.get(sid, "")})
 
 
 ## Below test depth the hull starts to give.

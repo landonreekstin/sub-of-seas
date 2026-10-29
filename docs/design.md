@@ -177,6 +177,13 @@ and you walk slower; at 6 % / 14 % or in thick smoke you pass out after 6 s, for
 come round in the compartment with the best air. At 8 % / 12 % the boat is lost. Surfacing
 clears everything.
 
+**Breakdowns and spare parts (M3).** Gear driven hard wears out (wrench to fix): diesels
+running (about once per 25 min each), the periscope raised at over 5 kn submerged (every
+~3 min), hard rudder at flank (every ~10 min), an active ping (4 %), a torpedo firing (3 %
+jams the tube). Gear caught in a close blast or flooded diesels are WRECKED: someone fetches a
+spare parts box from stores (engine room; 6 on a Gato), holds LMB to fit it (3 s), then the
+wrench finishes the job. A box put back in stores goes back on the count.
+
 ## 6. Torpedoes (simplified TDC)
 
 1. Periscope: put the crosshair on the target, use the **stadimeter** (match top of mast to

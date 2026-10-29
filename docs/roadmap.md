@@ -38,7 +38,7 @@ Each milestone ends playable and committed. Tick items as they land.
 - [x] Battery vs diesel (surface charging), engine station
 - [x] O2 / CO2, scrubbers, knockouts and wake-up
 - [x] Ballast/trim station, emergency blow, air banks
-- [ ] System breakdowns + spare parts
+- [x] System breakdowns + spare parts
 - [ ] Simplified TDC: stadimeter, marks, solution quality, gyro angle to tube panel
 - [ ] Nav/plot table
 
