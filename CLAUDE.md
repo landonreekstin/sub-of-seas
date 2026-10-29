@@ -61,6 +61,16 @@ Godot **4.7.2**, GDScript, Jolt 3D physics. Repo: github.com/landonreekstin/sub-
 | `tests/` | headless test runner + `test_*.gd` |
 
 ### Run
+The quick way, from any clone (imports the project after changes, uses port 7845 like the
+launcher, warns when the branch is behind `main`):
+```
+./play                      # the menu
+./play host [mission] [sub] # e.g. ./play host sandbox narwhal
+./play training
+./play join [address]       # default 192.168.1.76: lando's gaming-pc over the homelab VPN
+./play host -- --name Lando # anything after -- goes to the game
+```
+`make test` runs the unit tests and the training walkthrough. Godot directly:
 ```
 godot --path .                      # main menu
 godot --path . -- --host            # host straight away
@@ -75,7 +85,12 @@ Testing aids: `--name <n>`, `--spawn x,y,z` (start the local player there, e.g.
 goes off around the boat 3 s in and the helm is knocked out; leak/fire positions are printed), `--test-voice` (this player talks a 440 Hz tone the whole time, to check voice without a microphone), `--test-win` (host: every ship sinks 4 s in, so objectives tick and the debrief shows), `--test-air` (host: foul air, and a fire in the shut-in, smoke-filled control room: whoever is in there passes out). F10 leaves to the menu.
 
 ### Playing with others (Blaney)
-Others play the **published pack**, not the source: `tools/publish.sh` exports one `.pck`
+**From source** (both have the repo): both check out the same commit, lando runs
+`./play host <mission>` on gaming-pc, Blaney runs `./play join` over the homelab VPN. A
+source build reports itself as `dev`, which any host lets in, so mismatched commits are not
+caught: pull first.
+
+**From the published pack** (friends without the repo): `tools/publish.sh` exports one `.pck`
 (no export templates needed) to the NAS drop `/mnt/nas/public/sub-of-seas/`, and the
 `sub-of-seas` launcher from nixos-config (`modules/nixos/programs/sub-of-seas.nix`, on
 gaming-pc and blaney-pc) downloads a new one on its next start and runs it on port 7845.

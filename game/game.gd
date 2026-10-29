@@ -257,7 +257,7 @@ func _show_objectives() -> void:
 			"survive":
 				progress = "  (%d:%02d)" % [int(Sim.world.time) / 60, int(Sim.world.time) % 60] if Sim.world != null else ""
 		lines.append("%s  %s%s" % ["✓" if o.get("done", false) else "○", o.text, progress])
-	hud.set_objective(m.title.to_upper(), "\n".join(lines) + "\n\n" + crew_roles())
+	hud.set_objective(m.title.to_upper(), ("\n".join(lines) + "\n\n" if not lines.is_empty() else "") + crew_roles())
 
 
 ## Suggested jobs for whoever is aboard, in joining order (the host first).
