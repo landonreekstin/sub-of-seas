@@ -60,9 +60,9 @@ Each milestone ends playable and committed. Tick items as they land.
 - [x] Hit feedback: shake, light flicker, sparks, debris
 
 ## M7 — Sandbox and extras
-- [ ] Open-ocean patrol mode with roaming groups
-- [ ] Carrier patrol aircraft
-- [ ] Weather, night, thermocline layer
-- [ ] Persistent crew progression / cosmetics
+- [x] Open-ocean patrol mode with roaming groups
+- [x] Carrier patrol aircraft
+- [x] Weather, night, thermocline layer
+- [x] Persistent crew progression / cosmetics
 - [ ] Optional in-game proximity voice
 - [ ] Builds for friends (needs Godot export templates in nixos-config)

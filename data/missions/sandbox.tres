@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="MissionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/mission_data.gd" id="1_m"]
+
+[resource]
+script = ExtResource("1_m")
+key = "sandbox"
+title = "Open Patrol"
+briefing = "Open ocean, no orders but to sink what we find. Convoys, task forces and hunting groups come and go; day turns to night. Sink what you can, then head home from the chart table (H) whenever the crew has had enough."
+difficulty = 3
+start_heading = 0.0
+start_depth = 0.0
+start_speed = 2
+battery = 1.0
+layer_depth = 65.0
+groups = Array[Dictionary]([])
+objectives = Array[Dictionary]([])
+sandbox = true

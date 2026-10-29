@@ -208,6 +208,22 @@ main objectives are done and no escort has hunted nearby for a minute (or at onc
 was a survive patrol), and ends early if the targets got away (sunk or out of 25 km reach).
 The debrief lists objectives, ships by class and the crew's stats.
 
+**Sandbox and extras (M7).** *Open Patrol* (`sandbox`): no objectives; `sim/sandbox.gd`
+keeps two groups in the area (convoys, tanker runs, cruiser and carrier groups, a battleship,
+sub-chaser hunting pairs), spawning them 11–15 km off on courses that pass near the boat and
+dropping ships 30 km away; day and night swap every 15 minutes; the crew heads home from the
+chart table (H). *Conditions* (`sim/conditions.gd`, per mission or by the clock): night cuts
+lookout range to 30 % and rigs the boat for red; sea state 0–2 changes wave height, how well
+a scope hides (rough ×0.65) and hearing (rough ×0.7); a thermocline layer makes a boat below
+it hard to ping (×0.4) and hear (×0.55); the dive station shows the BT reading. *Aircraft*
+(`sim/aircraft.gd`): carriers keep 3 planes up, cruisers 1, flying search legs within 9 km;
+they see a surfaced boat 12 km off, a scope 2.5 km, a hull shallower than 22 m 700 m (all ×
+the visual factor), radio the escorts and drop two depth bombs; surfaced, the lookouts call
+planes inside 7 km ("clear the bridge, dive"). *Career* (`game/profile.gd`): each player's
+machine keeps tons, ships, patrols and merit (tons + 5,000 per patrol brought home) → rank
+(Seaman, Petty Officer, Chief, Ensign, Lieutenant, Commander), and each rank unlocks a hat;
+the shirt colour is free. Looks and rank travel in crew state; name tags carry the rank.
+
 ## 6. Torpedoes (simplified TDC)
 
 1. Periscope: put the crosshair on the target, use the **stadimeter** (match top of mast to

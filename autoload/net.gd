@@ -12,6 +12,7 @@ var address := "127.0.0.1"
 var player_name := "Sailor"
 var last_error := "" ## shown by the main menu after a session ends badly
 var cli_start := Mode.NONE ## set from the command line, consumed by the main menu once
+var profile := Profile.load_or_new() ## this player's career and look, saved on this machine
 var debug_spawn: Variant = null ## --spawn x,y,z: start this player there (testing)
 var port := DEFAULT_PORT ## --port n (the packaged game uses 7845, forwarded over the homelab VPN)
 ## Which build this is: tools/publish.sh writes the commit into build.txt in the pack.

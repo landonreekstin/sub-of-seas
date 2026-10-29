@@ -3,7 +3,8 @@ extends RefCounted
 ## The whole ocean simulation, with no rendering: the sub, AI ships and torpedoes.
 ## The host steps it authoritatively; clients step it between snapshots for smoothness.
 
-## kind: "fired" | "hit" | "dud" | "sunk" | "ping" | "splash" | "blast" | "leak" | "power" | "breakdown" | "lost".
+## kind: "fired" | "hit" | "dud" | "sunk" | "ping" | "splash" | "blast" | "leak" | "power" | "breakdown" |
+## "aircraft" | "lost".
 ## Only emitted by authoritative steps.
 signal event(kind: String, data: Dictionary)
 
@@ -21,8 +22,10 @@ var sub: SubState
 var ships: Array[ShipState] = []
 var torpedoes: Array[Torpedo] = []
 var charges: Array[DepthCharge] = []
+var planes: Array[Aircraft] = []
 var hull := HullState.new()
 var air := AirState.new()
+var conditions := Conditions.new()
 var crew_count := 1 ## players aboard, set by the host; they breathe
 var lost := "" ## why the boat was lost, once it is
 var dud_chance := 0.05
@@ -120,6 +123,7 @@ func fire_torpedo(gyro: float, stern := false) -> Torpedo:
 
 func step(dt: float, authoritative := true) -> void:
 	time += dt
+	Detection.conditions = conditions
 	sub.step(dt)
 	for ship in ships:
 		if authoritative:
@@ -141,11 +145,14 @@ func step(dt: float, authoritative := true) -> void:
 		_power_checks()
 		_wear(dt)
 		_gunnery(dt)
+		_air_patrols(dt)
 		sub.heaviness = hull.water_fraction()
 		_check_lost()
 	else:
 		for dc in charges:
 			dc.step(dt)
+		for p in planes:
+			p.pos += p.direction() * Aircraft.SPEED * dt
 
 
 func _think(ship: ShipState, dt: float) -> void:
@@ -218,6 +225,25 @@ func _power_checks() -> void:
 	if _battery_was > 0.0 and sub.battery <= 0.0:
 		event.emit("power", {"text": "Battery flat! The motors have stopped. Surface (dive station, 1) and start the diesels."})
 	_battery_was = sub.battery
+
+
+## Carriers and cruisers keep their planes up; each plane flies its own patrol.
+func _air_patrols(dt: float) -> void:
+	for ship in ships:
+		if ship.data.aircraft <= 0 or ship.is_sinking():
+			continue
+		var up := planes.filter(func(p: Aircraft) -> bool: return p.home == ship).size()
+		ship.launch_timer -= dt
+		if up < ship.data.aircraft and ship.launch_timer <= 0.0:
+			ship.launch_timer = 60.0
+			var p := Aircraft.new()
+			p.id = _take_id()
+			p.home = ship
+			p.pos = ship.pos
+			p.heading = rng.randf() * 360.0
+			p.altitude = 30.0
+			planes.append(p)
+	planes = planes.filter(func(p: Aircraft) -> bool: return p.step(dt, self, rng))
 
 
 ## Surfaced near anything with guns that knows she's there, she gets shelled. A hit does
@@ -319,8 +345,10 @@ func to_snapshot() -> Dictionary:
 		"ships": ships.map(func(s: ShipState) -> Dictionary: return s.to_snapshot()),
 		"torps": torpedoes.map(func(t: Torpedo) -> Dictionary: return t.to_snapshot()),
 		"dcs": charges.map(func(dc: DepthCharge) -> Array: return dc.to_snapshot()),
+		"pl": planes.map(func(p: Aircraft) -> Array: return p.to_snapshot()),
 		"hull": hull.to_snapshot(),
 		"air": air.to_snapshot(),
+		"cd": conditions.to_snapshot(),
 		"lost": lost,
 	}
 
@@ -356,8 +384,18 @@ func apply_snapshot(s: Dictionary) -> void:
 		dc.set_depth = INF # clients never detonate
 		dcs.append(dc)
 	charges = dcs
+	var pls: Array[Aircraft] = []
+	for a: Array in s.pl:
+		var p := Aircraft.new()
+		p.id = a[0]
+		p.pos = a[1]
+		p.heading = a[2]
+		p.altitude = a[3]
+		pls.append(p)
+	planes = pls
 	hull.apply_snapshot(s.hull)
 	air.apply_snapshot(s.air)
+	conditions.apply_snapshot(s.cd)
 	lost = s.lost
 
 

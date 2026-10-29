@@ -13,3 +13,5 @@ start_depth = 45.0
 battery = 0.7
 groups = Array[Dictionary]([{"type": "hunter_killer", "ships": ["subchaser", "kaibokan", "subchaser"], "pos": Vector2(0, 2500), "course": 180.0, "radius": 3500.0}])
 objectives = Array[Dictionary]([{"kind": "survive", "value": 900, "text": "Survive 15 minutes"}, {"kind": "sink_role", "role": "chaser", "count": 1, "text": "Sink a sub-chaser (bonus)", "bonus": true}])
+sea_state = 0
+layer_depth = 55.0

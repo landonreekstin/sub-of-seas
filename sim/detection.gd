@@ -7,6 +7,9 @@ const VISUAL_RATE := 0.012
 const HEARING_RATE := 0.04
 const SURFACED_EXPOSURE := 6.0
 
+## The patrol's conditions; OceanWorld sets this before stepping its ships.
+static var conditions := Conditions.new()
+
 
 ## Sound the sub makes, 0.1 (creeping) .. ~1.6 (flank on the surface, both diesels).
 static func sub_noise(sub: SubState) -> float:
@@ -39,13 +42,13 @@ static func hearing_factor(ship: ShipState) -> float:
 static func awareness_gain(ship: ShipState, sub: SubState) -> float:
 	var d := ship.pos.distance_to(sub.pos)
 	var gain := 0.0
-	var see_range := ship.data.lookout_range * (2.0 if sub.is_surfaced() else 1.0)
+	var see_range := ship.data.lookout_range * (2.0 if sub.is_surfaced() else 1.0) * conditions.visual_factor()
 	if d < see_range:
 		var f := 1.0 - d / see_range
 		gain += VISUAL_RATE * sub_exposure(sub) * f * f
 	if ship.data.hydrophone_range > 0.0 and d < ship.data.hydrophone_range:
 		var f := 1.0 - d / ship.data.hydrophone_range
-		gain += HEARING_RATE * sub_noise(sub) * f * f * hearing_factor(ship)
+		gain += HEARING_RATE * sub_noise(sub) * f * f * hearing_factor(ship) * conditions.hearing_factor(sub.depth)
 	return gain
 
 
@@ -57,4 +60,4 @@ static func ping_chance(ship: ShipState, sub: SubState) -> float:
 	if d > ship.data.sonar_range or d < 120.0: # the sub slips under the beam up close
 		return 0.0
 	var depth_f := lerpf(1.0, 0.55, clampf(sub.depth / 150.0, 0.0, 1.0))
-	return clampf((1.0 - d / ship.data.sonar_range) * 1.2, 0.0, 0.9) * depth_f * hearing_factor(ship)
+	return conditions.sonar_factor(sub.depth) * clampf((1.0 - d / ship.data.sonar_range) * 1.2, 0.0, 0.9) * depth_f * hearing_factor(ship)

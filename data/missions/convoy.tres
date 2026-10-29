@@ -12,3 +12,4 @@ start_heading = 0.0
 start_depth = -1.0
 groups = Array[Dictionary]([{"type": "convoy", "ships": ["freighter", "tanker", "freighter"], "escorts": ["destroyer"], "pos": Vector2(2000, 3400), "course": 270.0, "speed": 8.0}])
 objectives = Array[Dictionary]([{"kind": "tonnage", "value": 10000, "text": "Sink 10,000 tons"}])
+layer_depth = 70.0

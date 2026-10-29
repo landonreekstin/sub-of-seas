@@ -29,3 +29,4 @@ dc_pattern = 3
 depth_error = 25.0
 hunt_speed_kn = 26.0
 persistence = 0.5
+aircraft = 1

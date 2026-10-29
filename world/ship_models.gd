@@ -198,3 +198,17 @@ static func _subchaser(root: Node3D, d: ShipClassData) -> void:
 	Build.cyl(root, 0.18, 8.0, Vector3(0, 7.0, -L * 0.05), UPPER)
 	_turret(root, 1.4, Vector3(0, 3.2, -L * 0.34), 1)
 	Build.box(root, Vector3(B * 0.7, 0.6, 2.0), Vector3(0, 2.9, L * 0.44), Color("#2B2B2B"), false)
+
+
+## A low-wing carrier plane, nose to -Z: green-grey with red roundels.
+static func plane() -> Node3D:
+	var n := Node3D.new()
+	var green := Color("#5C6A4A")
+	Build.cyl(n, 0.6, 10.0, Vector3.ZERO, green, Vector3.BACK)
+	Build.box(n, Vector3(14.0, 0.25, 2.4), Vector3(0, -0.3, -0.5), green, false)
+	Build.box(n, Vector3(5.0, 0.2, 1.4), Vector3(0, 0.2, 4.4), green, false)
+	Build.box(n, Vector3(0.2, 1.8, 1.4), Vector3(0, 1.0, 4.4), green, false)
+	Build.cyl(n, 0.7, 0.4, Vector3(0, 0, -5.1), Color("#2B2B2B"), Vector3.BACK)
+	for x in [-5.0, 5.0]:
+		Build.cyl(n, 0.6, 0.05, Vector3(x, -0.15, -0.5), Color("#B23A2E"))
+	return n

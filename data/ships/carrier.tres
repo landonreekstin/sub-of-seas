@@ -22,3 +22,4 @@ gun_range = 4000.0
 gun_interval = 6.0
 gun_accuracy = 0.2
 gun_blast = 14.0
+aircraft = 3

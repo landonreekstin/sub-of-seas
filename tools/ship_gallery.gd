@@ -1,6 +1,6 @@
 extends SceneTree
 ## A ship model on a flat sea, three-quarter view, for checking how it looks:
-##   godot --path . --rendering-driver opengl3 -s tools/ship_gallery.gd -- <class>
+##   godot --path . --rendering-driver opengl3 -s tools/ship_gallery.gd -- <class | plane>
 ## (under xvfb-run, add a screenshot). Bow points right.
 
 const CLASSES := ["subchaser", "kaibokan", "destroyer", "freighter", "tanker", "cruiser", "battleship", "carrier"]
@@ -24,6 +24,15 @@ func _initialize() -> void:
 	Build.box(root3d, Vector3(3000, 0.1, 400), Vector3(600, -0.05, 0), Color("#1F4E79"), false)
 	var args := OS.get_cmdline_user_args()
 	var k: String = args[0] if not args.is_empty() else "destroyer"
+	if k == "plane": # the patrol plane, in the air
+		var p := ShipModels.plane()
+		p.position.y = 3.0
+		root3d.add_child(p)
+		var c := Camera3D.new()
+		root3d.add_child(c)
+		c.position = Vector3(-14, 9, 12)
+		c.look_at(p.position)
+		return
 	var d: ShipClassData = load("res://data/ships/%s.tres" % k)
 	var m := ShipModels.build(d)
 	m.rotation.y = -PI / 2.0 # bow to the right

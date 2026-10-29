@@ -109,7 +109,9 @@ func test_hunter_killer_sweeps_and_pings() -> bool:
 func test_every_mission_loads_and_spawns() -> bool:
 	for k in MissionData.KEYS:
 		var m := MissionData.load_key(k)
-		runner.check(m != null and m.key == k and m.title != "" and not m.objectives.is_empty(), "mission %s loads" % k)
+		runner.check(m != null and m.key == k and m.title != "" and (m.sandbox or not m.objectives.is_empty()), "mission %s loads" % k)
+		if m.sandbox:
+			continue # ships come later, from the Sandbox director
 		var w := _world()
 		var n := 0
 		for g: Dictionary in m.groups:
@@ -133,4 +135,86 @@ func test_every_boat_builds_with_all_its_stations() -> bool:
 		runner.check(interior.racks.has("control") and interior.spawn_points.size() == 6, "%s: rack and spawn points" % k)
 		runner.check(data.roles.size() >= data.crew_max, "%s: a suggested role for every crewman" % k)
 		interior.free()
+	return true
+
+
+func test_night_and_the_layer_hide_the_boat() -> bool:
+	var dd := ShipState.new(Formations.ship_class("destroyer"))
+	dd.pos = Vector2(0, 1500)
+	var sub := SubState.new(load("res://data/subs/gato.tres"))
+	sub.depth = 18.0
+	sub.periscope_raised = true
+	var day := Conditions.new()
+	Detection.conditions = day
+	var seen_day := Detection.awareness_gain(dd, sub)
+	var night := Conditions.new()
+	night.night = true
+	Detection.conditions = night
+	runner.check(Detection.awareness_gain(dd, sub) < seen_day, "harder to see a scope at night")
+	sub.depth = 80.0
+	sub.periscope_raised = false
+	Detection.conditions = day
+	var ping_day := Detection.ping_chance(dd, sub)
+	var layered := Conditions.new()
+	layered.layer_depth = 60.0
+	Detection.conditions = layered
+	runner.check(Detection.ping_chance(dd, sub) < ping_day * 0.5, "the layer bounces their sonar")
+	Detection.conditions = Conditions.new()
+	return true
+
+
+func test_carrier_planes_find_a_surfaced_boat_and_bomb() -> bool:
+	var w := _world()
+	w.sub.depth = 0.0
+	w.sub.ordered_depth = 0.0
+	w.sub.ballast = 0.0
+	w.add_ship(Formations.ship_class("carrier"), Vector2(0, 8000), 90.0, 0.0).passive = true
+	var seen := []
+	w.event.connect(func(k: String, _d: Dictionary) -> void:
+		if k == "aircraft":
+			seen.append(k))
+	_run(w, 240.0)
+	runner.check(not w.planes.is_empty() or not seen.is_empty(), "planes went up")
+	runner.check(not seen.is_empty(), "and one spotted the surfaced boat")
+	return true
+
+
+func test_planes_dont_see_a_deep_boat() -> bool:
+	var w := _world() # at 45 m
+	w.add_ship(Formations.ship_class("carrier"), Vector2(0, 3000), 90.0, 0.0).passive = true
+	var seen := []
+	w.event.connect(func(k: String, _d: Dictionary) -> void:
+		if k == "aircraft":
+			seen.append(k))
+	_run(w, 300.0)
+	runner.check(seen.is_empty(), "45 m down is invisible from the air")
+	return true
+
+
+func test_sandbox_keeps_ships_coming_and_turns_night() -> bool:
+	var w := _world()
+	var s := Sandbox.new()
+	var nights := 0
+	var was_night := false
+	for i in int(1200.0 / 0.5):
+		w.step(0.5)
+		s.tick(w, 0.5)
+		if w.conditions.night and not was_night:
+			nights += 1
+		was_night = w.conditions.night
+	runner.check(w.ships.size() >= 3, "groups in the area after 20 min: %d ships" % w.ships.size())
+	runner.check(nights == 1, "night fell once in 20 min")
+	for ship in w.ships:
+		runner.check(ship.pos.distance_to(w.sub.pos) < Sandbox.FORGET + 2000.0, "%s within reach" % ship.data.key)
+	return true
+
+
+func test_profile_ranks_and_hats() -> bool:
+	var p := Profile.new()
+	runner.check(p.rank() == 0 and p.unlocked("dixie") and not p.unlocked("officer"), "a new sailor is a seaman in a Dixie cup")
+	p.merit = 0
+	p.tons = 0
+	var r := Profile.rank_for(15000)
+	runner.check(Profile.RANKS[r][0] == "Petty Officer", "15,000 merit makes petty officer")
+	runner.check(Profile.rank_for(10000 + 5000) == r, "a patrol home counts 5,000")
 	return true

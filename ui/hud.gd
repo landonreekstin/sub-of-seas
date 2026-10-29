@@ -157,7 +157,7 @@ func has_debrief() -> bool:
 
 
 ## End-of-patrol screen for everyone aboard.
-func show_debrief(crew: Dictionary) -> void:
+func show_debrief(crew: Dictionary, career := "") -> void:
 	_debrief = UiKit.overlay_root()
 	_root.add_child(_debrief)
 	var dim := ColorRect.new()
@@ -204,6 +204,9 @@ func show_debrief(crew: Dictionary) -> void:
 		"Crew                  %s" % ", ".join(crew.names.values()),
 	]:
 		box.add_child(UiKit.label(line, 18))
+	if career != "":
+		box.add_child(UiKit.label(" ", 8))
+		box.add_child(UiKit.label(career, 18, UiKit.BRASS))
 	box.add_child(UiKit.label(" ", 8))
 	box.add_child(UiKit.label("[F10] back to the menu", 16, UiKit.DIM))
 	_crosshair.visible = false
