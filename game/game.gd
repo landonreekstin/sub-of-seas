@@ -6,8 +6,6 @@ extends Node3D
 ## broadcasts it to everyone.
 
 const GATO := preload("res://data/subs/gato.tres")
-const FREIGHTER := preload("res://data/ships/freighter.tres")
-const DESTROYER := preload("res://data/ships/destroyer.tres")
 const MENU_SCENE := "res://ui/main_menu.tscn"
 const RELOAD_TIME := 30.0 ## seconds of hands-on work at the tube
 const PING_NOTICE_GAP := 20.0 ## s between "they have us" announcements
@@ -85,6 +83,8 @@ func _ready() -> void:
 		_setup_mission()
 		if Net.debug_charges:
 			_debug_pattern.call_deferred()
+		if Net.debug_win:
+			_debug_win.call_deferred()
 		if Net.debug_air:
 			Sim.world.air.co2 = 4.6
 			Sim.world.air.smoke[1] = 1.0
@@ -97,7 +97,7 @@ func _ready() -> void:
 		if crew.mission == "training":
 			hud.show_message("Training patrol. Follow the checklist, top right.", 6.0)
 		else:
-			hud.show_message("Patrol started. Two freighters and a destroyer escort reported to the north.", 6.0)
+			hud.show_message(MissionData.load_key(crew.mission).briefing, 14.0)
 	else:
 		hud.show_message("Joining %s ..." % Net.address, 3.0)
 
@@ -115,11 +115,13 @@ func _initial_crew() -> Dictionary:
 		"tonnage": 0,
 		"sunk": 0,
 		"tools": {}, ## peer -> tool kind
-		"stats": {"charges": 0, "leaks": 0, "fires": 0, "repairs": 0},
+		"stats": {"charges": 0, "shells": 0, "leaks": 0, "fires": 0, "repairs": 0},
 		"result": "", ## set when the patrol ends: "lost" or "complete"
 		"result_text": "",
 		"time": 0.0,
-		"mission": "patrol", ## "patrol" | "training", set by the host
+		"mission": "convoy", ## a MissionData key, or "training"; set by the host
+		"objectives": [], ## from the mission: each with "done", shown top right
+		"sunk_by": {}, ## ship class key -> ships sunk
 		"tutorial": {"step": 0},
 		"knocked": {}, ## peer -> seconds until they come round
 		"parts": GATO.spare_parts, ## spare-parts boxes left in stores
@@ -136,19 +138,25 @@ func _setup_mission() -> void:
 		_start_tutorial()
 		tutorial.setup_world()
 		return
+	var m := MissionData.load_key(crew.mission)
+	if m == null:
+		crew.mission = MissionData.KEYS[0]
+		m = MissionData.load_key(crew.mission)
 	var sub := Sim.world.sub
-	sub.depth = sub.data.periscope_depth
-	sub.ballast = 1.0
+	sub.heading = m.start_heading
+	var depth: float = sub.data.periscope_depth if m.start_depth < 0.0 else m.start_depth
+	sub.depth = depth
+	sub.ordered_depth = depth
+	sub.ballast = 1.0 if depth > 0.0 else 0.0
 	sub.hp_air = 0.9
-	sub.battery = 0.8
-	sub.ordered_depth = sub.data.periscope_depth
-	sub.telegraph = 1
-	sub.speed = sub.max_speed() * 0.25
-	var lead := Sim.world.add_ship(FREIGHTER, Vector2(1800, 3200), 270.0, 8.0)
-	Sim.world.add_ship(FREIGHTER, Vector2(2400, 3550), 270.0, 8.0)
-	# The escort screens ahead of the convoy, a little to the side nearer the sub.
-	var dd := Sim.world.add_ship(DESTROYER, Vector2(700, 3000), 270.0, 8.0)
-	Sim.world.set_escort(dd, lead, Vector2(-500, 1100))
+	sub.battery = m.battery
+	sub.telegraph = m.start_speed
+	sub.speed = sub.max_speed() * SubState.TELEGRAPH[m.start_speed]
+	for g: Dictionary in m.groups:
+		Formations.spawn(Sim.world, g)
+	crew.objectives = m.objectives.duplicate(true)
+	for o: Dictionary in crew.objectives:
+		o.done = false
 
 
 func _start_tutorial() -> void:
@@ -172,6 +180,15 @@ func _debug_pattern() -> void:
 	print("debug broken %s" % [Sim.world.hull.broken.keys()])
 
 
+## Testing aid (--test-win): every ship goes down 4 s in, as if torpedoed.
+func _debug_win() -> void:
+	await get_tree().create_timer(4.0).timeout
+	for s in Sim.world.ships:
+		s.hp = 0.0
+		Sim.world.event.emit("sunk", {"ship": s.id, "x": s.pos.x, "y": s.pos.y, "name": s.data.display_name,
+			"tons": s.data.tonnage, "class": s.data.key, "role": s.data.role})
+
+
 func _fit_exterior() -> void:
 	exterior.viewport.size = get_viewport().get_visible_rect().size
 
@@ -181,6 +198,7 @@ func _process(delta: float) -> void:
 		_quit("")
 	if multiplayer.is_server():
 		_host_tick(delta)
+	_show_objectives()
 	if Sim.world != null:
 		_track_timer -= delta
 		if _track_timer <= 0.0:
@@ -192,6 +210,28 @@ func _process(delta: float) -> void:
 		hud.set_status("%s  |  crew %d  |  sunk %d (%d t)%s  |  F10 leave" % [
 			GATO.display_name, crew.names.size(), crew.sunk, crew.tonnage,
 			"  |  FLOODING %d%%" % roundi(water * 100.0) if water > 0.01 else ""])
+
+
+## The patrol's objectives in the top-right panel, ticked as they are done (every peer).
+func _show_objectives() -> void:
+	if crew.mission == "training":
+		return
+	if crew.result != "":
+		hud.set_objective("", "")
+		return
+	var m := MissionData.load_key(crew.mission)
+	if m == null:
+		return
+	var lines: Array[String] = []
+	for o: Dictionary in crew.objectives:
+		var progress := ""
+		match o.kind:
+			"tonnage":
+				progress = "  (%d t)" % crew.tonnage
+			"survive":
+				progress = "  (%d:%02d)" % [int(Sim.world.time) / 60, int(Sim.world.time) % 60] if Sim.world != null else ""
+		lines.append("%s  %s%s" % ["✓" if o.get("done", false) else "○", o.text, progress])
+	hud.set_objective(m.title.to_upper(), "\n".join(lines))
 
 
 # --- Players ---------------------------------------------------------------
@@ -663,25 +703,80 @@ func wake_at(pos: Vector3) -> void:
 	hud.show_message("You come round, coughing.", 3.0)
 
 
-## Done when every merchant is sunk and no escort has been hunting nearby for a minute.
+## Ticks objectives off. The patrol is complete when the main ones are done and no escort has
+## been hunting nearby for a minute (a "survive" patrol ends as soon as time is up); it ends
+## early if the targets can no longer be sunk (all gone, or out of reach).
 func _check_patrol_complete(delta: float) -> void:
 	if crew.mission == "training":
 		return
 	var w := Sim.world
-	var merchants := w.ships.filter(func(s: ShipState) -> bool: return s.ai == null and not s.is_sinking())
-	if not merchants.is_empty() or crew.sunk == 0:
-		_clear_timer = 0.0
+	var changed := false
+	var all_done := true
+	var hopeless := false
+	var survive := false
+	for o: Dictionary in crew.objectives:
+		var was: bool = o.done
+		match o.kind:
+			"tonnage":
+				o.done = crew.tonnage >= int(o.value)
+				if not o.done:
+					var afloat := 0
+					for s in _targets(o):
+						afloat += s.data.tonnage
+					hopeless = hopeless or crew.tonnage + afloat < int(o.value)
+			"sink_class", "sink_role":
+				var n := _sunk_count(o)
+				o.done = n >= int(o.count)
+				if not o.done and not o.get("bonus", false):
+					hopeless = hopeless or n + _targets(o).size() < int(o.count)
+			"survive":
+				survive = true
+				o.done = w.time >= float(o.value)
+		changed = changed or was != o.done
+		if not o.done and not o.get("bonus", false):
+			all_done = false
+	if changed:
+		push_crew()
+	if all_done and survive:
+		end_patrol("complete", "They gave up the hunt. We made it.")
+		return
+	if hopeless:
+		end_patrol("escaped", "The targets got away.")
 		return
 	var hunted := w.ships.any(func(s: ShipState) -> bool:
 		return s.ai != null and not s.is_sinking() and s.ai.mode >= ShipAI.Mode.HUNT and s.pos.distance_to(w.sub.pos) < 5000.0)
-	_clear_timer = 0.0 if hunted else _clear_timer + delta
+	_clear_timer = 0.0 if hunted or not all_done else _clear_timer + delta
 	if _clear_timer >= CLEAR_TIME:
-		end_patrol("complete", "Convoy destroyed and the escort shaken off.")
+		end_patrol("complete", "Objectives done and the escorts shaken off.")
+
+
+func _sunk_count(o: Dictionary) -> int:
+	var n := 0
+	for k: String in crew.sunk_by:
+		var data := Formations.ship_class(k)
+		if (o.kind == "sink_class" and k == o.get("class", "")) or (o.kind == "sink_role" and data.role == o.get("role", "")) or o.kind == "tonnage":
+			n += int(crew.sunk_by[k])
+	return n
+
+
+## Ships still afloat and within 25 km that would count towards objective `o`.
+func _targets(o: Dictionary) -> Array[ShipState]:
+	var out: Array[ShipState] = []
+	for s in Sim.world.ships:
+		if s.is_sinking() or s.pos.distance_to(Sim.world.sub.pos) > 25000.0:
+			continue
+		var fits: bool = (o.kind == "tonnage" and s.data.role == "merchant") or (o.kind == "sink_class" and s.data.key == o.get("class", "")) \
+			or (o.kind == "sink_role" and s.data.role == o.get("role", ""))
+		if fits or (o.kind == "tonnage" and s.data.role != "merchant"):
+			out.append(s)
+	return out
 
 
 func _on_sim_event(kind: String, data: Dictionary) -> void:
 	if kind == "hit":
 		exterior.explosion(Vector2(data.x, data.y))
+	elif kind == "shell":
+		exterior.water_column(Vector2(data.x, data.y), 4.0)
 	elif kind == "blast":
 		exterior.water_column(Vector2(data.x, data.y), data.d)
 		var dist: float = data.dist
@@ -698,7 +793,10 @@ func _on_sim_event(kind: String, data: Dictionary) -> void:
 				_last_ping_notice = now
 				announce.rpc("PING ... PING ... sonar's got us on the hull.")
 		"blast":
-			if data.dist < DepthCharge.SHAKE:
+			if data.get("shell", false):
+				crew.stats.shells += 1
+				data.dmg.push_front("SHELL HIT!")
+			elif data.dist < DepthCharge.SHAKE:
 				crew.stats.charges += 1
 			var lines: Array[String] = []
 			for m: String in data.dmg:
@@ -724,6 +822,7 @@ func _on_sim_event(kind: String, data: Dictionary) -> void:
 		"sunk":
 			crew.sunk += 1
 			crew.tonnage += int(data.tons)
+			crew.sunk_by[data["class"]] = int(crew.sunk_by.get(data["class"], 0)) + 1
 			push_crew()
 			var left := Sim.world.ships.filter(func(s: ShipState) -> bool: return not s.is_sinking()).size()
-			announce.rpc("%s SUNK — %d tons.%s" % [data.name, data.tons, " Convoy destroyed!" if left == 0 else ""])
+			announce.rpc("%s SUNK — %d tons.%s" % [data.name, data.tons, " Nothing left afloat!" if left == 0 else ""])

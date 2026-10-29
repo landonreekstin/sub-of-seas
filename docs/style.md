@@ -29,6 +29,12 @@ and update "Current style" in the same commit.
   a quality bar under them that runs red → amber → green.
 - **Chart:** cream paper, pale blue-grey 1 km grid, pencil-grey own track and boat, red for
   the TDC, blue for sonar bearings. Hand-plotted, not a radar screen.
+- **Enemy ships:** primitive hulls with a pointed prism bow, grey (`#4A4E55`) with a red
+  boot-top, tan decks, light grey upperworks, black funnel caps and gun barrels. Each class
+  has one read-at-a-glance silhouette feature: the battleship's stacked pagoda, the cruiser's
+  raked trunked funnel and big bridge, the carrier's flat deck and starboard island, the
+  tanker's long low well deck. A hit tanker (and any ship going down) burns orange under a
+  column of black smoke.
 - **UI:** typewriter / stencil feel, cream on dark panels, minimal HUD (crosshair, carried
   tool, interaction prompt).
 

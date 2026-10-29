@@ -17,10 +17,11 @@ var port := DEFAULT_PORT ## --port n (the packaged game uses 7845, forwarded ove
 ## Which build this is: tools/publish.sh writes the commit into build.txt in the pack.
 ## Peers must match (RPCs are checked against each other); "dev" (run from source) matches anything.
 var build := "dev"
-var mission := "patrol" ## "patrol" | "training"; chosen by the host (--training)
+var mission := "convoy" ## a MissionData key or "training"; chosen by the host (--mission, --training)
 var debug_charges := false ## --test-charges: the host drops a pattern on the boat (testing)
 var debug_station := "" ## --station <id>: man this station as soon as you are aboard (testing)
 var debug_look := 0.0 ## --look <deg>: turn the spawned player this far right (testing)
+var debug_win := false ## --test-win: the host sinks everything a few seconds in (objectives, debrief)
 var debug_air := false ## --test-air: the host starts with foul air, and a fire and thick smoke in the shut-in control room
 
 
@@ -42,6 +43,10 @@ func _ready() -> void:
 			"--address":
 				if i + 1 < args.size():
 					address = args[i + 1]
+			"--mission": # host this patrol
+				if i + 1 < args.size():
+					mission = args[i + 1]
+					cli_start = Mode.HOST
 			"--training": # host the training patrol
 				mission = "training"
 				cli_start = Mode.HOST
@@ -49,6 +54,8 @@ func _ready() -> void:
 				debug_charges = true
 			"--test-air":
 				debug_air = true
+			"--test-win":
+				debug_win = true
 			"--station":
 				if i + 1 < args.size():
 					debug_station = args[i + 1]

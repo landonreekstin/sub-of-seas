@@ -16,6 +16,18 @@ static func build(data: ShipClassData) -> Node3D:
 	match data.kind:
 		"destroyer":
 			_destroyer(root, data)
+		"tanker":
+			_tanker(root, data)
+		"carrier":
+			_carrier(root, data)
+		"battleship":
+			_battleship(root, data)
+		"cruiser":
+			_cruiser(root, data)
+		"kaibokan":
+			_kaibokan(root, data)
+		"subchaser":
+			_subchaser(root, data)
 		_:
 			_freighter(root, data)
 	return root
@@ -81,3 +93,108 @@ static func _destroyer(root: Node3D, d: ShipClassData) -> void:
 	for z in [L * 0.0, L * 0.15]:
 		Build.box(root, Vector3(2.4, 1.0, 5.0), Vector3(0, 5.2, z), Color("#5A5F66"), false) # torpedo mounts
 	Build.box(root, Vector3(B * 0.8, 0.8, 2.0), Vector3(0, 5.0, L * 0.47), Color("#2B2B2B"), false) # depth-charge racks
+
+
+## A gun turret with `barrels` barrels pointing along -Z (forward) or +Z when `aft`.
+static func _turret(root: Node3D, size: float, pos: Vector3, barrels: int, aft := false) -> void:
+	Build.box(root, Vector3(size * 1.4, size * 0.7, size * 1.6), pos, UPPER, false)
+	var dir := 1.0 if aft else -1.0
+	for i in barrels:
+		var x := (i - (barrels - 1) * 0.5) * size * 0.4
+		Build.cyl(root, size * 0.09, size * 2.2, pos + Vector3(x, size * 0.1, dir * size * 1.7), BLACK, Vector3.BACK)
+
+
+static func _funnel(root: Node3D, radius: float, height: float, pos: Vector3, rake := 8.0) -> void:
+	var f := Build.cyl(root, radius, height, pos + Vector3(0, height * 0.5, 0), UPPER)
+	f.rotation.x = deg_to_rad(rake)
+	Build.cyl(root, radius * 1.03, height * 0.12, pos + Vector3(0, height * 0.95, height * sin(deg_to_rad(rake)) * 0.5), BLACK)
+
+
+static func _tanker(root: Node3D, d: ShipClassData) -> void:
+	var L := d.length
+	var B := d.beam
+	_hull(root, L, B, 4.5, 8.0, HULL)
+	Build.box(root, Vector3(B * 0.9, 2.5, L * 0.1), Vector3(0, 5.7, -L * 0.42), HULL, false) # forecastle
+	Build.box(root, Vector3(B * 0.7, 6.0, L * 0.07), Vector3(0, 7.5, -L * 0.15), LIGHT, false) # midships bridge
+	Build.box(root, Vector3(B * 0.9, 5.0, L * 0.16), Vector3(0, 7.0, L * 0.38), LIGHT, false) # aft house
+	_funnel(root, 2.0, 8.0, Vector3(0, 9.5, L * 0.4))
+	Build.box(root, Vector3(1.2, 0.8, L * 0.6), Vector3(0, 5.2, L * 0.05), Color("#5A5F66"), false) # pipe catwalk
+	for z in [-L * 0.32, L * 0.25]:
+		Build.cyl(root, 0.3, 14.0, Vector3(0, 11.0, z), UPPER)
+
+
+static func _carrier(root: Node3D, d: ShipClassData) -> void:
+	var L := d.length
+	var B := d.beam
+	_hull(root, L * 0.95, B, 8.0, 8.8, HULL)
+	# Flight deck overhangs the hull fore and aft; open hangar sides below it.
+	Build.box(root, Vector3(B * 0.85, 6.0, L * 0.7), Vector3(0, 11.0, 0), Color("#5A5F66"), false)
+	Build.box(root, Vector3(B * 1.0, 0.6, L), Vector3(0, 14.3, 0), DECK, false)
+	Build.box(root, Vector3(0.6, 0.62, L * 0.95), Vector3(0, 14.32, 0), LIGHT, false) # centreline stripe
+	# Starboard island with its funnel.
+	Build.box(root, Vector3(3.0, 7.0, 14.0), Vector3(B * 0.5 + 1.0, 18.0, -L * 0.12), UPPER, false)
+	Build.box(root, Vector3(3.5, 1.0, 6.0), Vector3(B * 0.5 + 1.0, 21.8, -L * 0.14), BLACK, false)
+	var f := Build.cyl(root, 2.0, 9.0, Vector3(B * 0.5 + 3.0, 10.0, -L * 0.02), UPPER)
+	f.rotation.z = deg_to_rad(-60.0) # trunked out and down to starboard
+
+
+static func _battleship(root: Node3D, d: ShipClassData) -> void:
+	var L := d.length
+	var B := d.beam
+	_hull(root, L, B, 7.0, 8.5, HULL)
+	Build.box(root, Vector3(B * 0.9, 2.5, L * 0.35), Vector3(0, 8.2, -L * 0.25), HULL, false)
+	# Pagoda foremast: stacked platforms.
+	for i in 6:
+		var w := B * (0.55 - i * 0.06)
+		Build.box(root, Vector3(w, 3.6, 10.0 - i * 0.9), Vector3(0, 11.0 + i * 3.6, -L * 0.1), UPPER if i % 2 == 0 else LIGHT, false)
+	Build.box(root, Vector3(B * 0.35, 1.2, 5.0), Vector3(0, 33.0, -L * 0.1), BLACK, false)
+	_funnel(root, 2.8, 9.0, Vector3(0, 9.0, L * 0.02), 5.0)
+	_funnel(root, 2.6, 8.0, Vector3(0, 9.0, L * 0.12), 5.0)
+	Build.cyl(root, 0.5, 18.0, Vector3(0, 18.0, L * 0.22), UPPER) # mainmast
+	for z in [-L * 0.36, -L * 0.25]:
+		_turret(root, 6.0, Vector3(0, 10.5 if z > -L * 0.3 else 9.8, z), 2)
+	for z in [L * 0.3, L * 0.4]:
+		_turret(root, 6.0, Vector3(0, 9.5, z), 2, true)
+
+
+static func _cruiser(root: Node3D, d: ShipClassData) -> void:
+	var L := d.length
+	var B := d.beam
+	_hull(root, L, B, 6.0, 6.2, HULL)
+	Build.box(root, Vector3(B * 0.9, 2.2, L * 0.4), Vector3(0, 7.1, -L * 0.22), HULL, false)
+	# The Takao's huge bridge block.
+	Build.box(root, Vector3(B * 0.6, 9.0, 14.0), Vector3(0, 12.5, -L * 0.1), UPPER, false)
+	Build.box(root, Vector3(B * 0.45, 4.0, 9.0), Vector3(0, 19.0, -L * 0.1), LIGHT, false)
+	Build.box(root, Vector3(B * 0.5, 1.0, 5.0), Vector3(0, 21.5, -L * 0.1), BLACK, false)
+	var f := Build.cyl(root, 2.4, 10.0, Vector3(0, 12.0, L * 0.02), UPPER)
+	f.rotation.x = deg_to_rad(25.0) # the trunked, raked funnel
+	for i in 3:
+		_turret(root, 4.0, Vector3(0, 9.6 + (1.0 if i == 1 else 0.0), -L * 0.42 + i * 11.0), 2)
+	for i in 2:
+		_turret(root, 4.0, Vector3(0, 7.6 + (1.0 if i == 0 else 0.0), L * 0.3 + i * 10.0), 2, true)
+
+
+static func _kaibokan(root: Node3D, d: ShipClassData) -> void:
+	var L := d.length
+	var B := d.beam
+	_hull(root, L, B, 3.5, 3.0, HULL)
+	Build.box(root, Vector3(B * 0.6, 3.5, 7.0), Vector3(0, 5.2, -L * 0.15), UPPER, false)
+	Build.box(root, Vector3(B * 0.5, 1.0, 3.0), Vector3(0, 7.3, -L * 0.16), BLACK, false)
+	_funnel(root, 1.2, 5.0, Vector3(0, 3.5, L * 0.05), 5.0)
+	Build.cyl(root, 0.25, 10.0, Vector3(0, 8.0, -L * 0.08), UPPER)
+	_turret(root, 2.0, Vector3(0, 4.6, -L * 0.36), 1)
+	_turret(root, 2.0, Vector3(0, 4.6, L * 0.25), 2, true)
+	for side in [-1.0, 1.0]:
+		Build.cyl(root, 0.35, 1.2, Vector3(side * B * 0.38, 4.1, L * 0.35), BLACK) # K-guns
+	Build.box(root, Vector3(B * 0.8, 0.8, 3.0), Vector3(0, 4.0, L * 0.46), Color("#2B2B2B"), false)
+
+
+static func _subchaser(root: Node3D, d: ShipClassData) -> void:
+	var L := d.length
+	var B := d.beam
+	_hull(root, L, B, 2.6, 2.0, HULL)
+	Build.box(root, Vector3(B * 0.6, 2.4, 6.0), Vector3(0, 3.8, -L * 0.12), UPPER, false)
+	Build.box(root, Vector3(B * 0.5, 0.7, 2.5), Vector3(0, 5.3, -L * 0.13), BLACK, false)
+	Build.cyl(root, 0.18, 8.0, Vector3(0, 7.0, -L * 0.05), UPPER)
+	_turret(root, 1.4, Vector3(0, 3.2, -L * 0.34), 1)
+	Build.box(root, Vector3(B * 0.7, 0.6, 2.0), Vector3(0, 2.9, L * 0.44), Color("#2B2B2B"), false)

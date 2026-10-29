@@ -1,10 +1,12 @@
 extends Control
-## Title screen: name, host, or join a LAN game by IP.
+## Title screen: name, pick and host a patrol (or the training patrol), or join by IP.
 
 const GAME_SCENE := "res://game/game.tscn"
 
 var _name_edit: LineEdit
 var _ip_edit: LineEdit
+var _mission: OptionButton
+var _briefing: Label
 
 
 func _ready() -> void:
@@ -33,8 +35,22 @@ func _ready() -> void:
 	_name_edit.text = Net.player_name
 	box.add_child(_name_edit)
 
+	box.add_child(UiKit.label("Patrol"))
+	_mission = OptionButton.new()
+	for k in MissionData.KEYS:
+		var m := MissionData.load_key(k)
+		_mission.add_item("%s   %s" % [m.title, "★".repeat(m.difficulty)])
+	var current := MissionData.KEYS.find(Net.mission)
+	_mission.select(maxi(current, 0))
+	_mission.item_selected.connect(func(_i: int) -> void: _show_briefing())
+	box.add_child(_mission)
+	_briefing = UiKit.label("", 15, UiKit.DIM)
+	_briefing.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_briefing.custom_minimum_size = Vector2(420, 90)
+	box.add_child(_briefing)
+	_show_briefing()
 	var host := Button.new()
-	host.text = "Host a patrol"
+	host.text = "Host this patrol"
 	host.pressed.connect(_host)
 	box.add_child(host)
 
@@ -65,8 +81,13 @@ func _ready() -> void:
 	Net.cli_start = Net.Mode.NONE
 
 
+func _show_briefing() -> void:
+	var m := MissionData.load_key(MissionData.KEYS[_mission.selected])
+	_briefing.text = m.briefing
+
+
 func _host() -> void:
-	Net.mission = "patrol"
+	Net.mission = MissionData.KEYS[_mission.selected] # starts on --mission's, if given
 	_start(Net.Mode.HOST)
 
 

@@ -14,6 +14,14 @@ extends Resource
 @export var tonnage := 6000
 @export var zigzag_angle := 15.0 ## degrees either side of base course
 @export var sink_time := 60.0 ## seconds from fatal hit to gone
+@export var role := "merchant" ## merchant | capital | escort | chaser: how the sonar classes it, what missions ask for
+@export var burns := false ## a hit sets it ablaze (tankers): a glow on the horizon, slower to sink
+
+@export_group("Guns")
+@export var gun_range := 0.0 ## m at which it shells a surfaced sub (0 = no guns worth the name)
+@export var gun_interval := 8.0 ## s between salvoes
+@export var gun_accuracy := 0.3 ## chance a salvo hits at point blank, falling to a tenth of it at max range
+@export var gun_blast := 15.0 ## a hit does what a depth charge this many metres away would
 
 @export_group("Anti-submarine")
 @export var asw := false ## hunts subs (has sonar and depth charges)
@@ -25,3 +33,6 @@ extends Resource
 @export var dc_pattern := 6 ## charges per attack run
 @export var depth_error := 15.0 ## m of error when it sets charge depth
 @export var hunt_speed_kn := 24.0
+@export var search_speed_kn := 14.0 ## slow enough for its own sonar; sub-chasers rush in instead
+@export var charge_power := 1.0 ## depth-charge size: blast distances scale with it
+@export var persistence := 1.0 ## how long it keeps hunting a lost contact (x 90 s)

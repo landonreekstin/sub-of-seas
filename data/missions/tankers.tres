@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="MissionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/mission_data.gd" id="1_m"]
+
+[resource]
+script = ExtResource("1_m")
+key = "tankers"
+title = "Fuel for the Fleet"
+briefing = "Three tankers bound for Truk, guarded by two kaibokan. The kaibokan are slow but patient and carry more depth charges than you can count. Sink two of the tankers. Their oil is worth more than any warship."
+difficulty = 2
+start_heading = 90.0
+start_depth = -1.0
+groups = Array[Dictionary]([{"type": "convoy", "ships": ["tanker", "tanker", "tanker"], "escorts": ["kaibokan", "kaibokan"], "pos": Vector2(4500, -1500), "course": 315.0, "speed": 9.0}])
+objectives = Array[Dictionary]([{"kind": "sink_class", "class": "tanker", "count": 2, "text": "Sink 2 tankers"}])

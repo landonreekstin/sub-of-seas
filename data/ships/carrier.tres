@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="ShipClassData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/ship_class_data.gd" id="1_s"]
+
+[resource]
+script = ExtResource("1_s")
+key = "carrier"
+display_name = "Shokaku-class carrier"
+kind = "carrier"
+length = 257.0
+beam = 29.0
+max_speed_kn = 34.0
+cruise_speed_kn = 20.0
+max_turn_rate = 1.2
+hp = 7.0
+tonnage = 32000
+zigzag_angle = 30.0
+sink_time = 180.0
+role = "capital"
+lookout_range = 6000.0
+gun_range = 4000.0
+gun_interval = 6.0
+gun_accuracy = 0.2
+gun_blast = 14.0

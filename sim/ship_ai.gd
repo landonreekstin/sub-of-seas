@@ -11,7 +11,6 @@ extends RefCounted
 enum Mode { PATROL, SEARCH, HUNT, ATTACK, OPEN }
 const MODE_NAMES := ["patrolling", "searching", "hunting", "attacking", "attacking"]
 
-const SEARCH_KN := 14.0 ## slow enough for the sonar to work
 const SUSPICIOUS := 0.35
 const DECAY := 0.004 ## awareness lost per second when nothing is noticed
 const LOSE_CONTACT := 90.0 ## s without a fix before a hunt becomes a search
@@ -22,6 +21,8 @@ var ship: ShipState
 var mode := Mode.PATROL
 var guard: ShipState ## the ship it escorts, if any
 var guard_offset := Vector2.ZERO ## (right, ahead) of the guard, metres
+var sweep: Array[Vector2] = [] ## hunter-killer: legs of a search pattern, pinging as it goes
+var _sweep_i := 0
 var dc_left := 0
 var contact_pos := Vector2.ZERO
 var contact_vel := Vector2.ZERO
@@ -55,7 +56,7 @@ func set_mode(m: Mode) -> void:
 ## A report of the sub from outside (a lookout's call, a torpedo wake, a radioed hit).
 func report(pos: Vector2, error: float, rng: RandomNumberGenerator, awareness := 0.6) -> void:
 	ship.awareness = maxf(ship.awareness, awareness)
-	if mode >= Mode.HUNT and contact_age < LOSE_CONTACT:
+	if mode >= Mode.HUNT and contact_age < LOSE_CONTACT * ship.data.persistence:
 		return
 	_set_contact(pos, error, 30.0, rng)
 	set_mode(Mode.HUNT if awareness >= 0.8 else Mode.SEARCH)
@@ -79,6 +80,8 @@ func step(dt: float, world: OceanWorld, rng: RandomNumberGenerator) -> void:
 	match mode:
 		Mode.PATROL:
 			_patrol()
+			if not sweep.is_empty():
+				_ping(dt, world, rng) # a hunting group searches actively
 			if ship.awareness > SUSPICIOUS:
 				# Rough idea from a bearing: right direction, wrong distance.
 				var d := ship.pos.distance_to(sub.pos)
@@ -89,25 +92,25 @@ func step(dt: float, world: OceanWorld, rng: RandomNumberGenerator) -> void:
 		Mode.SEARCH:
 			if ship.pos.distance_to(_search_point) < 250.0:
 				_search_point = contact_pos + Vector2.from_angle(rng.randf() * TAU) * rng.randf_range(200.0, 800.0)
-			_steer(_search_point, SEARCH_KN)
+			_steer(_search_point, ship.data.search_speed_kn)
 			_ping(dt, world, rng)
-			if ship.awareness < 0.15 and mode_time > 60.0:
+			if ship.awareness < 0.15 and mode_time > 60.0 * ship.data.persistence:
 				set_mode(Mode.PATROL)
 		Mode.HUNT:
 			var aim := predicted()
 			var d := ship.pos.distance_to(aim)
-			_steer(aim, ship.data.hunt_speed_kn if d > 1600.0 else SEARCH_KN)
+			_steer(aim, ship.data.hunt_speed_kn if d > 1600.0 else ship.data.search_speed_kn)
 			_ping(dt, world, rng)
 			if d < ATTACK_RANGE and contact_age < 20.0 and dc_left > 0:
 				set_mode(Mode.ATTACK)
-			elif contact_age > LOSE_CONTACT:
+			elif contact_age > LOSE_CONTACT * ship.data.persistence:
 				_search_point = contact_pos
 				set_mode(Mode.SEARCH)
 		Mode.ATTACK:
 			var aim := predicted()
 			var d := ship.pos.distance_to(aim)
 			# Slow enough to keep pinging until the last stretch, then sprint over him.
-			_steer(aim, ship.data.max_speed_kn * 0.8 if d < 500.0 else SEARCH_KN + 4.0)
+			_steer(aim, ship.data.max_speed_kn * 0.8 if d < 500.0 else ship.data.search_speed_kn + 4.0)
 			if d > 400.0:
 				_ping(dt, world, rng)
 			if d < 60.0 or (d < 220.0 and d > _last_dist) or mode_time > 120.0:
@@ -119,7 +122,7 @@ func step(dt: float, world: OceanWorld, rng: RandomNumberGenerator) -> void:
 		Mode.OPEN:
 			ship.ordered_speed = ship.data.max_speed_kn * 0.8 * SubState.KNOT
 			if mode_time > RUN_OUT:
-				set_mode(Mode.HUNT if dc_left > 0 or contact_age < LOSE_CONTACT else Mode.SEARCH)
+				set_mode(Mode.HUNT if dc_left > 0 or contact_age < LOSE_CONTACT * ship.data.persistence else Mode.SEARCH)
 
 
 ## Where it thinks the sub is now.
@@ -179,10 +182,15 @@ func _update_pattern(dt: float, world: OceanWorld, rng: RandomNumberGenerator) -
 	if _drops % 3 == 1:
 		throw = 45.0 if (_drops / 3) % 2 == 0 else -45.0
 	world.drop_charge(ship.pos + back + side * throw + Vector2(rng.randfn(0, 4), rng.randfn(0, 4)),
-		contact_depth + rng.randf_range(-4.0, 4.0))
+		contact_depth + rng.randf_range(-4.0, 4.0), ship.data.charge_power)
 
 
 func _patrol() -> void:
+	if not sweep.is_empty():
+		if ship.pos.distance_to(sweep[_sweep_i]) < 300.0:
+			_sweep_i = (_sweep_i + 1) % sweep.size()
+		_steer(sweep[_sweep_i], ship.data.search_speed_kn)
+		return
 	if guard == null or guard.is_sinking():
 		_steer(ship.pos + ship.direction() * 1000.0, ship.data.cruise_speed_kn)
 		return

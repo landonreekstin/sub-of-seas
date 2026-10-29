@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="MissionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/mission_data.gd" id="1_m"]
+
+[resource]
+script = ExtResource("1_m")
+key = "carrier"
+title = "Flattop"
+briefing = "A Shokaku-class carrier is making 20 knots for home with two destroyers in the screen. We have one chance as she passes. Get ahead of her track, let her come to you, and sink her."
+difficulty = 4
+start_heading = 270.0
+start_depth = -1.0
+groups = Array[Dictionary]([{"type": "task_force", "ships": ["carrier"], "escorts": ["destroyer", "destroyer"], "pos": Vector2(-1500, 9000), "course": 170.0, "speed": 20.0}])
+objectives = Array[Dictionary]([{"kind": "sink_class", "class": "carrier", "count": 1, "text": "Sink the carrier"}])

@@ -5,6 +5,7 @@ extends SceneTree
 const TEST_FILES: Array[String] = [
 	"res://tests/test_sim.gd",
 	"res://tests/test_hunter.gd",
+	"res://tests/test_fleet.gd",
 ]
 
 var passed := 0
@@ -13,6 +14,7 @@ var _done := false
 
 
 func _initialize() -> void:
+	_load_all_scripts("res://")
 	for path in TEST_FILES:
 		var script: GDScript = load(path)
 		if script == null or not script.can_instantiate():
@@ -39,6 +41,17 @@ func _process(_delta: float) -> bool:
 		push_error("FAIL: the test run stopped early (script error above)")
 		quit(1)
 	return false
+
+
+## Every script in the project must compile, not just the ones the tests touch.
+func _load_all_scripts(dir: String) -> void:
+	for sub in DirAccess.get_directories_at(dir):
+		if not sub.begins_with("."):
+			_load_all_scripts(dir.path_join(sub))
+	for f in DirAccess.get_files_at(dir):
+		if f.ends_with(".gd"):
+			var s: GDScript = load(dir.path_join(f))
+			check(s != null and s.can_instantiate(), "%s compiles" % dir.path_join(f))
 
 
 func check(ok: bool, label: String) -> void:
