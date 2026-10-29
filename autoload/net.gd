@@ -19,6 +19,8 @@ var port := DEFAULT_PORT ## --port n (the packaged game uses 7845, forwarded ove
 var build := "dev"
 var mission := "patrol" ## "patrol" | "training"; chosen by the host (--training)
 var debug_charges := false ## --test-charges: the host drops a pattern on the boat (testing)
+var debug_station := "" ## --station <id>: man this station as soon as you are aboard (testing)
+var debug_look := 0.0 ## --look <deg>: turn the spawned player this far right (testing)
 var debug_air := false ## --test-air: the host starts with foul air, and a fire and thick smoke in the shut-in control room
 
 
@@ -47,6 +49,12 @@ func _ready() -> void:
 				debug_charges = true
 			"--test-air":
 				debug_air = true
+			"--station":
+				if i + 1 < args.size():
+					debug_station = args[i + 1]
+			"--look":
+				if i + 1 < args.size():
+					debug_look = args[i + 1].to_float()
 			"--spawn":
 				if i + 1 < args.size():
 					var v := args[i + 1].split_floats(",")

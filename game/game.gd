@@ -121,6 +121,9 @@ func _initial_crew() -> Dictionary:
 		"tutorial": {"step": 0},
 		"knocked": {}, ## peer -> seconds until they come round
 		"parts": GATO.spare_parts, ## spare-parts boxes left in stores
+		## The TDC: periscope marks on one target, the operator's nudges, and whether the
+		## tubes' gyros follow its solution.
+		"tdc": {"target": -1, "marks": [], "speed_adj": 0.0, "course_adj": 0.0, "follow": false},
 	}
 
 
@@ -341,6 +344,26 @@ func rq_order(station_id: String, key: String, value: Variant) -> void:
 				sub.periscope_raised = bool(value)
 			elif key == "ranged" and tutorial != null:
 				tutorial.flag("ranged")
+			elif key == "mark" and value is Array and value.size() == 3:
+				_tdc_mark(int(value[0]), float(value[1]), float(value[2]))
+		"tdc":
+			var tdc: Dictionary = crew.tdc
+			match key:
+				"speed":
+					tdc.speed_adj = clampf(tdc.speed_adj + float(value), -30.0, 30.0)
+				"course":
+					tdc.course_adj = wrapf(tdc.course_adj + float(value), -180.0, 180.0)
+				"clear":
+					tdc.marks.clear()
+					tdc.target = -1
+					tdc.speed_adj = 0.0
+					tdc.course_adj = 0.0
+					tdc.follow = false
+				"send":
+					tdc.follow = not tdc.follow and not tdc.marks.is_empty()
+					announce.rpc("TDC: tubes are following the solution." if tdc.follow else "TDC: tubes on manual gyro.")
+					if tdc.follow and tutorial != null:
+						tutorial.flag("solution")
 		"engine":
 			if key == "diesel" and value is Array and value.size() == 2:
 				Sim.world.set_diesel(int(value[0]), bool(value[1]))
@@ -370,11 +393,61 @@ func rq_order(station_id: String, key: String, value: Variant) -> void:
 	push_crew()
 
 
+## A periscope mark on ship `id`: true bearing and stadimeter range, as the scope saw them.
+func _tdc_mark(id: int, bearing: float, range_m: float) -> void:
+	var tdc: Dictionary = crew.tdc
+	var ship := Sim.world.find_ship(id)
+	if ship == null or range_m <= 0.0 or range_m > 12000.0:
+		return
+	if tdc.target != id:
+		tdc.target = id
+		tdc.marks.clear()
+		tdc.speed_adj = 0.0
+		tdc.course_adj = 0.0
+	tdc.marks.append(Tdc.make_mark(Sim.world.time, Sim.world.sub.pos, fposmod(bearing, 360.0), range_m))
+	if tdc.marks.size() > 8:
+		tdc.marks.pop_front()
+	announce.rpc("MARK! Bearing %03d, range %d." % [roundi(fposmod(bearing, 360.0)) % 360, roundi(range_m / 50.0) * 50])
+	if tutorial != null:
+		tutorial.flag("marked")
+
+
+## The live TDC solution for the bow tubes, from crew state (any peer can call it).
+func tdc_solution() -> Dictionary:
+	var tdc: Dictionary = crew.get("tdc", {})
+	if Sim.world == null or tdc.get("marks", []).is_empty():
+		return {"ok": false, "reason": "NO MARKS", "est": {"ok": false}}
+	var sub := Sim.world.sub
+	var est := Tdc.estimate(tdc.marks, tdc.speed_adj, tdc.course_adj)
+	var sol := Tdc.solve(est, Sim.world.time, sub.pos + sub.direction() * sub.data.length * 0.5, sub.heading)
+	sol.est = est
+	sol.quality = Tdc.quality(tdc.marks, sol.range)
+	return sol
+
+
+## Host: tubes whose gyros follow the TDC get the new angle as it changes.
+func _tdc_follow() -> void:
+	if not crew.tdc.follow:
+		return
+	var sol := tdc_solution()
+	if not sol.ok:
+		return
+	var g := roundi(sol.gyro)
+	var changed := false
+	for t: Dictionary in crew.tubes:
+		if t.gyro != g:
+			t.gyro = g
+			changed = true
+	if changed:
+		push_crew()
+
+
 func _tube_order(i: int, key: String, value: Variant) -> void:
 	var t: Dictionary = crew.tubes[i]
 	match key:
 		"gyro":
 			t.gyro = clampi(int(value), -90, 90)
+			crew.tdc.follow = false # a hand on the gyro takes it off the TDC
 		"flood":
 			if not t.door and t.reload == 0.0:
 				t.flooded = not t.flooded
@@ -495,6 +568,7 @@ func _host_tick(delta: float) -> void:
 		sub.periscope_raised = false
 	Sim.world.crew_count = crew.names.size()
 	_breathe(delta)
+	_tdc_follow()
 	_check_patrol_complete(delta)
 	var reloading := false
 	for i in crew.tubes.size():

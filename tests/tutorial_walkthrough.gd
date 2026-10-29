@@ -89,7 +89,15 @@ func _act(i: int) -> void:
 		"scope": if _once("a"): g.rq_station_enter("periscope")
 		"raise": if _once("a"): g.rq_order("periscope", "raised", true)
 		"range": if _once("a"): g.rq_order("periscope", "ranged", true)
+		"mark":
+			var marks: Array = _game.crew.tdc.marks
+			if marks.is_empty() or _sim.world.time - float(marks[-1].t) >= Tdc.MIN_SPAN + 1.0:
+				var target: ShipState = _game.tutorial._target
+				var to: Vector2 = target.pos - _sim.world.sub.pos
+				g.rq_order("periscope", "mark", [target.id, rad_to_deg(atan2(to.x, to.y)), to.length()])
 		"lower": if _once("a"): g.rq_order("periscope", "raised", false)
+		"tdc": if _once("a"): g.rq_station_enter("tdc")
+		"send": if _once("a"): g.rq_order("tdc", "send", null)
 		"tube": if _once("a"): g.rq_station_enter("tube_1")
 		"flood":
 			if _once("a"):

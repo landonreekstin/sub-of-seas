@@ -25,6 +25,8 @@ and update "Current style" in the same commit.
   bad air closes the screen in with a dark vignette, passing out is a black screen. The
   ballast board's "Christmas tree" lights are red for flooded tanks or open vents, green dry.
   Broken gear sparks under a red BROKEN sign; gear that needs spare parts reads WRECKED.
+- **TDC:** a grey cabinet with a black face: SPEED / COURSE / GYRO in big cream numerals,
+  a quality bar under them that runs red → amber → green.
 - **UI:** typewriter / stencil feel, cream on dark panels, minimal HUD (crosshair, carried
   tool, interaction prompt).
 

@@ -198,6 +198,16 @@ wrench finishes the job. A box put back in stores goes back on the count.
 
 Without a solution players can still fire straight down the bow on a gut call.
 
+**How it is built (M3).** `M` on the periscope marks the ship under the crosshair: true
+bearing (±0.5°) and a stadimeter range (±3 %, ±1.5 % in high power), stamped with the time
+and our position, kept in `crew.tdc` (last 8 marks on one target; marking a new ship starts
+over). `sim/tdc.gd` fits a straight track through the marks by least squares once they span
+30 s (one mark: 8 kn across the line of sight, a guess). The operator nudges speed (W/S) and
+course (A/D). The intercept for a 46 kn torpedo from the bow gives the gyro angle; past 90°
+or a 4 km run there is no solution. Quality grows with marks, their span and closeness.
+`T` sends it: the bow tubes' gyros then follow the live solution until someone touches a
+gyro or presses T again.
+
 ## 7. Co-op design principles
 
 - **Information lives in one place, action in another.** The periscope sees, the torpedo room

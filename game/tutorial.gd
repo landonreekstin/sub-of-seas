@@ -96,15 +96,23 @@ func _build_steps() -> void:
 			"marker": _station("periscope"), "done": func() -> bool: return sub.call().periscope_raised},
 		{"id": "range", "needs": "periscope", "text": "A freighter lies dead ahead. Put the crosshair on it (mouse, Z zooms) and take a range with the stadimeter: F.",
 			"marker": _station("periscope"), "done": func() -> bool: return _flags.has("ranged")},
+		{"id": "mark", "needs": "periscope", "text": "Mark him for the TDC: M. Then mark him again after 30 seconds (and again: every mark helps), so the TDC can work out his course and speed. Z (high power) ranges better.",
+			"marker": _station("periscope"), "done": func() -> bool:
+				var marks: Array = game.crew.tdc.marks
+				return marks.size() >= 2 and float(marks[-1].t) - float(marks[0].t) >= Tdc.MIN_SPAN},
 		{"id": "lower", "needs": "periscope", "text": "Good. Lower the scope (R): a raised scope is how lookouts spot you.",
 			"marker": _station("periscope"), "done": func() -> bool: return not sub.call().periscope_raised},
+		{"id": "tdc", "text": "Man the TDC: the cabinet beside the periscope, starboard side.",
+			"marker": _station("tdc"), "done": _manned("tdc")},
+		{"id": "send", "needs": "tdc", "text": "The TDC has his course and speed, and the gyro angle to hit him. Send it to the tubes: T. Their gyros now follow it.",
+			"marker": _station("tdc"), "done": func() -> bool: return game.crew.tdc.follow},
 		{"id": "tube", "text": "Go forward to the TORPEDO ROOM (through the forward door) and man TUBE 1, top right.",
 			"marker": _station("tube_1"), "done": _manned("tube_1")},
 		{"id": "flood", "needs": "tube_1", "text": "Flood the tube (F), then open the outer door (O).",
 			"marker": _station("tube_1"), "done": func() -> bool:
 				var t: Dictionary = game.crew.tubes[0]
 				return t.flooded and t.door},
-		{"id": "fire", "needs": "tube_1", "text": "Target dead ahead, gyro 0. FIRE: Space. Then wait for the hit.",
+		{"id": "fire", "needs": "tube_1", "text": "The gyro follows the TDC. FIRE: Space. Then wait for the hit.",
 			"marker": _station("tube_1"), "done": func() -> bool: return game.crew.sunk >= 1,
 			"hint": _miss_hint},
 		{"id": "sonar", "text": "Fast screws to the north: an escort! Man the SONAR (control room, port side aft).",
@@ -250,7 +258,7 @@ func _advance(i: int) -> void:
 	_flags.clear() # what happens from here on counts for the next step
 	game.crew.tutorial.step = i + 1
 	if i + 1 >= steps.size():
-		game.end_patrol("training", "Training complete. You ran the whole boat: helm, ballast, dive, scope, tubes, sonar, damage control, air and the diesels.")
+		game.end_patrol("training", "Training complete. You ran the whole boat: helm, ballast, dive, scope, TDC, tubes, sonar, damage control, air and the diesels.")
 	else:
 		game.announce.rpc("✓  Step %d done." % (i + 1))
 	game.push_crew()

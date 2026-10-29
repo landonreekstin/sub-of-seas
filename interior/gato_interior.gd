@@ -237,9 +237,7 @@ func _conning_tower() -> void:
 	Build.label(self, "CONNING TOWER", Vector3(0, CT_FLOOR + h - 0.25, z0 + 0.13), 40, Color("#2B2B26"))
 	_add_station(PeriscopeStation.new().setup("periscope", "Attack periscope"), Vector3(0, CT_FLOOR, -2.9))
 	_gauge_board(Vector3(-0.8, CT_FLOOR + 1.7, z0 + 0.12), ["depth", "heading"])
-	# Torpedo Data Computer cabinet (becomes a station in M3).
-	Build.box(self, Vector3(0.5, 1.6, 1.3), Vector3(hw - 0.35, CT_FLOOR + 0.8, -4.3), Color("#4A5248"))
-	Build.label(self, "TDC", Vector3(hw - 0.62, CT_FLOOR + 1.4, -4.3), 40).rotation.y = -PI / 2.0
+	_add_station(TdcStation.new().setup("tdc", "Torpedo Data Computer"), Vector3(hw - 0.45, CT_FLOOR, -4.3))
 
 
 func _engine_room() -> void:

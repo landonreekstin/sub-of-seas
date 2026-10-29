@@ -338,3 +338,60 @@ func test_fire_smokes_its_room_and_spreads_through_open_doors() -> bool:
 	runner.check(w.air.smoke[2] == 0.0, "not past a shut door")
 	runner.check(w.air.badness_in(0) > w.air.badness_in(2), "worse to breathe where it burns")
 	return true
+
+
+# --- TDC ----------------------------------------------------------------------
+
+func test_tdc_two_marks_solve_a_hit() -> bool:
+	var w := _submerged_world()
+	var ship := w.add_ship(FREIGHTER, Vector2(1200, 1500), 270.0, 9.0)
+	ship.passive = true
+	var marks := []
+	for i in 3:
+		var to := ship.pos - w.sub.pos
+		marks.append(Tdc.make_mark(w.time, w.sub.pos, rad_to_deg(atan2(to.x, to.y)), to.length()))
+		_run(w, 20.0)
+	var est := Tdc.estimate(marks)
+	runner.check(est.measured and absf(est.speed_kn - 9.0) < 0.3, "speed from marks: %.2f kn" % est.speed_kn)
+	runner.check(absf(wrapf(est.course - 270.0, -180.0, 180.0)) < 2.0, "course from marks: %.1f" % est.course)
+	var launch := w.sub.pos + w.sub.direction() * GATO.length * 0.5
+	var sol := Tdc.solve(est, w.time, launch, w.sub.heading)
+	runner.check(sol.ok, "solution found: %s" % sol.get("reason", ""))
+	w.fire_torpedo(sol.gyro)
+	var sunk := []
+	w.event.connect(func(k: String, d: Dictionary) -> void:
+		if k == "hit":
+			sunk.append(d.ship))
+	_run(w, 150.0)
+	runner.check(sunk.size() == 1, "the TDC's gyro angle hit him (gyro %+.1f)" % sol.gyro)
+	runner.check(Tdc.quality(marks, sol.range) > 0.6, "good solution rated good: %.2f" % Tdc.quality(marks, sol.range))
+	return true
+
+
+func test_tdc_refuses_impossible_shots() -> bool:
+	var est := {"ok": true, "pos": Vector2(0, -3000), "t": 0.0, "course": 0.0, "speed_kn": 8.0,
+		"vel": Vector2(0, 8.0 * SubState.KNOT), "measured": true}
+	var sol := Tdc.solve(est, 0.0, Vector2.ZERO, 0.0) # dead astern of a bow tube
+	runner.check(not sol.ok and "GYRO" in sol.reason, "astern target needs a turn: %s" % sol.reason)
+	var far := est.duplicate()
+	far.pos = Vector2(0, 9000)
+	runner.check(not Tdc.solve(far, 0.0, Vector2.ZERO, 0.0).ok, "out of range")
+	return true
+
+
+func test_tdc_more_marks_beat_stadimeter_error() -> bool:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7
+	var worst := 0.0
+	for trial in 20:
+		var target := Vector2(-1500, 2500)
+		var vel := Vector2(10.0 * SubState.KNOT, 0.0) # 10 kn due east
+		var marks := []
+		for i in 4:
+			var t := i * 30.0
+			var p := target + vel * t
+			marks.append(Tdc.make_mark(t, Vector2.ZERO, rad_to_deg(atan2(p.x, p.y)) + rng.randf_range(-0.5, 0.5), p.length() * (1.0 + rng.randf_range(-0.03, 0.03))))
+		var est := Tdc.estimate(marks)
+		worst = maxf(worst, absf(est.speed_kn - 10.0))
+	runner.check(worst < 3.0, "four marks over 90 s: speed within 3 kn (worst %.1f)" % worst)
+	return true

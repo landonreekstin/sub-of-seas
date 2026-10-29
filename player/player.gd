@@ -116,6 +116,17 @@ func _ready() -> void:
 		Game.instance.local_player = self
 		if Net.debug_spawn != null:
 			global_position = Net.debug_spawn
+		rotation.y = -deg_to_rad(Net.debug_look)
+		if Net.debug_station != "":
+			_man_on_spawn.call_deferred()
+
+
+## Testing aid (--station): ask for the station once the crew state has arrived.
+func _man_on_spawn() -> void:
+	await get_tree().create_timer(1.5).timeout
+	var s: Station = Game.instance.interior.stations.get(Net.debug_station)
+	if s != null:
+		request_station(s)
 
 
 func set_display_name(n: String) -> void:

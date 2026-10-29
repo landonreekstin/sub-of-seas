@@ -1,7 +1,8 @@
 class_name PeriscopeStation
 extends Station
 ## Attack periscope in the conning tower. Mouse trains it, Z switches power, R raises or
-## lowers, F takes a stadimeter range on whatever is under the crosshair.
+## lowers, F takes a stadimeter range on whatever is under the crosshair, M marks it for the
+## TDC (bearing and range).
 
 const LOW_FOV := 32.0
 const HIGH_FOV := 8.0
@@ -88,7 +89,7 @@ func _build_overlay(root: Control) -> void:
 	var box := UiKit.bottom_panel(root)
 	_status = UiKit.label()
 	box.add_child(_status)
-	box.add_child(UiKit.label("[mouse] train   [Z] power   [R] raise/lower   [F] stadimeter range", 14, UiKit.DIM))
+	box.add_child(UiKit.label("[mouse] train   [Z] power   [R] raise/lower   [F] stadimeter range   [M] mark for the TDC", 14, UiKit.DIM))
 	box.add_child(UiKit.label(footer(cluster != ""), 14, UiKit.DIM))
 	ext.set_active(true)
 
@@ -108,15 +109,13 @@ func station_input(event: InputEvent) -> void:
 		order("raised", not Sim.world.sub.periscope_raised)
 	elif key_pressed(event, KEY_F):
 		_take_range()
+	elif key_pressed(event, KEY_M):
+		_mark()
 
 
-## Stadimeter: range to the ship nearest the crosshair, with an observer's error.
-func _take_range() -> void:
-	_range_timer = 4.0
+## The ship nearest the crosshair, or null.
+func _on_the_wire() -> ShipState:
 	var sub := Sim.world.sub
-	if sub.scope_height() <= 0.0:
-		_range_label.text = ""
-		return
 	var true_brg := fposmod(sub.heading + bearing, 360.0)
 	var best: ShipState = null
 	var best_off := 2.5 if not high_power else 1.0
@@ -127,11 +126,41 @@ func _take_range() -> void:
 		if off < best_off and to.length() < 9000.0:
 			best_off = off
 			best = ship
+	return best
+
+
+## Stadimeter range on `ship`, with an observer's error (smaller in high power).
+func _stadimeter(ship: ShipState) -> float:
+	var err := randf_range(-0.03, 0.03) * (0.5 if high_power else 1.0)
+	return ship.pos.distance_to(Sim.world.sub.pos) * (1.0 + err)
+
+
+## Mark: bearing and range to the TDC.
+func _mark() -> void:
+	_range_timer = 4.0
+	var sub := Sim.world.sub
+	var best := _on_the_wire() if sub.scope_height() > 0.0 else null
+	if best == null:
+		_range_label.text = "no target on the wire" if sub.scope_height() > 0.0 else ""
+		return
+	var rng := _stadimeter(best)
+	var true_brg := fposmod(sub.heading + bearing + randf_range(-0.5, 0.5), 360.0)
+	order("mark", [best.id, true_brg, rng])
+	_range_label.text = "MARK — BRG %03d  RANGE %d m" % [roundi(true_brg) % 360, roundi(rng / 50.0) * 50]
+
+
+## Stadimeter: range to the ship nearest the crosshair, with an observer's error.
+func _take_range() -> void:
+	_range_timer = 4.0
+	var sub := Sim.world.sub
+	if sub.scope_height() <= 0.0:
+		_range_label.text = ""
+		return
+	var best := _on_the_wire()
 	if best == null:
 		_range_label.text = "no target on the wire"
 		return
 	order("ranged", true)
-	var dist := best.pos.distance_to(sub.pos)
-	var err := randf_range(-0.08, 0.08) * (0.5 if high_power else 1.0)
+	var dist := _stadimeter(best)
 	var aob := wrapf(rad_to_deg(atan2(-(best.pos - sub.pos).x, -(best.pos - sub.pos).y)) - best.heading, -180.0, 180.0)
-	_range_label.text = "RANGE %d m   AoB %s %d°" % [roundi(dist * (1.0 + err) / 50.0) * 50, "STBD" if aob > 0 else "PORT", absi(roundi(aob / 5.0) * 5)]
+	_range_label.text = "RANGE %d m   AoB %s %d°" % [roundi(dist / 50.0) * 50, "STBD" if aob > 0 else "PORT", absi(roundi(aob / 5.0) * 5)]
