@@ -809,7 +809,39 @@ func _targets(o: Dictionary) -> Array[ShipState]:
 	return out
 
 
+## What the crew hears of a sim event. Sonar-only sounds need the local player on the sonar.
+func _event_sound(kind: String, data: Dictionary) -> void:
+	var on_sonar := local_player != null and local_player.station != null and local_player.station.station_id == "sonar"
+	match kind:
+		"blast":
+			if data.get("shell", false):
+				Sfx.play("shell_hit")
+				return
+			var d: float = data.dist
+			if d < DepthCharge.SHAKE * 3.0:
+				Sfx.play("depth_charge", lerpf(-4.0, -20.0, clampf(d / (DepthCharge.SHAKE * 3.0), 0.0, 1.0)), lerpf(0.9, 1.1, randf()))
+			if d < DepthCharge.HEAVY:
+				Sfx.play("alarm", -6.0)
+		"ping":
+			if data.echo:
+				Sfx.play("echo_ranging")
+			elif on_sonar:
+				Sfx.play("echo_ranging", -14.0, 0.95)
+		"splash":
+			if on_sonar:
+				Sfx.play("splash")
+		"own_ping":
+			Sfx.play("sonar_ping")
+		"fired":
+			Sfx.play("torpedo_launch")
+		"hit":
+			Sfx.play("torpedo_hit")
+		"sunk":
+			Sfx.play("creak_%d" % randi_range(1, 3), -4.0, 0.5) # breaking up
+
+
 func _on_sim_event(kind: String, data: Dictionary) -> void:
+	_event_sound(kind, data)
 	if kind == "hit":
 		exterior.explosion(Vector2(data.x, data.y))
 	elif kind == "shell":
@@ -820,7 +852,9 @@ func _on_sim_event(kind: String, data: Dictionary) -> void:
 		if local_player != null and dist < DepthCharge.SHAKE:
 			local_player.add_trauma(clampf((DepthCharge.SHAKE - dist) / 70.0, 0.15, 1.0))
 		if dist < DepthCharge.LIGHT + 15.0:
-			interior.flicker(clampf((DepthCharge.LIGHT + 15.0 - dist) / 40.0, 0.3, 1.0))
+			var strength := clampf((DepthCharge.LIGHT + 15.0 - dist) / 40.0, 0.3, 1.0)
+			interior.flicker(strength)
+			interior.shake_loose(strength)
 	if not multiplayer.is_server():
 		return
 	match kind:

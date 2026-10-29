@@ -1,7 +1,25 @@
 class_name Build
 ## Helpers for building greybox geometry from primitives (Peak-like flat colours).
 
+## Palette colour -> [detail texture, metres per repeat]. The grey detail maps
+## (tools/make_textures.py) multiply the flat colour, so the palette stays the palette.
+const DETAIL := {
+	"9db59a": ["painted_steel", 1.6], "b5c4b0": ["painted_steel", 1.6], "d8d2c0": ["painted_steel", 1.0],
+	"5e6b5c": ["deck_plate", 1.2], "4e5550": ["painted_steel", 1.2], "6e756c": ["brushed", 0.8],
+	"c9a04a": ["brushed", 0.5], "8a8f86": ["brushed", 0.8], "3a3f38": ["painted_steel", 1.2],
+	"4a5248": ["painted_steel", 1.0], "6b5a44": ["wood", 1.5], "5d6b4e": ["brushed", 1.0],
+	"4a4e55": ["ship_plating", 12.0], "8c9096": ["ship_plating", 8.0], "8b7355": ["wood", 6.0],
+	"5a5f66": ["ship_plating", 8.0], "c8c4b8": ["ship_plating", 6.0],
+}
+
 static var _materials := {}
+static var _textures := {}
+
+
+static func detail_texture(name: String) -> Texture2D:
+	if not _textures.has(name):
+		_textures[name] = load("res://assets/textures/%s.png" % name)
+	return _textures[name]
 
 
 static func mat(color: Color, emission := 0.0) -> StandardMaterial3D:
@@ -10,6 +28,17 @@ static func mat(color: Color, emission := 0.0) -> StandardMaterial3D:
 		var m := StandardMaterial3D.new()
 		m.albedo_color = color
 		m.roughness = 0.75
+		var d: Array = DETAIL.get(color.to_html(false), [])
+		if not d.is_empty() and emission == 0.0:
+			m.albedo_texture = detail_texture(d[0])
+			m.uv1_triplanar = true
+			m.uv1_scale = Vector3.ONE / float(d[1])
+			m.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+		# Toon-ish: light wraps softly round the chunky shapes, with a touch of rim light.
+		m.diffuse_mode = BaseMaterial3D.DIFFUSE_LAMBERT_WRAP
+		m.rim_enabled = true
+		m.rim = 0.2
+		m.rim_tint = 0.6
 		if color.a < 1.0:
 			m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		if emission > 0.0:

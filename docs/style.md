@@ -7,7 +7,13 @@ and update "Current style" in the same commit.
 
 - **Phase 1 (now): Peak-like.** Low-poly, chunky shapes built from primitives, flat
   colours, soft lighting, no textures. Crew are capsules with a simple head, cap and face.
-- **Phase 2 (M6): toward Sea of Thieves.** Hand-painted feel via procedural textures
+- **Phase 2 (M6, started): toward Sea of Thieves.** Now in: every palette colour carries a
+  grey detail map (`Build.DETAIL`), mapped triplanar so the flat colour stays the colour:
+  riveted painted steel panels with rust drips and chips on walls and deckhead, diamond-tread
+  deck plates, brushed brass, plank wood, ship plating with strakes. Light wraps softly
+  (Lambert wrap) with a faint rim light. Still to come for the full SoT feel: hand-painted
+  colour variation, stronger toon banding.
+- **Planned for Phase 2:** Hand-painted feel via procedural textures
   (riveted steel, brass, painted pipes, chipped paint, rust streaks, wood decking), toon-ish
   shading with soft rim light, stylised ocean with foam and big readable waves.
 - **Interior palette:** pale institutional green walls (`#9DB59A`), grey-green deck
@@ -39,6 +45,16 @@ and update "Current style" in the same commit.
   table with a cream cloth, brass-handled battery-well hatches underfoot. Crew's mess: two
   tiers of bunks both sides and a mess table. Maneuvering: dark switch cubicles with brass
   handles. Torpedo rooms: olive torpedoes racked low, bunks over them.
+- **Sea:** noise-broken foam on the crests, white wakes astern of ships and a bow wave;
+  just under the surface the scope sees murky green.
+- **Crew:** Peak-like sailors: big round head, white Dixie-cup hat, dot eyes, chambray shirt
+  in the crewman's own colour, navy dungarees, black boots; arms and legs swing as they walk,
+  arms reach forward at a station.
+- **Sound:** synthesised, not sampled (`tools/make_sounds.sh`): clean 1.5 kHz sonar ping,
+  harsh metallic echo-ranging when they find us, booms that roll, groaning creaks that come
+  more often deeper, an "ah-OO-gah" klaxon on opening the vents, alarm bell on a close one,
+  diesel chug, motor whine rising with speed, hissing leaks, crackling fires.
+- **Hits:** camera shake, lights stutter, paint flakes shake down from the deckhead.
 - **UI:** typewriter / stencil feel, cream on dark panels, minimal HUD (crosshair, carried
   tool, interaction prompt).
 

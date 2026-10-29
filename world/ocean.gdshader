@@ -1,6 +1,8 @@
 shader_type spatial;
+render_mode cull_disabled;
 // Stylised open ocean: three Gerstner waves in world space, faded out with distance,
-// deep-to-turquoise colour by facing angle and white foam on the crests.
+// deep-to-turquoise colour by facing angle, noisy white foam on the crests, and the white
+// wakes and bow waves of up to 16 ships. Seen from below it is a murky green ceiling.
 
 uniform vec4 deep_color : source_color = vec4(0.03, 0.12, 0.24, 1.0);
 uniform vec4 shallow_color : source_color = vec4(0.06, 0.30, 0.38, 1.0);
@@ -9,6 +11,10 @@ uniform vec4 foam_color : source_color = vec4(0.92, 0.96, 1.0, 1.0);
 uniform float amplitude = 0.5;
 uniform float fade_start = 300.0;
 uniform float fade_end = 1800.0;
+// Ships for wakes: (x, z, heading in radians, speed m/s), and their lengths.
+uniform vec4 ships[16];
+uniform float ship_len[16];
+uniform int ship_count = 0;
 
 varying float v_crest;
 varying float v_fade;
@@ -40,14 +46,61 @@ void vertex() {
 	NORMAL = normalize(mix(vec3(0.0, 1.0, 0.0), normalize(cross(binormal, tangent)), v_fade));
 }
 
+float hash(vec2 p) {
+	return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+}
+
+float vnoise(vec2 p) {
+	vec2 i = floor(p);
+	vec2 f = fract(p);
+	f = f * f * (3.0 - 2.0 * f);
+	return mix(mix(hash(i), hash(i + vec2(1, 0)), f.x), mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), f.x), f.y);
+}
+
+// White water behind and around a ship: a narrow churned trail astern that widens and fades,
+// and a bow wave curling off the stem. 0..1.
+float wake(vec2 p) {
+	float w = 0.0;
+	for (int i = 0; i < ship_count; i++) {
+		vec4 s = ships[i];
+		if (s.w < 0.5) {
+			continue;
+		}
+		vec2 fwd = vec2(sin(s.z), -cos(s.z)); // heading 0 = north = -z
+		vec2 rel = p - s.xy;
+		float along = dot(rel, fwd);
+		float across = abs(dot(rel, vec2(-fwd.y, fwd.x)));
+		float half_len = ship_len[i] * 0.5;
+		float astern = -along - half_len;
+		float trail_len = 60.0 * s.w;
+		if (astern > -half_len && astern < trail_len) {
+			float width = 4.0 + max(astern, 0.0) * 0.12;
+			float t = clamp(astern / trail_len, 0.0, 1.0);
+			w = max(w, (1.0 - smoothstep(width * 0.6, width, across)) * (1.0 - t) * min(1.0, s.w / 4.0));
+		}
+		float bow = along - half_len * 0.8;
+		if (bow > -half_len * 0.4 && bow < 6.0) {
+			w = max(w, (1.0 - smoothstep(4.0, 9.0, across + bow * 0.5)) * min(1.0, s.w / 5.0) * 0.8);
+		}
+	}
+	return w;
+}
+
 void fragment() {
 	// Looking down into the water shows turquoise; at grazing angles it reads deep blue.
 	float facing = clamp(dot(NORMAL, VIEW), 0.0, 1.0);
 	vec3 col = mix(deep_color.rgb, shallow_color.rgb, pow(facing, 1.5));
 	float fresnel = pow(1.0 - facing, 5.0);
 	col = mix(col, horizon_color.rgb, fresnel * 0.45);
-	float foam = smoothstep(1.6 * amplitude, 2.4 * amplitude, v_crest);
-	col = mix(col, foam_color.rgb, foam * 0.8);
+	vec3 world = (INV_VIEW_MATRIX * vec4(VERTEX, 1.0)).xyz;
+	float n = vnoise(world.xz * 0.35 + TIME * 0.2) * 0.6 + vnoise(world.xz * 1.3 - TIME * 0.3) * 0.4;
+	float foam = smoothstep(1.4 * amplitude, 2.3 * amplitude, v_crest + n * 0.5 * amplitude);
+	foam = max(foam, wake(world.xz) * smoothstep(0.25, 0.6, n));
+	col = mix(col, foam_color.rgb, foam * 0.85);
+	if (!FRONT_FACING) {
+		col = vec3(0.10, 0.28, 0.28); // the surface from underneath
+		foam = 0.0;
+	}
 	ALBEDO = col;
 	ROUGHNESS = mix(0.22, 0.7, foam);
 	SPECULAR = 0.3;

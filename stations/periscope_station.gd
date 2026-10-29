@@ -41,7 +41,7 @@ func _process(delta: float) -> void:
 	ext.scope_bearing = bearing
 	ext.scope_fov = HIGH_FOV if high_power else LOW_FOV
 	var height := sub.scope_height()
-	_view_rect.visible = height > 0.0
+	_view_rect.visible = height > -4.0 # just under, the scope sees green murk
 	if not sub.periscope_raised and not sub.is_surfaced():
 		_status.text = "SCOPE DOWN — [R] raise"
 	elif height <= 0.0:

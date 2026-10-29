@@ -53,11 +53,11 @@ Each milestone ends playable and committed. Tick items as they land.
 - [x] Per-size role suggestions in lobby; balance pass per crew size (first pass: CO2 and reload time scale with crew; tune by playing)
 
 ## M6 — Look and feel
-- [ ] Procedural textures (steel, brass, paint, rust, wood) and toon-ish lighting
-- [ ] Ocean shader polish: foam, wakes, underwater fog
-- [ ] Crew models (stylised, procedural animation)
-- [ ] Audio: sonar pings, hull creaks, depth-charge booms, alarms, engine hum, water
-- [ ] Hit feedback: shake, light flicker, sparks, debris
+- [x] Procedural textures (steel, brass, paint, rust, wood) and toon-ish lighting
+- [x] Ocean shader polish: foam, wakes, underwater fog
+- [x] Crew models (stylised, procedural animation)
+- [x] Audio: sonar pings, hull creaks, depth-charge booms, alarms, engine hum, water
+- [x] Hit feedback: shake, light flicker, sparks, debris
 
 ## M7 — Sandbox and extras
 - [ ] Open-ocean patrol mode with roaming groups

@@ -25,6 +25,7 @@ func _ready() -> void:
 			Build.sphere(self, 0.07, Vector3.ZERO, Color("#1E2A24"))
 			_fx = Build.particles(self, Color(0.85, 0.93, 1.0, 0.85), 40, 0.7, inward, 4.0, 12.0, Vector3(0, -9, 0), 0.07)
 			Build.area(self, Vector3(0.5, 0.6, 0.6), Vector3(-signf(position.x) * 0.2, 0, 0))
+			Sfx.loop_at(self, "water_loop", Vector3.ZERO, -2.0)
 		"fire":
 			_fx = Build.particles(self, Color(1.0, 0.55, 0.15, 0.9), 50, 0.8, Vector3.UP, 1.2, 25.0, Vector3(0, 1.5, 0), 0.16)
 			_fx.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
@@ -35,6 +36,7 @@ func _ready() -> void:
 			_light.position.y = 0.6
 			add_child(_light)
 			Build.area(self, Vector3(1.0, 1.2, 1.0), Vector3(0, 0.5, 0))
+			Sfx.loop_at(self, "fire_loop", Vector3(0, 0.5, 0), 0.0)
 		"pump":
 			var m := Tools.model("pump")
 			m.position.y = 0.11
