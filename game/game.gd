@@ -26,6 +26,7 @@ var _push_timer := 0.0
 var _last_ping_notice := -INF
 var _clear_timer := 0.0
 var _work_clock := {} ## peer -> last time a work request was accepted (msec)
+var tutorial: Tutorial
 
 
 func _enter_tree() -> void:
@@ -66,7 +67,7 @@ func _ready() -> void:
 	multiplayer.peer_disconnected.connect(_on_peer_disconnected)
 	multiplayer.server_disconnected.connect(_quit.bind("Lost connection to the host."))
 	multiplayer.connection_failed.connect(_quit.bind("Could not reach a host at %s:%d." % [Net.address, Net.port]))
-	multiplayer.connected_to_server.connect(func() -> void: rq_hello.rpc_id(1, Net.player_name))
+	multiplayer.connected_to_server.connect(func() -> void: rq_hello.rpc_id(1, Net.player_name, Net.build))
 
 	var err := Net.start()
 	if err != OK:
@@ -74,12 +75,16 @@ func _ready() -> void:
 		return
 	if multiplayer.is_server():
 		crew.names[1] = Net.player_name
+		crew.mission = Net.mission
 		_setup_mission()
 		if Net.debug_charges:
 			_debug_pattern.call_deferred()
 		_spawner.spawn(1)
 		_apply_crew()
-		hud.show_message("Patrol started. Two freighters and a destroyer escort reported to the north.", 6.0)
+		if crew.mission == "training":
+			hud.show_message("Training patrol. Follow the checklist, top right.", 6.0)
+		else:
+			hud.show_message("Patrol started. Two freighters and a destroyer escort reported to the north.", 6.0)
 	else:
 		hud.show_message("Joining %s ..." % Net.address, 3.0)
 
@@ -101,10 +106,16 @@ func _initial_crew() -> Dictionary:
 		"result": "", ## set when the patrol ends: "lost" or "complete"
 		"result_text": "",
 		"time": 0.0,
+		"mission": "patrol", ## "patrol" | "training", set by the host
+		"tutorial": {"step": 0},
 	}
 
 
 func _setup_mission() -> void:
+	if crew.mission == "training":
+		_start_tutorial()
+		tutorial.setup_world()
+		return
 	var sub := Sim.world.sub
 	sub.depth = sub.data.periscope_depth
 	sub.ordered_depth = sub.data.periscope_depth
@@ -115,6 +126,12 @@ func _setup_mission() -> void:
 	# The escort screens ahead of the convoy, a little to the side nearer the sub.
 	var dd := Sim.world.add_ship(DESTROYER, Vector2(700, 3000), 270.0, 8.0)
 	Sim.world.set_escort(dd, lead, Vector2(-500, 1100))
+
+
+func _start_tutorial() -> void:
+	if tutorial == null:
+		tutorial = Tutorial.new(self)
+		add_child(tutorial)
 
 
 ## Testing aid (--test-charges): a pattern going off around the boat a few seconds in.
@@ -172,7 +189,7 @@ func _on_peer_disconnected(id: int) -> void:
 	crew.names.erase(id)
 	crew.tools.erase(id)
 	_clear_stations_of(id)
-	_push_crew()
+	push_crew()
 
 
 func _quit(reason: String) -> void:
@@ -192,7 +209,7 @@ func crew_name(id: int) -> String:
 	return crew.names.get(id, "Sailor %d" % id)
 
 
-func _push_crew() -> void:
+func push_crew() -> void:
 	set_crew.rpc(crew)
 
 
@@ -204,6 +221,8 @@ func set_crew(state: Dictionary) -> void:
 
 func _apply_crew() -> void:
 	interior.apply_crew(crew)
+	if crew.mission == "training":
+		_start_tutorial()
 	for p: Player in _players.get_children():
 		p.set_display_name(crew_name(p.peer_id))
 		p.set_tool(crew.tools.get(p.peer_id, ""))
@@ -216,6 +235,12 @@ func _apply_crew() -> void:
 			if crew.stations[sid] == multiplayer.get_unique_id():
 				held = sid
 		local_player.sync_station(held)
+
+
+## Host -> one client: you can't join (different build).
+@rpc("authority", "call_remote", "reliable")
+func turned_away(reason: String) -> void:
+	_quit(reason)
 
 
 @rpc("authority", "call_local", "reliable")
@@ -237,11 +262,14 @@ func _clear_stations_of(peer: int) -> void:
 # --- Requests (run on the host) ---------------------------------------------
 
 @rpc("any_peer", "call_local", "reliable")
-func rq_hello(player_name: String) -> void:
+func rq_hello(player_name: String, build: String) -> void:
 	if not multiplayer.is_server():
 		return
+	if build != Net.build and "dev" not in [build, Net.build]:
+		turned_away.rpc_id(_sender(), "The host runs build %s and you run %s. Both start the game again to update." % [Net.build, build])
+		return
 	crew.names[_sender()] = player_name.substr(0, 20)
-	_push_crew()
+	push_crew()
 	announce.rpc("%s came aboard." % player_name.substr(0, 20))
 
 
@@ -251,11 +279,11 @@ func rq_station_enter(station_id: String) -> void:
 		return
 	var peer := _sender()
 	if station_occupant(station_id) not in [0, peer]:
-		_push_crew()
+		push_crew()
 		return
 	_clear_stations_of(peer)
 	crew.stations[station_id] = peer
-	_push_crew()
+	push_crew()
 
 
 @rpc("any_peer", "call_local", "reliable")
@@ -263,7 +291,7 @@ func rq_station_leave() -> void:
 	if not multiplayer.is_server():
 		return
 	_clear_stations_of(_sender())
-	_push_crew()
+	push_crew()
 
 
 @rpc("any_peer", "call_local", "reliable")
@@ -272,7 +300,7 @@ func rq_door(door_id: String) -> void:
 		return
 	crew.doors[door_id] = not crew.doors[door_id]
 	Sim.world.hull.doors_open[door_id] = crew.doors[door_id]
-	_push_crew()
+	push_crew()
 
 
 @rpc("any_peer", "call_local", "reliable")
@@ -280,7 +308,7 @@ func rq_order(station_id: String, key: String, value: Variant) -> void:
 	if not multiplayer.is_server() or station_occupant(station_id) != _sender():
 		return
 	if Sim.world.hull.is_broken(station_id):
-		_push_crew()
+		push_crew()
 		return
 	var sub := Sim.world.sub
 	match station_id:
@@ -295,14 +323,18 @@ func rq_order(station_id: String, key: String, value: Variant) -> void:
 		"periscope":
 			if key == "raised":
 				sub.periscope_raised = bool(value)
+			elif key == "ranged" and tutorial != null:
+				tutorial.flag("ranged")
 		"sonar":
 			if key == "ping":
 				Sim.world.own_ping()
 				announce.rpc("Sonar: PING! Every escort out there heard that.")
+			elif key == "classified" and tutorial != null:
+				tutorial.flag("classified")
 		_:
 			if station_id.begins_with("tube_"):
 				_tube_order(station_id.trim_prefix("tube_").to_int() - 1, key, value)
-	_push_crew()
+	push_crew()
 
 
 func _tube_order(i: int, key: String, value: Variant) -> void:
@@ -345,7 +377,7 @@ func rq_tool(kind: String) -> void:
 		if kind == "pump" and crew.tools.get(peer, "") != "pump" and pumps_free() <= 0:
 			return
 		crew.tools[peer] = kind
-	_push_crew()
+	push_crew()
 
 
 @rpc("any_peer", "call_local", "reliable")
@@ -374,7 +406,7 @@ func rq_work(tool: String, target: String, seconds: float) -> void:
 			crew.stats.repairs += 1
 			var st: Station = interior.stations.get(target)
 			announce.rpc("%s repaired the %s." % [who, st.display_name.to_lower() if st != null else target])
-	_push_crew()
+	push_crew()
 
 
 @rpc("any_peer", "call_local", "reliable")
@@ -384,7 +416,7 @@ func rq_place_pump(pos: Vector3) -> void:
 	var hull := Sim.world.hull
 	hull.pumps.append({"c": hull.comp_at(pos.z), "p": Vector3(pos.x, maxf(pos.y, 0.0), pos.z)})
 	crew.tools.erase(_sender())
-	_push_crew()
+	push_crew()
 
 
 @rpc("any_peer", "call_local", "reliable")
@@ -394,16 +426,16 @@ func rq_take_pump(index: int) -> void:
 		return
 	hull.pumps.remove_at(index)
 	crew.tools[_sender()] = "pump"
-	_push_crew()
+	push_crew()
 
 
-func _end_patrol(result: String, text: String) -> void:
+func end_patrol(result: String, text: String) -> void:
 	if crew.result != "":
 		return
 	crew.result = result
 	crew.result_text = text
 	crew.time = Sim.world.time
-	_push_crew()
+	push_crew()
 
 
 func _host_tick(delta: float) -> void:
@@ -423,16 +455,18 @@ func _host_tick(delta: float) -> void:
 				t.reload = 0.0
 				t.loaded = true
 				announce.rpc("Tube %d loaded." % (i + 1))
-				_push_crew()
+				push_crew()
 	if reloading:
 		_push_timer += delta
 		if _push_timer > 0.25:
 			_push_timer = 0.0
-			_push_crew()
+			push_crew()
 
 
 ## Done when every merchant is sunk and no escort has been hunting nearby for a minute.
 func _check_patrol_complete(delta: float) -> void:
+	if crew.mission == "training":
+		return
 	var w := Sim.world
 	var merchants := w.ships.filter(func(s: ShipState) -> bool: return s.ai == null and not s.is_sinking())
 	if not merchants.is_empty() or crew.sunk == 0:
@@ -442,7 +476,7 @@ func _check_patrol_complete(delta: float) -> void:
 		return s.ai != null and not s.is_sinking() and s.ai.mode >= ShipAI.Mode.HUNT and s.pos.distance_to(w.sub.pos) < 5000.0)
 	_clear_timer = 0.0 if hunted else _clear_timer + delta
 	if _clear_timer >= CLEAR_TIME:
-		_end_patrol("complete", "Convoy destroyed and the escort shaken off.")
+		end_patrol("complete", "Convoy destroyed and the escort shaken off.")
 
 
 func _on_sim_event(kind: String, data: Dictionary) -> void:
@@ -475,13 +509,13 @@ func _on_sim_event(kind: String, data: Dictionary) -> void:
 					lines.append(m)
 			if not lines.is_empty():
 				announce.rpc("  ".join(lines))
-			_push_crew()
+			push_crew()
 		"spotted":
 			announce.rpc("The convoy is zig-zagging. They've spotted us!")
 		"leak":
 			announce.rpc(data.text)
 		"lost":
-			_end_patrol("lost", data.reason)
+			end_patrol("lost", data.reason)
 		"hit":
 			announce.rpc("HIT! %s" % data.name)
 		"dud":
@@ -489,6 +523,6 @@ func _on_sim_event(kind: String, data: Dictionary) -> void:
 		"sunk":
 			crew.sunk += 1
 			crew.tonnage += int(data.tons)
-			_push_crew()
+			push_crew()
 			var left := Sim.world.ships.filter(func(s: ShipState) -> bool: return not s.is_sinking()).size()
 			announce.rpc("%s SUNK — %d tons.%s" % [data.name, data.tons, " Convoy destroyed!" if left == 0 else ""])

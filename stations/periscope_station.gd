@@ -130,6 +130,7 @@ func _take_range() -> void:
 	if best == null:
 		_range_label.text = "no target on the wire"
 		return
+	order("ranged", true)
 	var dist := best.pos.distance_to(sub.pos)
 	var err := randf_range(-0.08, 0.08) * (0.5 if high_power else 1.0)
 	var aob := wrapf(rad_to_deg(atan2(-(best.pos - sub.pos).x, -(best.pos - sub.pos).y)) - best.heading, -180.0, 180.0)

@@ -45,7 +45,8 @@ Godot **4.7.2**, GDScript, Jolt 3D physics. Repo: github.com/landonreekstin/sub-
 | Path | Holds |
 |---|---|
 | `autoload/` | `controls.gd` (input map), `net.gd` (host/join, CLI args), `sim.gd` (ocean world, host-run, replicated) |
-| `game/` | `game.gd`: patrol root — builds boat, spawns crew, owns crew state (doors, stations, tubes) and the host-side request RPCs |
+| `game/` | `game.gd`: patrol root — builds boat, spawns crew, owns crew state (doors, stations, tubes) and the host-side request RPCs; `tutorial.gd`: the training patrol's checklist and script |
+| `tools/` | `publish.sh`: export the pack to the NAS drop for the launcher |
 | `sim/` | pure simulation classes: sub, ships, torpedoes, depth charges, `detection.gd`, `ship_ai.gd` (escort state machine), `hull.gd` (water, leaks, fires, broken stations) |
 | `interior/` | sub interiors built from primitives, doors, compartments, tool racks, `damage_view.gd` (draws the hull state) |
 | `stations/` | station base class and each station |
@@ -60,11 +61,21 @@ Godot **4.7.2**, GDScript, Jolt 3D physics. Repo: github.com/landonreekstin/sub-
 godot --path .                      # main menu
 godot --path . -- --host            # host straight away
 godot --path . -- --join 127.0.0.1  # join straight away
+godot --path . -- --training      # host the training patrol (the tutorial)
 ```
 Two-player test on one machine: start one with `--host`, one with `--join 127.0.0.1`.
 Testing aids: `--name <n>`, `--spawn x,y,z` (start the local player there, e.g.
-`--spawn 0.6,0.1,-20.2` = torpedo room), `--port <n>` (default 7000), `--test-charges` (host: fixed seed, and a pattern
+`--spawn 0.6,0.1,-20.2` = torpedo room), `--address <ip>` (prefill the join box), `--port <n>` (default 7000), `--test-charges` (host: fixed seed, and a pattern
 goes off around the boat 3 s in and the helm is knocked out; leak/fire positions are printed). F10 leaves to the menu.
+
+### Playing with others (Blaney)
+Others play the **published pack**, not the source: `tools/publish.sh` exports one `.pck`
+(no export templates needed) to the NAS drop `/mnt/nas/public/sub-of-seas/`, and the
+`sub-of-seas` launcher from nixos-config (`modules/nixos/programs/sub-of-seas.nix`, on
+gaming-pc and blaney-pc) downloads a new one on its next start and runs it on port 7845.
+Blaney joins `192.168.1.76:7845` over the homelab VPN (the Batman forward to gaming-pc).
+The build id (commit) is baked into the pack; a host turns away a different build, except
+`dev` (running from source). Publish only committed, tested work.
 
 ### Controls
 WASD + mouse, E interact, Space jump, Q/Esc leave station, Tab next station in a cluster.
@@ -78,6 +89,7 @@ down at your feet (E picks it up), G puts a tool down.
 ```
 godot --headless --path . --quit-after 120          # script/parse errors
 godot --headless --path . -s tests/run_tests.gd     # unit tests, exit code 1 on failure
+godot --headless --path . -s tests/tutorial_walkthrough.gd  # plays the whole training patrol (~1 min)
 ```
 Then run it in xvfb and look at screenshots (see `../CLAUDE.md`).
 

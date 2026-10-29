@@ -1,6 +1,6 @@
 extends Node
 ## LAN session over ENet: the host is a listen server (and a player), others join by IP.
-## Command line (after `--`): --host | --join <ip> | --name <name>
+## Command line (after `--`): --host | --join <ip> | --name <name> | --address <ip> (prefill)
 
 const DEFAULT_PORT := 7000
 const MAX_PLAYERS := 8
@@ -13,11 +13,17 @@ var player_name := "Sailor"
 var last_error := "" ## shown by the main menu after a session ends badly
 var cli_start := Mode.NONE ## set from the command line, consumed by the main menu once
 var debug_spawn: Variant = null ## --spawn x,y,z: start this player there (testing)
-var port := DEFAULT_PORT ## --port n (testing two sessions on one machine)
+var port := DEFAULT_PORT ## --port n (the packaged game uses 7845, forwarded over the homelab VPN)
+## Which build this is: tools/publish.sh writes the commit into build.txt in the pack.
+## Peers must match (RPCs are checked against each other); "dev" (run from source) matches anything.
+var build := "dev"
+var mission := "patrol" ## "patrol" | "training"; chosen by the host (--training)
 var debug_charges := false ## --test-charges: the host drops a pattern on the boat (testing)
 
 
 func _ready() -> void:
+	if FileAccess.file_exists("res://build.txt"):
+		build = FileAccess.get_file_as_string("res://build.txt").strip_edges()
 	var args := OS.get_cmdline_user_args()
 	for i in args.size():
 		match args[i]:
@@ -30,6 +36,12 @@ func _ready() -> void:
 			"--port":
 				if i + 1 < args.size():
 					port = args[i + 1].to_int()
+			"--address":
+				if i + 1 < args.size():
+					address = args[i + 1]
+			"--training": # host the training patrol
+				mission = "training"
+				cli_start = Mode.HOST
 			"--test-charges":
 				debug_charges = true
 			"--spawn":

@@ -10,6 +10,9 @@ var _status: Label
 var _overlay: Control
 var _message_tween: Tween
 var _debrief: Control
+var _objective: PanelContainer
+var _objective_title: Label
+var _objective_text: Label
 
 
 func _ready() -> void:
@@ -46,6 +49,30 @@ func _ready() -> void:
 	_status.add_theme_color_override("font_outline_color", Color.BLACK)
 	_root.add_child(_status)
 	_status.position = Vector2(12, 8)
+
+
+## The training checklist panel, top right. An empty title hides it.
+func set_objective(title: String, text: String) -> void:
+	if _objective == null:
+		if title == "":
+			return
+		_objective = UiKit.panel()
+		_root.add_child(_objective)
+		_objective.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+		_objective.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+		_objective.offset_right = -12
+		_objective.offset_top = 36
+		var box := VBoxContainer.new()
+		_objective.add_child(box)
+		_objective_title = UiKit.label("", 16, UiKit.BRASS)
+		box.add_child(_objective_title)
+		_objective_text = UiKit.label("", 17)
+		_objective_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_objective_text.custom_minimum_size = Vector2(360, 0)
+		box.add_child(_objective_text)
+	_objective.visible = title != ""
+	_objective_title.text = title
+	_objective_text.text = text
 
 
 func set_prompt(text: String) -> void:
@@ -96,7 +123,8 @@ func show_debrief(crew: Dictionary) -> void:
 	box.add_theme_constant_override("separation", 8)
 	p.add_child(box)
 	var lost: bool = crew.result == "lost"
-	box.add_child(UiKit.label("BOAT LOST" if lost else "PATROL COMPLETE", 34, UiKit.BAD if lost else UiKit.GOOD))
+	var title := "BOAT LOST" if lost else ("TRAINING COMPLETE" if crew.result == "training" else "PATROL COMPLETE")
+	box.add_child(UiKit.label(title, 34, UiKit.BAD if lost else UiKit.GOOD))
 	box.add_child(UiKit.label(crew.result_text, 20))
 	box.add_child(UiKit.label(" ", 8))
 	var st: Dictionary = crew.stats

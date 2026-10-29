@@ -14,6 +14,7 @@ var _lines: Array[Label] = []
 var _echoes: Array = [] ## {b, r} from our last ping
 var _echo_time := -INF
 var _alerts: Array = [] ## {text, b, until}
+var _classified_sent := false ## told the host (training) we have identified a warship
 var _ping_flash := {} ## ship id -> until (enemy echo-ranging seen on the ring)
 
 
@@ -94,6 +95,9 @@ func _process(_delta: float) -> void:
 	if broken:
 		_lines[1].text = "Static. The sonar gear is damaged."
 	elif best != null:
+		if best.data.asw and not _classified_sent:
+			_classified_sent = true
+			order("classified", true)
 		_lines[1].text = "CONTACT %03d°  %s" % [roundi(ShipState.bearing(sub.pos, best.pos)), classify(best)]
 	else:
 		_lines[1].text = "Nothing on this bearing."

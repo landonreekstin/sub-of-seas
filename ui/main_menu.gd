@@ -38,6 +38,11 @@ func _ready() -> void:
 	host.pressed.connect(_host)
 	box.add_child(host)
 
+	var training := Button.new()
+	training.text = "Training patrol (host)"
+	training.pressed.connect(_training)
+	box.add_child(training)
+
 	box.add_child(UiKit.label("Host address"))
 	_ip_edit = LineEdit.new()
 	_ip_edit.text = Net.address
@@ -50,17 +55,23 @@ func _ready() -> void:
 	if Net.last_error != "":
 		box.add_child(UiKit.label(Net.last_error, 16, UiKit.BAD))
 		Net.last_error = ""
-	box.add_child(UiKit.label("Host needs UDP port %d open on the LAN." % Net.port, 14, UiKit.DIM))
+	box.add_child(UiKit.label("Host needs UDP port %d open. Build %s." % [Net.port, Net.build], 14, UiKit.DIM))
 
 	match Net.cli_start:
 		Net.Mode.HOST:
-			_host.call_deferred()
+			(_training if Net.mission == "training" else _host).call_deferred()
 		Net.Mode.CLIENT:
 			_join.call_deferred()
 	Net.cli_start = Net.Mode.NONE
 
 
 func _host() -> void:
+	Net.mission = "patrol"
+	_start(Net.Mode.HOST)
+
+
+func _training() -> void:
+	Net.mission = "training"
 	_start(Net.Mode.HOST)
 
 

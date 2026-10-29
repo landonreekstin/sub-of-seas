@@ -129,7 +129,7 @@ func step(dt: float, authoritative := true) -> void:
 
 
 func _think(ship: ShipState, dt: float) -> void:
-	if ship.is_sinking():
+	if ship.is_sinking() or ship.passive:
 		return
 	if ship.ai != null:
 		ship.ai.step(dt, self, rng)
