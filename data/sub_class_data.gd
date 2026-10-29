@@ -23,3 +23,5 @@ extends Resource
 @export var flood_seconds := 30.0 ## main ballast vents open to decks awash
 @export var co2_canisters := 8 ## CO2 absorbent canisters aboard
 @export var spare_parts := 6 ## spare-parts boxes in stores
+## Suggested jobs, most important first: player N is offered roles[N-1]. Not locks.
+@export var roles: Array[String] = []

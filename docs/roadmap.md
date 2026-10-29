@@ -48,9 +48,9 @@ Each milestone ends playable and committed. Tick items as they land.
 - [x] Mission data + mission select; objectives; tonnage scoring; debrief screen
 
 ## M5 — Three subs
-- [ ] S-boat interior + control-room cluster
-- [ ] Narwhal interior
-- [ ] Per-size role suggestions in lobby; balance pass per crew size
+- [x] S-boat interior + control-room cluster
+- [x] Narwhal interior
+- [x] Per-size role suggestions in lobby; balance pass per crew size (first pass: CO2 and reload time scale with crew; tune by playing)
 
 ## M6 — Look and feel
 - [ ] Procedural textures (steel, brass, paint, rust, wood) and toon-ish lighting

@@ -51,6 +51,15 @@ Crew/Galley · Forward Engine Room · After Engine Room · Maneuvering (electric
 Torpedo Room. Levels: main deck, conning tower (ladder up), pump room / battery well
 (hatch down).
 
+**How it is built (M5).** `interior/sub_interior.gd` lays each boat out from a list of
+compartments (S-boat 4: forward torpedo, battery, control, engine; Gato 7: + crew's mess,
+maneuvering, after torpedo; Narwhal 8: + a second engine room), 39 / 68 / 86 m of walking.
+The Gato and Narwhal have a conning tower (periscope + TDC cluster) over the control room;
+the S-boat's periscope comes down into the control room where one person can run helm,
+periscope, sonar and TDC with Tab. Stern tubes fire astern with their own TDC solution. The
+air panel and the spare-parts stores are always in the first compartment aft of the
+control room. Suggested roles (`SubClassData.roles`) are listed top right in joining order.
+
 ### Role splits
 
 Roles are suggestions shown in the lobby, not locks. Anyone can use any station.

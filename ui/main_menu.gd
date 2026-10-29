@@ -6,6 +6,8 @@ const GAME_SCENE := "res://game/game.tscn"
 var _name_edit: LineEdit
 var _ip_edit: LineEdit
 var _mission: OptionButton
+var _sub: OptionButton
+const SUBS: Array[String] = ["s_boat", "gato", "narwhal"]
 var _briefing: Label
 
 
@@ -49,6 +51,13 @@ func _ready() -> void:
 	_briefing.custom_minimum_size = Vector2(420, 90)
 	box.add_child(_briefing)
 	_show_briefing()
+	box.add_child(UiKit.label("Boat"))
+	_sub = OptionButton.new()
+	for k in SUBS:
+		var d: SubClassData = load("res://data/subs/%s.tres" % k)
+		_sub.add_item("%s   (crew %d–%d)" % [d.display_name, d.crew_min, d.crew_max])
+	_sub.select(maxi(SUBS.find(Net.sub_key), 0))
+	box.add_child(_sub)
 	var host := Button.new()
 	host.text = "Host this patrol"
 	host.pressed.connect(_host)
@@ -88,6 +97,7 @@ func _show_briefing() -> void:
 
 func _host() -> void:
 	Net.mission = MissionData.KEYS[_mission.selected] # starts on --mission's, if given
+	Net.sub_key = SUBS[_sub.selected]
 	_start(Net.Mode.HOST)
 
 

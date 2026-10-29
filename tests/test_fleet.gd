@@ -117,3 +117,20 @@ func test_every_mission_loads_and_spawns() -> bool:
 		runner.check(n > 0 and w.ships.size() == n, "mission %s spawns %d ships" % [k, n])
 		_run(w, 30.0)
 	return true
+
+
+func test_every_boat_builds_with_all_its_stations() -> bool:
+	for k in ["s_boat", "gato", "narwhal"]:
+		var data: SubClassData = load("res://data/subs/%s.tres" % k)
+		var interior := SubInterior.create(data)
+		interior.build()
+		var tubes := interior.stations.keys().filter(func(s: String) -> bool: return s.begins_with("tube_")).size()
+		runner.check(tubes == data.bow_tubes + data.stern_tubes, "%s: %d tubes" % [k, tubes])
+		for sid in ["helm", "dive", "ballast", "periscope", "tdc", "sonar", "nav", "engine", "air"]:
+			runner.check(interior.stations.has(sid), "%s has %s" % [k, sid])
+		runner.check(interior.doors.size() == interior.compartments.size() - 1, "%s: a door in every inner bulkhead" % k)
+		runner.check(interior.station_compartments().size() == interior.stations.size(), "%s: every station is inside a compartment" % k)
+		runner.check(interior.racks.has("control") and interior.spawn_points.size() == 6, "%s: rack and spawn points" % k)
+		runner.check(data.roles.size() >= data.crew_max, "%s: a suggested role for every crewman" % k)
+		interior.free()
+	return true

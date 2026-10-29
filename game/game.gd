@@ -5,7 +5,7 @@ extends Node3D
 ## authoritative: clients send requests (rq_*), the host validates, changes `crew` and
 ## broadcasts it to everyone.
 
-const GATO := preload("res://data/subs/gato.tres")
+const SUB_DIR := "res://data/subs/%s.tres"
 const MENU_SCENE := "res://ui/main_menu.tscn"
 const RELOAD_TIME := 30.0 ## seconds of hands-on work at the tube
 const PING_NOTICE_GAP := 20.0 ## s between "they have us" announcements
@@ -15,7 +15,8 @@ const KNOCKED_OUT_TIME := 15.0
 
 static var instance: Game
 
-var interior: GatoInterior
+var interior: SubInterior ## built once we know the boat: at once on the host, on the first crew state on a client
+var sub_class: SubClassData
 var exterior: ExteriorWorld
 var hud: Hud
 var local_player: Player
@@ -43,13 +44,6 @@ func _exit_tree() -> void:
 
 
 func _ready() -> void:
-	crew = _initial_crew()
-	Sim.start(GATO, 1234 if Net.debug_charges else -1) # fixed seed: same damage every test run
-	interior = GatoInterior.new()
-	interior.name = "Interior"
-	add_child(interior)
-	Sim.world.hull.setup(GatoInterior.COMPARTMENTS, GatoInterior.DOOR_LINKS, interior.station_compartments())
-	Sim.world.air.setup(GatoInterior.COMPARTMENTS.size(), GATO.co2_canisters)
 	exterior = ExteriorWorld.create()
 	add_child(exterior.viewport)
 	get_viewport().size_changed.connect(_fit_exterior)
@@ -78,6 +72,8 @@ func _ready() -> void:
 		_quit.call_deferred("Could not %s (error %d). Is the port in use?" % ["host" if Net.mode == Net.Mode.HOST else "join", err])
 		return
 	if multiplayer.is_server():
+		_build_boat(Net.sub_key if Net.mission != "training" else "gato")
+		crew = _initial_crew()
 		crew.names[1] = Net.player_name
 		crew.mission = Net.mission
 		_setup_mission()
@@ -87,12 +83,13 @@ func _ready() -> void:
 			_debug_win.call_deferred()
 		if Net.debug_air:
 			Sim.world.air.co2 = 4.6
-			Sim.world.air.smoke[1] = 1.0
+			var cr := interior.comp_index("control")
+			Sim.world.air.smoke[cr] = 1.0
 			for d: String in crew.doors: # shut in with it: the control room stays thick
 				crew.doors[d] = false
 				Sim.world.hull.doors_open[d] = false
-			Sim.world.hull.add_fire(1, Sim.world.rng)
-		_spawner.spawn(1)
+			Sim.world.hull.add_fire(cr, Sim.world.rng)
+		_spawner.spawn(_spawn_data(1))
 		_apply_crew()
 		if crew.mission == "training":
 			hud.show_message("Training patrol. Follow the checklist, top right.", 6.0)
@@ -102,16 +99,32 @@ func _ready() -> void:
 		hud.show_message("Joining %s ..." % Net.address, 3.0)
 
 
+## The boat: its sim, its interior and the hull model's compartments. Clients call this
+## when the host's first crew state tells them which class it is.
+func _build_boat(key: String) -> void:
+	sub_class = load(SUB_DIR % key) if ResourceLoader.exists(SUB_DIR % key) else load(SUB_DIR % "gato")
+	Sim.start(sub_class, 1234 if Net.debug_charges else -1) # fixed seed: same damage every test run
+	interior = SubInterior.create(sub_class)
+	add_child(interior)
+	move_child(interior, 0)
+	Sim.world.hull.setup(interior.compartments, interior.door_links, interior.station_compartments())
+	Sim.world.air.setup(interior.compartments.size(), sub_class.co2_canisters)
+
+
 func _initial_crew() -> Dictionary:
 	var tubes := []
-	for i in GATO.bow_tubes:
-		tubes.append({"loaded": true, "flooded": false, "door": false, "gyro": 0, "reload": 0.0})
+	for i in sub_class.bow_tubes + sub_class.stern_tubes:
+		tubes.append({"loaded": true, "flooded": false, "door": false, "gyro": 0, "reload": 0.0, "stern": i >= sub_class.bow_tubes})
+	var doors := {}
+	for d: String in interior.doors:
+		doors[d] = true
 	return {
+		"sub": sub_class.key,
 		"names": {},
-		"doors": {"fwd": true, "aft": true},
+		"doors": doors,
 		"stations": {},
 		"tubes": tubes,
-		"reserve": GATO.torpedo_capacity - GATO.bow_tubes - GATO.stern_tubes,
+		"reserve": sub_class.torpedo_capacity - sub_class.bow_tubes - sub_class.stern_tubes,
 		"tonnage": 0,
 		"sunk": 0,
 		"tools": {}, ## peer -> tool kind
@@ -124,7 +137,7 @@ func _initial_crew() -> Dictionary:
 		"sunk_by": {}, ## ship class key -> ships sunk
 		"tutorial": {"step": 0},
 		"knocked": {}, ## peer -> seconds until they come round
-		"parts": GATO.spare_parts, ## spare-parts boxes left in stores
+		"parts": sub_class.spare_parts, ## spare-parts boxes left in stores
 		## The TDC: periscope marks on one target, the operator's nudges, and whether the
 		## tubes' gyros follow its solution.
 		"tdc": {"target": -1, "marks": [], "speed_adj": 0.0, "course_adj": 0.0, "follow": false},
@@ -196,6 +209,8 @@ func _fit_exterior() -> void:
 func _process(delta: float) -> void:
 	if Input.is_action_just_pressed("quit_to_menu"):
 		_quit("")
+	if interior == null or crew.is_empty():
+		return # a client still waiting to hear which boat this is
 	if multiplayer.is_server():
 		_host_tick(delta)
 	_show_objectives()
@@ -208,7 +223,7 @@ func _process(delta: float) -> void:
 				track.pop_front()
 		var water := Sim.world.hull.water_fraction()
 		hud.set_status("%s  |  crew %d  |  sunk %d (%d t)%s  |  F10 leave" % [
-			GATO.display_name, crew.names.size(), crew.sunk, crew.tonnage,
+			sub_class.display_name, crew.names.size(), crew.sunk, crew.tonnage,
 			"  |  FLOODING %d%%" % roundi(water * 100.0) if water > 0.01 else ""])
 
 
@@ -231,21 +246,37 @@ func _show_objectives() -> void:
 			"survive":
 				progress = "  (%d:%02d)" % [int(Sim.world.time) / 60, int(Sim.world.time) % 60] if Sim.world != null else ""
 		lines.append("%s  %s%s" % ["✓" if o.get("done", false) else "○", o.text, progress])
-	hud.set_objective(m.title.to_upper(), "\n".join(lines))
+	hud.set_objective(m.title.to_upper(), "\n".join(lines) + "\n\n" + crew_roles())
+
+
+## Suggested jobs for whoever is aboard, in joining order (the host first).
+func crew_roles() -> String:
+	var out: Array[String] = []
+	var ids: Array = crew.names.keys()
+	ids.sort()
+	for i in ids.size():
+		var role: String = sub_class.roles[i] if i < sub_class.roles.size() else "Damage control"
+		out.append("%s — %s" % [crew_name(ids[i]), role])
+	return "CREW\n" + "\n".join(out)
 
 
 # --- Players ---------------------------------------------------------------
 
-func _spawn_player(id: int) -> Node:
+## Spawn data is [peer id, position]: clients may not have built the boat yet.
+func _spawn_player(data: Variant) -> Node:
+	return Player.create(int(data[0]), data[1])
+
+
+func _spawn_data(id: int) -> Array:
 	var points := interior.spawn_points
-	return Player.create(id, points[absi(id) % points.size()])
+	return [id, points[absi(id) % points.size()]]
 
 
 func _on_peer_connected(id: int) -> void:
 	if not multiplayer.is_server():
 		return
 	print("peer %d connected" % id)
-	_spawner.spawn(id)
+	_spawner.spawn(_spawn_data(id))
 	set_crew.rpc_id(id, crew)
 
 
@@ -285,6 +316,8 @@ func push_crew() -> void:
 @rpc("authority", "call_local", "reliable")
 func set_crew(state: Dictionary) -> void:
 	crew = state
+	if interior == null:
+		_build_boat(crew.sub)
 	_apply_crew()
 
 
@@ -478,14 +511,16 @@ func _tdc_mark(id: int, bearing: float, range_m: float) -> void:
 		tutorial.flag("marked")
 
 
-## The live TDC solution for the bow tubes, from crew state (any peer can call it).
-func tdc_solution() -> Dictionary:
+## The live TDC solution for the bow tubes (or the stern tubes, fired astern), from crew
+## state (any peer can call it).
+func tdc_solution(stern := false) -> Dictionary:
 	var tdc: Dictionary = crew.get("tdc", {})
 	if Sim.world == null or tdc.get("marks", []).is_empty():
 		return {"ok": false, "reason": "NO MARKS", "est": {"ok": false}}
 	var sub := Sim.world.sub
 	var est := Tdc.estimate(tdc.marks, tdc.speed_adj, tdc.course_adj)
-	var sol := Tdc.solve(est, Sim.world.time, sub.pos + sub.direction() * sub.data.length * 0.5, sub.heading)
+	var launch := sub.pos + sub.direction() * sub.data.length * (-0.5 if stern else 0.5)
+	var sol := Tdc.solve(est, Sim.world.time, launch, fposmod(sub.heading + (180.0 if stern else 0.0), 360.0))
 	sol.est = est
 	sol.quality = Tdc.quality(tdc.marks, sol.range)
 	return sol
@@ -495,15 +530,16 @@ func tdc_solution() -> Dictionary:
 func _tdc_follow() -> void:
 	if not crew.tdc.follow:
 		return
-	var sol := tdc_solution()
-	if not sol.ok:
-		return
-	var g := roundi(sol.gyro)
 	var changed := false
-	for t: Dictionary in crew.tubes:
-		if t.gyro != g:
-			t.gyro = g
-			changed = true
+	for stern in [false, true]:
+		var sol := tdc_solution(stern)
+		if not sol.ok:
+			continue
+		var g := roundi(sol.gyro)
+		for t: Dictionary in crew.tubes:
+			if t.get("stern", false) == stern and t.gyro != g:
+				t.gyro = g
+				changed = true
 	if changed:
 		push_crew()
 
@@ -527,7 +563,7 @@ func _tube_order(i: int, key: String, value: Variant) -> void:
 		"fire":
 			if t.loaded and t.flooded and t.door:
 				t.loaded = false
-				Sim.world.fire_torpedo(float(t.gyro))
+				Sim.world.fire_torpedo(float(t.gyro), t.get("stern", false))
 				announce.rpc("Tube %d fired — gyro %+d°" % [i + 1, t.gyro])
 				if Sim.world.rng.randf() < 0.03:
 					Sim.world.hull.break_station("tube_%d" % (i + 1))
@@ -641,7 +677,8 @@ func _host_tick(delta: float) -> void:
 		var t: Dictionary = crew.tubes[i]
 		if t.reload > 0.0 and station_occupant("tube_%d" % (i + 1)) != 0:
 			reloading = true
-			t.reload += delta / RELOAD_TIME
+			# A small crew has its hands full: reloads go a little quicker with fewer aboard.
+			t.reload += delta / (RELOAD_TIME * clampf(0.6 + 0.1 * crew.names.size(), 0.8, 1.2))
 			if t.reload >= 1.0:
 				t.reload = 0.0
 				t.loaded = true

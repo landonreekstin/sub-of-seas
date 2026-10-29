@@ -220,7 +220,9 @@ func _physics_process(delta: float) -> void:
 		input = Vector2.ZERO
 	var dir := (transform.basis * Vector3(input.x, 0.0, input.y)).normalized()
 	# Wading through flood water is slow.
-	var wade := clampf(Game.instance.interior.damage.water_height_at(position.z) - position.y, 0.0, 1.2) / 1.2
+	var wade := 0.0
+	if Game.instance.interior != null:
+		wade = clampf(Game.instance.interior.damage.water_height_at(position.z) - position.y, 0.0, 1.2) / 1.2
 	var speed := SPEED * lerpf(1.0, 0.4, wade) * lerpf(1.0, 0.55, breathing().x) # bad air makes your legs heavy
 	velocity.x = dir.x * speed
 	velocity.z = dir.z * speed
