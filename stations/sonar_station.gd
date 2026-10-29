@@ -14,6 +14,7 @@ var _lines: Array[Label] = []
 var _echoes: Array = [] ## {b, r} from our last ping
 var _echo_time := -INF
 var _alerts: Array = [] ## {text, b, until}
+var _classified_sent := false ## told the host (training) we have identified a warship
 var _ping_flash := {} ## ship id -> until (enemy echo-ranging seen on the ring)
 
 
@@ -94,6 +95,9 @@ func _process(_delta: float) -> void:
 	if broken:
 		_lines[1].text = "Static. The sonar gear is damaged."
 	elif best != null:
+		if best.data.asw and not _classified_sent:
+			_classified_sent = true
+			order("classified", true)
 		_lines[1].text = "CONTACT %03d°  %s" % [roundi(ShipState.bearing(sub.pos, best.pos)), classify(best)]
 	else:
 		_lines[1].text = "Nothing on this bearing."
@@ -124,7 +128,7 @@ func _build_overlay(root: Control) -> void:
 		var l := UiKit.label("", 18, UiKit.CREAM if i < 2 else (UiKit.BAD if i == 2 else UiKit.GOOD))
 		box.add_child(l)
 		_lines.append(l)
-	box.add_child(UiKit.label("[P] active ping (gives range, gives us away)    " + footer(cluster != ""), 14, UiKit.DIM))
+	box.add_child(UiKit.label("[M] put this bearing on the chart    [P] active ping (gives range, gives us away)    " + footer(cluster != ""), 14, UiKit.DIM))
 
 
 func _draw_scope() -> void:
@@ -175,3 +179,5 @@ func station_input(event: InputEvent) -> void:
 		trained = fposmod(trained + 5.0, 360.0)
 	elif key_pressed(event, KEY_P):
 		order("ping")
+	elif key_pressed(event, KEY_M):
+		order("plot", trained)

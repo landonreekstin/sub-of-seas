@@ -12,6 +12,7 @@ const FIRE_MAX_PER_ROOM := 3
 const LEAK_SIZES := [0.03, 0.06, 0.12] ## volume per second; a 14 m room holds 14
 const TORCH_SECONDS_PER_RATE := 75.0 ## 0.03 leak = 2.3 s of welding, 0.12 = 9 s
 const WRENCH_SECONDS := 6.0
+const PARTS_SECONDS := 3.0 ## fitting spare parts to wrecked gear, before the wrench
 
 ## Each: {name, z0, z1, water (0..1 of deck height)}.
 var comps: Array[Dictionary] = []
@@ -22,6 +23,7 @@ var leaks: Array[Dictionary] = [] ## {id, c, p: Vector3, rate, hp}
 var fires: Array[Dictionary] = [] ## {id, c, p: Vector3, size}
 var pumps: Array[Dictionary] = [] ## {c, p: Vector3}
 var broken := {} ## station_id -> seconds of wrench work left
+var needs_parts := {} ## station_id -> seconds of fitting spare parts left (wrecked, not just broken)
 var _next_id := 1
 
 
@@ -166,9 +168,16 @@ func apply_blast(dist: float, at_z: float, side: float, rng: RandomNumberGenerat
 			return station_comp[s] == c and not broken.has(s))
 		if not here.is_empty():
 			var sid: String = here[rng.randi() % here.size()]
-			broken[sid] = WRENCH_SECONDS
+			break_station(sid, dist < DepthCharge.LETHAL)
 			out.append("BROKEN:" + sid)
 	return out
+
+
+## Knocks a station out. Wrecked (`heavy`) gear needs spare parts fitted before the wrench.
+func break_station(sid: String, heavy := false) -> void:
+	broken[sid] = WRENCH_SECONDS
+	if heavy:
+		needs_parts[sid] = PARTS_SECONDS
 
 
 ## Hands-on repair work from a tool. Returns true when the job is finished.
@@ -190,8 +199,14 @@ func work(tool: String, target: String, seconds: float) -> bool:
 						fires.erase(f)
 						return true
 					return false
+		"parts":
+			if needs_parts.has(target):
+				needs_parts[target] -= seconds
+				if needs_parts[target] <= 0.0:
+					needs_parts.erase(target)
+					return true
 		"wrench":
-			if broken.has(target):
+			if broken.has(target) and not needs_parts.has(target):
 				broken[target] -= seconds
 				if broken[target] <= 0.0:
 					broken.erase(target)
@@ -206,7 +221,7 @@ func is_broken(station_id: String) -> bool:
 func to_snapshot() -> Dictionary:
 	return {
 		"w": comps.map(func(c: Dictionary) -> float: return c.water),
-		"l": leaks, "f": fires, "pu": pumps, "b": broken,
+		"l": leaks, "f": fires, "pu": pumps, "b": broken, "np": needs_parts,
 	}
 
 
@@ -217,6 +232,7 @@ func apply_snapshot(s: Dictionary) -> void:
 	fires.assign(s.f)
 	pumps.assign(s.pu)
 	broken = s.b
+	needs_parts = s.np
 
 
 func _take_id() -> int:

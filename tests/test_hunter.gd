@@ -18,6 +18,7 @@ func _world(seed_value := 3) -> OceanWorld:
 	var w := OceanWorld.new(GATO, seed_value)
 	w.hull.setup(COMPS, LINKS, {"helm": 1, "dive": 1, "tube_1": 0})
 	w.sub.depth = 18.0
+	w.sub.ballast = 1.0
 	w.sub.ordered_depth = 18.0
 	return w
 
@@ -45,6 +46,7 @@ func test_detection_numbers() -> bool:
 	dd.speed = 30.0 * SubState.KNOT
 	runner.check(Detection.hearing_factor(dd) < 0.3, "a ship at 30 kn is deaf")
 	w.sub.depth = 100.0
+	w.sub.ballast = 1.0
 	dd.pos = Vector2(0, 2600)
 	runner.check(Detection.ping_chance(dd, w.sub) == 0.0, "out of sonar range")
 	dd.pos = Vector2(0, 80)
@@ -65,6 +67,7 @@ func test_raised_scope_starts_a_search() -> bool:
 func test_hunt_ends_in_depth_charges() -> bool:
 	var w := _world()
 	w.sub.depth = 60.0
+	w.sub.ballast = 1.0
 	w.sub.ordered_depth = 60.0
 	var dd := w.add_ship(DESTROYER, Vector2(0, 1600), 180.0, 14.0)
 	var kinds := {}
@@ -163,6 +166,7 @@ func test_close_blast_damages_the_right_room() -> bool:
 func test_flooded_boat_sinks_and_is_lost() -> bool:
 	var w := _world()
 	w.sub.telegraph = 1
+	w.sub.ballast = 1.0 # dived: dry tanks would float even this much water
 	w.hull.comps[0].water = 0.8
 	w.hull.comps[1].water = 0.6
 	w.hull.doors_open = {"fwd": false, "aft": false}
@@ -189,4 +193,31 @@ func test_snapshot_carries_hunter_state() -> bool:
 	runner.check(c.ships[0].mode == ShipAI.Mode.HUNT, "mode replicated")
 	runner.check(c.charges.size() == 1, "charge replicated")
 	runner.check(c.hull.leaks.size() == 1 and c.hull.is_broken("helm"), "hull replicated")
+	return true
+
+
+func test_wrecked_gear_needs_parts_before_the_wrench() -> bool:
+	var h := HullState.new().setup([{"name": "a", "z0": 0.0, "z1": 10.0}], {}, {"helm": 0})
+	h.break_station("helm", true)
+	runner.check(not h.work("wrench", "helm", 10.0) and h.is_broken("helm"), "wrench does nothing to wrecked gear")
+	runner.check(h.work("parts", "helm", HullState.PARTS_SECONDS), "parts fitted")
+	runner.check(h.work("wrench", "helm", HullState.WRENCH_SECONDS) and not h.is_broken("helm"), "then the wrench fixes it")
+	return true
+
+
+func test_hard_driven_gear_wears_out() -> bool:
+	var w := _world()
+	w.hull.setup([{"name": "a", "z0": -10.0, "z1": 10.0}], {}, {"engine": 0, "helm": 0})
+	w.sub.depth = 0.0 # surfaced, on the diesels
+	w.sub.ordered_depth = 0.0
+	w.sub.ballast = 0.0
+	w.sub.diesels.assign([1.0, 1.0])
+	w.sub.telegraph = 4
+	w.sub.rudder = 3
+	var said := []
+	w.event.connect(func(k: String, d: Dictionary) -> void:
+		if k == "breakdown":
+			said.append(d.station))
+	_run(w, 1800.0, 0.5)
+	runner.check(said.has("engine") and said.has("helm"), "half an hour flat out broke something: %s" % [said])
 	return true

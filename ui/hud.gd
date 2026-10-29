@@ -10,12 +10,19 @@ var _status: Label
 var _overlay: Control
 var _message_tween: Tween
 var _debrief: Control
+var _objective: PanelContainer
+var _objective_title: Label
+var _objective_text: Label
+var _smoke: ColorRect
+var _vignette: ColorRect
+var _blackout: ColorRect
 
 
 func _ready() -> void:
 	_root = UiKit.overlay_root()
 	_root.theme = UiKit.theme()
 	add_child(_root)
+	_build_air_layers()
 	_overlay = UiKit.overlay_root()
 	_root.add_child(_overlay)
 
@@ -46,6 +53,72 @@ func _ready() -> void:
 	_status.add_theme_color_override("font_outline_color", Color.BLACK)
 	_root.add_child(_status)
 	_status.position = Vector2(12, 8)
+
+
+## The training checklist panel, top right. An empty title hides it.
+func set_objective(title: String, text: String) -> void:
+	if _objective == null:
+		if title == "":
+			return
+		_objective = UiKit.panel()
+		_root.add_child(_objective)
+		_objective.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+		_objective.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+		_objective.offset_right = -12
+		_objective.offset_top = 36
+		var box := VBoxContainer.new()
+		_objective.add_child(box)
+		_objective_title = UiKit.label("", 16, UiKit.BRASS)
+		box.add_child(_objective_title)
+		_objective_text = UiKit.label("", 17)
+		_objective_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_objective_text.custom_minimum_size = Vector2(360, 0)
+		box.add_child(_objective_text)
+	_objective.visible = title != ""
+	_objective_title.text = title
+	_objective_text.text = text
+
+
+const VIGNETTE_SHADER := """
+shader_type canvas_item;
+uniform float amount : hint_range(0.0, 1.0) = 0.0;
+void fragment() {
+	float d = distance(UV, vec2(0.5)) * 1.6;
+	float a = smoothstep(1.0 - amount * 0.9, 1.25 - amount * 0.6, d) * (0.4 + 0.6 * amount);
+	COLOR = vec4(0.0, 0.0, 0.0, a);
+}
+"""
+
+
+## Full-screen layers for breathing bad air: grey smoke, a dark closing vignette, and the
+## black of passing out.
+func _build_air_layers() -> void:
+	_smoke = ColorRect.new()
+	_smoke.color = Color(0.45, 0.45, 0.43, 0.0)
+	_vignette = ColorRect.new()
+	var m := ShaderMaterial.new()
+	m.shader = Shader.new()
+	m.shader.code = VIGNETTE_SHADER
+	_vignette.material = m
+	_blackout = ColorRect.new()
+	_blackout.color = Color(0, 0, 0, 0.96)
+	_blackout.visible = false
+	var l := UiKit.label("You passed out...", 30, UiKit.DIM)
+	_blackout.add_child(l)
+	l.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	l.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	for c: ColorRect in [_smoke, _vignette, _blackout]:
+		c.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_root.add_child(c)
+		c.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+
+
+## `bad` 0..1 (1 = about to pass out), `smoke` 0..1 where you stand.
+func set_air(bad: float, smoke: float, knocked: bool) -> void:
+	_smoke.color.a = clampf(smoke * 0.75, 0.0, 0.75)
+	(_vignette.material as ShaderMaterial).set_shader_parameter("amount", bad)
+	_vignette.visible = bad > 0.01
+	_blackout.visible = knocked
 
 
 func set_prompt(text: String) -> void:
@@ -96,7 +169,8 @@ func show_debrief(crew: Dictionary) -> void:
 	box.add_theme_constant_override("separation", 8)
 	p.add_child(box)
 	var lost: bool = crew.result == "lost"
-	box.add_child(UiKit.label("BOAT LOST" if lost else "PATROL COMPLETE", 34, UiKit.BAD if lost else UiKit.GOOD))
+	var title := "BOAT LOST" if lost else ("TRAINING COMPLETE" if crew.result == "training" else "PATROL COMPLETE")
+	box.add_child(UiKit.label(title, 34, UiKit.BAD if lost else UiKit.GOOD))
 	box.add_child(UiKit.label(crew.result_text, 20))
 	box.add_child(UiKit.label(" ", 8))
 	var st: Dictionary = crew.stats

@@ -16,6 +16,7 @@ var alerted := false
 var awareness := 0.0 ## 0..1, how sure it is that a sub is near (see Detection)
 var ai: ShipAI = null ## host only, for anti-submarine ships
 var mode := 0 ## ShipAI.Mode, replicated so stations can show it
+var passive := false ## scripted (training): no lookouts, no zig-zag, holds course and speed
 var _zig_timer := 30.0
 
 
@@ -44,8 +45,8 @@ func step(dt: float, rng: RandomNumberGenerator) -> void:
 	if is_sinking():
 		ordered_speed = 0.0
 		sink = minf(1.0, sink + dt / data.sink_time)
-	elif ai != null:
-		pass # the AI sets course and speed
+	elif ai != null or passive:
+		pass # the AI (or a script) sets course and speed
 	elif rng != null:
 		_zig_timer -= dt
 		if _zig_timer <= 0.0:

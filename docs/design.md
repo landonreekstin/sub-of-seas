@@ -14,7 +14,7 @@ Everything here is a starting point. Numbers live in `data/*.tres` and get tuned
    bridge view, navigator plots a course to the patrol area.
 3. **Contact.** Sonar hears screws, or the periscope spots smoke. Identify: freighter? convoy
    with escorts? battleship task force?
-4. **Approach.** Dive, close submerged on battery. Too fast = noisy and battery drains; too slow
+4. **Approach.** Dive, close submerged on battery (Gato: 30 min at 1/3, ~4 min at flank; lights brown out near flat, and a flat battery stops the motors). Too fast = noisy and battery drains; too slow
    = target gets away. Periscope up = risk of being seen.
 5. **Attack.** Periscope marks target; TDC turns that into a gyro angle; captain calls
    "Fire one!"; torpedo room fires. Torpedoes run, hit (or dud, or miss).
@@ -79,7 +79,7 @@ leaving station mode. One player per station; others see who is on it.
 | Sonar | Passive: bearings of contacts by sound, class guess by screws. Active ping: range, but alerts everyone | Hears depth charges hit the water (warning!) |
 | Nav / plot | Chart with own track, marked contacts, mission area | Draw/mark for the team |
 | Torpedo tube | Load (hoist torpedo from rack, ram), flood tube, open outer door, fire | Reload takes ~45 s of hands-on work; 2 people faster |
-| Engine (diesel) | Start/stop, charges battery when surfaced | Can't run submerged; breaks under damage |
+| Engine (diesel) | Start/stop each of two diesels (1/2), battery gauge | Surfaced only: diving with them running floods them (controls broken + a leak). One diesel = 70 % surface speed, two = full; what the screws don't use charges the battery (Gato: flat to full in 8 min stopped) |
 | Electrical | Battery charge, motor switchboard, lights | Battery damaged + seawater = chlorine gas (M3+) |
 | Air | O2 bleed, CO2 scrubbers (absorbent canisters) | Submerged CO2 rises with crew count and time |
 
@@ -162,6 +162,28 @@ whatever the dive station orders. Below test depth rivets start to pop (new smal
 Lost when past crush depth or 65 % flooded; the debrief shows time, sinkings, charges felt,
 leaks welded, fires out and repairs.
 
+**Ballast and air (M3).** Main ballast (`SubState.ballast`) is 0 dry .. 1 flooded. Dry, she
+floats; the planes can't take her under. Opening the vents floods the tanks over the class's
+`flood_seconds` and she settles to decks awash (4.5 m), then the dive station takes her down.
+Coming up, the planes stop at awash: blowing the tanks with high-pressure air surfaces her
+(diesels need that: their induction floods below 3 m). A normal blow takes 20 s and 12 % of
+the air banks; the emergency blow (X twice) takes 4 s and 35 %, and the buoyancy of dry tanks
+holds up a flooding boat that would otherwise sink. The compressors refill the banks on the
+diesels. Air (`sim/air.gd`): submerged, CO2 rises 0.08 %/min plus 0.04 per player (4 players:
+3 % in ~12 min) and O2 falls with it. A CO2 canister scrubs 0.6 %/min for 5 min (8 aboard a
+Gato); the oxygen bleed adds 0.8 %/min from a 40-minute bank. Fires make smoke in their room,
+which drifts through open doors. Past 3 % CO2 / under 17 % O2 / in smoke the screen closes in
+and you walk slower; at 6 % / 14 % or in thick smoke you pass out after 6 s, for 15 s, and
+come round in the compartment with the best air. At 8 % / 12 % the boat is lost. Surfacing
+clears everything.
+
+**Breakdowns and spare parts (M3).** Gear driven hard wears out (wrench to fix): diesels
+running (about once per 25 min each), the periscope raised at over 5 kn submerged (every
+~3 min), hard rudder at flank (every ~10 min), an active ping (4 %), a torpedo firing (3 %
+jams the tube). Gear caught in a close blast or flooded diesels are WRECKED: someone fetches a
+spare parts box from stores (engine room; 6 on a Gato), holds LMB to fit it (3 s), then the
+wrench finishes the job. A box put back in stores goes back on the count.
+
 ## 6. Torpedoes (simplified TDC)
 
 1. Periscope: put the crosshair on the target, use the **stadimeter** (match top of mast to
@@ -175,6 +197,22 @@ leaks welded, fires out and repairs.
    accurate, deliberately frustrating at low odds — tunable to 0). The wake can give the sub away.
 
 Without a solution players can still fire straight down the bow on a gut call.
+
+**How it is built (M3).** `M` on the periscope marks the ship under the crosshair: true
+bearing (±0.5°) and a stadimeter range (±3 %, ±1.5 % in high power), stamped with the time
+and our position, kept in `crew.tdc` (last 8 marks on one target; marking a new ship starts
+over). `sim/tdc.gd` fits a straight track through the marks by least squares once they span
+30 s (one mark: 8 kn across the line of sight, a guess). The operator nudges speed (W/S) and
+course (A/D). The intercept for a 46 kn torpedo from the bow gives the gyro angle; past 90°
+or a 4 km run there is no solution. Quality grows with marks, their span and closeness.
+`T` sends it: the bow tubes' gyros then follow the live solution until someone touches a
+gyro or presses T again.
+
+**Chart table (M3).** North up, centred on the boat: the boat's own track, TDC marks (red
+crosses) and the TDC's estimate of the target's track ten minutes ahead, sonar bearings the
+operator put on the plot with M (blue lines, fading over 3 minutes), and up to 16 numbered
+pencil marks anyone can put down (LMB) or rub out (RMB). Contacts only appear when someone
+marks them, so the chart is where the crew's information meets.
 
 ## 7. Co-op design principles
 

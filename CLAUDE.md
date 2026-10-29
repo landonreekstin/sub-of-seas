@@ -45,13 +45,14 @@ Godot **4.7.2**, GDScript, Jolt 3D physics. Repo: github.com/landonreekstin/sub-
 | Path | Holds |
 |---|---|
 | `autoload/` | `controls.gd` (input map), `net.gd` (host/join, CLI args), `sim.gd` (ocean world, host-run, replicated) |
-| `game/` | `game.gd`: patrol root — builds boat, spawns crew, owns crew state (doors, stations, tubes) and the host-side request RPCs |
-| `sim/` | pure simulation classes: sub, ships, torpedoes, depth charges, `detection.gd`, `ship_ai.gd` (escort state machine), `hull.gd` (water, leaks, fires, broken stations) |
+| `game/` | `game.gd`: patrol root — builds boat, spawns crew, owns crew state (doors, stations, tubes) and the host-side request RPCs; `tutorial.gd`: the training patrol's checklist and script |
+| `tools/` | `publish.sh`: export the pack to the NAS drop for the launcher |
+| `sim/` | pure simulation classes: sub (incl. battery, diesels, ballast, HP air), `air.gd` (CO2/O2, smoke, scrubber), `tdc.gd` (marks → track → gyro), ships, torpedoes, depth charges, `detection.gd`, `ship_ai.gd` (escort state machine), `hull.gd` (water, leaks, fires, broken stations) |
 | `interior/` | sub interiors built from primitives, doors, compartments, tool racks, `damage_view.gd` (draws the hull state) |
 | `stations/` | station base class and each station |
 | `player/` | first-person crew controller, held tools (`tools.gd`) |
 | `world/` | exterior ocean scene, ocean shader, ship models |
-| `ui/` | main menu, HUD, station overlays |
+| `ui/` | main menu, HUD, station overlays, `chart_view.gd` (the plot) |
 | `data/` | `.tres` balance data and their `Resource` scripts |
 | `tests/` | headless test runner + `test_*.gd` |
 
@@ -60,24 +61,40 @@ Godot **4.7.2**, GDScript, Jolt 3D physics. Repo: github.com/landonreekstin/sub-
 godot --path .                      # main menu
 godot --path . -- --host            # host straight away
 godot --path . -- --join 127.0.0.1  # join straight away
+godot --path . -- --training      # host the training patrol (the tutorial)
 ```
 Two-player test on one machine: start one with `--host`, one with `--join 127.0.0.1`.
 Testing aids: `--name <n>`, `--spawn x,y,z` (start the local player there, e.g.
-`--spawn 0.6,0.1,-20.2` = torpedo room), `--port <n>` (default 7000), `--test-charges` (host: fixed seed, and a pattern
-goes off around the boat 3 s in and the helm is knocked out; leak/fire positions are printed). F10 leaves to the menu.
+`--spawn 0.6,0.1,-20.2` = torpedo room), `--address <ip>` (prefill the join box), `--look <deg>` (spawn turned that far right), `--station <id>` (man that station on arrival: `helm`, `dive`, `ballast`, `periscope`, `tdc`, `sonar`, `tube_1`.., `engine`, `air`), `--port <n>` (default 7000), `--test-charges` (host: fixed seed, and a pattern
+goes off around the boat 3 s in and the helm is knocked out; leak/fire positions are printed), `--test-air` (host: foul air, and a fire in the shut-in, smoke-filled control room: whoever is in there passes out). F10 leaves to the menu.
+
+### Playing with others (Blaney)
+Others play the **published pack**, not the source: `tools/publish.sh` exports one `.pck`
+(no export templates needed) to the NAS drop `/mnt/nas/public/sub-of-seas/`, and the
+`sub-of-seas` launcher from nixos-config (`modules/nixos/programs/sub-of-seas.nix`, on
+gaming-pc and blaney-pc) downloads a new one on its next start and runs it on port 7845.
+Blaney joins `192.168.1.76:7845` over the homelab VPN (the Batman forward to gaming-pc).
+The build id (commit) is baked into the pack; a host turns away a different build, except
+`dev` (running from source). Publish only committed, tested work.
 
 ### Controls
 WASD + mouse, E interact, Space jump, Q/Esc leave station, Tab next station in a cluster.
 Helm: W/S telegraph, A/D rudder. Dive: W/S depth ±5 (Shift ±1), 1–4 presets.
-Periscope: mouse train, Z power, R raise/lower, F stadimeter. Tubes: L reload, F flood,
+Periscope: mouse train, Z power, R raise/lower, F stadimeter, M mark for the TDC.
+TDC (conning tower, starboard): W/S target speed ±1 kn, A/D course ±5°, C clear marks, T send to the tubes (gyros follow).
+Chart table (control room, starboard aft): W/S or wheel zoom, LMB pencil mark, RMB rub out. Sonar: M puts the bearing on the chart. Tubes: L reload, F flood,
 O outer door, A/D gyro, Space fire. Sonar: A/D or mouse train, P active ping.
+Engine (after end of the engine room): 1/2 start/stop a diesel (surfaced only; stop them before diving).
+Ballast (control room, port aft): V vents (flood to dive), B blow (to surface), X twice emergency blow.
+Air (engine room, starboard fwd): C fresh CO2 canister, O oxygen bleed.
 Tools: E at a rack takes one, hold LMB on a leak/fire/broken station to work, LMB with the pump sets it
-down at your feet (E picks it up), G puts a tool down.
+down at your feet (E picks it up), G puts a tool down. Wrecked gear needs a spare parts box (crate in the engine room, aft port) fitted with LMB before the wrench.
 
 ### Test
 ```
 godot --headless --path . --quit-after 120          # script/parse errors
 godot --headless --path . -s tests/run_tests.gd     # unit tests, exit code 1 on failure
+godot --headless --path . -s tests/tutorial_walkthrough.gd  # plays the whole training patrol (~1 min)
 ```
 Then run it in xvfb and look at screenshots (see `../CLAUDE.md`).
 

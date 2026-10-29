@@ -31,7 +31,8 @@ func _process(_delta: float) -> void:
 		_lines[0].text = "TELEGRAPH  %-15s [W/S]" % SubState.TELEGRAPH_NAMES[sub.telegraph]
 		var side := "AMIDSHIPS" if sub.rudder == 0 else ("%s %d°" % ["RIGHT" if sub.rudder > 0 else "LEFT", absf(sub.rudder_angle())])
 		_lines[1].text = "RUDDER     %-15s [A/D]" % side
-		_lines[2].text = "HEADING    %03d°   SPEED %4.1f kn" % [roundi(sub.heading) % 360, sub.speed / SubState.KNOT]
+		_lines[2].text = "HEADING    %03d°   SPEED %4.1f kn   BATTERY %d%%" % [roundi(sub.heading) % 360, sub.speed / SubState.KNOT, roundi(sub.battery * 100.0)]
+		_lines[2].add_theme_color_override("font_color", UiKit.BAD if sub.battery <= 0.1 else UiKit.CREAM)
 
 
 func _build_overlay(root: Control) -> void:

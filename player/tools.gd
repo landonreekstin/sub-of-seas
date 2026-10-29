@@ -6,6 +6,7 @@ const KINDS := {
 	"extinguisher": {"name": "extinguisher", "use": "put out the fire", "color": Color("#C0392B")},
 	"wrench": {"name": "wrench", "use": "repair", "color": Color("#8A8F86")},
 	"pump": {"name": "portable pump", "use": "set the pump down", "color": Color("#D4A017")},
+	"parts": {"name": "spare parts box", "use": "fit the parts", "color": Color("#7A5A34")},
 }
 const PUMPS_ABOARD := 2
 
@@ -28,6 +29,9 @@ static func model(kind: String) -> Node3D:
 		"wrench":
 			Build.box(root, Vector3(0.04, 0.03, 0.34), Vector3(0, 0, -0.05), c, false)
 			Build.box(root, Vector3(0.1, 0.03, 0.06), Vector3(0, 0, -0.23), c, false)
+		"parts":
+			Build.box(root, Vector3(0.3, 0.18, 0.2), Vector3.ZERO, c, false)
+			Build.box(root, Vector3(0.31, 0.03, 0.21), Vector3(0, 0.06, 0), Color("#C9A04A"), false)
 		"pump":
 			Build.box(root, Vector3(0.3, 0.22, 0.22), Vector3.ZERO, c, false)
 			Build.cyl(root, 0.03, 0.3, Vector3(0.18, -0.05, 0), Color("#2B2B26"))

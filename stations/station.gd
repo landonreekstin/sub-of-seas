@@ -34,6 +34,10 @@ func get_view_transform() -> Transform3D:
 
 func get_prompt(player: Player) -> String:
 	if broken:
+		if Sim.world.hull.needs_parts.has(station_id):
+			if player.held_tool == "parts":
+				return "%s is WRECKED  —  [LMB] hold to fit the spare parts" % display_name
+			return "%s is WRECKED  —  bring SPARE PARTS from stores (engine room), then a wrench" % display_name
 		if player.held_tool == "wrench":
 			return "%s is BROKEN  —  [LMB] hold to repair" % display_name
 		return "%s is BROKEN  —  needs a wrench" % display_name
@@ -49,7 +53,12 @@ func interact(player: Player) -> void:
 
 
 func tool_target(tool: String) -> String:
-	return station_id if broken and tool == "wrench" else ""
+	if not broken:
+		return ""
+	var wrecked := Sim.world.hull.needs_parts.has(station_id)
+	if (tool == "parts" and wrecked) or (tool == "wrench" and not wrecked):
+		return station_id
+	return ""
 
 
 ## Sparks and a sign while broken. The hitbox centre is a good place for both.
@@ -70,6 +79,11 @@ func set_broken(b: bool) -> void:
 		_broken_label.no_depth_test = true
 	_sparks.emitting = b
 	_broken_label.visible = b
+
+
+func update_broken_label() -> void:
+	if _broken_label != null and _broken_label.visible:
+		_broken_label.text = "WRECKED" if Sim.world.hull.needs_parts.has(station_id) else "BROKEN"
 
 
 ## Send an order for this station to the host, which validates and applies it.

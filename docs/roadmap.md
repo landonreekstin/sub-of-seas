@@ -29,13 +29,18 @@ Each milestone ends playable and committed. Tick items as they land.
 - [x] Buoyancy from flooding; crush depth; sub lost → debrief
 - [ ] Played by hand against the escort (balance: how lethal, how long a hunt lasts)
 
+## M2.5 — Learnable and playable together
+- [x] Training patrol: a shared step-by-step checklist with markers, scripted target and escort
+- [x] Packaged for other players: pack published to the NAS drop, `sub-of-seas` launcher in nixos-config, build check on join
+- [ ] First two-player session with Blaney (then tune M2 from it)
+
 ## M3 — Survival systems
-- [ ] Battery vs diesel (surface charging), engine station
-- [ ] O2 / CO2, scrubbers, knockouts and wake-up
-- [ ] Ballast/trim station, emergency blow, air banks
-- [ ] System breakdowns + spare parts
-- [ ] Simplified TDC: stadimeter, marks, solution quality, gyro angle to tube panel
-- [ ] Nav/plot table
+- [x] Battery vs diesel (surface charging), engine station
+- [x] O2 / CO2, scrubbers, knockouts and wake-up
+- [x] Ballast/trim station, emergency blow, air banks
+- [x] System breakdowns + spare parts
+- [x] Simplified TDC: stadimeter, marks, solution quality, gyro angle to tube panel
+- [x] Nav/plot table
 
 ## M4 — Fleet and missions
 - [ ] All ship classes with distinct behaviour (carrier, battleship, cruiser, kaibokan, sub-chaser, tanker)

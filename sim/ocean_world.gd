@@ -3,11 +3,18 @@ extends RefCounted
 ## The whole ocean simulation, with no rendering: the sub, AI ships and torpedoes.
 ## The host steps it authoritatively; clients step it between snapshots for smoothness.
 
-## kind: "fired" | "hit" | "dud" | "sunk" | "ping" | "splash" | "blast" | "leak" | "lost".
+## kind: "fired" | "hit" | "dud" | "sunk" | "ping" | "splash" | "blast" | "leak" | "power" | "breakdown" | "lost".
 ## Only emitted by authoritative steps.
 signal event(kind: String, data: Dictionary)
 
 const SHIP_DIR := "res://data/ships/%s.tres"
+const BATTERY_WARNINGS := [0.2, 0.1] ## announce when the charge falls past these
+const BREAKDOWN_TEXT := {
+	"engine": "The diesels are knocking: the engine controls are down. Wrench, engine room!",
+	"periscope": "The periscope's jammed: it shook loose running fast with it up.",
+	"helm": "The steering's jammed hard over at flank! Wrench to the helm!",
+	"sonar": "The sonar head's gone quiet after that ping. It needs a wrench.",
+}
 
 var time := 0.0
 var sub: SubState
@@ -15,15 +22,19 @@ var ships: Array[ShipState] = []
 var torpedoes: Array[Torpedo] = []
 var charges: Array[DepthCharge] = []
 var hull := HullState.new()
+var air := AirState.new()
+var crew_count := 1 ## players aboard, set by the host; they breathe
 var lost := "" ## why the boat was lost, once it is
 var dud_chance := 0.05
 var rng := RandomNumberGenerator.new()
 var _next_id := 1
+var _battery_was := 1.0
 
 
 func _init(sub_class: SubClassData, seed_value := 0) -> void:
 	sub = SubState.new(sub_class)
 	rng.seed = seed_value
+	air.canisters = sub_class.co2_canisters
 
 
 func add_ship(ship_class: ShipClassData, pos: Vector2, course: float, speed_kn: float) -> ShipState:
@@ -66,6 +77,8 @@ func own_ping() -> void:
 		if ship.ai != null and d < 8000.0:
 			ship.ai.report(sub.pos, 300.0, rng, 0.7)
 	event.emit("own_ping", {"echoes": echoes})
+	if hull.station_comp.has("sonar") and rng.randf() < 0.04:
+		breakdown("sonar")
 
 
 ## Every ship hears about the sub: convoys scatter, escorts come hunting.
@@ -120,7 +133,12 @@ func step(dt: float, authoritative := true) -> void:
 		ships = ships.filter(func(s: ShipState) -> bool: return s.sink < 1.0)
 		_step_charges(dt)
 		hull.step(dt, rng)
+		if air.smoke.size() != hull.comps.size():
+			air.smoke.resize(hull.comps.size())
+		air.step(dt, sub.is_surfaced(), crew_count, hull)
 		_hull_stress(dt)
+		_power_checks()
+		_wear(dt)
 		sub.heaviness = hull.water_fraction()
 		_check_lost()
 	else:
@@ -129,7 +147,7 @@ func step(dt: float, authoritative := true) -> void:
 
 
 func _think(ship: ShipState, dt: float) -> void:
-	if ship.is_sinking():
+	if ship.is_sinking() or ship.passive:
 		return
 	if ship.ai != null:
 		ship.ai.step(dt, self, rng)
@@ -167,6 +185,57 @@ func _step_charges(dt: float) -> void:
 	charges = left
 
 
+## Engine station "engine" runs the diesels: broken gear stops them, and diving with them
+## running sends seawater down the main induction.
+func set_diesel(i: int, on: bool) -> void:
+	if i < 0 or i >= sub.diesels.size() or hull.is_broken("engine"):
+		return
+	if not on:
+		sub.diesels[i] = 0.0
+	elif sub.diesels[i] == 0.0 and sub.depth <= SubState.INDUCTION_DEPTH:
+		sub.diesels[i] = 0.01 # starts cranking
+
+
+func _power_checks() -> void:
+	var on := sub.diesels.any(func(d: float) -> bool: return d > 0.0)
+	if on and hull.is_broken("engine"):
+		sub.diesels.fill(0.0)
+		event.emit("power", {"text": "The diesels have stopped: the engine controls are wrecked."})
+	elif on and sub.depth > SubState.INDUCTION_DEPTH and lost == "":
+		sub.diesels.fill(0.0)
+		var text := "Seawater down the induction! Diesels flooded. Stop the diesels BEFORE diving."
+		var c: int = hull.station_comp.get("engine", -1)
+		if c >= 0:
+			hull.break_station("engine", true)
+			hull.add_leak(c, 0, rng)
+		event.emit("power", {"text": text})
+	for w: float in BATTERY_WARNINGS:
+		if _battery_was > w and sub.battery <= w:
+			event.emit("power", {"text": "Battery at %d%%. Surface and run the diesels to charge." % roundi(w * 100.0)})
+	if _battery_was > 0.0 and sub.battery <= 0.0:
+		event.emit("power", {"text": "Battery flat! The motors have stopped. Surface (dive station, 1) and start the diesels."})
+	_battery_was = sub.battery
+
+
+## Gear driven hard wears out: chance per second of a breakdown (wrench work, no parts).
+func _wear(dt: float) -> void:
+	if lost != "":
+		return
+	var risks := {
+		"engine": sub.diesels_running() / (25.0 * 60.0),
+		"periscope": (1.0 / 180.0) if sub.periscope_raised and not sub.is_surfaced() and absf(sub.speed) > 5.0 * SubState.KNOT else 0.0,
+		"helm": (1.0 / 600.0) if absi(sub.rudder) == 3 and sub.telegraph == 4 else 0.0,
+	}
+	for sid: String in risks:
+		if hull.station_comp.has(sid) and not hull.is_broken(sid) and rng.randf() < risks[sid] * dt:
+			breakdown(sid)
+
+
+func breakdown(sid: String) -> void:
+	hull.break_station(sid)
+	event.emit("breakdown", {"station": sid, "text": BREAKDOWN_TEXT.get(sid, "")})
+
+
 ## Below test depth the hull starts to give.
 func _hull_stress(dt: float) -> void:
 	var over := (sub.depth - sub.data.test_depth) / float(sub.data.crush_depth - sub.data.test_depth)
@@ -185,6 +254,8 @@ func _check_lost() -> void:
 		lost = "Hull crushed at %d m." % roundi(sub.depth)
 	elif sub.heaviness >= 0.65:
 		lost = "Flooded. She went down with %d%% of the hull full of seawater." % roundi(sub.heaviness * 100.0)
+	elif air.is_lethal():
+		lost = "The air gave out. CO2 %.1f%%, oxygen %.1f%%: nobody was awake to bring her up." % [air.co2, air.o2]
 	if lost != "":
 		event.emit("lost", {"reason": lost})
 
@@ -215,6 +286,7 @@ func to_snapshot() -> Dictionary:
 		"torps": torpedoes.map(func(t: Torpedo) -> Dictionary: return t.to_snapshot()),
 		"dcs": charges.map(func(dc: DepthCharge) -> Array: return dc.to_snapshot()),
 		"hull": hull.to_snapshot(),
+		"air": air.to_snapshot(),
 		"lost": lost,
 	}
 
@@ -251,6 +323,7 @@ func apply_snapshot(s: Dictionary) -> void:
 		dcs.append(dc)
 	charges = dcs
 	hull.apply_snapshot(s.hull)
+	air.apply_snapshot(s.air)
 	lost = s.lost
 
 

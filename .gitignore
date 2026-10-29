@@ -14,3 +14,4 @@ __pycache__/
 # Screenshots taken while testing
 screenshots/
 .direnv/
+build.txt

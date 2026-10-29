@@ -6,6 +6,7 @@ extends Node3D
 
 var interior: GatoInterior
 var _water: Array[MeshInstance3D] = []
+var _smoke: Array[MeshInstance3D] = [] ## a grey haze hanging under the deckhead
 var _spots := {} ## "kind:id" -> DamageSpot
 
 
@@ -25,6 +26,20 @@ func _ready() -> void:
 		mi.visible = false
 		add_child(mi)
 		_water.append(mi)
+		var sm := MeshInstance3D.new()
+		var sbox := BoxMesh.new()
+		sbox.size = Vector3(GatoInterior.HALF_WIDTH * 2.0 - 0.1, 1.0, c.z1 - c.z0 - 0.1)
+		sm.mesh = sbox
+		var smat := StandardMaterial3D.new()
+		smat.albedo_color = Color(0.35, 0.35, 0.33, 0.0)
+		smat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		smat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		smat.cull_mode = BaseMaterial3D.CULL_DISABLED
+		sm.material_override = smat
+		sm.position = Vector3(0, GatoInterior.DECK_HEIGHT - 0.5, (c.z0 + c.z1) * 0.5)
+		sm.visible = false
+		add_child(sm)
+		_smoke.append(sm)
 
 
 func _process(delta: float) -> void:
@@ -36,6 +51,15 @@ func _process(delta: float) -> void:
 		var w := _water[i]
 		w.position.y = lerpf(w.position.y, target, clampf(delta * 3.0, 0.0, 1.0))
 		w.visible = w.position.y > 0.01
+	var air := Sim.world.air
+	for i in mini(_smoke.size(), air.smoke.size()):
+		var s: float = air.smoke[i]
+		var sm := _smoke[i]
+		sm.visible = s > 0.03
+		# Thickens downward from the deckhead as it builds.
+		sm.scale.y = lerpf(0.4, 2.4, s)
+		sm.position.y = GatoInterior.DECK_HEIGHT - 0.5 * sm.scale.y
+		(sm.material_override as StandardMaterial3D).albedo_color.a = clampf(s * 0.55, 0.0, 0.5)
 	var seen := {}
 	for l: Dictionary in hull.leaks:
 		_spot("leak", str(l.id), l.p, l.hp, seen)
@@ -49,6 +73,7 @@ func _process(delta: float) -> void:
 			_spots.erase(key)
 	for sid: String in interior.stations:
 		interior.stations[sid].set_broken(hull.is_broken(sid))
+		interior.stations[sid].update_broken_label()
 
 
 func _spot(kind: String, id: String, p: Vector3, amount: float, seen: Dictionary) -> void:
