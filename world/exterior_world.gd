@@ -20,6 +20,7 @@ var _env: Environment
 var _sky: ProceduralSkyMaterial
 var _sun: DirectionalLight3D
 var _look := "" ## the conditions last applied to the sky, sun and sea
+var _under := false ## the eye is under the surface (the sky shows the water's light instead)
 
 
 static func to_3d(p: Vector2, y := 0.0) -> Vector3:
@@ -117,7 +118,7 @@ func _process(_delta: float) -> void:
 	_sync_planes()
 	_feed_wakes()
 	_apply_conditions(Sim.world.conditions)
-	_underwater(sub.scope_height() <= 0.0)
+	_underwater(maxf(-camera.position.y, 0.01) if h <= 0.0 else 0.0)
 
 
 func _sync_ships() -> void:
@@ -179,16 +180,30 @@ func _apply_conditions(c: Conditions) -> void:
 	var m := _ocean_near.material_override as ShaderMaterial
 	m.set_shader_parameter("amplitude", [0.3, 0.5, 0.9][c.sea_state])
 	m.set_shader_parameter("horizon_color", Color(0.12, 0.17, 0.26) if c.night else Color(0.55, 0.70, 0.82))
-	m.set_shader_parameter("shallow_color", Color(0.02, 0.08, 0.12) if c.night else Color(0.06, 0.30, 0.38))
+	m.set_shader_parameter("shallow_color", Color(0.02, 0.08, 0.12) if c.night else Color(0.05, 0.44, 0.50))
 
 
-## With the scope just under, the view is murky green water instead of nothing.
-func _underwater(under: bool) -> void:
-	if under == (_env.fog_density > 0.01):
+## Under the surface: clear, well-lit turquoise water like Sea of Thieves (lando), bright from
+## above and deeper blue below, darkening slowly with depth and at night. The sky's colours
+## become the water's light; `depth` is the eye's depth in metres (0 = above water).
+func _underwater(depth: float) -> void:
+	if depth <= 0.0:
+		if _under:
+			_under = false
+			_look = "" # puts the sky and fog back
+			_env.fog_density = 0.00004
+			_apply_conditions(Sim.world.conditions)
 		return
-	_env.fog_density = 0.08 if under else 0.00004
-	_env.fog_light_color = Color("#1D4A52") if under else _sky.sky_horizon_color
-	_env.fog_sky_affect = 1.0 if under else 0.0
+	_under = true
+	var dark := clampf(depth / 150.0, 0.0, 0.7) + (0.55 if Sim.world.conditions.night else 0.0)
+	var mid := Color("#2FB3C4").lerp(Color("#04182A"), clampf(dark, 0.0, 0.9))
+	_sky.sky_top_color = Color("#B4F2F2").lerp(Color("#0A2A40"), clampf(dark, 0.0, 0.9))
+	_sky.sky_horizon_color = mid
+	_sky.ground_horizon_color = mid
+	_sky.ground_bottom_color = Color("#0D5878").lerp(Color("#020A14"), clampf(dark, 0.0, 0.9))
+	_env.fog_light_color = mid
+	_env.fog_density = 0.016
+	_env.fog_sky_affect = 0.0
 
 
 func _sync_planes() -> void:

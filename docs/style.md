@@ -48,8 +48,10 @@ and update "Current style" in the same commit.
 - **Sea:** noise-broken foam on the crests, white wakes astern of ships and a bow wave;
   a torpedo leaves a thin white bubble track from the tube to where it is, brightest at the
   head, breaking up and spreading behind and gone about a minute later (lando);
-  just under the surface the scope sees murky green (to change: lando wants the water well
-  lit like Sea of Thieves, M9).
+  the open water a brighter teal toward Sea of Thieves. Under the surface it is clear and well
+  lit like Sea of Thieves (lando): bright turquoise, light from above and deeper blue below,
+  about 60 m of visibility, darkening slowly with depth and at night, and the surface overhead
+  a glowing, rippling ceiling with wakes showing white.
 - **Crew:** Peak-like sailors: big round head, white Dixie-cup hat, dot eyes, chambray shirt
   in the crewman's own colour, navy dungarees, black boots; arms and legs swing as they walk,
   arms reach forward at a station.
@@ -89,7 +91,7 @@ and update "Current style" in the same commit.
 - **Planned (lando's list, M9):** an arcade feel over strict realism (all current mechanics
   stay until tried with others); art pushed on toward Sea of Thieves and a bit more detailed;
   customisable Sea of Thieves-style crew; portholes
-  that show the water and nearby hulls; bright, well-lit water like Sea of Thieves; reefs,
+  that show the water and nearby hulls; reefs,
   undersea mountains and shelves; sharks, whales, octopus and fish; music (menu, patrol,
   combat); emotes seen in third person; a rec room for whimsical fun and mini games.
 - **UI:** typewriter / stencil feel, cream on dark panels, minimal HUD (crosshair, carried

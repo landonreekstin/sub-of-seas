@@ -172,6 +172,8 @@ func _setup_mission() -> void:
 	var sub := Sim.world.sub
 	sub.heading = m.start_heading
 	var depth: float = sub.data.periscope_depth if m.start_depth < 0.0 else m.start_depth
+	if Net.debug_depth >= 0.0:
+		depth = Net.debug_depth
 	sub.depth = depth
 	sub.ordered_depth = depth
 	sub.ballast = 1.0 if depth > 0.0 else 0.0

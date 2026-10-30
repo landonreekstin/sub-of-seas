@@ -3,10 +3,10 @@ render_mode cull_disabled;
 // Stylised open ocean: three Gerstner waves in world space, faded out with distance,
 // deep-to-turquoise colour by facing angle, noisy white foam on the crests, and the white
 // wakes and bow waves of up to 16 ships, and the bubble tracks of up to 8 torpedoes. Seen from
-// below it is a murky green ceiling.
+// below it is a bright, rippling ceiling of light.
 
-uniform vec4 deep_color : source_color = vec4(0.03, 0.12, 0.24, 1.0);
-uniform vec4 shallow_color : source_color = vec4(0.06, 0.30, 0.38, 1.0);
+uniform vec4 deep_color : source_color = vec4(0.03, 0.17, 0.30, 1.0);
+uniform vec4 shallow_color : source_color = vec4(0.05, 0.44, 0.50, 1.0);
 uniform vec4 horizon_color : source_color = vec4(0.55, 0.70, 0.82, 1.0);
 uniform vec4 foam_color : source_color = vec4(0.92, 0.96, 1.0, 1.0);
 uniform float amplitude = 0.5;
@@ -126,7 +126,12 @@ void fragment() {
 	foam = max(foam, torp_track(world.xz, n));
 	col = mix(col, foam_color.rgb, foam * 0.85);
 	if (!FRONT_FACING) {
-		col = vec3(0.10, 0.28, 0.28); // the surface from underneath
+		// The surface from underneath: bright and rippling, the daylight coming through it,
+		// with wakes and torpedo tracks showing as white water.
+		float ripple = vnoise(world.xz * 0.6 + TIME * 0.5) * 0.5 + vnoise(world.xz * 2.1 - TIME * 0.7) * 0.5;
+		col = mix(vec3(0.42, 0.80, 0.86), vec3(0.85, 0.98, 1.0), smoothstep(0.45, 0.8, ripple));
+		col = mix(col, vec3(1.0), foam * 0.6);
+		EMISSION = col * 0.5;
 		foam = 0.0;
 	}
 	ALBEDO = col;

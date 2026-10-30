@@ -22,6 +22,7 @@ var build := "dev"
 var sub_key := "gato" ## the boat the host takes out (--sub s_boat | gato | narwhal)
 var mission := "convoy" ## a MissionData key or "training"; chosen by the host (--mission, --training)
 var debug_charges := false ## --test-charges: the host drops a pattern on the boat (testing)
+var debug_depth := -1.0 ## --depth <m>: the host's patrol starts at this keel depth (testing)
 var debug_station := "" ## --station <id>: man this station as soon as you are aboard (testing)
 var debug_look := 0.0 ## --look <deg>: turn the spawned player this far right (testing)
 var debug_torpedo := false ## --test-torpedo: the host fires a spread of three a few seconds in (tracks)
@@ -71,6 +72,9 @@ func _ready() -> void:
 				debug_win = true
 			"--test-torpedo":
 				debug_torpedo = true
+			"--depth":
+				if i + 1 < args.size():
+					debug_depth = float(args[i + 1])
 			"--station":
 				if i + 1 < args.size():
 					debug_station = args[i + 1]
