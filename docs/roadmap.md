@@ -75,7 +75,7 @@ Added by Blaney after playing. In his words where it matters.
       axle, like a car's steering wheel, when the rudder moves.
 - [x] **Tutorial: tell you to leave a station**: when the next step is somewhere else,
       prompt "press Q to leave the station" before sending you on.
-- [ ] **A more nimble boat**: "more nimble than physically possible to a slight extent so
+- [x] **A more nimble boat**: "more nimble than physically possible to a slight extent so
       that people don't get bored, but not so that we're in a rocket ship". Faster turns, dives
       and speed changes than the real thing, still heavy and submarine-like.
 - [ ] **Portholes**: some windows to look out of from inside the boat.

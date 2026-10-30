@@ -66,6 +66,9 @@ and update "Current style" in the same commit.
   a deep clang for doors and outer doors, a chain rattle for a reload, a diesel turning over and
   catching, pencil on the chart, boots on the steel deck, a clang per ladder rung, a clink
   picking up or putting down a tool.
+- **Handling** (Blaney): livelier than the real boat but still heavy and submarine-like, not a
+  rocket ship. Speed changes are twice as quick, turns 1.6× and dives 1.5× (a Gato: 0 to 9 kn
+  in about 15 s, a full circle in about 75 s, periscope depth to 45 m in about 28 s).
 - **Menus:** the same dark panel with a brass border and cream type as the station screens.
   Esc pauses (Blaney): resume, settings, leave to the main menu; the boat carries on while
   others are aboard and only truly pauses for a host alone. Q leaves a station. Settings
