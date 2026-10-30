@@ -79,7 +79,7 @@ Added by Blaney after playing. In his words where it matters.
       that people don't get bored, but not so that we're in a rocket ship". Faster turns, dives
       and speed changes than the real thing, still heavy and submarine-like.
 - [x] **Portholes**: some windows to look out of from inside the boat.
-- [ ] **Frutiger Aero coral reef**: shallow, bright, clear water with coral, fish and sea
+- [x] **Frutiger Aero coral reef**: shallow, bright, clear water with coral, fish and sea
       floor terrain to look at through the portholes and periscope, "almost like you'd see
       on a nostalgic soap pump bottle at school".
 - [ ] **Tutorials per crew position**: the one 29-step training patrol is too long. Split it
@@ -114,9 +114,9 @@ stays for now, until they have been tried with others.
       not murky.
 - [x] **Sea floor with reefs and mountains / shelves** the boat has to avoid (running into
       them damages it); pairs with Blaney's M8 coral reef.
-- [ ] **Sea life**: fish, sharks, whales and octopus. Whales show up on sonar as false
+- [x] **Sea life**: fish, sharks, whales and octopus. Whales show up on sonar as false
       contacts.
-- [ ] **Listening station**: hydrophone headphones where you hear ship engines and screws
+- [x] **Listening station**: hydrophone headphones where you hear ship engines and screws
       and animal sounds, and have to tell them apart.
 - [ ] **Music**: a soundtrack (menu, patrol, combat / being hunted), with its own volume in
       the settings menu.

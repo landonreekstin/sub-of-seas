@@ -114,3 +114,23 @@ sox -m $T/f3.wav $T/f4.wav $R $A/rung.wav gain -n -10
 sox -n $R $T/p1.wav synth 0.25 sine 700 sine 1080 fade q 0.001 0.25 0.24 gain -10
 sox -n $R $T/p2.wav synth 0.04 whitenoise bandpass 1500 800 fade q 0.001 0.04 0.035
 sox -m $T/p1.wav $T/p2.wav $R $A/tool.wav gain -n -10
+
+# --- The hydrophones (listening station): loops heard in the sonar operator's headphones ---
+# Screws: a swish-thump per blade, whole cycles in 2 s. Merchant: slow and heavy (3 a second).
+sox -n $R $A/screws_merchant_loop.wav synth 2.0 brownnoise gain -6 lowpass 380 tremolo 3 95 gain -n -6
+# Warship: fast, light and higher (7 a second).
+sox -n $R $A/screws_warship_loop.wav synth 2.0 pinknoise gain -6 bandpass 900 700 tremolo 7 90 gain -n -6
+# Capital ship: four big shafts, a deep beating churn (4 a second over a low rumble).
+sox -n $R $T/c1.wav synth 2.0 brownnoise gain -6 lowpass 220 tremolo 4 85
+sox -n $R $T/c2.wav synth 2.0 brownnoise gain -6 lowpass 120 gain -4
+sox -m $T/c1.wav $T/c2.wav $R $A/screws_capital_loop.wav gain -n -6
+# Whale song: slow rising and falling moans with long gaps, 8 s.
+sox -n $R $T/s1.wav synth 1.6 sine 160-420 sine 320-840 fade q 0.3 1.6 0.6 gain -8
+sox -n $R $T/s2.wav synth 2.2 sine 520-210 sine 1040-420 fade q 0.4 2.2 0.9 gain -9
+sox -n $R $T/s3.wav synth 0.9 sine 300-360 fade q 0.2 0.9 0.4 gain -10
+sox $T/s1.wav $T/s2.wav $T/s3.wav $R $T/s4.wav pad 0 0.4
+sox $T/s4.wav $R $A/whale_loop.wav reverb 80 50 100 pad 0.3 3.0 trim 0 8.0 gain -n -4
+# Snapping shrimp on a reef: a dry crackle.
+sox -n $R $A/shrimp_loop.wav synth 2.0 whitenoise gain -6 highpass 2500 tremolo 41 100 tremolo 13 60 gain -n -16
+# The sea itself in the headphones: a soft hiss.
+sox -n $R $A/sea_loop.wav synth 2.0 pinknoise gain -6 lowpass 900 tremolo 0.5 20 gain -n -22

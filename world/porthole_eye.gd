@@ -80,7 +80,7 @@ func _place(p: Porthole) -> void:
 	var dir := to_world * (p.global_position - eye).normalized()
 	camera.look_at(camera.global_position + dir, Vector3.UP)
 	var dist := maxf(eye.distance_to(p.global_position), 0.3)
-	camera.fov = clampf(rad_to_deg(2.0 * atan(Porthole.RADIUS / dist)) * 2.2, 35.0, 95.0)
+	camera.fov = clampf(rad_to_deg(2.0 * atan(Porthole.RADIUS / dist)) * 1.5, 30.0, 60.0)
 	var depth := -camera.global_position.y
 	if depth > 0.0:
 		ExteriorWorld.paint_water(_env, _sky, depth, Sim.world.conditions.night)

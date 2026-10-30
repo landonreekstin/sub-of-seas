@@ -1,12 +1,18 @@
 class_name SonarStation
 extends Station
-## Passive hydrophones and the active "pinger". The ring shows every contact the
-## hydrophones can hear, at its true bearing; train the hydrophone (A/D or mouse) onto one
-## to classify it by its screws. P sends a ping: ranges to everything, but everyone hears it.
+## Passive hydrophones and the active "pinger": the listening station. The ring shows every
+## contact the hydrophones can hear, ships and whales alike, at its true bearing. Train the
+## hydrophone (A/D or mouse) onto one and you hear it in the headphones: slow heavy screws,
+## fast light ones, four big shafts, or whale song. Hold it there a few seconds and the
+## readout names it. P sends a ping: ranges to everything (whales too), but everyone hears it.
 ## Only the operator sees what the enemy is doing (pinging, splashes): call it out.
 
 const HEAR_RANGE := 12000.0
 const ECHO_SHOW_TIME := 10.0
+const LISTEN_TIME := 3.0 ## seconds on a contact before the readout names it
+## Headphone loops: what each kind of contact sounds like.
+const PHONES := {"merchant": "screws_merchant_loop", "warship": "screws_warship_loop",
+	"capital": "screws_capital_loop", "whale": "whale_loop", "shrimp": "shrimp_loop", "sea": "sea_loop"}
 
 var trained := 0.0 ## true bearing of the hydrophone, degrees
 var _scope: Control
@@ -16,6 +22,9 @@ var _echo_time := -INF
 var _alerts: Array = [] ## {text, b, until}
 var _classified_sent := false ## told the host (training) we have identified a warship
 var _ping_flash := {} ## ship id -> until (enemy echo-ranging seen on the ring)
+var _listen_id := -1 ## the contact on the wire
+var _listen_time := 0.0 ## how long it has been there
+var _phones := {} ## kind -> AudioStreamPlayer, while the local player listens
 
 
 func _ready() -> void:
@@ -45,6 +54,30 @@ static func loudness(ship: ShipState, sub: SubState) -> float:
 	var screws := 0.25 + 0.75 * ship.speed / (ship.data.max_speed_kn * SubState.KNOT)
 	var own := absf(sub.speed) / (sub.data.submerged_speed_kn * SubState.KNOT)
 	return clampf(screws * (1.0 - d / HEAR_RANGE) * 1.6 - own * 0.35, 0.0, 1.0)
+
+
+## What a contact sounds like: "merchant", "warship", "capital" or "whale".
+static func sound_kind(c: Object) -> String:
+	if c is Whale:
+		return "whale"
+	var ship := c as ShipState
+	if ship.data.role == "capital":
+		return "capital"
+	return "warship" if ship.data.asw or ship.data.role == "chaser" else "merchant"
+
+
+## Everything the hydrophones hear: [{c (ShipState or Whale), loud, b (bearing)}].
+static func contacts(sub: SubState) -> Array:
+	var out := []
+	for ship in Sim.world.ships:
+		var l := loudness(ship, sub)
+		if l > 0.02:
+			out.append({"c": ship, "loud": l, "b": ShipState.bearing(sub.pos, ship.pos)})
+	for wh in Sim.world.whales:
+		var l := wh.loudness(sub, HEAR_RANGE)
+		if l > 0.02:
+			out.append({"c": wh, "loud": l, "b": ShipState.bearing(sub.pos, wh.pos)})
+	return out
 
 
 static func classify(ship: ShipState) -> String:
@@ -89,21 +122,32 @@ func _process(_delta: float) -> void:
 	_scope.queue_redraw()
 	var sub := Sim.world.sub
 	var now := Sim.world.time
-	var best: ShipState = null
+	var heard := contacts(sub)
+	var best: Object = null
 	var best_off := 6.0
-	for ship in Sim.world.ships:
-		var off := absf(wrapf(ShipState.bearing(sub.pos, ship.pos) - trained, -180.0, 180.0))
-		if off < best_off and loudness(ship, sub) > 0.05:
+	for h: Dictionary in heard:
+		var off := absf(wrapf(float(h.b) - trained, -180.0, 180.0))
+		if off < best_off and h.loud > 0.05:
 			best_off = off
-			best = ship
+			best = h.c
+	var best_id: int = best.id if best != null else -1
+	_listen_time = _listen_time + get_process_delta_time() if best_id == _listen_id else 0.0
+	_listen_id = best_id
+	_headphones(heard, sub)
 	_lines[0].text = "HYDROPHONE  %03d°   own heading %03d°   [A/D or mouse] train" % [roundi(trained) % 360, roundi(sub.heading) % 360]
 	if broken:
 		_lines[1].text = "Static. The sonar gear is damaged."
 	elif best != null:
-		if best.data.asw and not _classified_sent:
-			_classified_sent = true
-			order("classified", true)
-		_lines[1].text = "CONTACT %03d°  %s" % [roundi(ShipState.bearing(sub.pos, best.pos)), classify(best)]
+		var brg := roundi(ShipState.bearing(sub.pos, best.pos))
+		if _listen_time < LISTEN_TIME:
+			_lines[1].text = "CONTACT %03d°  listening%s" % [brg, ".".repeat(1 + int(_listen_time * 2.0) % 3)]
+		elif best is Whale:
+			_lines[1].text = "CONTACT %03d°  %s — BIOLOGICAL: a whale, not a ship" % [brg, "long moaning song" if best.singing else "slow swishing, no screws"]
+		else:
+			if best.data.asw and not _classified_sent:
+				_classified_sent = true
+				order("classified", true)
+			_lines[1].text = "CONTACT %03d°  %s" % [brg, classify(best)]
 	else:
 		_lines[1].text = "Nothing on this bearing."
 	var a := ""
@@ -159,15 +203,13 @@ func _draw_scope() -> void:
 			var p := c + Vector2(randf_range(-r, r), randf_range(-r, r)) * 0.7
 			_scope.draw_circle(p, 1.5, Color(green, 0.5))
 		return
-	for ship in Sim.world.ships:
-		var loud := loudness(ship, sub)
-		if loud <= 0.02:
-			continue
-		var jitter := sin(now * 1.7 + ship.id) * 2.0
-		var b := ShipState.bearing(sub.pos, ship.pos) + jitter
+	for h: Dictionary in contacts(sub): # ships and whales look alike here
+		var loud: float = h.loud
+		var id: int = h.c.id
+		var b: float = h.b + sin(now * 1.7 + id) * 2.0
 		var col := Color(green, clampf(loud * 1.5, 0.25, 1.0))
 		_scope.draw_line(c + dir.call(b) * r * (0.9 - loud * 0.5), c + dir.call(b) * r * 0.98, col, 3.0 + loud * 3.0)
-		if _ping_flash.get(ship.id, -INF) > now:
+		if _ping_flash.get(id, -INF) > now:
 			_scope.draw_circle(c + dir.call(b) * r * 1.0, 7.0, Color(UiKit.BAD, 0.9))
 	if now - _echo_time < ECHO_SHOW_TIME:
 		for e: Dictionary in _echoes:
@@ -189,3 +231,44 @@ func station_input(event: InputEvent) -> void:
 	elif key_pressed(event, KEY_M):
 		order("plot", trained)
 		Sfx.play_at(self, "pencil", Vector3(0, 1.2, 0))
+
+
+## The operator's headphones: each kind of contact's sound, loudest for what the hydrophone is
+## trained on and faint off the wire; snapping shrimp over a reef; the sea's hiss underneath.
+func _headphones(heard: Array, sub: SubState) -> void:
+	var level := {}
+	var pitch := {}
+	for h: Dictionary in heard:
+		var kind := sound_kind(h.c)
+		var off := absf(wrapf(float(h.b) - trained, -180.0, 180.0))
+		var v: float = h.loud * lerpf(1.0, 0.12, smoothstep(4.0, 40.0, off))
+		if v > float(level.get(kind, 0.0)):
+			level[kind] = v
+			if h.c is ShipState:
+				pitch[kind] = 0.8 + 0.45 * h.c.speed / (h.c.data.max_speed_kn * SubState.KNOT)
+	if broken:
+		level.clear()
+	level["sea"] = 0.5
+	level["shrimp"] = clampf(1.0 - Sim.world.seabed.floor_depth(sub.pos) / 80.0, 0.0, 1.0) * 0.6
+	for kind: String in PHONES:
+		var v: float = level.get(kind, 0.0)
+		var p: AudioStreamPlayer = _phones.get(kind)
+		if p == null:
+			if v <= 0.01:
+				continue
+			p = AudioStreamPlayer.new()
+			p.bus = "Effects"
+			p.stream = Sfx.stream(PHONES[kind])
+			p.volume_db = -60.0
+			add_child(p)
+			p.play()
+			_phones[kind] = p
+		p.volume_db = move_toward(p.volume_db, linear_to_db(maxf(v, 0.001)) + 2.0, 120.0 * get_process_delta_time())
+		p.pitch_scale = pitch.get(kind, 1.0)
+
+
+func on_leave() -> void:
+	super.on_leave()
+	for p: AudioStreamPlayer in _phones.values():
+		p.queue_free()
+	_phones.clear()

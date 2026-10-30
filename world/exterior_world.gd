@@ -21,6 +21,7 @@ var _sky: ProceduralSkyMaterial
 var _sun: DirectionalLight3D
 var _look := "" ## the conditions last applied to the sky, sun and sea
 var _terrain: TerrainView
+var _life: SeaLifeView
 var _under := false ## the eye is under the surface (the sky shows the water's light instead)
 
 
@@ -94,6 +95,8 @@ func _ready() -> void:
 
 	_terrain = TerrainView.new()
 	add_child(_terrain)
+	_life = SeaLifeView.new()
+	add_child(_life)
 
 	camera = Camera3D.new()
 	camera.far = 30000.0
@@ -106,7 +109,7 @@ func set_active(on: bool) -> void:
 	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS if on else SubViewport.UPDATE_DISABLED
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if Sim.world == null:
 		return
 	var sub := Sim.world.sub
@@ -118,6 +121,7 @@ func _process(_delta: float) -> void:
 	_ocean_near.position = snap
 	_ocean_far.position = Vector3(snap.x, -0.3, snap.z)
 	_terrain.sync(Sim.world.seabed)
+	_life.sync(delta)
 	_sync_ships()
 	_sync_torpedoes()
 	_sync_planes()

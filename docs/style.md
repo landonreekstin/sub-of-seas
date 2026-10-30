@@ -82,6 +82,14 @@ and update "Current style" in the same commit.
   table and the bunks) and either side of the mess table. Dark glass until you are close and
   looking at one; then it shows the water outside from that spot on the hull, the way you're
   looking through it, with a soft dark edge and a glint.
+- **Sea life:** chunky low-poly fish in bright schools (yellow, sky blue, orange, mint, pink),
+  more of them over a reef; grey sharks with white bellies circling now and then; orange
+  octopus on a shallow bottom; humpbacks (dark slate, pale belly, long white flippers) that
+  blow a spout at the surface. Coral on the island reefs is Blaney's Frutiger Aero look:
+  glossy candy-coloured brain coral, staghorn and sea fans, with bubbles rising.
+- **Hydrophones:** the operator hears contacts in the headphones: merchant screws slow and
+  heavy, warships fast and light, capital ships a deep four-shaft churn, whales a long moaning
+  song, snapping shrimp over a reef, the sea's hiss under it all.
 - **Islands:** low-poly and flat-shaded like everything else: bare rock peaks, deep jungle,
   green scrub, a pale sand beach with a few leaning palms, then a reef of sand and coral
   (pink, orange, violet) and blue-grey slopes into the deep. Light haze so they read 10 km off.

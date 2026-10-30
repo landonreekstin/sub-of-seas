@@ -198,6 +198,34 @@ func _setup_mission() -> void:
 	for o: Dictionary in crew.objectives:
 		o.done = false
 	_lay_seabed()
+	for i in Sim.world.rng.randi_range(2, 3):
+		Sim.world.add_whale(Sim.world.rng.randf_range(1500.0, 6000.0))
+	if Net.debug_reef:
+		_debug_reef()
+
+
+## Testing aid (--reef): the boat sits stopped at 9 m just off the first island's reef, beam on
+## to it, with a whale 40 m off the other side.
+func _debug_reef() -> void:
+	var w := Sim.world
+	for f: Dictionary in w.seabed.features:
+		if f.kind != "island":
+			continue
+		var centre := Vector2(f.x, f.y)
+		var out := (w.sub.pos - centre).normalized()
+		var p := centre
+		while w.seabed.floor_depth(p) < 16.0:
+			p += out * 5.0
+		w.sub.pos = p
+		w.sub.heading = fposmod(ShipState.bearing(centre, p) + 90.0, 360.0) # reef to starboard
+		w.sub.depth = 9.0
+		w.sub.ordered_depth = 9.0
+		w.sub.telegraph = 0
+		w.sub.speed = 0.0
+		var wh := w.add_whale(40.0)
+		wh.pos = p + out * 40.0
+		wh.depth = 9.0
+		return
 
 
 ## Islands, reefs, seamounts and shelves for this patrol, clear of the boat, of every ship's

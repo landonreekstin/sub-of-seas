@@ -23,6 +23,7 @@ var ships: Array[ShipState] = []
 var torpedoes: Array[Torpedo] = []
 var charges: Array[DepthCharge] = []
 var planes: Array[Aircraft] = []
+var whales: Array[Whale] = []
 var hull := HullState.new()
 var air := AirState.new()
 var conditions := Conditions.new()
@@ -57,6 +58,17 @@ func add_ship(ship_class: ShipClassData, pos: Vector2, course: float, speed_kn: 
 	return ship
 
 
+## A whale somewhere `dist` metres from the boat.
+func add_whale(dist: float) -> Whale:
+	var wh := Whale.new()
+	wh.id = _take_id()
+	wh.pos = sub.pos + Vector2.from_angle(rng.randf() * TAU) * dist
+	wh.heading = rng.randf() * 360.0
+	wh.depth = rng.randf_range(5.0, 35.0)
+	whales.append(wh)
+	return wh
+
+
 ## Escort `ship` keeps station at (right, ahead) metres from `guard`.
 func set_escort(ship: ShipState, guard: ShipState, offset: Vector2) -> void:
 	ship.ai.guard = guard
@@ -82,6 +94,10 @@ func own_ping() -> void:
 		echoes.append({"b": ShipState.bearing(sub.pos, ship.pos), "r": d * rng.randf_range(0.97, 1.03)})
 		if ship.ai != null and d < 8000.0:
 			ship.ai.report(sub.pos, 300.0, rng, 0.7)
+	for wh in whales: # a whale's back returns an echo just like a hull
+		var d := wh.pos.distance_to(sub.pos)
+		if d < 6000.0:
+			echoes.append({"b": ShipState.bearing(sub.pos, wh.pos), "r": d * rng.randf_range(0.97, 1.03)})
 	event.emit("own_ping", {"echoes": echoes})
 	if hull.station_comp.has("sonar") and rng.randf() < 0.04:
 		breakdown("sonar")
@@ -133,6 +149,8 @@ func step(dt: float, authoritative := true) -> void:
 		if authoritative:
 			_think(ship, dt)
 		ship.step(dt, rng if authoritative else null, seabed)
+	for wh in whales:
+		wh.step(dt, rng if authoritative else null)
 	for t in torpedoes:
 		t.step(dt)
 		if authoritative and t.alive:
@@ -378,6 +396,7 @@ func to_snapshot() -> Dictionary:
 		"torps": torpedoes.map(func(t: Torpedo) -> Dictionary: return t.to_snapshot()),
 		"dcs": charges.map(func(dc: DepthCharge) -> Array: return dc.to_snapshot()),
 		"pl": planes.map(func(p: Aircraft) -> Array: return p.to_snapshot()),
+		"wh": whales.map(func(wh: Whale) -> Array: return wh.to_snapshot()),
 		"hull": hull.to_snapshot(),
 		"air": air.to_snapshot(),
 		"cd": conditions.to_snapshot(),
@@ -425,6 +444,15 @@ func apply_snapshot(s: Dictionary) -> void:
 		p.altitude = a[3]
 		pls.append(p)
 	planes = pls
+	var whs: Array[Whale] = []
+	for a: Array in s.get("wh", []):
+		var wh := Whale.new()
+		for old in whales:
+			if old.id == a[0]:
+				wh = old
+		wh.apply_snapshot(a)
+		whs.append(wh)
+	whales = whs
 	hull.apply_snapshot(s.hull)
 	air.apply_snapshot(s.air)
 	conditions.apply_snapshot(s.cd)

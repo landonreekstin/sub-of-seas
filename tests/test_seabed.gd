@@ -113,3 +113,25 @@ func test_torpedo_beaches_on_an_island() -> bool:
 		w.step(0.25)
 	runner.check(not beached.is_empty() and w.torpedoes.is_empty(), "the torpedo stops at the shore")
 	return true
+
+
+func test_whales_are_false_contacts() -> bool:
+	var w := _world()
+	w.sub.depth = 30.0
+	var wh := w.add_whale(2000.0)
+	wh.singing = true
+	runner.check(wh.loudness(w.sub, SonarStation.HEAR_RANGE) > 0.2, "a singing whale 2 km off is loud on the hydrophones")
+	var echoes: Array = []
+	w.event.connect(func(k: String, d: Dictionary) -> void:
+		if k == "own_ping":
+			echoes.append_array(d.echoes))
+	w.own_ping()
+	runner.check(echoes.size() == 1 and absf(float(echoes[0].r) - 2000.0) < 100.0, "and a ping gets an echo off it")
+	var snap := w.to_snapshot()
+	var c := _world()
+	c.apply_snapshot(snap)
+	runner.check(c.whales.size() == 1 and c.whales[0].pos.distance_to(wh.pos) < 0.1, "clients get the whales")
+	for i in 200:
+		w.step(1.0)
+	runner.check(wh.pos.distance_to(w.sub.pos) > 1000.0, "it swims about (%.0f m off)" % wh.pos.distance_to(w.sub.pos))
+	return true

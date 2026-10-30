@@ -28,6 +28,7 @@ func sync(seabed: Seabed) -> void:
 			add_child(mesh)
 		if f.kind == "island":
 			_palms(seabed, f, rng)
+			_coral(seabed, f, rng)
 
 
 ## One feature's patch of floor: a square grid `reach` metres each way from `centre`.
@@ -92,6 +93,52 @@ func _colour(y: float, rng: RandomNumberGenerator) -> Color:
 		c = Color("#3E6D73").lerp(Color("#22424F"), clampf((-y - 80.0) / 180.0, 0.0, 1.0))
 	var shade := rng.randf_range(-0.05, 0.05)
 	return Color(c.r + shade, c.g + shade, c.b + shade * 0.5)
+
+
+const CORAL_PER_ISLAND := 90
+## Blaney's Frutiger Aero reef: glossy, cheerful candy colours.
+const CORAL_COLOURS: Array[Color] = [Color("#FF5FA2"), Color("#FF9F43"), Color("#3EE6D0"), Color("#9BE564"), Color("#9D6BFF"), Color("#FFD93D"), Color("#5FC8FF")]
+
+
+## Coral on the reef flat (2–14 m down): round brain coral, branching stags and flat fans,
+## glossy and bright, with bubbles rising off the reef here and there.
+func _coral(seabed: Seabed, f: Dictionary, rng: RandomNumberGenerator) -> void:
+	var placed := 0
+	for attempt in 600:
+		if placed >= CORAL_PER_ISLAND:
+			return
+		var p := Vector2(f.x, f.y) + Vector2.from_angle(rng.randf() * TAU) * rng.randf_range(0.5, 1.05) * float(f.r) * float(f.stretch)
+		var d := seabed.floor_depth(p)
+		if d < 1.5 or d > 14.0:
+			continue
+		var piece := Node3D.new()
+		piece.position = _to_3d(p, -d)
+		piece.rotation.y = rng.randf() * TAU
+		var col := CORAL_COLOURS[rng.randi() % CORAL_COLOURS.size()]
+		var s := rng.randf_range(0.8, 2.2)
+		match rng.randi() % 3:
+			0: # brain coral
+				var b := Build.sphere(piece, s, Vector3(0, s * 0.3, 0), col)
+				b.scale = Vector3(1.0, 0.6, 1.0)
+			1: # staghorn: a few branches
+				for k in 5:
+					var br := Build.cyl(piece, 0.12 * s, 1.6 * s, Vector3(0, 0.7 * s, 0), col)
+					br.rotation = Vector3(rng.randf_range(-0.6, 0.6), 0.0, rng.randf_range(-0.6, 0.6))
+			_: # sea fan
+				Build.box(piece, Vector3(2.2 * s, 2.0 * s, 0.08), Vector3(0, s, 0), col, false)
+		for m in piece.find_children("*", "MeshInstance3D", true, false):
+			var mat := StandardMaterial3D.new()
+			mat.albedo_color = col
+			mat.roughness = 0.15 # glossy, the soap-bottle look
+			mat.metallic_specular = 0.9
+			mat.rim_enabled = true
+			mat.rim = 0.4
+			(m as MeshInstance3D).material_override = mat
+		if rng.randf() < 0.12:
+			var bubbles := Build.particles(piece, Color(0.85, 1.0, 1.0, 0.7), 12, 6.0, Vector3.UP, 1.2, 8.0, Vector3(0, 0.4, 0), 0.25)
+			bubbles.position.y = s
+		add_child(piece)
+		placed += 1
 
 
 ## Palms on the low ground behind the beach, each leaning a little its own way.
