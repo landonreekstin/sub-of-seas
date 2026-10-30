@@ -26,6 +26,12 @@ func _tube() -> Dictionary:
 
 func _process(_delta: float) -> void:
 	var t := _tube()
+	if sound_on_change("flooded", t.flooded, "lever") and t.flooded:
+		Sfx.play_at(self, "flood", Vector3(0, 1.0, 0))
+	sound_on_change("door", t.door, "clang")
+	if sound_on_change("reloading", t.reload > 0.0, "lever") and t.reload > 0.0:
+		Sfx.play_at(self, "reload", Vector3(0, 1.0, 0))
+	sound_on_change("gyro", t.gyro, "click")
 	var ready: bool = t.loaded and t.flooded and t.door
 	_lamp.material_override = Build.mat(Color.GREEN if ready else (Color.ORANGE if t.loaded else Color.RED), 0.8)
 	if overlay == null:

@@ -55,9 +55,15 @@ and update "Current style" in the same commit.
   harsh metallic echo-ranging when they find us, booms that roll, groaning creaks that come
   more often deeper, an "ah-OO-gah" klaxon on opening the vents, alarm bell on a close one,
   diesel chug, a soft airy motor whirr from aft (barely there slow, louder flat out, never a
-  low droning hum), hissing leaks, crackling fires. Planned (lando, M9): everything has a sound
-  effect, every control, station and action; the engine-order telegraph dings when the speed
-  changes, and the helm wheel makes a sound as it turns.
+  low droning hum), hissing leaks, crackling fires. **Everything makes a sound** (lando): every
+  control, station and action, and anything new gets one when it is made. Controls sound from
+  where they are, for the whole crew, whoever worked them: a two-note telegraph ding on each
+  speed order, gear clicks while the helm and planes wheels spin over (they turn to the order,
+  not snap), heavy lever clunks, small dial clicks, a roar of air when the vents open and a hard
+  hiss while blowing, a hydraulic whine as the periscope moves, a gurgling rush flooding a tube,
+  a deep clang for doors and outer doors, a chain rattle for a reload, a diesel turning over and
+  catching, pencil on the chart, boots on the steel deck, a clang per ladder rung, a clink
+  picking up or putting down a tool.
 - **Hits:** camera shake, lights stutter, paint flakes shake down from the deckhead.
 - **Night:** a deep blue-black sky, cold dim moonlight, black water with silver foam; inside,
   submerged, the boat rigs for red (`#FF4A35` light). Rough seas are big rolling waves.

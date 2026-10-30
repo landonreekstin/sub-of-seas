@@ -15,6 +15,8 @@ var peer_id := 1
 var station: Station = null
 var requested_station := ""
 var climbing := false
+var _step_pos := Vector3.ZERO ## for footsteps
+var _step_dist := 0.0 ## distance since the last footstep or rung
 var held_tool := "" ## from crew state (host-owned)
 var trauma := 0.0 ## camera shake, 0..1, decays
 
@@ -98,7 +100,7 @@ func _build() -> void:
 	var sync := MultiplayerSynchronizer.new()
 	sync.name = "Sync"
 	var cfg := SceneReplicationConfig.new()
-	for prop: String in [".:position", ".:rotation", "Head:rotation"]:
+	for prop: String in [".:position", ".:rotation", "Head:rotation", ".:climbing"]:
 		var path := NodePath(prop)
 		cfg.add_property(path)
 		cfg.property_set_spawn(path, true)
@@ -232,6 +234,7 @@ func set_display_name(n: String) -> void:
 func set_tool(kind: String) -> void:
 	if kind == held_tool:
 		return
+	Sfx.play_at(self, "tool", Vector3(0, 1.0, 0), -2.0, 1.0 if kind != "" else 0.8)
 	held_tool = kind
 	if _hand != null:
 		_hand.queue_free()
@@ -255,6 +258,28 @@ func set_tool(kind: String) -> void:
 	else:
 		_hand.position = Vector3(0.3, 1.0, -0.3)
 		add_child(_hand)
+
+
+## Boots on the deck every stride and a clang per ladder rung, for every crewman, from how far
+## they moved (so remote players sound the same as the local one).
+func _footsteps() -> void:
+	var moved := global_position - _step_pos
+	_step_pos = global_position
+	if moved.length() > 1.0 or station != null: # a teleport or spawn, or sat at a station
+		_step_dist = 0.0
+		return
+	if climbing:
+		_step_dist += absf(moved.y)
+		if _step_dist > 0.4:
+			_step_dist = 0.0
+			Sfx.play_at(self, "rung", Vector3(0, 0.9, 0), -2.0, randf_range(0.92, 1.08))
+		return
+	if absf(moved.y) > 0.03: # in the air
+		return
+	_step_dist += Vector2(moved.x, moved.z).length()
+	if _step_dist > 0.8:
+		_step_dist = 0.0
+		Sfx.play_at(self, "step_%d" % randi_range(1, 3), Vector3(0, 0.05, 0), -4.0, randf_range(0.9, 1.1))
 
 
 func add_trauma(amount: float) -> void:
@@ -331,6 +356,7 @@ func _physics_process(delta: float) -> void:
 
 
 func _process(delta: float) -> void:
+	_footsteps()
 	if not is_local():
 		_animate_body(delta)
 		return

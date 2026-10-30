@@ -5,6 +5,7 @@ extends Station
 var _wheel: Node3D
 var _telegraph_handle: Node3D
 var _lines: Array[Label] = []
+var _wheel_deg := 0.0 ## the wheel's shown angle, turning towards the rudder order
 
 
 func _ready() -> void:
@@ -21,12 +22,18 @@ func _ready() -> void:
 	set_view(Vector3(-0.85, 1.6, 0.25), Vector3(0.1, 1.15, 0.25))
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if Sim.world == null:
 		return
 	var sub := Sim.world.sub
-	_wheel.rotation.z = deg_to_rad(sub.rudder_angle() * 4.0)
+	# The helmsman spins the wheel over to the order rather than it snapping there.
+	var target := sub.rudder_angle() * 4.0
+	var turning := absf(target - _wheel_deg) > 0.5
+	_wheel_deg = move_toward(_wheel_deg, target, delta * 240.0)
+	_wheel.rotation.z = deg_to_rad(_wheel_deg)
+	sound_while("wheel", "wheel_loop", 1.0 if turning else 0.0, Vector3(0, 1.25, 0))
 	_telegraph_handle.rotation.x = deg_to_rad(-sub.telegraph * 20.0)
+	sound_on_change("telegraph", sub.telegraph, "telegraph_ding", Vector3(0.15, 1.3, 0.65))
 	if overlay != null:
 		_lines[0].text = "TELEGRAPH  %-15s [W/S]" % SubState.TELEGRAPH_NAMES[sub.telegraph]
 		var side := "AMIDSHIPS" if sub.rudder == 0 else ("%s %d°" % ["RIGHT" if sub.rudder > 0 else "LEFT", absf(sub.rudder_angle())])

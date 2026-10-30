@@ -48,6 +48,10 @@ func _process(delta: float) -> void:
 		_lights[i].material_override = Build.mat(lamp, 0.5)
 	_air_label.text = "%d%%" % roundi(sub.hp_air * 100.0)
 	_vent_lever.rotation.x = 0.6 if sub.vents_open else -0.6
+	if sound_on_change("vents", sub.vents_open, "lever") and sub.vents_open:
+		Sfx.play_at(self, "vent_rush", Vector3(0, 2.0, 0), 2.0)
+	sound_on_change("blow", sub.blowing, "lever")
+	sound_while("blow", "blow_loop", [0.0, 0.6, 1.0][clampi(sub.blowing, 0, 2)], Vector3(0, 1.8, 0), 4.0)
 	if sub.blowing > 0:
 		_blow_wheel.rotate_object_local(Vector3.FORWARD, delta * (8.0 if sub.blowing == 2 else 3.0))
 	if overlay != null:

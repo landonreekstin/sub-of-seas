@@ -10,6 +10,7 @@ var door_id := ""
 var is_open := false
 var _hinge: Node3D
 var _tween: Tween
+var _born := Time.get_ticks_msec()
 
 
 func setup(id: String) -> WatertightDoor:
@@ -48,3 +49,9 @@ func set_open(open: bool) -> void:
 		_tween.kill()
 	_tween = create_tween().set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN_OUT)
 	_tween.tween_property(_hinge, "rotation:y", deg_to_rad(-100.0) if open else 0.0, 0.8)
+	if Time.get_ticks_msec() - _born < 1000:
+		return # the state a joiner arrives to, not someone working the door
+	if open:
+		Sfx.play_at(self, "door_open", Vector3(0, 1.0, 0.2))
+	else:
+		_tween.tween_callback(Sfx.play_at.bind(self, "clang", Vector3(0, 1.0, 0.2), 2.0))

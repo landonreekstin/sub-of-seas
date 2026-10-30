@@ -21,6 +21,7 @@ var _range_timer := 0.0
 func _ready() -> void:
 	Build.cyl(self, 0.11, 2.4, Vector3(0, 1.2, 0), Color("#6E756C"))
 	_eyepiece = Node3D.new()
+	_eyepiece.position.y = 0.55 # stowed (see _process)
 	add_child(_eyepiece)
 	Build.box(_eyepiece, Vector3(0.36, 0.34, 0.3), Vector3(0, 0, 0), Color("#3A3F38"), false)
 	Build.box(_eyepiece, Vector3(0.2, 0.1, 0.08), Vector3(0, 0.03, 0.18), Color("#151515"), false)
@@ -34,6 +35,7 @@ func _process(delta: float) -> void:
 		return
 	var sub := Sim.world.sub
 	var target_y := 1.6 if sub.periscope_raised else 0.55
+	sound_while("hoist", "hoist_loop", 1.0 if absf(_eyepiece.position.y - target_y) > 0.01 else 0.0, Vector3(0, 1.2, 0))
 	_eyepiece.position.y = move_toward(_eyepiece.position.y, target_y, delta * 1.2)
 	if overlay == null:
 		return
@@ -105,12 +107,15 @@ func station_input(event: InputEvent) -> void:
 		bearing = wrapf(bearing + event.relative.x * sens, -180.0, 180.0)
 	elif key_pressed(event, KEY_Z):
 		high_power = not high_power
+		click(0.0, 0.8)
 	elif key_pressed(event, KEY_R):
 		order("raised", not Sim.world.sub.periscope_raised)
 	elif key_pressed(event, KEY_F):
 		_take_range()
+		click()
 	elif key_pressed(event, KEY_M):
 		_mark()
+		click(0.0, 1.3)
 
 
 ## The ship nearest the crosshair, or null.

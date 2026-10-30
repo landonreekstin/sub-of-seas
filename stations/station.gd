@@ -12,6 +12,8 @@ var overlay: Control ## the on-screen panel while the local player mans this sta
 var broken := false ## from the hull state; a broken station ignores its controls
 var _sparks: CPUParticles3D
 var _broken_label: Label3D
+var _heard := {} ## key -> [last value seen, when it last sounded], for sound_on_change
+var _loops := {} ## key -> AudioStreamPlayer3D, for sound_while
 
 
 func setup(id: String, title: String, cluster_name := "") -> Station:
@@ -84,6 +86,42 @@ func set_broken(b: bool) -> void:
 func update_broken_label() -> void:
 	if _broken_label != null and _broken_label.visible:
 		_broken_label.text = "WRECKED" if Sim.world.hull.needs_parts.has(station_id) else "BROKEN"
+
+
+## Plays `sound` here when `value` differs from last frame's. It is driven by the replicated
+## state, so the whole crew hears a control being worked, whoever worked it. A client's own
+## order is applied at once and can flicker back for one snapshot, so a key sounds at most
+## every 0.2 s. Returns whether it changed.
+func sound_on_change(key: String, value: Variant, sound: String, pos := Vector3(0, 1.2, 0), volume_db := 0.0) -> bool:
+	var now := Time.get_ticks_msec() / 1000.0
+	if not _heard.has(key):
+		_heard[key] = [value, 0.0]
+		return false
+	if _heard[key][0] == value:
+		return false
+	_heard[key][0] = value
+	if now - float(_heard[key][1]) >= 0.2:
+		_heard[key][1] = now
+		Sfx.play_at(self, sound, pos, volume_db)
+	return true
+
+
+## A loop at `pos` that plays while `level` (0..1) is above zero, louder as it rises.
+func sound_while(key: String, sound: String, level: float, pos := Vector3(0, 1.2, 0), full_db := 0.0) -> void:
+	var p: AudioStreamPlayer3D = _loops.get(key)
+	if p == null:
+		if level <= 0.0:
+			return
+		p = Sfx.loop_at(self, sound, pos, -80.0)
+		_loops[key] = p
+	var target := full_db + linear_to_db(clampf(level, 0.001, 1.0)) if level > 0.0 else -60.0
+	p.volume_db = move_toward(p.volume_db, target, 240.0 * get_process_delta_time())
+	p.stream_paused = p.volume_db <= -59.0
+
+
+## A single click from this station, heard by this player only (their own knob or dial).
+func click(volume_db := 0.0, pitch := 1.0) -> void:
+	Sfx.play_at(self, "click", Vector3(0, 1.2, 0), volume_db, pitch)
 
 
 ## Send an order for this station to the host, which validates and applies it.

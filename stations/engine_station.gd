@@ -46,6 +46,8 @@ func _process(_delta: float) -> void:
 			lamp_color = LAMP_OFF # blinks while cranking
 		_lamps[i].material_override = Build.mat(lamp_color, 0.0 if lamp_color == LAMP_OFF else 0.5)
 		_levers[i].rotation.z = 0.5 if d > 0.0 else -0.5 # thrown towards the engineer when on
+		if sound_on_change("diesel%d" % i, d > 0.0, "lever") and d > 0.0:
+			Sfx.play_at(self, "diesel_start", Vector3(0, 1.0, 0), 2.0)
 	_battery_label.text = "%d%%" % roundi(sub.battery * 100.0)
 	_battery_label.modulate = _battery_color(sub.battery)
 	if overlay != null:

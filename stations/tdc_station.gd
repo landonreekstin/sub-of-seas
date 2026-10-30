@@ -32,6 +32,12 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	if Sim.world == null or Game.instance == null:
 		return
+	var tdc: Dictionary = Game.instance.crew.get("tdc", {})
+	if not tdc.is_empty():
+		sound_on_change("speed", tdc.speed_adj, "click")
+		sound_on_change("course", tdc.course_adj, "click")
+		sound_on_change("marks", tdc.marks.size(), "click")
+		sound_on_change("follow", tdc.follow, "lever")
 	var sol: Dictionary = Game.instance.tdc_solution()
 	var est: Dictionary = sol.est
 	_dials[0].text = "%.0f kn" % est.speed_kn if est.ok else "--"

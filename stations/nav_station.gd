@@ -68,7 +68,9 @@ func station_input(event: InputEvent) -> void:
 		if Rect2(Vector2.ZERO, _chart.size).has_point(local):
 			var at := _chart.to_world(local)
 			order("pencil" if event.button_index == MOUSE_BUTTON_LEFT else "erase", [at.x, at.y])
+			Sfx.play_at(self, "pencil", Vector3(0, 1.0, 0), 0.0, 1.0 if event.button_index == MOUSE_BUTTON_LEFT else 0.7)
 		return
 	else:
 		return
+	click(-6.0)
 	_chart.half_width = ZOOMS[_zoom]

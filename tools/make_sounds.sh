@@ -44,3 +44,70 @@ sox -n $R $A/motor_loop.wav synth 2.0 pinknoise gain -6 highpass 300 lowpass 150
 sox -n $R $A/water_loop.wav synth 2.0 whitenoise gain -6 highpass 900 lowpass 6000 tremolo 7 20 gain -n -10
 sox -n $R $A/fire_loop.wav synth 2.0 brownnoise lowpass 900 tremolo 17 80 gain -n -8
 sox -n $R $A/torch_loop.wav synth 2.0 whitenoise gain -6 highpass 2500 gain -n -14
+
+# --- Controls and the crew (M9: everything makes a sound) ---
+# Engine telegraph answering bell: two bright dings.
+sox -n $R $T/d1.wav synth 0.9 sine 1568 sine 2350 sine 3920 fade q 0.002 0.9 0.85 gain -6
+sox $T/d1.wav $R $T/d2.wav trim 0 0.22
+sox $T/d2.wav $T/d1.wav $R $A/telegraph_ding.wav gain -n -4
+# A big handwheel turning (helm, dive planes): gear-tooth clicks over a soft grind.
+sox -n $R $T/w1.wav synth 0.01 whitenoise bandpass 2200 600 fade q 0.001 0.01 0.008
+sox $T/w1.wav $R $T/w3.wav pad 0 0.0525
+sox $T/w3.wav $R $T/w4.wav repeat 31
+sox -n $R $T/w5.wav synth 2.0 brownnoise lowpass 500 tremolo 16 40 gain -18
+sox -m $T/w4.wav $T/w5.wav $R $A/wheel_loop.wav trim 0 2.0 gain -n -8
+# A heavy lever or valve thrown home: a low clunk with a short metal ring.
+sox -n $R $T/l1.wav synth 0.18 sine 95 fade q 0.001 0.18 0.16
+sox -n $R $T/l2.wav synth 0.06 whitenoise bandpass 900 400 fade q 0.001 0.06 0.05 gain -4
+sox -n $R $T/l3.wav synth 0.5 sine 640 sine 1010 fade q 0.001 0.5 0.48 gain -16
+sox -m $T/l1.wav $T/l2.wav $T/l3.wav $R $A/lever.wav gain -n -3
+# A small switch, knob or dial detent.
+sox -n $R $T/c1.wav synth 0.008 whitenoise bandpass 3200 800 fade q 0.0005 0.008 0.006
+sox -n $R $T/c2.wav synth 0.03 sine 1400 fade q 0.001 0.03 0.028 gain -10
+sox -m $T/c1.wav $T/c2.wav $R $A/click.wav pad 0 0.05 gain -n -6
+# Main ballast vents opening: air roaring out of the tanks, then settling.
+sox -n $R $T/v1.wav synth 3.0 whitenoise gain -6 highpass 250 lowpass 3500 fade q 0.08 3.0 2.2
+sox -n $R $T/v2.wav synth 3.0 brownnoise lowpass 200 fade q 0.1 3.0 2.4 gain -4
+sox -m $T/v1.wav $T/v2.wav $R $A/vent_rush.wav gain -n -3
+# Blowing ballast with high-pressure air (loop): a hard, steady hiss.
+sox -n $R $A/blow_loop.wav synth 2.0 whitenoise gain -6 highpass 1200 lowpass 7000 tremolo 9 8 gain -n -8
+# A thin gas hiss (oxygen bleed), quiet.
+sox -n $R $A/hiss_loop.wav synth 2.0 whitenoise gain -6 highpass 3500 tremolo 5 10 gain -n -18
+# Periscope hoist (loop): a hydraulic whine with a little grind.
+sox -n $R $T/h1.wav synth 2.0 sine 420 sine 433 gain -14
+sox -n $R $T/h2.wav synth 2.0 pinknoise bandpass 700 300 tremolo 8 30 gain -16
+sox -m $T/h1.wav $T/h2.wav $R $A/hoist_loop.wav gain -n -10
+# Sea water flooding a torpedo tube: a deep gurgling rush.
+sox -n $R $A/flood.wav synth 2.2 brownnoise bandpass 450 400 tremolo 6 60 fade q 0.15 2.2 1.0 gain -n -4
+# A heavy door or hatch shutting: a deep clang.
+sox -n $R $T/g1.wav synth 1.3 sine 170 sine 262 sine 415 fade q 0.001 1.3 1.25 gain -6
+sox -n $R $T/g2.wav synth 0.08 brownnoise lowpass 600 fade q 0.001 0.08 0.07
+sox -m $T/g1.wav $T/g2.wav $R $A/clang.wav reverb 30 gain -n -3
+# A watertight door swinging open: its dogs coming off, a short metal creak.
+sox -n $R $A/door_open.wav synth 0.7 sawtooth 140-110 lowpass 900 tremolo 22 70 fade q 0.05 0.7 0.3 gain -n -8
+# A torpedo being hoisted into a tube (reload): chain rattle and rumble.
+sox -n $R $T/r1.wav synth 0.03 whitenoise bandpass 2500 1200 fade q 0.001 0.03 0.025 pad 0 0.09
+sox $T/r1.wav $R $T/r2.wav repeat 19
+sox -n $R $T/r3.wav synth 2.4 brownnoise lowpass 300 gain -10
+sox -m $T/r2.wav $T/r3.wav $R $A/reload.wav trim 0 2.4 fade q 0.05 2.4 0.4 gain -n -6
+# A diesel turning over and catching.
+sox -n $R $T/s1.wav synth 1.6 sawtooth 25-60 lowpass 260 tremolo 9 80 fade q 0.1 1.6 0.2
+sox -n $R $T/s2.wav synth 0.6 brownnoise lowpass 400 fade q 0.01 0.6 0.4 gain -2
+sox $T/s1.wav $T/s2.wav $R $A/diesel_start.wav gain -n -4
+# A scrubber canister clanking into its seat.
+sox -n $R $A/canister.wav synth 0.4 sine 880 sine 1320 sine 1990 fade q 0.001 0.4 0.38 gain -n -9
+# Pencil on the chart.
+sox -n $R $A/pencil.wav synth 0.25 pinknoise highpass 2500 tremolo 30 70 fade q 0.02 0.25 0.08 gain -n -18
+# Boots on the steel deck (three variants) and on a ladder rung.
+for i in 1 2 3; do
+  sox -n $R $T/f1.wav synth 0.09 brownnoise lowpass $((500 + i * 150)) fade q 0.002 0.09 0.08
+  sox -n $R $T/f2.wav synth 0.12 sine $((220 + i * 40)) fade q 0.001 0.12 0.11 gain -18
+  sox -m $T/f1.wav $T/f2.wav $R $A/step_$i.wav gain -n -10
+done
+sox -n $R $T/f3.wav synth 0.3 sine 520 sine 780 fade q 0.001 0.3 0.29 gain -10
+sox -n $R $T/f4.wav synth 0.05 brownnoise lowpass 800 fade q 0.001 0.05 0.04
+sox -m $T/f3.wav $T/f4.wav $R $A/rung.wav gain -n -10
+# Picking up or putting down a tool.
+sox -n $R $T/p1.wav synth 0.25 sine 700 sine 1080 fade q 0.001 0.25 0.24 gain -10
+sox -n $R $T/p2.wav synth 0.04 whitenoise bandpass 1500 800 fade q 0.001 0.04 0.035
+sox -m $T/p1.wav $T/p2.wav $R $A/tool.wav gain -n -10

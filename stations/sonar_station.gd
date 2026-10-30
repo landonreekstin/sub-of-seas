@@ -180,9 +180,12 @@ func station_input(event: InputEvent) -> void:
 		trained = fposmod(trained + event.relative.x * 0.15, 360.0)
 	elif key_pressed(event, KEY_A):
 		trained = fposmod(trained - 5.0, 360.0)
+		click(-4.0)
 	elif key_pressed(event, KEY_D):
 		trained = fposmod(trained + 5.0, 360.0)
+		click(-4.0)
 	elif key_pressed(event, KEY_P):
 		order("ping")
 	elif key_pressed(event, KEY_M):
 		order("plot", trained)
+		Sfx.play_at(self, "pencil", Vector3(0, 1.2, 0))

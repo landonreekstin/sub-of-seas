@@ -73,7 +73,7 @@ Added by Blaney after playing. In his words where it matters.
       keeps going while it is open when others are aboard; it only truly pauses in single player.
 - [x] **Fix the helm wheel**: it turns on the wrong axis. It should spin around its own
       axle, like a car's steering wheel, when the rudder moves.
-- [ ] **Tutorial: tell you to leave a station**: when the next step is somewhere else,
+- [x] **Tutorial: tell you to leave a station**: when the next step is somewhere else,
       prompt "press Q to leave the station" before sending you on.
 - [ ] **A more nimble boat**: "more nimble than physically possible to a slight extent so
       that people don't get bored, but not so that we're in a rocket ship". Faster turns, dives
@@ -123,8 +123,9 @@ stays for now, until they have been tried with others.
       realistic it plays, from the arcade mode above up to a most-realistic mode. Includes the
       nuclear era, e.g. a full Typhoon-class boat with its exact deck layout as the most
       realistic.
-- [ ] **Sound effects for everything**: every control, station and action makes a sound. To
+- [x] **Sound effects for everything**: every control, station and action makes a sound. To
       start: a telegraph ding when the ordered speed changes, and the helm wheel and rudder
-      gear sound as it turns.
+      gear sound as it turns. *(Every station, door, tool, footstep and ladder now has one;
+      anything new gets its sound when it is made.)*
 - [ ] **Optional bot crew**: AI crewmen you assign to stations and either give orders to or
       leave to act on their own, to fill out a small crew.

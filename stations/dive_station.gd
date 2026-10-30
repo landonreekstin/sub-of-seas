@@ -4,6 +4,7 @@ extends Station
 
 const PRESETS := {KEY_1: 0.0, KEY_2: -1.0, KEY_3: 45.0, KEY_4: -2.0} # -1 periscope, -2 test depth
 
+var _planes := 0.0 ## the planes wheels' shown angle, turning towards the planes' need
 var _wheels: Array[Node3D] = []
 var _needle: Node3D
 var _lines: Array[Label] = []
@@ -27,13 +28,17 @@ func _ready() -> void:
 	set_view(Vector3(0.95, 1.6, 0), Vector3(0, 1.35, 0))
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if Sim.world == null:
 		return
 	var sub := Sim.world.sub
-	var planes := clampf((sub.ordered_depth - sub.depth) * 0.1, -1.0, 1.0)
+	var planes := clampf((sub.ordered_depth - sub.depth) * 0.1, -1.0, 1.0) * 1.2
+	var turning := absf(planes - _planes) > 0.05
+	_planes = move_toward(_planes, planes, delta * 2.5)
 	for w in _wheels:
-		w.rotation.z = planes * 1.2
+		w.rotation.z = _planes
+	sound_while("wheel", "wheel_loop", 0.8 if turning else 0.0, Vector3(0, 1.2, 0))
+	sound_on_change("depth", sub.ordered_depth, "click")
 	_needle.rotation.x = -sub.depth / 150.0 * TAU * 0.9
 	if overlay != null:
 		_lines[0].text = "ORDERED DEPTH  %5.0f m      [W/S] ±5   [Shift] ±1" % sub.ordered_depth

@@ -43,6 +43,9 @@ func _process(delta: float) -> void:
 	_scrubber_lamp.material_override = Build.mat(Color("#8FD47A") if air.canister_left > 0.0 else Color("#2A2A26"), 0.5 if air.canister_left > 0.0 else 0.0)
 	if air.bleed:
 		_bleed_wheel.rotate_object_local(Vector3.FORWARD, delta * 2.0)
+	sound_on_change("bleed", air.bleed, "lever")
+	sound_while("bleed", "hiss_loop", 1.0 if air.bleed else 0.0)
+	sound_on_change("canisters", air.canisters, "canister")
 	if overlay != null:
 		_lines[0].text = "CO2     %4.1f %%   OXYGEN  %4.1f %%" % [air.co2, air.o2]
 		_lines[0].add_theme_color_override("font_color", _co2_color(air.co2) if air.co2 >= AirState.CO2_BAD else _o2_color(air.o2))
