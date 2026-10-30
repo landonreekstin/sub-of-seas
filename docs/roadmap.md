@@ -101,8 +101,10 @@ stays for now, until they have been tried with others.
 - [x] **Settings menu**: audio (master / music / effects / voice volumes), graphics
       (resolution, window mode, quality, field of view), controls (mouse sensitivity, invert
       Y, key rebinding). Reachable from the main menu and the pause menu (M8).
-- [ ] **Keep pushing the art toward Sea of Thieves**, and a bit more detailed than now:
+- [x] **Keep pushing the art toward Sea of Thieves**, and a bit more detailed than now:
       hand-painted colour variation, stronger toon banding, more props and detail.
+      *(A painted toon shader on everything opaque, and frames, cables, valves, lamp cages,
+      extinguishers and room props through the boat. Ships and islands can keep going.)*
 - [x] **Customisable characters that look like Sea of Thieves crew**: stylised, exaggerated
       proportions, with faces, hair, body shape, clothes and hats to choose from (builds on the
       M7 rank hats).

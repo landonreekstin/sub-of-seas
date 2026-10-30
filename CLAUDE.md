@@ -55,7 +55,7 @@ Godot **4.7.2**, GDScript, Jolt 3D physics. Repo: github.com/landonreekstin/sub-
 | `interior/` | `sub_interior.gd` builds any boat from `LAYOUTS` (compartments fore to aft; the control room ends at z 0), doors, tool racks, parts crate, `damage_view.gd` (draws the hull state), `porthole.gd`, `bot_view.gd` (a bot crewman at his station), `jukebox.gd` |
 | `stations/` | station base class and each station |
 | `player/` | first-person crew controller (emotes too), `crewman.gd` (the crewman's body and face from a look), held tools (`tools.gd`), proximity voice (`voice.gd`) |
-| `world/` | exterior ocean scene, ocean shader, ship models, `terrain_view.gd` (islands and sea floor meshes from the seabed), `sea_life_view.gd` (whales, fish schools, sharks, octopus), `porthole_eye.gd` (a second camera in the ocean for the porthole you look at) |
+| `world/` | exterior ocean scene, ocean shader, `toon.gdshader` (the painted toon look on every opaque primitive, via `Build.mat`), ship models, `terrain_view.gd` (islands and sea floor meshes from the seabed), `sea_life_view.gd` (whales, fish schools, sharks, octopus), `porthole_eye.gd` (a second camera in the ocean for the porthole you look at) |
 | `ui/` | main menu, HUD, station overlays, `chart_view.gd` (the plot), `pause_menu.gd` (Esc), `settings_menu.gd`, `sailor_editor.gd` (make your crewman), `bot_orders.gd` (E at a bot) |
 | `data/` | `.tres` balance data and their `Resource` scripts: `subs/`, `ships/` (8 classes), `missions/` (patrols: groups + objectives; `MissionData.KEYS` is the menu order) |
 | `tests/` | headless test runner + `test_*.gd` |

@@ -10,9 +10,18 @@ and update "Current style" in the same commit.
 - **Phase 2 (M6, started): toward Sea of Thieves.** Now in: every palette colour carries a
   grey detail map (`Build.DETAIL`), mapped triplanar so the flat colour stays the colour:
   riveted painted steel panels with rust drips and chips on walls and deckhead, diamond-tread
-  deck plates, brushed brass, plank wood, ship plating with strakes. Light wraps softly
-  (Lambert wrap) with a faint rim light. Still to come for the full SoT feel: hand-painted
-  colour variation, stronger toon banding.
+  deck plates, brushed brass, plank wood, ship plating with strakes. Every opaque piece is
+  drawn by one painted toon shader (`world/toon.gdshader`, lando: keep going toward Sea of
+  Thieves): soft-edged light bands (shadow, mid, lit) and the lamps' falloff in soft steps so
+  light lies in pools; big soft blotches of lighter and darker paint drifting warm and cool,
+  and each plate a touch different from its neighbour (soft and large on ship hulls, finer
+  inside the boat); a warm rim on the lit side; a small hard highlight on brass. Glowing and
+  see-through things stay plain.
+- **Detail inside the boat:** ring frames over the deckhead and down the shoulders with
+  stencilled frame numbers, cable runs (black, red, blue) in brass clamps, red handwheel
+  valves on the white pipe runs, wire cages round the bulbs, a red extinguisher by each
+  after door; a coffee urn, mugs and a menu board in the mess, books over the wardroom table,
+  a brass clock in the control room.
 - **Planned for Phase 2:** Hand-painted feel via procedural textures
   (riveted steel, brass, painted pipes, chipped paint, rust streaks, wood decking), toon-ish
   shading with soft rim light, stylised ocean with foam and big readable waves.

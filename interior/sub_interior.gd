@@ -141,6 +141,8 @@ func build() -> void:
 	_portholes()
 	if has_conning_tower:
 		_conning_tower(ct, hatch)
+	for c in compartments:
+		_dressing(c, hatch if c.type == "control" else Rect2())
 	damage = DamageView.new()
 	damage.name = "Damage"
 	damage.interior = self
@@ -459,6 +461,92 @@ func _air_and_stores() -> void:
 	var crate := PartsCrate.new()
 	crate.position = Vector3(-1.35, 0, c.z1 - 1.1)
 	add_child(crate)
+
+
+## Detail every compartment shares, so the hull reads as a working boat (lando: art toward
+## Sea of Thieves, a bit more detailed): ring frames over the deckhead and down the shoulders,
+## a cable run with brass clamps, red handwheels on the pipe runs, a wire cage round each
+## bulb, an extinguisher by the after door, stencilled frame numbers. None of it collides.
+func _dressing(c: Dictionary, hatch: Rect2) -> void:
+	var z0: float = c.z0
+	var z1: float = c.z1
+	var frame_col := Color("#8FA88C")
+	var n := int((z1 - z0) / 1.2)
+	for i in range(1, n):
+		var z := z0 + (z1 - z0) * i / n
+		if hatch.size != Vector2.ZERO and z > hatch.position.y - 0.15 and z < hatch.end.y + 0.15:
+			continue
+		Build.box(self, Vector3(2.5, 0.07, 0.1), Vector3(0, DECK_HEIGHT - 0.03, z), frame_col, false)
+		for side in [-1.0, 1.0]:
+			if _near_porthole(side, z):
+				continue
+			var s := Build.box(self, Vector3(0.95, 0.07, 0.1), Vector3(side * 1.69, DECK_HEIGHT - 0.25, z), frame_col, false)
+			s.rotation.z = side * deg_to_rad(40.0)
+			# Cable clamps on the frame.
+			Build.box(self, Vector3(0.16, 0.05, 0.05), Vector3(side * 0.62, DECK_HEIGHT - 0.1, z), BRASS, false)
+		if i % 2 == 0:
+			Build.label(self, "FR %d" % (int(z * 2.0) + 60), Vector3(0.0, DECK_HEIGHT - 0.12, z + 0.051), 18, Color("#2B2B26"))
+	# Cable runs under the deckhead, both sides of the light line.
+	var cables := [Color("#2B2B26"), Color("#7A2E25"), Color("#3E5770")]
+	for side in [-1.0, 1.0]:
+		for k in cables.size():
+			Build.cyl(self, 0.022, z1 - z0 - 0.3, Vector3(side * (0.56 + k * 0.05), DECK_HEIGHT - 0.06, (z0 + z1) * 0.5), cables[k], Vector3.BACK)
+	# Handwheel valves on the white pipe runs.
+	var m := maxi(1, int((z1 - z0) / 3.5))
+	for i in m:
+		var z := z0 + (z1 - z0) * (i + 0.5) / m
+		var side := -1.0 if i % 2 == 0 else 1.0
+		Build.cyl(self, 0.1, 0.18, Vector3(side * 1.1, DECK_HEIGHT - 0.1, z), Color("#8A8F86"), Vector3.BACK)
+		Build.cyl(self, 0.015, 0.14, Vector3(side * 1.1, DECK_HEIGHT - 0.22, z), Color("#8A8F86"))
+		Build.wheel(self, 0.09, Vector3(side * 1.1, DECK_HEIGHT - 0.29, z), RED, Vector3.DOWN)
+	# Wire cages round the bulbs.
+	var bulbs := maxi(1, roundi((z1 - z0) / 5.0))
+	for i in bulbs:
+		var z := z0 + (z1 - z0) * (i + 0.5) / bulbs
+		for k in 2:
+			var w := Build.box(self, Vector3(0.22, 0.015, 0.015), Vector3(0, DECK_HEIGHT - 0.1, z), DARK, false)
+			w.rotation.y = k * PI / 2.0
+		Build.wheel(self, 0.11, Vector3(0, DECK_HEIGHT - 0.07, z), DARK, Vector3.DOWN)
+	# An extinguisher on the after bulkhead by the door, port side.
+	if c != compartments[-1]:
+		var ez := z1 - 0.2
+		Build.cyl(self, 0.09, 0.5, Vector3(-1.3, 0.55, ez), RED)
+		Build.sphere(self, 0.09, Vector3(-1.3, 0.8, ez), RED)
+		Build.cyl(self, 0.03, 0.08, Vector3(-1.3, 0.92, ez), DARK)
+		Build.box(self, Vector3(0.14, 0.03, 0.03), Vector3(-1.25, 0.95, ez), DARK, false)
+		Build.box(self, Vector3(0.24, 0.04, 0.08), Vector3(-1.3, 0.62, ez + 0.06), DARK, false) # strap
+	match c.type:
+		"crew":
+			# Coffee urn and mugs on the mess table, a menu board.
+			var tz: float = z1 - 1.2
+			Build.cyl(self, 0.13, 0.4, Vector3(1.5, 0.99, tz - 0.6), Color("#8A8F86"))
+			Build.cyl(self, 0.14, 0.03, Vector3(1.5, 1.2, tz - 0.6), DARK)
+			Build.box(self, Vector3(0.06, 0.03, 0.03), Vector3(1.4, 0.9, tz - 0.6), DARK, false)
+			for k in 4:
+				Build.cyl(self, 0.04, 0.09, Vector3(1.1 + (k % 2) * 0.35, 0.83, tz - 0.2 + (k / 2) * 0.55), Color("#E8DFC4"))
+			Build.box(self, Vector3(0.03, 0.5, 0.7), Vector3(HALF_WIDTH - 0.02, 1.55, tz - 1.4), Color("#2F3A30"), false).rotation.y = 0.0
+			var menu := Build.label(self, "TODAY\nSPAM & BEANS\nCOFFEE", Vector3(HALF_WIDTH - 0.04, 1.55, tz - 1.4), 20, Color("#F2F0E8"))
+			menu.rotation.y = -PI / 2.0
+		"battery":
+			# Officers' books on a shelf over the wardroom table, a brass clock.
+			var bz: float = (z0 + z1) * 0.5
+			Build.box(self, Vector3(0.22, 0.03, 1.2), Vector3(1.85, 1.25, bz + 0.3), WOOD, false)
+			var cols := [Color("#7A2E25"), Color("#3E5770"), Color("#2F4A2E"), Color("#6B5A44"), Color("#7A2E25"), Color("#2B2B26")]
+			for k in cols.size():
+				Build.box(self, Vector3(0.16, 0.22 - (k % 3) * 0.03, 0.06), Vector3(1.86, 1.38 - (k % 3) * 0.015, bz - 0.2 + k * 0.09), cols[k], false)
+		"control":
+			# The boat's clock over the depth board.
+			Build.cyl(self, 0.15, 0.05, Vector3(-1.15, 2.2, z0 + 0.13), BRASS, Vector3.BACK)
+			Build.cyl(self, 0.12, 0.02, Vector3(-1.15, 2.2, z0 + 0.16), Color("#F2E8CF"), Vector3.BACK)
+			var hand := Build.box(self, Vector3(0.015, 0.09, 0.01), Vector3(-1.13, 2.24, z0 + 0.18), DARK, false)
+			hand.rotation.z = -0.5
+
+
+func _near_porthole(side: float, z: float) -> bool:
+	for p in portholes:
+		if signf(p.position.x) == side and absf(p.position.z - z) < 0.45 and p.position.y > 1.75:
+			return true
+	return false
 
 
 func _gauge_board(pos: Vector3, kinds: Array) -> void:

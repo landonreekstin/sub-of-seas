@@ -22,8 +22,28 @@ static func detail_texture(name: String) -> Texture2D:
 	return _textures[name]
 
 
-static func mat(color: Color, emission := 0.0) -> StandardMaterial3D:
+## Shinier palette colours (brass, gauge glass): a tighter toon highlight.
+const SHINY := {"c9a04a": 0.35, "8a8f86": 0.5, "6e756c": 0.55}
+const TOON_SHADER := preload("res://world/toon.gdshader")
+
+
+## The painted toon material (world/toon.gdshader) for an opaque palette colour; glowing
+## and see-through colours keep a plain material.
+static func mat(color: Color, emission := 0.0) -> Material:
 	var key := "%s/%s" % [color.to_html(), emission]
+	if not _materials.has(key) and emission == 0.0 and color.a >= 1.0:
+		var t := ShaderMaterial.new()
+		t.shader = TOON_SHADER
+		t.set_shader_parameter("albedo", color)
+		t.set_shader_parameter("roughness", SHINY.get(color.to_html(false), 0.75))
+		var dt: Array = DETAIL.get(color.to_html(false), [])
+		if not dt.is_empty():
+			t.set_shader_parameter("detail", detail_texture(dt[0]))
+			t.set_shader_parameter("use_detail", true)
+			t.set_shader_parameter("detail_scale", 1.0 / float(dt[1]))
+			t.set_shader_parameter("paint_scale", clampf(1.6 / float(dt[1]), 0.15, 1.0))
+			t.set_shader_parameter("paint", 1.0 if dt[1] < 4.0 else 0.6)
+		_materials[key] = t
 	if not _materials.has(key):
 		var m := StandardMaterial3D.new()
 		m.albedo_color = color
