@@ -55,6 +55,9 @@ func _ready() -> void:
 			Settings.apply_quality(exterior.viewport))
 	pause_menu = PauseMenu.new()
 	add_child(pause_menu)
+	var eye := PortholeEye.new()
+	eye.game = self
+	add_child(eye)
 	get_viewport().size_changed.connect(_fit_exterior)
 	_fit_exterior()
 	hud = Hud.new()

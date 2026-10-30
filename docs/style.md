@@ -78,6 +78,10 @@ and update "Current style" in the same commit.
   others are aboard and only truly pauses for a host alone. Q leaves a station. Settings
   (lando) has audio, graphics and controls tabs, reachable from the main menu and the pause
   menu, and applies each change as you make it.
+- **Portholes:** round brass rims with eight bolts, in officers' country (over the wardroom
+  table and the bunks) and either side of the mess table. Dark glass until you are close and
+  looking at one; then it shows the water outside from that spot on the hull, the way you're
+  looking through it, with a soft dark edge and a glint.
 - **Islands:** low-poly and flat-shaded like everything else: bare rock peaks, deep jungle,
   green scrub, a pale sand beach with a few leaning palms, then a reef of sand and coral
   (pink, orange, violet) and blue-grey slopes into the deep. Light haze so they read 10 km off.

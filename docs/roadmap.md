@@ -78,7 +78,7 @@ Added by Blaney after playing. In his words where it matters.
 - [x] **A more nimble boat**: "more nimble than physically possible to a slight extent so
       that people don't get bored, but not so that we're in a rocket ship". Faster turns, dives
       and speed changes than the real thing, still heavy and submarine-like.
-- [ ] **Portholes**: some windows to look out of from inside the boat.
+- [x] **Portholes**: some windows to look out of from inside the boat.
 - [ ] **Frutiger Aero coral reef**: shallow, bright, clear water with coral, fish and sea
       floor terrain to look at through the portholes and periscope, "almost like you'd see
       on a nostalgic soap pump bottle at school".
@@ -108,7 +108,7 @@ stays for now, until they have been tried with others.
 - [x] **Navigation station**: a chart with each target at its last marked position and the
       land masses drawn in (builds on the M3 chart table).
 - [x] **Islands and land masses** in the ocean world, which the boat has to steer around.
-- [ ] **Portholes** along the sides of the boat, showing the water and any ship hull on that
+- [x] **Portholes** along the sides of the boat, showing the water and any ship hull on that
       side (overlaps Blaney's M8 portholes).
 - [x] **Well-lit water like Sea of Thieves**: bright, clear and readable under the surface,
       not murky.

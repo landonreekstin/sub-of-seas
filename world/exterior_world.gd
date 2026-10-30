@@ -200,15 +200,26 @@ func _underwater(depth: float) -> void:
 			_apply_conditions(Sim.world.conditions)
 		return
 	_under = true
-	var dark := clampf(depth / 150.0, 0.0, 0.7) + (0.55 if Sim.world.conditions.night else 0.0)
-	var mid := Color("#2FB3C4").lerp(Color("#04182A"), clampf(dark, 0.0, 0.9))
-	_sky.sky_top_color = Color("#B4F2F2").lerp(Color("#0A2A40"), clampf(dark, 0.0, 0.9))
-	_sky.sky_horizon_color = mid
-	_sky.ground_horizon_color = mid
-	_sky.ground_bottom_color = Color("#0D5878").lerp(Color("#020A14"), clampf(dark, 0.0, 0.9))
-	_env.fog_light_color = mid
-	_env.fog_density = 0.016
-	_env.fog_sky_affect = 0.0
+	paint_water(_env, _sky, depth, Sim.world.conditions.night)
+
+
+func environment() -> Environment:
+	return _env
+
+
+## Sets `env` and its `sky` up for an eye `depth` metres under the surface (the periscope's,
+## or a porthole's own environment).
+static func paint_water(env: Environment, sky: ProceduralSkyMaterial, depth: float, night: bool) -> void:
+	var dark := clampf(clampf(depth / 150.0, 0.0, 0.7) + (0.55 if night else 0.0), 0.0, 0.9)
+	var mid := Color("#2FB3C4").lerp(Color("#04182A"), dark)
+	sky.sky_top_color = Color("#B4F2F2").lerp(Color("#0A2A40"), dark)
+	sky.sky_horizon_color = mid
+	sky.ground_horizon_color = mid
+	sky.ground_bottom_color = Color("#0D5878").lerp(Color("#020A14"), dark)
+	env.fog_enabled = true
+	env.fog_light_color = mid
+	env.fog_density = 0.016
+	env.fog_sky_affect = 0.0
 
 
 func _sync_planes() -> void:

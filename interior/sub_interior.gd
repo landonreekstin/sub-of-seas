@@ -55,6 +55,7 @@ var racks := {} ## compartment type -> damage control rack position (global)
 var spawn_points: Array[Vector3] = []
 var has_conning_tower := true
 var damage: DamageView
+var portholes: Array[Porthole] = []
 var _gauges := {} ## kind -> Array[Label3D]
 var _lights: Array[OmniLight3D] = []
 var _flicker := 0.0
@@ -133,6 +134,7 @@ func build() -> void:
 			"maneuvering":
 				_maneuvering(c)
 	_air_and_stores()
+	_portholes()
 	if has_conning_tower:
 		_conning_tower(ct, hatch)
 	damage = DamageView.new()
@@ -254,6 +256,24 @@ func _bunks(z0: float, z1: float, sides := [-1.0, 1.0]) -> void:
 		for y in [0.5, 1.3]:
 			Build.box(self, Vector3(0.75, 0.08, z1 - z0), Vector3(side * 1.55, y, (z0 + z1) * 0.5), WOOD)
 			Build.box(self, Vector3(0.7, 0.12, z1 - z0 - 0.2), Vector3(side * 1.55, y + 0.1, (z0 + z1) * 0.5), BUNK, false)
+
+
+## Portholes: over the wardroom table and the officers' bunks, and either side of the mess
+## table (lando, Blaney: windows to look out of).
+func _portholes() -> void:
+	var spots: Array = []
+	if comp_index("battery") >= 0:
+		var b := comp("battery")
+		spots.append([Vector3(HALF_WIDTH - 0.02, 1.6, (b.z0 + b.z1) * 0.5), 1.0])
+		spots.append([Vector3(-HALF_WIDTH + 0.02, 1.85, (b.z0 + b.z1) * 0.5 - 1.0), -1.0])
+	if comp_index("crew") >= 0:
+		var c := comp("crew")
+		spots.append([Vector3(HALF_WIDTH - 0.02, 1.6, c.z1 - 1.2), 1.0])
+		spots.append([Vector3(-HALF_WIDTH + 0.02, 1.6, c.z1 - 1.2), -1.0])
+	for s: Array in spots:
+		var p := Porthole.create(s[0], s[1])
+		add_child(p)
+		portholes.append(p)
 
 
 # --- Compartments ----------------------------------------------------------
