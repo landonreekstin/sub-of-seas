@@ -71,7 +71,7 @@ Each milestone ends playable and committed. Tick items as they land.
 Added by Blaney after playing. In his words where it matters.
 - [ ] **Pause menu**: Esc brings up a menu (resume, settings, leave to main menu). The boat
       keeps going while it is open when others are aboard; it only truly pauses in single player.
-- [ ] **Fix the helm wheel**: it turns on the wrong axis. It should spin around its own
+- [x] **Fix the helm wheel**: it turns on the wrong axis. It should spin around its own
       axle, like a car's steering wheel, when the rudder moves.
 - [ ] **Tutorial: tell you to leave a station**: when the next step is somewhere else,
       prompt "press Q to leave the station" before sending you on.
