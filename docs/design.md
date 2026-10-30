@@ -7,7 +7,9 @@ person can find, aim, fire and survive alone.
 
 **Arcade over realism (lando, 2026-10-30).** History and real numbers are a starting point,
 not a rule: when fun and accuracy disagree, fun wins. The current mechanics all stay until
-they have been played with others.
+they have been played with others. Later, modes and boats sit on a scale from arcade to
+realistic, reaching into the nuclear era (a full Typhoon-class boat with its exact deck layout
+as the most realistic), and optional bot crewmen can man stations for small crews.
 
 Everything here is a starting point. Numbers live in `data/*.tres` and get tuned by playing.
 

@@ -65,7 +65,8 @@ and update "Current style" in the same commit.
   stay until tried with others); art pushed on toward Sea of Thieves and a bit more detailed;
   customisable Sea of Thieves-style crew; torpedoes leave a visible bubble trail; portholes
   that show the water and nearby hulls; bright, well-lit water like Sea of Thieves; reefs,
-  undersea mountains and shelves; sharks, whales, octopus and fish.
+  undersea mountains and shelves; sharks, whales, octopus and fish; music (menu, patrol,
+  combat); emotes seen in third person; a rec room for whimsical fun and mini games.
 - **UI:** typewriter / stencil feel, cream on dark panels, minimal HUD (crosshair, carried
   tool, interaction prompt).
 
@@ -80,3 +81,7 @@ and update "Current style" in the same commit.
 | 2026-10-30 | lando | You should be able to see the torpedo trails when they fire. |
 | 2026-10-30 | lando | Portholes on the sides of the sub you can see out of, showing the water and ships' hulls in that direction. |
 | 2026-10-30 | lando | The water should be fairly well lit, like Sea of Thieves. |
+| 2026-10-30 | lando | Add music. |
+| 2026-10-30 | lando | Add third-person emotes. |
+| 2026-10-30 | lando | Add a rec room for whimsical fun and mini games, separate from the main objective. |
+| 2026-10-30 | lando | Besides the arcade mode, add modes and submarines that vary from arcade to realism, into the nuclear era; the most realistic, e.g., a full Typhoon-class boat with its exact deck layout. |

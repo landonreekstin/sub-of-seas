@@ -93,3 +93,15 @@ stays for now, until they have been tried with others.
       contacts.
 - [ ] **Listening station**: hydrophone headphones where you hear ship engines and screws
       and animal sounds, and have to tell them apart.
+- [ ] **Music**: a soundtrack (menu, patrol, combat / being hunted), with its own volume in
+      the settings menu.
+- [ ] **Third-person emotes**: the camera pulls out to third person while you play an emote
+      (wave, salute, dance, ...) so you can see your own crewman.
+- [ ] **Rec room**: a compartment for whimsical fun and mini games, separate from the
+      mission objectives. Matters most in the generative free-roam mode.
+- [ ] **Modes on an arcade ↔ realism scale**: more modes and boats that set how arcadey or
+      realistic it plays, from the arcade mode above up to a most-realistic mode. Includes the
+      nuclear era, e.g. a full Typhoon-class boat with its exact deck layout as the most
+      realistic.
+- [ ] **Optional bot crew**: AI crewmen you assign to stations and either give orders to or
+      leave to act on their own, to fill out a small crew.
