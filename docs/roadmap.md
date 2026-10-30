@@ -123,5 +123,8 @@ stays for now, until they have been tried with others.
       realistic it plays, from the arcade mode above up to a most-realistic mode. Includes the
       nuclear era, e.g. a full Typhoon-class boat with its exact deck layout as the most
       realistic.
+- [ ] **Sound effects for everything**: every control, station and action makes a sound. To
+      start: a telegraph ding when the ordered speed changes, and the helm wheel and rudder
+      gear sound as it turns.
 - [ ] **Optional bot crew**: AI crewmen you assign to stations and either give orders to or
       leave to act on their own, to fill out a small crew.

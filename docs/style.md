@@ -55,7 +55,9 @@ and update "Current style" in the same commit.
   harsh metallic echo-ranging when they find us, booms that roll, groaning creaks that come
   more often deeper, an "ah-OO-gah" klaxon on opening the vents, alarm bell on a close one,
   diesel chug, a soft airy motor whirr from aft (barely there slow, louder flat out, never a
-  low droning hum), hissing leaks, crackling fires.
+  low droning hum), hissing leaks, crackling fires. Planned (lando, M9): everything has a sound
+  effect, every control, station and action; the engine-order telegraph dings when the speed
+  changes, and the helm wheel makes a sound as it turns.
 - **Hits:** camera shake, lights stutter, paint flakes shake down from the deckhead.
 - **Night:** a deep blue-black sky, cold dim moonlight, black water with silver foam; inside,
   submerged, the boat rigs for red (`#FF4A35` light). Rough seas are big rolling waves.
@@ -95,3 +97,4 @@ and update "Current style" in the same commit.
 | 2026-10-30 | lando | Add a rec room for whimsical fun and mini games, separate from the main objective. |
 | 2026-10-30 | lando | Besides the arcade mode, add modes and submarines that vary from arcade to realism, into the nuclear era; the most realistic, e.g., a full Typhoon-class boat with its exact deck layout. |
 | 2026-10-30 | Blaney | The low hum is horrible. (Asked: it is the electric motor; he chose a soft whirr instead.) |
+| 2026-10-30 | lando | There should be ding sounds when you change the sub's speed, and sound effects for turning the helm. Everything should have sound effects. |
