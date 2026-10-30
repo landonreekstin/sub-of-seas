@@ -14,7 +14,7 @@ var scope_fov := 32.0
 var _ocean_near: MeshInstance3D
 var _ocean_far: MeshInstance3D
 var _ships := {} ## ship id -> Node3D
-var _torps := {} ## torpedo id -> Node3D
+var _tracks := {} ## torpedo id -> {from, head (3D xz), ended (sim time, or -1 while running)}
 var _planes := {} ## aircraft id -> Node3D
 var _env: Environment
 var _sky: ProceduralSkyMaterial
@@ -208,24 +208,41 @@ func _sync_planes() -> void:
 			_planes.erase(id)
 
 
+## Only the bubble track shows on the surface, from where the fish left the tube to where it
+## is (or hit, or ran out); the ocean shader draws it, and it fades about a minute later.
 func _sync_torpedoes() -> void:
+	var now := Sim.world.time
 	var seen := {}
 	for t in Sim.world.torpedoes:
+		if not t.alive:
+			continue
 		seen[t.id] = true
-		var node: Node3D = _torps.get(t.id)
-		if node == null:
-			node = Node3D.new()
-			# Only the wake shows on the surface: a long pale streak behind the fish.
-			Build.box(node, Vector3(0.8, 0.05, 50.0), Vector3(0, 0.15, 25.0), Color(0.95, 0.98, 1.0, 0.7), false)
-			Build.box(node, Vector3(1.4, 0.06, 4.0), Vector3(0, 0.18, 1.0), Color(1, 1, 1, 0.9), false)
-			add_child(node)
-			_torps[t.id] = node
-		node.position = to_3d(t.pos)
-		node.rotation.y = -deg_to_rad(t.heading)
-	for id: int in _torps.keys():
-		if not seen.has(id):
-			_torps[id].queue_free()
-			_torps.erase(id)
+		var head := Vector2(t.pos.x, -t.pos.y)
+		if not _tracks.has(t.id):
+			_tracks[t.id] = {"from": head, "head": head, "ended": -1.0}
+		_tracks[t.id].head = head
+		_tracks[t.id].ended = -1.0
+	for id: int in _tracks.keys():
+		var tr: Dictionary = _tracks[id]
+		if not seen.has(id) and tr.ended < 0.0:
+			tr.ended = now
+		if tr.ended >= 0.0 and now - tr.ended > 90.0:
+			_tracks.erase(id)
+	var ids := _tracks.keys()
+	ids.sort_custom(func(a: int, b: int) -> bool: return a > b) # newest first
+	var segs := PackedVector4Array()
+	var life := PackedVector2Array()
+	for id: int in ids.slice(0, 8):
+		var tr: Dictionary = _tracks[id]
+		segs.append(Vector4(tr.from.x, tr.from.y, tr.head.x, tr.head.y))
+		life.append(Vector2(0.0 if tr.ended < 0.0 else now - tr.ended, Torpedo.SPEED))
+	var count := segs.size()
+	segs.resize(8)
+	life.resize(8)
+	for m: ShaderMaterial in [_ocean_near.material_override, _ocean_far.material_override]:
+		m.set_shader_parameter("torps", segs)
+		m.set_shader_parameter("torp_life", life)
+		m.set_shader_parameter("torp_count", count)
 
 
 ## Fire and a column of black smoke on a hit tanker, or any ship going down: on the horizon

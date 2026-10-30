@@ -2,7 +2,8 @@ shader_type spatial;
 render_mode cull_disabled;
 // Stylised open ocean: three Gerstner waves in world space, faded out with distance,
 // deep-to-turquoise colour by facing angle, noisy white foam on the crests, and the white
-// wakes and bow waves of up to 16 ships. Seen from below it is a murky green ceiling.
+// wakes and bow waves of up to 16 ships, and the bubble tracks of up to 8 torpedoes. Seen from
+// below it is a murky green ceiling.
 
 uniform vec4 deep_color : source_color = vec4(0.03, 0.12, 0.24, 1.0);
 uniform vec4 shallow_color : source_color = vec4(0.06, 0.30, 0.38, 1.0);
@@ -15,6 +16,10 @@ uniform float fade_end = 1800.0;
 uniform vec4 ships[16];
 uniform float ship_len[16];
 uniform int ship_count = 0;
+// Torpedo tracks: (launch x, z, head x, z), and (seconds since it hit or ran out, speed m/s).
+uniform vec4 torps[8];
+uniform vec2 torp_life[8];
+uniform int torp_count = 0;
 
 varying float v_crest;
 varying float v_fade;
@@ -86,6 +91,28 @@ float wake(vec2 p) {
 	return w;
 }
 
+// A torpedo's bubble track, launch to head: a tight bright line at the head that spreads
+// and breaks up as it ages, gone about a minute after the fish passed. 0..1.
+float torp_track(vec2 p, float n) {
+	float w = 0.0;
+	for (int i = 0; i < torp_count; i++) {
+		vec2 a = torps[i].xy;
+		vec2 b = torps[i].zw;
+		vec2 seg = b - a;
+		float len = max(length(seg), 0.001);
+		vec2 dir = seg / len;
+		float along = clamp(dot(p - a, dir), 0.0, len);
+		float across = distance(p, a + dir * along);
+		float age = (len - along) / max(torp_life[i].y, 1.0) + torp_life[i].x;
+		float width = 0.7 + age * 0.035;
+		float line = 1.0 - smoothstep(width * 0.3, width, across);
+		float fresh = mix(0.95, 0.35, smoothstep(0.0, 12.0, age)) * (1.0 - smoothstep(30.0, 70.0, age));
+		float broken = mix(1.0, smoothstep(0.35, 0.75, n), clamp(age / 8.0, 0.0, 1.0));
+		w = max(w, line * fresh * broken);
+	}
+	return w;
+}
+
 void fragment() {
 	// Looking down into the water shows turquoise; at grazing angles it reads deep blue.
 	float facing = clamp(dot(NORMAL, VIEW), 0.0, 1.0);
@@ -96,6 +123,7 @@ void fragment() {
 	float n = vnoise(world.xz * 0.35 + TIME * 0.2) * 0.6 + vnoise(world.xz * 1.3 - TIME * 0.3) * 0.4;
 	float foam = smoothstep(1.4 * amplitude, 2.3 * amplitude, v_crest + n * 0.5 * amplitude);
 	foam = max(foam, wake(world.xz) * smoothstep(0.25, 0.6, n));
+	foam = max(foam, torp_track(world.xz, n));
 	col = mix(col, foam_color.rgb, foam * 0.85);
 	if (!FRONT_FACING) {
 		col = vec3(0.10, 0.28, 0.28); // the surface from underneath

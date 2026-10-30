@@ -82,7 +82,7 @@ godot --path . -- --sub s_boat      # the boat to take out: s_boat, gato (defaul
 Two-player test on one machine: start one with `--host`, one with `--join 127.0.0.1`.
 Testing aids: `--name <n>`, `--spawn x,y,z` (start the local player there, e.g.
 `--spawn 0.6,0.1,-20.2` = torpedo room), `--address <ip>` (prefill the join box), `--look <deg>` (spawn turned that far right), `--station <id>` (man that station on arrival: `helm`, `dive`, `ballast`, `periscope`, `tdc`, `sonar`, `tube_1`.., `engine`, `air`), `--port <n>` (default 7000), `--test-charges` (host: fixed seed, and a pattern
-goes off around the boat 3 s in and the helm is knocked out; leak/fire positions are printed), `--test-voice` (this player talks a 440 Hz tone the whole time, to check voice without a microphone), `--test-win` (host: every ship sinks 4 s in, so objectives tick and the debrief shows), `--test-air` (host: foul air, and a fire in the shut-in, smoke-filled control room: whoever is in there passes out). F10 leaves to the menu.
+goes off around the boat 3 s in and the helm is knocked out; leak/fire positions are printed), `--test-voice` (this player talks a 440 Hz tone the whole time, to check voice without a microphone), `--test-torpedo` (host: a spread of three fired from the bow 3 s in, to see the tracks), `--test-win` (host: every ship sinks 4 s in, so objectives tick and the debrief shows), `--test-air` (host: foul air, and a fire in the shut-in, smoke-filled control room: whoever is in there passes out). F10 leaves to the menu.
 
 ### Playing with others (Blaney)
 **From source** (both have the repo): lando runs `./play host <mission>` on gaming-pc,

@@ -92,6 +92,8 @@ func _ready() -> void:
 			_debug_pattern.call_deferred()
 		if Net.debug_win:
 			_debug_win.call_deferred()
+		if Net.debug_torpedo:
+			_debug_torpedo.call_deferred()
 		if Net.debug_air:
 			Sim.world.air.co2 = 4.6
 			var cr := interior.comp_index("control")
@@ -210,6 +212,13 @@ func _debug_pattern() -> void:
 	for f in Sim.world.hull.fires:
 		print("debug fire %s at %s" % [f.id, f.p])
 	print("debug broken %s" % [Sim.world.hull.broken.keys()])
+
+
+## Testing aid (--test-torpedo): a spread of three from the bow 3 s in, to see their tracks.
+func _debug_torpedo() -> void:
+	await get_tree().create_timer(3.0).timeout
+	for gyro in [-6.0, 0.0, 6.0]:
+		Sim.world.fire_torpedo(gyro)
 
 
 ## Testing aid (--test-win): every ship goes down 4 s in, as if torpedoed.

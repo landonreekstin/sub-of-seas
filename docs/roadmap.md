@@ -98,7 +98,7 @@ stays for now, until they have been tried with others.
 - [ ] **Customisable characters that look like Sea of Thieves crew**: stylised, exaggerated
       proportions, with faces, hair, body shape, clothes and hats to choose from (builds on the
       M7 rank hats).
-- [ ] **Visible torpedo trails**: a bubble wake you can see from the periscope from launch
+- [x] **Visible torpedo trails**: a bubble wake you can see from the periscope from launch
       to hit or miss.
 - [ ] **Navigation station**: a chart with each target at its last marked position and the
       land masses drawn in (builds on the M3 chart table).
