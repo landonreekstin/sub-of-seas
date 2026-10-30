@@ -4,10 +4,12 @@
 play:
 	./play
 
-# Unit tests (exit 1 on failure), then the whole training patrol played by script.
+COURSES := full helm scope torpedo sonar damage engine
+
+# Unit tests (exit 1 on failure), then every training course played by script.
 test:
 	godot --headless --path . -s tests/run_tests.gd
-	godot --headless --path . -s tests/tutorial_walkthrough.gd
+	$(MAKE) walkthrough
 
 walkthrough:
-	godot --headless --path . -s tests/tutorial_walkthrough.gd
+	set -e; for c in $(COURSES); do godot --headless --path . -s tests/tutorial_walkthrough.gd -- $$c; done

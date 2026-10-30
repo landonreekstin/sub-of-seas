@@ -82,11 +82,14 @@ Added by Blaney after playing. In his words where it matters.
 - [x] **Frutiger Aero coral reef**: shallow, bright, clear water with coral, fish and sea
       floor terrain to look at through the portholes and periscope, "almost like you'd see
       on a nostalgic soap pump bottle at school".
-- [ ] **Tutorials per crew position**: the one 29-step training patrol is too long. Split it
+- [x] **Tutorials per crew position**: the one 29-step training patrol is too long. Split it
       so you pick the position you want to play (helm, dive, periscope/TDC, sonar, torpedoes,
       engine/air, damage control...) and do a short tutorial just for that. Each one includes
       the information you would normally hear from the other players aboard (e.g. "Captain:
       come to 090", "Sonar: contact bearing 270") so it works alone.
+      *(Training patrol on the menu opens a list: Helm & dive, Periscope & TDC, Torpedoes,
+      Sonar, Damage control, Engine & air, and the whole boat (long). Crew calls pop up big
+      with the speaker's name and a bell.)*
 - [ ] **Footsteps that don't sound like knocking**: "the footsteps make it sound like someone
       is knocking on my door which is not optimal". They should read as boots on a steel deck,
       not a knock on wood (ask Blaney what he wants instead when this is picked up).

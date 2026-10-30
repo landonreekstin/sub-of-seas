@@ -1,6 +1,7 @@
 extends SceneTree
 ## Plays the training patrol start to finish through the same host requests players send.
-##   godot --headless --path . -s tests/tutorial_walkthrough.gd
+##   godot --headless --path . -s tests/tutorial_walkthrough.gd [-- <course>]
+## (a Tutorial.COURSES key; the whole boat when left out).
 ## Exits 0 when the debrief says "training", 1 if a step stalls.
 
 const TIMEOUT := 900.0 ## game seconds
@@ -18,6 +19,9 @@ func _initialize() -> void:
 	var net: Node = root.get_node("Net")
 	_sim = root.get_node("Sim")
 	net.mission = "training"
+	var args := OS.get_cmdline_user_args()
+	net.course = args[0] if not args.is_empty() else "full"
+	print("walkthrough: course %s" % net.course)
 	net.mode = 1 # Net.Mode.HOST
 	net.port = 7090
 	Engine.time_scale = 6.0
@@ -144,3 +148,26 @@ func _act(i: int) -> void:
 			if _once("a"):
 				g.rq_station_enter("engine")
 				g.rq_order("engine", "diesel", [0, true])
+		"come_090":
+			if _once("a"):
+				g.rq_station_enter("helm")
+				g.rq_order("helm", "rudder", 3)
+			var off := wrapf(_sim.world.sub.heading - 90.0, -180.0, 180.0)
+			if absf(off) < 15.0 and _once("ease"):
+				g.rq_order("helm", "rudder", 1)
+		"steady": if _once("a"): g.rq_order("helm", "rudder", 0)
+		"deep_dive":
+			if _once("a"):
+				g.rq_station_enter("dive")
+				g.rq_order("dive", "depth", 45.0)
+		"back_up": if _once("a"): g.rq_order("dive", "depth", _sim.world.sub.data.periscope_depth)
+		"reload":
+			if _once("a"):
+				g.rq_order("tube_1", "door", null)
+				g.rq_order("tube_1", "flood", null)
+				g.rq_order("tube_1", "load", null)
+		"plot": if _once("a"): g.rq_order("sonar", "plot", 0.0)
+		"diesel_stop":
+			if _once("a"):
+				for d in _sim.world.sub.diesels.size():
+					g.rq_order("engine", "diesel", [d, false])

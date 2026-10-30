@@ -159,7 +159,7 @@ func _initial_crew() -> Dictionary:
 		"mission": "convoy", ## a MissionData key, or "training"; set by the host
 		"objectives": [], ## from the mission: each with "done", shown top right
 		"sunk_by": {}, ## ship class key -> ships sunk
-		"tutorial": {"step": 0},
+		"tutorial": {"step": 0, "course": Net.course}, ## course: a Tutorial.COURSES key
 		"knocked": {}, ## peer -> seconds until they come round
 		"looks": {}, ## peer -> {hat, hue, rank} from their own profile
 		"parts": sub_class.spare_parts, ## spare-parts boxes left in stores

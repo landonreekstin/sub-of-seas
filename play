@@ -4,7 +4,7 @@
 #   ./play                         the menu
 #   ./play host [mission] [sub]    host a patrol (missions: convoy tankers hunted carrier task_force sandbox;
 #                                  subs: s_boat gato narwhal)
-#   ./play training                host the training patrol
+#   ./play training [course]       host the training patrol (courses: helm scope torpedo sonar damage engine full)
 #   ./play join [address]          join a host (default 192.168.1.76, lando's gaming-pc over the VPN)
 #   ./play ... -- <extra args>     anything after -- goes to the game (e.g. --name Blaney)
 #
@@ -82,7 +82,9 @@ case "$mode" in
 		if [ $# -gt 0 ] && [ "$1" != "--" ]; then mission="$1"; shift; fi
 		if [ $# -gt 0 ] && [ "$1" != "--" ]; then sub="$1"; shift; fi
 		args+=(--mission "$mission" --sub "$sub") ;;
-	training) args+=(--training) ;;
+	training)
+		args+=(--training)
+		if [ $# -gt 0 ] && [ "$1" != "--" ]; then args+=("$1"); shift; fi ;;
 	join)
 		address="$JOIN_ADDRESS"
 		if [ $# -gt 0 ] && [ "$1" != "--" ]; then address="$1"; shift; fi

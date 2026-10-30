@@ -18,11 +18,32 @@ var _destroyer: ShipState
 var _pattern_dropped := false
 var _pattern_over := false ## the pattern has gone off and the damage is set up
 var _entered := -1
+var _called := -1 ## the last step whose crew call this peer has shown
+var course := "full"
+
+## The training courses, in menu order: one per crew job, then the whole boat.
+const COURSES := {
+	"helm": "Helm & dive", "scope": "Periscope & TDC", "torpedo": "Torpedoes", "sonar": "Sonar",
+	"damage": "Damage control", "engine": "Engine & air", "full": "Whole boat (long)",
+}
+const BLURBS := {
+	"helm": "Steer, ring up speed, and take her down and back up on the planes.",
+	"scope": "Raise the scope, range and mark a target, and give the TDC a firing solution.",
+	"torpedo": "Flood, open the door, fire, and reload a torpedo tube.",
+	"sonar": "Find a contact on the hydrophone, tell a warship by its screws, plot its bearing.",
+	"damage": "After a pattern of depth charges: weld a leak, put out a fire, fix gear, pump, shut doors.",
+	"engine": "Run the diesels to charge the battery, stop them to dive, and keep the air clean.",
+	"full": "Every station in one patrol, 29 steps. Best done together as a crew.",
+}
+const FULL_LENGTH := 29 ## the first 29 steps in the library are the whole-boat course
 
 
 func _init(g: Game) -> void:
 	game = g
 	name = "Tutorial"
+	course = str(g.crew.get("tutorial", {}).get("course", "full"))
+	if not COURSES.has(course):
+		course = "full"
 	_build_steps()
 
 
@@ -52,6 +73,7 @@ func setup_world() -> void:
 	_target = w.add_ship(FREIGHTER, Vector2(0, 2600), 90.0, 0.0)
 	_target.passive = true
 	_target.hp = 1.0
+	_setup_course()
 
 
 ## Host: a station reported something only it can see (a stadimeter range, a classification).
@@ -76,7 +98,7 @@ func _manned(id: String) -> Callable:
 func _build_steps() -> void:
 	var sub := func() -> SubState: return Sim.world.sub
 	var hull := func() -> HullState: return Sim.world.hull
-	steps = [
+	var list: Array[Dictionary] = [
 		{"id": "helm", "at": "helm", "text": "Welcome aboard. Man the HELM: starboard side of the control room, forward. Walk up and press E.",
 			"marker": _station("helm"), "done": _manned("helm")},
 		{"id": "ahead", "needs": "helm", "text": "Ring up AHEAD 2/3 on the engine telegraph: press W twice. Keep the rudder amidships.",
@@ -143,7 +165,101 @@ func _build_steps() -> void:
 			"marker": _station("ballast"), "done": func() -> bool: return sub.call().is_surfaced()},
 		{"id": "diesel", "needs": "engine", "text": "Surfaced. Charge the battery: man the DIESEL CONTROLS (engine room, aft end) and start a diesel: 1. Stop them again before you ever dive.",
 			"marker": _station("engine"), "done": func() -> bool: return sub.call().diesels.any(func(d: float) -> bool: return d > 0.0)},
+		# Steps only the short per-job courses use.
+		{"id": "come_090", "needs": "helm", "text": "Hold D for right rudder and watch the HEADING. Ease back (A) as it nears 090.",
+			"marker": _station("helm"), "done": func() -> bool: return absf(wrapf(sub.call().heading - 90.0, -180.0, 180.0)) < 6.0},
+		{"id": "steady", "needs": "helm", "text": "Rudder AMIDSHIPS (A or D back to the middle) and hold her on 090.",
+			"marker": _station("helm"), "done": func() -> bool:
+				return sub.call().rudder == 0 and absf(wrapf(sub.call().heading - 90.0, -180.0, 180.0)) < 10.0},
+		{"id": "deep_dive", "needs": "dive", "text": "Press 3: the planes take her down to 45 m. Watch the depth gauge.",
+			"marker": _station("dive"), "done": func() -> bool: return sub.call().depth >= 40.0},
+		{"id": "back_up", "needs": "dive", "text": "Press 2: back up to periscope depth.",
+			"marker": _station("dive"), "done": func() -> bool: return sub.call().depth <= sub.call().data.periscope_depth + 1.5},
+		{"id": "reload", "needs": "tube_1", "text": "Shut the outer door (O), drain the tube (F), then reload: L. Stay at the tube until it reads LOADED.",
+			"marker": _station("tube_1"), "done": func() -> bool: return game.crew.tubes[0].loaded},
+		{"id": "plot", "needs": "sonar", "text": "Keep the hydrophone on him and press M: his bearing goes on the chart for the captain.",
+			"marker": _station("sonar"), "done": func() -> bool: return not game.crew.plot.is_empty()},
+		{"id": "brace", "ok": ["any"], "text": "Hold on to something. The pattern is on its way down...",
+			"marker": Callable(), "enter": _drop_pattern, "done": func() -> bool: return _pattern_over},
+		{"id": "diesel_stop", "needs": "engine", "text": "Stop every running diesel: 2. Diesels running when she dives flood the engine room.",
+			"marker": _station("engine"), "done": func() -> bool: return sub.call().diesels.all(func(d: float) -> bool: return d <= 0.0)},
 	]
+	var by_id := {}
+	for st in list:
+		by_id[st.id] = st
+	var plan := _plan(course)
+	if plan.is_empty(): # the whole boat: the original long checklist, in order
+		for st in list.slice(0, FULL_LENGTH):
+			plan.append([st.id])
+	for entry: Array in plan:
+		var st: Dictionary = by_id[entry[0]].duplicate()
+		if entry.size() >= 3:
+			st.who = entry[1]
+			st.say = entry[2]
+		if entry.size() >= 4:
+			st.enter = entry[3]
+		steps.append(st)
+
+
+## A short course: [step id] or [step id, who calls it, the call, optional enter]. Empty for
+## the whole boat. The calls stand in for the crewmates you would hear on a full boat.
+func _plan(key: String) -> Array:
+	match key:
+		"helm": return [
+			["helm", "Captain", "Helmsman, man the helm."],
+			["ahead", "Captain", "All ahead two-thirds."],
+			["come_090", "Captain", "Right full rudder. Come to course zero-niner-zero."],
+			["steady", "Captain", "Rudder amidships. Steady as she goes."],
+			["dive", "Chief of the boat", "Vents open, she's flooding down. Diving officer, take the planes!", _open_vents],
+			["depth", "Captain", "Make your depth periscope depth."],
+			["deep_dive", "Captain", "Escort closing! Take her down to 45 metres."],
+			["back_up", "Captain", "He's lost us. Bring her back to periscope depth."]]
+		"scope": return [
+			["scope", "Captain", "Man the periscope. Lookout reports a freighter dead ahead."],
+			["raise", "Captain", "Up periscope."],
+			["range", "", ""], ["mark", "", ""],
+			["lower", "Captain", "Down periscope."],
+			["tdc", "Captain", "Good marks. Take the TDC."],
+			["send", "Captain", "Send the solution to the torpedo room."]]
+		"torpedo": return [
+			["tube", "Captain", "Torpedo room, make ready tube one."],
+			["flood", "Captain", "Flood tube one and open the outer door."],
+			["fire", "Captain", "Target dead ahead, gyro zero. Fire one!"],
+			["reload", "Captain", "Good hit! Reload tube one."]]
+		"sonar": return [
+			["sonar", "Captain", "Sonar, man your station. Lookout heard screws to the north."],
+			["classify", "Captain", "What is he? Warship or merchant?"],
+			["plot", "Captain", "Warship. Put his bearing on the chart."]]
+		"damage": return [
+			["brace", "Captain", "Depth charges! Brace for it!"],
+			["weld", "Control room", "Leak in the control room!"],
+			["extinguish", "Control room", "Fire! Fire in the control room!"],
+			["wrench", "Helmsman", "The helm's knocked out, she won't answer!"],
+			["pump", "Chief of the boat", "We're taking water. Rig the portable pump!"],
+			["door", "Captain", "Shut the watertight door forward."]]
+		"engine": return [
+			["diesel", "Captain", "Surfaced. Start a diesel and charge the battery."],
+			["diesel_stop", "Bridge", "Aircraft! Clear the bridge, we're diving. Stop the diesels!"],
+			["air", "Chief of the boat", "We're under. CO2's climbing back here: load a fresh canister in the scrubber.", _open_vents]]
+	return []
+
+
+## Host: where each short course starts. Surfaced and stopped (the whole boat, helm, engine),
+## or already down at periscope depth with the freighter dead ahead.
+func _setup_course() -> void:
+	var sub := Sim.world.sub
+	match course:
+		"scope", "torpedo", "sonar", "damage":
+			var depth: float = 30.0 if course == "damage" else sub.data.periscope_depth
+			sub.ballast = 1.0
+			sub.depth = depth
+			sub.ordered_depth = depth
+		"engine":
+			sub.battery = 0.5
+
+
+func _open_vents() -> void:
+	Sim.world.sub.ballast_order("vent")
 
 
 ## The door in the control room's forward bulkhead.
@@ -206,7 +322,8 @@ func _drop_pattern() -> void:
 	_pattern_dropped = true
 	var w := Sim.world
 	var sub := w.sub
-	Sim.world.event.emit("splash", {"ship": _destroyer.id, "x": _destroyer.pos.x, "y": _destroyer.pos.y})
+	if _destroyer != null:
+		Sim.world.event.emit("splash", {"ship": _destroyer.id, "x": _destroyer.pos.x, "y": _destroyer.pos.y})
 	# Close enough to hurt, set a little shallow (they usually were).
 	for off: Vector2 in [Vector2(14, 20), Vector2(-18, -10), Vector2(30, -30), Vector2(-40, 35)]:
 		w.drop_charge(sub.pos + off, sub.depth - 12.0)
@@ -226,6 +343,10 @@ func _ensure_damage() -> void:
 
 func _process(_delta: float) -> void:
 	var i := step_index()
+	if i != _called and i < steps.size() and game.crew.result == "":
+		_called = i
+		if steps[i].get("say", "") != "":
+			game.hud.crew_call(steps[i].who, steps[i].say)
 	_update_marker(i)
 	_update_hud(i)
 	if not multiplayer.is_server() or game.crew.result != "" or i >= steps.size():
@@ -241,6 +362,9 @@ func _process(_delta: float) -> void:
 
 
 func _script_tick(_i: int) -> void:
+	if _destroyer == null and _pattern_dropped and not _pattern_over and Sim.world.charges.is_empty():
+		_pattern_over = true # the damage course's pattern, with nobody up top
+		_ensure_damage()
 	if _destroyer == null or _destroyer.is_sinking():
 		return
 	var d := _destroyer.pos.distance_to(Sim.world.sub.pos)
@@ -264,7 +388,10 @@ func _advance(i: int) -> void:
 	_flags.clear() # what happens from here on counts for the next step
 	game.crew.tutorial.step = i + 1
 	if i + 1 >= steps.size():
-		game.end_patrol("training", "Training complete. You ran the whole boat: helm, ballast, dive, scope, TDC, tubes, sonar, damage control, air and the diesels.")
+		if course == "full":
+			game.end_patrol("training", "Training complete. You ran the whole boat: helm, ballast, dive, scope, TDC, tubes, sonar, damage control, air and the diesels.")
+		else:
+			game.end_patrol("training", "Training complete: %s. Pick another job from Training patrol on the menu, or take a real patrol." % COURSES[course])
 	else:
 		game.announce.rpc("✓  Step %d done." % (i + 1))
 	game.push_crew()
@@ -303,7 +430,8 @@ func _update_hud(i: int) -> void:
 		var h: String = hint.call()
 		if h != "":
 			text += "\n\n" + h
-	game.hud.set_objective("TRAINING  %d / %d" % [i + 1, steps.size()], text)
+	var title := "TRAINING" if course == "full" else "TRAINING: %s" % COURSES[course].to_upper()
+	game.hud.set_objective("%s  %d / %d" % [title, i + 1, steps.size()], text)
 
 
 ## "Press Q" when this player is at a station the step doesn't happen at. A step's station is
