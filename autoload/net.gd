@@ -16,7 +16,8 @@ var profile := Profile.load_or_new() ## this player's career and look, saved on 
 var debug_spawn: Variant = null ## --spawn x,y,z: start this player there (testing)
 var port := DEFAULT_PORT ## --port n (the packaged game uses 7845, forwarded over the homelab VPN)
 ## Which build this is: tools/publish.sh writes the commit into build.txt in the pack.
-## Peers must match (RPCs are checked against each other); "dev" (run from source) matches anything.
+## Peers must match (RPCs are checked against each other). A source build is "dev", or
+## "dev-<commit>" from ./play (--build); any dev build matches anything.
 var build := "dev"
 var sub_key := "gato" ## the boat the host takes out (--sub s_boat | gato | narwhal)
 var mission := "convoy" ## a MissionData key or "training"; chosen by the host (--mission, --training)
@@ -40,6 +41,9 @@ func _ready() -> void:
 				cli_start = Mode.CLIENT
 				if i + 1 < args.size():
 					address = args[i + 1]
+			"--build": # ./play passes dev-<commit>; a published pack's build.txt wins
+				if i + 1 < args.size() and not FileAccess.file_exists("res://build.txt"):
+					build = args[i + 1]
 			"--port":
 				if i + 1 < args.size():
 					port = args[i + 1].to_int()

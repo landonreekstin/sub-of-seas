@@ -62,7 +62,7 @@ Godot **4.7.2**, GDScript, Jolt 3D physics. Repo: github.com/landonreekstin/sub-
 
 ### Run
 The quick way, from any clone (imports the project after changes, uses port 7845 like the
-launcher, warns when the branch is behind `main`):
+launcher, updates `main` from GitHub first; see "Playing with others"):
 ```
 ./play                      # the menu
 ./play host [mission] [sub] # e.g. ./play host sandbox narwhal
@@ -85,10 +85,14 @@ Testing aids: `--name <n>`, `--spawn x,y,z` (start the local player there, e.g.
 goes off around the boat 3 s in and the helm is knocked out; leak/fire positions are printed), `--test-voice` (this player talks a 440 Hz tone the whole time, to check voice without a microphone), `--test-win` (host: every ship sinks 4 s in, so objectives tick and the debrief shows), `--test-air` (host: foul air, and a fire in the shut-in, smoke-filled control room: whoever is in there passes out). F10 leaves to the menu.
 
 ### Playing with others (Blaney)
-**From source** (both have the repo): both check out the same commit, lando runs
-`./play host <mission>` on gaming-pc, Blaney runs `./play join` over the homelab VPN. A
-source build reports itself as `dev`, which any host lets in, so mismatched commits are not
-caught: pull first.
+**From source** (both have the repo): lando runs `./play host <mission>` on gaming-pc,
+Blaney runs `./play join` over the homelab VPN. `./play` keeps you on the latest version: on
+`main` it fast-forwards to `origin/main` before starting (it stops if you have uncommitted
+changes), on another branch it warns when `main` has moved on and host/join ask before going
+on, and hosting with unpushed commits warns that the joiner won't have them. It never asks for
+a GitHub login; without one it skips the check. A source build reports itself as
+`dev-<commit>` (shown on the main menu; `dev` without `./play`), and any host lets a dev build
+in, so compare the commits on the menu if something seems off.
 
 **From the published pack** (friends without the repo): `tools/publish.sh` exports one `.pck`
 (no export templates needed) to the NAS drop `/mnt/nas/public/sub-of-seas/`, and the

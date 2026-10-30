@@ -9,8 +9,10 @@
 #   ./play ... -- <extra args>     anything after -- goes to the game (e.g. --name Blaney)
 #
 # Uses port 7845 like the launcher, so the homelab VPN forward to gaming-pc works when lando
-# hosts from source. A source build reports itself as "dev", which every host lets in: to
-# play together, both of you run the same commit (this script warns when you're behind main).
+# hosts from source. A source build reports itself as "dev-<commit>", which every host lets in,
+# so to play together both of you need the same commit. This script sees to it: on main it
+# fast-forwards to origin/main before starting (unless you have uncommitted changes); on any
+# other branch it warns when main has moved on, and host/join ask before going on.
 set -euo pipefail
 cd "$(dirname "$0")"
 case "${1:-}" in -h|--help|help) awk 'NR > 1 && /^#/ { sub(/^# ?/, ""); print; next } NR > 1 { exit }' "$0"; exit 0 ;; esac
@@ -25,6 +27,41 @@ else
 	GODOT=(nix run nixpkgs/nixos-unstable#godot_4 --)
 fi
 
+mode="${1:-menu}"
+
+ask() { # ask "question": yes when there's no terminal to ask on
+	[ -t 0 ] || return 0
+	local reply; read -r -p "$1 [y/N] " reply; [[ "$reply" == [yY]* ]]
+}
+
+# Be on the latest version: both players must run the same commit to play together.
+branch="$(git branch --show-current 2>/dev/null || echo '?')"
+# Never stop to ask for a GitHub login: no credentials just means no update check.
+if GIT_TERMINAL_PROMPT=0 GIT_ASKPASS=true SSH_ASKPASS= timeout 8 git fetch -q origin main 2>/dev/null; then
+	behind="$(git rev-list --count HEAD..origin/main 2>/dev/null || echo 0)"
+	ahead="$(git rev-list --count origin/main..HEAD 2>/dev/null || echo 0)"
+	if [ "$behind" -gt 0 ] && [ "$branch" = main ]; then
+		if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
+			echo "play: main is $behind commit(s) behind origin/main, and you have uncommitted changes," >&2
+			echo "      so it can't update. Commit or stash them, then run ./play again." >&2
+			exit 1
+		fi
+		echo "play: updating main ($behind new commit(s) from origin/main)..." >&2
+		git merge -q --ff-only origin/main || { echo "play: main has diverged from origin/main; sort that out first." >&2; exit 1; }
+	elif [ "$behind" -gt 0 ]; then
+		echo "play: $branch is $behind commit(s) behind origin/main. Someone on main won't match you." >&2
+		case "$mode" in host|join) ask "play: start anyway?" || exit 1 ;; esac
+	fi
+	if [ "$ahead" -gt 0 ] && [ "$mode" = host ]; then
+		echo "play: $branch has $ahead commit(s) that aren't on origin/main; whoever joins won't have them." >&2
+	fi
+else
+	echo "play: couldn't reach GitHub to check for updates; running what you have." >&2
+fi
+commit="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
+[ -n "$(git status --porcelain --untracked-files=no 2>/dev/null)" ] && commit="$commit+changes"
+echo "play: running $branch ($commit)" >&2
+
 # Re-import when the code changed since the last run: a fresh clone has no imported assets,
 # and new class names need the script class cache rebuilt.
 stamp=.godot/play-import-stamp
@@ -35,17 +72,9 @@ if [ ! -f "$stamp" ] || [ "$(cat "$stamp")" != "$now" ]; then
 	mkdir -p .godot && echo "$now" > "$stamp"
 fi
 
-# Say what is being run, and whether main has moved on.
-branch="$(git branch --show-current 2>/dev/null || echo '?')"
-if timeout 5 git fetch -q origin main 2>/dev/null; then
-	behind="$(git rev-list --count HEAD..origin/main 2>/dev/null || echo 0)"
-	[ "$behind" -gt 0 ] && echo "play: $branch is $behind commit(s) behind origin/main." >&2
-fi
-echo "play: running $branch ($(git rev-parse --short HEAD 2>/dev/null))" >&2
 
-mode="${1:-menu}"
 [ $# -gt 0 ] && shift
-args=(--port "$PORT" --address "$JOIN_ADDRESS")
+args=(--port "$PORT" --address "$JOIN_ADDRESS" --build "dev-$commit")
 case "$mode" in
 	menu) ;;
 	host)

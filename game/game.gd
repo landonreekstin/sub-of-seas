@@ -401,7 +401,7 @@ func _clear_stations_of(peer: int) -> void:
 func rq_hello(player_name: String, build: String, looks: Dictionary) -> void:
 	if not multiplayer.is_server():
 		return
-	if build != Net.build and "dev" not in [build, Net.build]:
+	if build != Net.build and not build.begins_with("dev") and not Net.build.begins_with("dev"):
 		turned_away.rpc_id(_sender(), "The host runs build %s and you run %s. Both start the game again to update." % [Net.build, build])
 		return
 	crew.looks[_sender()] = _clean_looks(looks)
