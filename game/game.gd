@@ -20,6 +20,7 @@ var sub_class: SubClassData
 var exterior: ExteriorWorld
 var hud: Hud
 var pause_menu: PauseMenu
+var _hunted_for := 0.0 ## seconds the hunted music has left to run
 var local_player: Player
 var crew := {}
 var _players: Node3D
@@ -289,6 +290,7 @@ func _process(delta: float) -> void:
 		_quit("")
 	if interior == null or crew.is_empty():
 		return # a client still waiting to hear which boat this is
+	_pick_music(delta)
 	if multiplayer.is_server():
 		_host_tick(delta)
 	_show_objectives()
@@ -370,6 +372,18 @@ func _on_peer_disconnected(id: int) -> void:
 	push_crew()
 
 
+## The hunted track while an escort is hunting within 6 km or charges are in the water, and
+## for 20 s after; the calm patrol track otherwise. Every peer decides from its own snapshot.
+func _pick_music(delta: float) -> void:
+	if crew.result != "" or Sim.world == null:
+		return
+	var w := Sim.world
+	var hunted := not w.charges.is_empty() or w.ships.any(func(s: ShipState) -> bool:
+		return not s.is_sinking() and s.mode >= ShipAI.Mode.HUNT and s.pos.distance_to(w.sub.pos) < 6000.0)
+	_hunted_for = 20.0 if hunted else maxf(_hunted_for - delta, 0.0)
+	Music.play("hunted" if _hunted_for > 0.0 else "patrol", 1.5 if hunted else 6.0)
+
+
 ## Back to the main menu (F10, or the pause menu).
 func leave() -> void:
 	_quit("")
@@ -422,6 +436,9 @@ func _apply_crew() -> void:
 		p.set_looks(look)
 		p.set_tool(crew.tools.get(p.peer_id, ""))
 	if crew.result != "" and not hud.has_debrief():
+		Music.play("menu", 4.0)
+		if crew.result in ["complete", "lost"]:
+			Music.sting("win" if crew.result == "complete" else "lost")
 		Sim.running = false
 		hud.show_debrief(crew, _credit_career())
 	if local_player != null:

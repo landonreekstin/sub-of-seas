@@ -87,6 +87,13 @@ and update "Current style" in the same commit.
   octopus on a shallow bottom; humpbacks (dark slate, pale belly, long white flippers) that
   blow a spout at the surface. Coral on the island reefs is Blaney's Frutiger Aero look:
   glossy candy-coloured brain coral, staghorn and sea fans, with bubbles rising.
+- **Music** (synthesised, `tools/make_music.py`; style picked by Claude while lando was away,
+  to match the Sea of Thieves direction; change it freely): the menu is an original D-minor
+  sea shanty on a two-reed accordion with oom-pah bass and stomp-clap; a patrol is a calm,
+  sparse pad with a lonely flute; being hunted (an escort hunting within 6 km, charges in
+  the water) brings in a heartbeat pulse under trembling strings, holding 20 s after; the
+  debrief plays a short accordion fanfare for a completed patrol, a falling minor line for a
+  lost boat.
 - **Hydrophones:** the operator hears contacts in the headphones: merchant screws slow and
   heavy, warships fast and light, capital ships a deep four-shaft churn, whales a long moaning
   song, snapping shrimp over a reef, the sea's hiss under it all.

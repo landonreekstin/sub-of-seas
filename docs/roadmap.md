@@ -118,7 +118,7 @@ stays for now, until they have been tried with others.
       contacts.
 - [x] **Listening station**: hydrophone headphones where you hear ship engines and screws
       and animal sounds, and have to tell them apart.
-- [ ] **Music**: a soundtrack (menu, patrol, combat / being hunted), with its own volume in
+- [x] **Music**: a soundtrack (menu, patrol, combat / being hunted), with its own volume in
       the settings menu.
 - [ ] **Third-person emotes**: the camera pulls out to third person while you play an emote
       (wave, salute, dance, ...) so you can see your own crewman.
