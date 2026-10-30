@@ -93,7 +93,7 @@ func _draw_land() -> void:
 	var span := Vector2(half_width, half_width * size.y / maxf(size.x, 1.0)) * 1.3
 	var here := Sim.world.sub.pos
 	var key := "%d/%d/%d" % [seabed.version, roundi(half_width), roundi(size.y)]
-	var moved := not _land_rect.grow(-half_width * 0.15).has_point(here)
+	var moved := _land_tex == null or not _land_rect.grow(-half_width * 0.15).has_point(here)
 	if key != _land_key or moved or _land_tex == null:
 		_land_key = key
 		_land_rect = Rect2(here - span, span * 2.0)
