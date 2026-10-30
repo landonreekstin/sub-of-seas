@@ -19,6 +19,9 @@ var port := DEFAULT_PORT ## --port n (the packaged game uses 7845, forwarded ove
 ## Peers must match (RPCs are checked against each other). A source build is "dev", or
 ## "dev-<commit>" from ./play (--build); any dev build matches anything.
 var build := "dev"
+## --server: a dedicated host with no player of its own (run it headless). The patrol waits
+## until someone is aboard, and a fresh one starts after each debrief.
+var dedicated := false
 var sub_key := "gato" ## the boat the host takes out (--sub s_boat | gato | narwhal)
 var mission := "convoy" ## a MissionData key or "training"; chosen by the host (--mission, --training)
 var course := "full" ## which training course (--training <course>): a Tutorial.COURSES key
@@ -42,6 +45,9 @@ func _ready() -> void:
 		match args[i]:
 			"--host":
 				cli_start = Mode.HOST
+			"--server":
+				cli_start = Mode.HOST
+				dedicated = true
 			"--join":
 				cli_start = Mode.CLIENT
 				if i + 1 < args.size():
@@ -104,10 +110,13 @@ func start() -> Error:
 	var peer := ENetMultiplayerPeer.new()
 	var err: Error
 	if mode == Mode.HOST:
-		err = peer.create_server(port, MAX_PLAYERS - 1)
+		err = peer.create_server(port, MAX_PLAYERS if dedicated else MAX_PLAYERS - 1)
 	else:
 		err = peer.create_client(address, port)
 	if err == OK:
+		# The 10 Hz snapshots run past one packet uncompressed (lost more often over the VPN).
+		# Both ends must agree: a build without this can't talk to one with it.
+		peer.host.compress(ENetConnection.COMPRESS_ZSTD)
 		multiplayer.multiplayer_peer = peer
 	return err
 

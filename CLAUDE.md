@@ -84,6 +84,23 @@ Testing aids: `--name <n>`, `--spawn x,y,z` (start the local player there, e.g.
 `--spawn 0.6,0.1,-20.2` = torpedo room), `--address <ip>` (prefill the join box), `--look <deg>` (spawn turned that far right), `--station <id>` (man that station on arrival: `helm`, `dive`, `ballast`, `periscope`, `tdc`, `sonar`, `tube_1`.., `engine`, `air`), `--port <n>` (default 7000), `--test-charges` (host: fixed seed, and a pattern
 goes off around the boat 3 s in and the helm is knocked out; leak/fire positions are printed), `--test-voice` (this player talks a 440 Hz tone the whole time, to check voice without a microphone), `--bots helm,dive,...` (host: posts bot crewmen to those stations at the start; handy solo), `--reef` (host: the boat starts stopped at 9 m just off an island's reef, beam on, a whale close by), `--depth <m>` (host: the patrol starts at that keel depth; 22.5 puts a Gato's raised scope just under), `--test-torpedo` (host: a spread of three fired from the bow 3 s in, to see the tracks), `--test-win` (host: every ship sinks 4 s in, so objectives tick and the debrief shows), `--test-air` (host: foul air, and a fire in the shut-in, smoke-filled control room: whoever is in there passes out). F10 leaves to the menu.
 
+### Dedicated server (lando's mini-server)
+`--server` hosts a patrol with no player of its own. Run it headless; it logs to stdout
+(`server: ...` lines: hosting, who came aboard / left, patrol results, fresh patrols).
+- The patrol waits (the sim is paused) while nobody is aboard, and starts when the first
+  crewman joins. Up to 8 players (all slots are for players).
+- 90 s after a debrief, or after the boat has sat empty for 10 minutes (so a crew can drop and
+  rejoin the same patrol), it starts a fresh one; anyone still connected goes back to their
+  menu with "join again".
+- From a clone: `./play server [mission] [sub]` (default `sandbox gato`, port 7845).
+- Directly (e.g. a systemd unit):
+  `godot --headless --path <checkout> -- --server --mission sandbox --sub gato --port 7845`
+  or with the published pack: `godot --headless --main-pack sub-of-seas.pck -- --server ...`.
+  Players join it like any host. A source checkout reports build `dev` (add `--build <id>`
+  to pin one); a pack reports its commit and turns away other builds.
+- Network traffic is ZSTD-compressed by ENet, so the server and every player must run a build
+  from after that change.
+
 ### Playing with others (Blaney)
 **From source** (both have the repo): lando runs `./play host <mission>` on gaming-pc,
 Blaney runs `./play join` over the homelab VPN. `./play` keeps you on the latest version: on

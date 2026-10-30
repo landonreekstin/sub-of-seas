@@ -5,6 +5,8 @@
 #   ./play host [mission] [sub]    host a patrol (missions: convoy tankers hunted carrier task_force sandbox;
 #                                  subs: s_boat gato narwhal)
 #   ./play training [course]       host the training patrol (courses: helm scope torpedo sonar damage engine full)
+#   ./play server [mission] [sub]  a dedicated server: no player of its own, headless; waits for a
+#                                  crew, starts a fresh patrol after each one (e.g. ./play server sandbox)
 #   ./play join [address]          join a host (default 192.168.1.76, lando's gaming-pc over the VPN)
 #   ./play ... -- <extra args>     anything after -- goes to the game (e.g. --name Blaney)
 #
@@ -50,9 +52,9 @@ if GIT_TERMINAL_PROMPT=0 GIT_ASKPASS=true SSH_ASKPASS= timeout 8 git fetch -q or
 		git merge -q --ff-only origin/main || { echo "play: main has diverged from origin/main; sort that out first." >&2; exit 1; }
 	elif [ "$behind" -gt 0 ]; then
 		echo "play: $branch is $behind commit(s) behind origin/main. Someone on main won't match you." >&2
-		case "$mode" in host|join) ask "play: start anyway?" || exit 1 ;; esac
+		case "$mode" in host|join|server) ask "play: start anyway?" || exit 1 ;; esac
 	fi
-	if [ "$ahead" -gt 0 ] && [ "$mode" = host ]; then
+	if [ "$ahead" -gt 0 ] && { [ "$mode" = host ] || [ "$mode" = server ]; }; then
 		echo "play: $branch has $ahead commit(s) that aren't on origin/main; whoever joins won't have them." >&2
 	fi
 else
@@ -82,6 +84,12 @@ case "$mode" in
 		if [ $# -gt 0 ] && [ "$1" != "--" ]; then mission="$1"; shift; fi
 		if [ $# -gt 0 ] && [ "$1" != "--" ]; then sub="$1"; shift; fi
 		args+=(--mission "$mission" --sub "$sub") ;;
+	server)
+		mission="sandbox"; sub="gato"
+		if [ $# -gt 0 ] && [ "$1" != "--" ]; then mission="$1"; shift; fi
+		if [ $# -gt 0 ] && [ "$1" != "--" ]; then sub="$1"; shift; fi
+		[ "${1:-}" = "--" ] && shift
+		exec "${GODOT[@]}" --headless --path . -- "${args[@]}" --server --mission "$mission" --sub "$sub" "$@" ;;
 	training)
 		args+=(--training)
 		if [ $# -gt 0 ] && [ "$1" != "--" ]; then args+=("$1"); shift; fi ;;
@@ -89,7 +97,7 @@ case "$mode" in
 		address="$JOIN_ADDRESS"
 		if [ $# -gt 0 ] && [ "$1" != "--" ]; then address="$1"; shift; fi
 		args+=(--join "$address") ;;
-	*) echo "play: unknown mode '$mode' (menu, host, training, join)" >&2; exit 2 ;;
+	*) echo "play: unknown mode '$mode' (menu, host, server, training, join)" >&2; exit 2 ;;
 esac
 [ "${1:-}" = "--" ] && shift
 exec "${GODOT[@]}" --path . -- "${args[@]}" "$@"

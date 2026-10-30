@@ -93,8 +93,9 @@ func _ready() -> void:
 	if multiplayer.is_server():
 		_build_boat(Net.sub_key if Net.mission != "training" else "gato")
 		crew = _initial_crew()
-		crew.names[1] = Net.player_name
-		crew.looks[1] = Net.profile.looks()
+		if not Net.dedicated:
+			crew.names[1] = Net.player_name
+			crew.looks[1] = Net.profile.looks()
 		crew.mission = Net.mission
 		_setup_mission()
 		if Net.debug_charges:
@@ -113,7 +114,10 @@ func _ready() -> void:
 				crew.doors[d] = false
 				Sim.world.hull.doors_open[d] = false
 			Sim.world.hull.add_fire(cr, Sim.world.rng)
-		_spawner.spawn(_spawn_data(1))
+		if Net.dedicated:
+			print("server: hosting %s in a %s on port %d, build %s. Waiting for a crew." % [crew.mission, sub_class.display_name, Net.port, Net.build])
+		else:
+			_spawner.spawn(_spawn_data(1))
 		_apply_crew()
 		if crew.mission == "training":
 			hud.show_message("Training patrol. Follow the checklist, top right.", 6.0)
@@ -293,8 +297,10 @@ func _fit_exterior() -> void:
 
 
 func _process(delta: float) -> void:
-	if Input.is_action_just_pressed("quit_to_menu"):
+	if Input.is_action_just_pressed("quit_to_menu") and not Net.dedicated:
 		_quit("")
+	if Net.dedicated and multiplayer.is_server() and not crew.is_empty():
+		_serve(delta)
 	if interior == null or crew.is_empty():
 		return # a client still waiting to hear which boat this is
 	_pick_music(delta)
@@ -362,7 +368,7 @@ func _spawn_data(id: int) -> Array:
 func _on_peer_connected(id: int) -> void:
 	if not multiplayer.is_server():
 		return
-	print("peer %d connected" % id)
+	print("%speer %d connected" % ["server: " if Net.dedicated else "", id])
 	_spawner.spawn(_spawn_data(id))
 	set_crew.rpc_id(id, crew)
 
@@ -373,6 +379,8 @@ func _on_peer_disconnected(id: int) -> void:
 	var p := _players.get_node_or_null(str(id))
 	if p != null:
 		p.queue_free()
+	if Net.dedicated:
+		print("server: %s left (%d aboard)" % [crew_name(id), crew.names.size() - 1])
 	crew.names.erase(id)
 	crew.tools.erase(id)
 	_clear_stations_of(id)
@@ -389,6 +397,41 @@ func _pick_music(delta: float) -> void:
 		return not s.is_sinking() and s.mode >= ShipAI.Mode.HUNT and s.pos.distance_to(w.sub.pos) < 6000.0)
 	_hunted_for = 20.0 if hunted else maxf(_hunted_for - delta, 0.0)
 	Music.play("hunted" if _hunted_for > 0.0 else "patrol", 1.5 if hunted else 6.0)
+
+
+## Dedicated server: the boat waits while nobody is aboard; a finished patrol (90 s after the
+## debrief) or one left empty for 10 minutes makes way for a fresh one.
+const SERVER_DEBRIEF_TIME := 90.0
+const SERVER_EMPTY_TIME := 600.0
+var _server_idle := 0.0
+var _had_crew := false ## someone has been aboard this patrol
+
+
+func _serve(delta: float) -> void:
+	var empty: bool = crew.names.is_empty()
+	_had_crew = _had_crew or not empty
+	if crew.result == "":
+		Sim.running = not empty
+	if crew.result != "" or (empty and _had_crew):
+		_server_idle += delta
+	else:
+		_server_idle = 0.0
+	var limit := SERVER_DEBRIEF_TIME if crew.result != "" else SERVER_EMPTY_TIME
+	if crew.result != "" and not empty and int(_server_idle) == int(limit) - 30 and int(_server_idle - delta) != int(_server_idle):
+		announce.rpc("A fresh patrol starts in 30 seconds. Join again to sail with it.")
+	if _server_idle >= limit:
+		print("server: starting a fresh patrol")
+		for peer in multiplayer.get_peers():
+			turned_away.rpc_id(peer, "That patrol is over; the server has started a new one. Join again to sail with it.")
+		_server_idle = -INF # once
+		get_tree().create_timer(1.0).timeout.connect(_restart_server) # let the goodbyes go out
+
+
+func _restart_server() -> void:
+	Net.stop()
+	Net.mode = Net.Mode.HOST
+	Sim.stop()
+	get_tree().change_scene_to_file(get_tree().current_scene.scene_file_path)
 
 
 ## Back to the main menu (F10, or the pause menu).
@@ -523,6 +566,8 @@ func rq_hello(player_name: String, build: String, looks: Dictionary) -> void:
 		return
 	crew.looks[_sender()] = _clean_looks(looks)
 	crew.names[_sender()] = player_name.substr(0, 20)
+	if Net.dedicated:
+		print("server: %s came aboard (%d aboard)" % [player_name.substr(0, 20), crew.names.size()])
 	push_crew()
 	announce.rpc("%s came aboard." % player_name.substr(0, 20))
 
@@ -842,6 +887,8 @@ func rq_take_pump(index: int) -> void:
 func end_patrol(result: String, text: String) -> void:
 	if crew.result != "":
 		return
+	if Net.dedicated:
+		print("server: patrol over: %s. %s" % [result, text])
 	crew.result = result
 	crew.result_text = text
 	crew.time = Sim.world.time
