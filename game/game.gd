@@ -537,6 +537,15 @@ func rq_door(door_id: String) -> void:
 	push_crew()
 
 
+## Any crewman: the jukebox's next record.
+@rpc("any_peer", "call_local", "reliable")
+func rq_jukebox() -> void:
+	if not multiplayer.is_server():
+		return
+	crew.jukebox = (int(crew.get("jukebox", 0)) + 1) % Jukebox.RECORDS.size()
+	push_crew()
+
+
 @rpc("any_peer", "call_local", "reliable")
 func rq_order(station_id: String, key: String, value: Variant) -> void:
 	if not multiplayer.is_server() or station_occupant(station_id) != _sender():
@@ -620,6 +629,13 @@ func rq_order(station_id: String, key: String, value: Variant) -> void:
 						if Vector2(crew.pencil[i].x, crew.pencil[i].y).distance_to(at) < Vector2(crew.pencil[best].x, crew.pencil[best].y).distance_to(at):
 							best = i
 					crew.pencil.remove_at(best)
+		"darts":
+			if key == "score":
+				var best: Dictionary = crew.get_or_add("darts", {})
+				var who := crew_name(_sender())
+				if int(value) > int(best.get(who, -1)):
+					best[who] = clampi(int(value), 0, 180)
+				announce.rpc("%s throws %d%s" % [who, int(value), "  — ONE HUNDRED AND EIGHTY!" if int(value) == 180 else ""])
 		_:
 			if station_id.begins_with("tube_"):
 				_tube_order(station_id.trim_prefix("tube_").to_int() - 1, key, value)

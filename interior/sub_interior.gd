@@ -30,19 +30,21 @@ const LAYOUTS := {
 	"gato": [
 		{"type": "fwd_torpedo", "length": 14.0}, {"type": "battery", "length": 8.0},
 		{"type": "control", "length": 8.0}, {"type": "crew", "length": 8.0},
+		{"type": "rec", "length": 6.0},
 		{"type": "engine", "length": 14.0}, {"type": "maneuvering", "length": 6.0},
 		{"type": "aft_torpedo", "length": 10.0},
 	],
 	"narwhal": [
 		{"type": "fwd_torpedo", "length": 16.0}, {"type": "battery", "length": 9.0},
 		{"type": "control", "length": 9.0}, {"type": "crew", "length": 9.0},
+		{"type": "rec", "length": 6.0},
 		{"type": "engine", "length": 12.0}, {"type": "engine2", "length": 12.0},
 		{"type": "maneuvering", "length": 7.0}, {"type": "aft_torpedo", "length": 12.0},
 	],
 }
 const TITLES := {
 	"fwd_torpedo": "forward torpedo room", "battery": "officers' country / battery",
-	"control": "control room", "crew": "crew's mess / stores", "engine": "engine room",
+	"control": "control room", "crew": "crew's mess / stores", "rec": "rec room", "engine": "engine room",
 	"engine2": "after engine room", "maneuvering": "maneuvering room", "aft_torpedo": "after torpedo room",
 }
 
@@ -129,6 +131,8 @@ func build() -> void:
 				_control_room(c, hatch)
 			"crew":
 				_crew(c)
+			"rec":
+				_rec_room(c)
 			"engine", "engine2":
 				_engine_room(c, c.type == "engine")
 			"maneuvering":
@@ -393,6 +397,26 @@ func _crew(c: Dictionary) -> void:
 	_bunks(c.z0 + 2.5, c.z1 - 2.5)
 	Build.box(self, Vector3(0.9, 0.75, 1.8), Vector3(1.3, 0.38, c.z1 - 1.2), WOOD)
 	Build.box(self, Vector3(1.0, 0.04, 1.9), Vector3(1.3, 0.77, c.z1 - 1.2), Color("#E8DFC4"), false)
+
+
+## The rec room (lando: whimsical fun and mini games, apart from the patrol): a dartboard on
+## the after bulkhead with a chalkboard of best turns, a jukebox, a card table, portholes.
+func _rec_room(c: Dictionary) -> void:
+	# The board on the starboard wall amidships (the bulkheads have doors); the oche across the room.
+	var mid: float = (c.z0 + c.z1) * 0.5
+	_add_station(DartsStation.new().setup("darts", "Darts"), Vector3(HALF_WIDTH - 0.06 - DartsStation.OCHE, 0, mid), -PI / 2.0)
+	var jb := Jukebox.new()
+	jb.position = Vector3(-1.45, 0, c.z0 + 0.6)
+	jb.rotation.y = PI
+	add_child(jb)
+	Build.box(self, Vector3(0.9, 0.72, 0.9), Vector3(1.3, 0.36, c.z0 + 1.4), WOOD) # card table
+	Build.box(self, Vector3(1.0, 0.04, 1.0), Vector3(1.3, 0.74, c.z0 + 1.4), Color("#2B6A3A"), false) # baize
+	for k in 5:
+		var card := Build.box(self, Vector3(0.06, 0.005, 0.09), Vector3(1.15 + k * 0.07, 0.765, c.z0 + 1.35 + (k % 2) * 0.05), Color("#F2F0E8"), false)
+		card.rotation.y = k * 0.3
+	var p := Porthole.create(Vector3(-HALF_WIDTH + 0.02, 1.6, (c.z0 + c.z1) * 0.5), -1.0)
+	add_child(p)
+	portholes.append(p)
 
 
 func _engine_room(c: Dictionary, controls: bool) -> void:

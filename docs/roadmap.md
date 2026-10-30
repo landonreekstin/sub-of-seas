@@ -122,7 +122,7 @@ stays for now, until they have been tried with others.
       the settings menu.
 - [x] **Third-person emotes**: the camera pulls out to third person while you play an emote
       (wave, salute, dance, ...) so you can see your own crewman.
-- [ ] **Rec room**: a compartment for whimsical fun and mini games, separate from the
+- [x] **Rec room**: a compartment for whimsical fun and mini games, separate from the
       mission objectives. Matters most in the generative free-roam mode.
 - [ ] **Modes on an arcade ↔ realism scale**: more modes and boats that set how arcadey or
       realistic it plays, from the arcade mode above up to a most-realistic mode. Includes the

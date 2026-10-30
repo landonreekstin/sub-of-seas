@@ -94,6 +94,11 @@ and update "Current style" in the same commit.
   bandana), the rank hats and a shirt colour, in "Your sailor..." on the main menu.
 - **Emotes:** 1 wave, 2 salute, 3 jig, 4 point, 5 cheer. The camera swings out in front, a
   little to one side wherever the hull has room, so you see yourself; moving ends it.
+- **Rec room** (games picked by Claude while lando was away; add more): between the mess and
+  the engine room on the Gato and Narwhal. A dartboard on the starboard wall (real rings and
+  scoring, a swaying aim, three darts a turn, best turns chalked up and called out to the
+  crew), a jukebox with an amber glow that the room hears (the shanty, the slow watch), a
+  green-baize card table, a porthole.
 - **Music** (synthesised, `tools/make_music.py`; style picked by Claude while lando was away,
   to match the Sea of Thieves direction; change it freely): the menu is an original D-minor
   sea shanty on a two-reed accordion with oom-pah bass and stomp-clap; a patrol is a calm,
