@@ -77,20 +77,20 @@ func _build_steps() -> void:
 	var sub := func() -> SubState: return Sim.world.sub
 	var hull := func() -> HullState: return Sim.world.hull
 	steps = [
-		{"id": "helm", "text": "Welcome aboard. Man the HELM: starboard side of the control room, forward. Walk up and press E.",
+		{"id": "helm", "at": "helm", "text": "Welcome aboard. Man the HELM: starboard side of the control room, forward. Walk up and press E.",
 			"marker": _station("helm"), "done": _manned("helm")},
 		{"id": "ahead", "needs": "helm", "text": "Ring up AHEAD 2/3 on the engine telegraph: press W twice. Keep the rudder amidships.",
 			"marker": _station("helm"), "done": func() -> bool: return sub.call().telegraph >= 2},
-		{"id": "ballast", "text": "To dive, first flood the main ballast tanks. Leave the helm (Q) and man the BALLAST manifold: control room, port side, aft.",
+		{"id": "ballast", "at": "ballast", "text": "To dive, first flood the main ballast tanks. Man the BALLAST manifold: control room, port side, aft.",
 			"marker": _station("ballast"), "done": _manned("ballast")},
 		{"id": "vents", "needs": "ballast", "text": "Open the vents: press V. The lights go red as the tanks flood and she settles to decks awash.",
 			"marker": _station("ballast"), "done": func() -> bool: return sub.call().vents_open},
-		{"id": "dive", "text": "Leave the manifold (Q) and man the DIVE station, port side forward.",
+		{"id": "dive", "at": "dive", "text": "Man the DIVE station, port side forward.",
 			"marker": _station("dive"), "done": _manned("dive")},
 		{"id": "depth", "needs": "dive", "text": "Take her down to periscope depth: press 2. Watch the depth gauge.",
 			"marker": _station("dive"),
 			"done": func() -> bool: return sub.call().depth >= sub.call().data.periscope_depth - 1.0},
-		{"id": "scope", "text": "Climb the ladder (E) to the conning tower and man the PERISCOPE.",
+		{"id": "scope", "at": "periscope", "text": "Climb the ladder (E) to the conning tower and man the PERISCOPE.",
 			"marker": _station("periscope"), "done": _manned("periscope")},
 		{"id": "raise", "needs": "periscope", "text": "Raise the periscope: press R.",
 			"marker": _station("periscope"), "done": func() -> bool: return sub.call().periscope_raised},
@@ -102,11 +102,11 @@ func _build_steps() -> void:
 				return marks.size() >= 2 and float(marks[-1].t) - float(marks[0].t) >= Tdc.MIN_SPAN},
 		{"id": "lower", "needs": "periscope", "text": "Good. Lower the scope (R): a raised scope is how lookouts spot you.",
 			"marker": _station("periscope"), "done": func() -> bool: return not sub.call().periscope_raised},
-		{"id": "tdc", "text": "Man the TDC: the cabinet beside the periscope, starboard side.",
+		{"id": "tdc", "at": "tdc", "text": "Man the TDC: the cabinet beside the periscope, starboard side.",
 			"marker": _station("tdc"), "done": _manned("tdc")},
 		{"id": "send", "needs": "tdc", "text": "The TDC has his course and speed, and the gyro angle to hit him. Send it to the tubes: T. Their gyros now follow it.",
 			"marker": _station("tdc"), "done": func() -> bool: return game.crew.tdc.follow},
-		{"id": "tube", "text": "Go forward through officers' country to the FORWARD TORPEDO ROOM and man TUBE 1, top right.",
+		{"id": "tube", "at": "tube_1", "text": "Go forward through officers' country to the FORWARD TORPEDO ROOM and man TUBE 1, top right.",
 			"marker": _station("tube_1"), "done": _manned("tube_1")},
 		{"id": "flood", "needs": "tube_1", "text": "Flood the tube (F), then open the outer door (O).",
 			"marker": _station("tube_1"), "done": func() -> bool:
@@ -115,14 +115,14 @@ func _build_steps() -> void:
 		{"id": "fire", "needs": "tube_1", "text": "The gyro follows the TDC. FIRE: Space. Then wait for the hit.",
 			"marker": _station("tube_1"), "done": func() -> bool: return game.crew.sunk >= 1,
 			"hint": _miss_hint},
-		{"id": "sonar", "text": "Fast screws to the north: an escort! Man the SONAR (control room, port side aft).",
+		{"id": "sonar", "at": "sonar", "text": "Fast screws to the north: an escort! Man the SONAR (control room, port side aft).",
 			"marker": _station("sonar"), "done": _manned("sonar"), "enter": _spawn_destroyer},
 		{"id": "classify", "needs": "sonar", "text": "Train the hydrophone (A/D or mouse) onto the loudest contact until it reads WARSHIP.",
 			"marker": _station("sonar"), "done": func() -> bool: return _flags.has("classified")},
-		{"id": "deep", "needs": "dive", "text": "He's coming for us. Go deep: DIVE station, press 3 (45 m). And slow to AHEAD 1/3 at the helm (S).",
+		{"id": "deep", "needs": "dive", "ok": ["helm"], "text": "He's coming for us. Go deep: DIVE station, press 3 (45 m). And slow to AHEAD 1/3 at the helm (S).",
 			"marker": _station("dive"), "done": func() -> bool:
 				return sub.call().depth >= 40.0 and sub.call().telegraph <= 1},
-		{"id": "run_in", "text": "Hold depth and keep quiet... Here he comes at 30 knots. Listen on the sonar if you like. Brace for depth charges!",
+		{"id": "run_in", "ok": ["any"], "text": "Hold depth and keep quiet... Here he comes at 30 knots. Listen on the sonar if you like. Brace for depth charges!",
 			"marker": Callable(), "enter": _run_over, "done": func() -> bool: return _pattern_over},
 		{"id": "weld", "text": "LEAK! Take a WELDING TORCH from the DAMAGE CONTROL rack (E), then hold LMB on the leak.",
 			"marker": _first_spot.bind("leak"), "done": func() -> bool: return hull.call().leaks.is_empty()},
@@ -291,6 +291,9 @@ func _update_hud(i: int) -> void:
 	if i >= steps.size():
 		return
 	var text: String = steps[i].text
+	var leave := _leave_hint(steps[i])
+	if leave != "":
+		text = leave + "\n\n" + text
 	var needs: String = steps[i].get("needs", "")
 	if needs != "" and Sim.world.hull.is_broken(needs):
 		var st: Station = game.interior.stations[needs]
@@ -301,3 +304,16 @@ func _update_hud(i: int) -> void:
 		if h != "":
 			text += "\n\n" + h
 	game.hud.set_objective("TRAINING  %d / %d" % [i + 1, steps.size()], text)
+
+
+## "Press Q" when this player is at a station the step doesn't happen at. A step's station is
+## its "at" (go and man it) or its "needs" (work it); "ok" lists others it's fine to stay at.
+func _leave_hint(step: Dictionary) -> String:
+	var me := game.local_player
+	if me == null or me.station == null:
+		return ""
+	var here := me.station.station_id
+	var ok: Array = step.get("ok", [])
+	if here == step.get("at", step.get("needs", "")) or ok.has(here) or ok.has("any"):
+		return ""
+	return "▶ You're at the %s. Press Q to leave it first." % me.station.display_name.to_lower()
