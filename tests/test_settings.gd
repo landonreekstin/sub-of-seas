@@ -1,5 +1,6 @@
 extends RefCounted
-## Settings: saved and loaded back, bad values ignored, look sensitivity and invert Y.
+## Settings: saved and loaded back, bad values ignored, look sensitivity and invert Y; the
+## walking controls; the mesh builders.
 
 var runner: Object
 
@@ -34,4 +35,24 @@ func test_settings_round_trip() -> bool:
 	a.free()
 	b.free()
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+	return true
+
+
+func test_built_meshes_are_closed_and_sized() -> bool:
+	var m := Build.bevel_box_mesh(Vector3(2.0, 0.5, 1.0))
+	var aabb := m.get_aabb()
+	runner.check(aabb.size.is_equal_approx(Vector3(2.0, 0.5, 1.0)), "a bevelled box is the size asked for")
+	runner.check(m.surface_get_array_len(0) == (6 * 2 + 12 * 2 + 8) * 3, "6 faces, 12 edge bevels and 8 corners")
+	runner.check(Build.bevel_box_mesh(Vector3(2.0, 0.5, 1.0)) == m, "the same size shares one mesh")
+	var l := Build.lathe_mesh([Vector2(0, 0), Vector2(1, 0), Vector2(1, 2), Vector2(0, 2)], 8)
+	runner.check(l.get_aabb().size.is_equal_approx(Vector3(2.0, 2.0, 2.0)), "a lathed cylinder spans its radius and height")
+	var ship := ShipModels.build(load("res://data/ships/destroyer.tres"))
+	var box := AABB()
+	for c in ship.get_children():
+		if c is MeshInstance3D:
+			box = box.merge((c as MeshInstance3D).get_aabb() * (c as MeshInstance3D).transform) if box.size != Vector3.ZERO else (c as MeshInstance3D).get_aabb() * (c as MeshInstance3D).transform
+	var d: ShipClassData = load("res://data/ships/destroyer.tres")
+	runner.check(absf(box.size.z - d.length) < d.length * 0.06, "the destroyer's hull is its length")
+	runner.check(box.position.y < -3.0, "the hull goes down below the waterline")
+	ship.free()
 	return true

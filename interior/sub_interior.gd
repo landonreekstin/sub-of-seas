@@ -9,6 +9,7 @@ extends Node3D
 const HALF_WIDTH := 2.0
 const DECK_HEIGHT := 2.6
 const CT_FLOOR := 2.8
+const SHOULDER_R := 0.75 ## radius of the curved hull between wall and deckhead
 
 const WALL := Color("#9DB59A")
 const FLOOR := Color("#5E6B5C")
@@ -179,11 +180,11 @@ func _compartment(z0: float, z1: float, title: String, ceiling_hole := Rect2()) 
 	Build.box(self, Vector3(HALF_WIDTH * 2.0 + 0.4, 0.2, length), Vector3(0, -0.1, mid), FLOOR)
 	for side in [-1.0, 1.0]:
 		Build.box(self, Vector3(0.2, DECK_HEIGHT + 0.2, length), Vector3(side * (HALF_WIDTH + 0.1), DECK_HEIGHT * 0.5, mid), WALL)
-		# Angled shoulders make the box read as a round pressure hull.
-		var top := Build.box(self, Vector3(0.95, 0.12, length), Vector3(side * 1.72, DECK_HEIGHT - 0.2, mid), WALL, false)
-		top.rotation.z = side * deg_to_rad(40.0)
-		var low := Build.box(self, Vector3(0.6, 0.12, length), Vector3(side * 1.86, 0.16, mid), FLOOR, false)
-		low.rotation.z = side * deg_to_rad(-45.0)
+		# Curved shoulders and bilges make the box read as a round pressure hull.
+		Build.arc(self, Vector2(side * (HALF_WIDTH - SHOULDER_R), DECK_HEIGHT - SHOULDER_R), SHOULDER_R,
+				0.0 if side > 0.0 else PI * 0.5, PI * 0.5 if side > 0.0 else PI, 0.12, z0, z1, WALL)
+		Build.arc(self, Vector2(side * (HALF_WIDTH - 0.4), 0.4), 0.4,
+				-PI * 0.5 if side > 0.0 else PI, 0.0 if side > 0.0 else PI * 1.5, 0.12, z0, z1, FLOOR, 6)
 		# Pipe runs.
 		Build.cyl(self, 0.05, length, Vector3(side * 1.35, DECK_HEIGHT - 0.12, mid), BRASS, Vector3.BACK)
 		Build.cyl(self, 0.08, length, Vector3(side * 1.1, DECK_HEIGHT - 0.1, mid), PIPE, Vector3.BACK)
@@ -303,8 +304,11 @@ func _torpedo_room(c: Dictionary, aft: bool) -> void:
 	var rz1: float = c.z1 - (3.0 if aft else 2.5)
 	for side in [-1.0, 1.0]:
 		for y in [0.45, 1.05]:
-			var t := Build.cyl(self, 0.27, rz1 - rz0, Vector3(side * 1.5, y, (rz0 + rz1) * 0.5), Color("#5D6B4E"), Vector3.BACK, true)
-			Build.sphere(t, 0.27, Vector3(0, (rz1 - rz0) * 0.5 * (1.0 if aft else -1.0) * -1.0, 0), Color("#5D6B4E"))
+			Build.torpedo(self, 0.27, minf(rz1 - rz0, 6.4), Vector3(side * 1.5, y, (rz0 + rz1) * 0.5), aft)
+			Build.box(self, Vector3(0.54, 0.54, rz1 - rz0), Vector3(side * 1.5, y, (rz0 + rz1) * 0.5), DARK).visible = false
+			for k in 3: # the rack's cradle straps
+				var cz := lerpf(rz0 + 0.8, rz1 - 0.8, k / 2.0)
+				Build.arc(self, Vector2(side * 1.5, y), 0.275, PI * 1.05, PI * 1.95, 0.025, cz - 0.04, cz + 0.04, DARK, 8)
 		Build.box(self, Vector3(0.75, 0.08, rz1 - rz0), Vector3(side * 1.55, 1.75, (rz0 + rz1) * 0.5), WOOD)
 		Build.box(self, Vector3(0.7, 0.12, rz1 - rz0 - 0.2), Vector3(side * 1.55, 1.85, (rz0 + rz1) * 0.5), BUNK, false)
 	_rack(c.type, c.z0 + 1.4 if aft else c.z1 - 1.4)
@@ -482,8 +486,9 @@ func _dressing(c: Dictionary, hatch: Rect2) -> void:
 		for side in [-1.0, 1.0]:
 			if _near_porthole(side, z):
 				continue
-			var s := Build.box(self, Vector3(0.95, 0.07, 0.1), Vector3(side * 1.69, DECK_HEIGHT - 0.25, z), frame_col, false)
-			s.rotation.z = side * deg_to_rad(40.0)
+			Build.arc(self, Vector2(side * (HALF_WIDTH - SHOULDER_R), DECK_HEIGHT - SHOULDER_R), SHOULDER_R - 0.07,
+					0.0 if side > 0.0 else PI * 0.5, PI * 0.5 if side > 0.0 else PI, 0.07, z - 0.05, z + 0.05, frame_col)
+			Build.box(self, Vector3(0.07, DECK_HEIGHT - SHOULDER_R - 0.4, 0.1), Vector3(side * (HALF_WIDTH - 0.035), (DECK_HEIGHT - SHOULDER_R + 0.4) * 0.5, z), frame_col, false)
 			# Cable clamps on the frame.
 			Build.box(self, Vector3(0.16, 0.05, 0.05), Vector3(side * 0.62, DECK_HEIGHT - 0.1, z), BRASS, false)
 		if i % 2 == 0:

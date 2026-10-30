@@ -33,7 +33,7 @@ static func build_body(root: Node3D, look: Dictionary, shirt: Color) -> Dictiona
 	cm.radius = r
 	cm.height = torso_len + r * 1.2
 	torso.mesh = cm
-	torso.material_override = Build.mat(shirt)
+	torso.material_override = Build.mat(shirt, 0.0, "cloth")
 	torso.position.y = hip_y + cm.height * 0.5 - r * 0.15
 	torso.scale.z = 0.8
 	root.add_child(torso)
@@ -42,18 +42,25 @@ static func build_body(root: Node3D, look: Dictionary, shirt: Color) -> Dictiona
 	Build.box(root, Vector3(r * 1.6, 0.22, 0.04), Vector3(0, SHOULDER_Y - 0.02, r * 0.82), NAVY, false)
 	var tie := Build.box(root, Vector3(0.1, 0.14, 0.04), Vector3(0, SHOULDER_Y - 0.12, -r * 0.82), Color("#1E1E20"), false)
 	tie.rotation.z = PI / 4.0
-	Build.box(root, Vector3(r * 2.0, 0.1, r * 1.4), Vector3(0, hip_y + 0.02, 0), NAVY, false) # belt line
+	Build.box(root, Vector3(r * 2.0, 0.1, r * 1.4), Vector3(0, hip_y + 0.02, 0), NAVY, false).material_override = Build.mat(NAVY, 0.0, "cloth") # belt line
 	for side in [-1.0, 1.0]:
 		var leg := Node3D.new()
 		leg.position = Vector3(side * r * 0.45, hip_y, 0)
 		root.add_child(leg)
-		Build.cyl(leg, 0.11, hip_y - 0.1, Vector3(0, -(hip_y - 0.1) * 0.5, 0), NAVY)
+		# Dungarees: wide bell-bottoms flaring to a turned-up cuff over the boot.
+		var ll := hip_y - 0.1
+		Build.lathe(leg, [Vector2(0, -ll), Vector2(0.13, -ll), Vector2(0.135, -ll + 0.06), Vector2(0.12, -ll + 0.07),
+				Vector2(0.1, -ll * 0.45), Vector2(0.115, 0.0), Vector2(0, 0.0)], Vector3.ZERO, NAVY, Vector3.UP, 14) \
+				.material_override = Build.mat(NAVY, 0.0, "cloth")
 		Build.box(leg, Vector3(0.21, 0.15, 0.34), Vector3(0, -hip_y + 0.075, -0.06), BOOTS, false) # chunky boots
 		limbs["leg_l" if side < 0.0 else "leg_r"] = leg
 		var arm := Node3D.new()
 		arm.position = Vector3(side * shoulder, SHOULDER_Y, 0)
 		root.add_child(arm)
-		limbs.shirt.append(Build.cyl(arm, 0.075, 0.3, Vector3(0, -0.15, 0), shirt)) # sleeve
+		var sleeve := Build.lathe(arm, [Vector2(0, 0.04), Vector2(0.085, 0.04), Vector2(0.09, -0.24), Vector2(0.1, -0.3), Vector2(0, -0.3)],
+				Vector3.ZERO, shirt, Vector3.UP, 14) # sleeve, a little wider at the cuff
+		sleeve.material_override = Build.mat(shirt, 0.0, "cloth")
+		limbs.shirt.append(sleeve)
 		Build.cyl(arm, 0.095, 0.3, Vector3(0, -0.42, 0), skin) # big forearm
 		Build.sphere(arm, 0.1, Vector3(0, -0.62, 0), skin) # big hand
 		limbs["arm_l" if side < 0.0 else "arm_r"] = arm
