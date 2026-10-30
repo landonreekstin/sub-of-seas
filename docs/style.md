@@ -75,8 +75,10 @@ and update "Current style" in the same commit.
 - **Aircraft:** low-wing carrier planes, green-grey with red roundels.
 - **Hats by rank:** white Dixie cup (Seaman), navy watch cap, ball cap, officer's peaked
   cap with a brass badge, and a salt-stained grey skipper's cap for a Commander.
-- **Planned (Blaney's list, M8):** the boat handles a bit more nimbly than a real one, but
-  never like a rocket ship; portholes to look out of; bright, shallow Frutiger Aero coral
+- **Handling (Blaney):** the boat picks up speed, turns and dives about half as fast again
+  as the real boat class would (`SubState.NIMBLE_*`); top speeds stay historical, so it is
+  livelier, never a rocket ship.
+- **Planned (Blaney's list, M8):** portholes to look out of; bright, shallow Frutiger Aero coral
   reefs (glossy, cheerful, aqua and green, like a nostalgic school soap-pump bottle) with fish
   and sea-floor terrain.
 - **Planned (lando's list, M9):** an arcade feel over strict realism (all current mechanics

@@ -22,6 +22,13 @@ const BLOW_SECONDS := 20.0 ## main ballast blown dry with the normal blow
 const EMERGENCY_BLOW_SECONDS := 4.0
 const BLOW_AIR := 0.12 ## of the air banks to blow main ballast dry
 const EMERGENCY_AIR := 0.35
+## Arcade handling (Blaney, M8): "more nimble than physically possible to a slight extent, but
+## not so that we're in a rocket ship". Multiplies the boat class's real figures; top speeds
+## stay historical.
+const NIMBLE_ACCEL := 1.6
+const NIMBLE_TURN := 1.5
+const NIMBLE_DIVE := 1.5
+const FULL_FLOW_KN := 3.0 ## speed at which the rudder and planes bite fully
 const COMPRESSOR_MINUTES := 10.0 ## surfaced on diesels, empty banks to full
 
 var data: SubClassData
@@ -97,17 +104,17 @@ func scope_height() -> float:
 func step(dt: float) -> void:
 	_step_power(dt)
 	var target_speed: float = max_speed() * TELEGRAPH[telegraph]
-	speed = move_toward(speed, target_speed, data.acceleration * dt)
+	speed = move_toward(speed, target_speed, data.acceleration * NIMBLE_ACCEL * dt)
 
 	# Rudder and planes need water flowing over them.
-	var flow := clampf(absf(speed) / (4.0 * KNOT), 0.0, 1.0)
-	turn_rate = rudder_angle() / 35.0 * data.max_turn_rate * flow * signf(speed)
+	var flow := clampf(absf(speed) / (FULL_FLOW_KN * KNOT), 0.0, 1.0)
+	turn_rate = rudder_angle() / 35.0 * data.max_turn_rate * NIMBLE_TURN * flow * signf(speed)
 	heading = fposmod(heading + turn_rate * dt, 360.0)
 	pos += direction() * speed * dt
 
 	var before := depth
 	_step_ballast(dt)
-	var dive_rate := data.max_dive_rate * lerpf(0.35, 1.0, flow)
+	var dive_rate := data.max_dive_rate * NIMBLE_DIVE * lerpf(0.35, 1.0, flow)
 	# With the tanks flooded the planes can take her anywhere below awash; while they are
 	# (partly) blown she floats up to wherever her buoyancy puts her.
 	var target := maxf(ordered_depth, AWASH_DEPTH)
