@@ -103,7 +103,7 @@ func on_leave() -> void:
 
 func station_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion:
-		var sens := TRAIN_SENSITIVITY * (0.25 if high_power else 1.0)
+		var sens := TRAIN_SENSITIVITY * float(Settings.get_value("sensitivity")) * (0.25 if high_power else 1.0)
 		bearing = wrapf(bearing + event.relative.x * sens, -180.0, 180.0)
 	elif key_pressed(event, KEY_Z):
 		high_power = not high_power

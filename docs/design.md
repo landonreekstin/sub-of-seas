@@ -80,7 +80,7 @@ Roles are suggestions shown in the lobby, not locks. Anyone can use any station.
 ## 3. Stations
 
 Interacting with a station (`E`) locks movement and moves the camera to a fixed view of
-that equipment. `Esc`/`Q` leaves. Stations in a **cluster** (helm, periscope, sonar in the
+that equipment. `Q` leaves (`Esc` is the pause menu). Stations in a **cluster** (helm, periscope, sonar in the
 S-boat control room; periscope + TDC in the Gato conning tower) switch with `Tab` without
 leaving station mode. One player per station; others see who is on it.
 
@@ -278,7 +278,7 @@ marks them, so the chart is where the crew's information meets.
 ## 8. Controls (keyboard + mouse first, gamepad later)
 
 `WASD` move · mouse look · `Space` climb ladder · `Ctrl` crouch · `E` interact / use station ·
-`Esc`/`Q` leave station · `Tab` next station in cluster · `LMB` use tool · `G` drop tool ·
+`Q` leave station · `Esc` pause menu · `Tab` next station in cluster · `LMB` use tool · `G` drop tool ·
 station views use mouse + `WASD`/arrows for the dials they show on screen.
 
 ## 9. Open questions (decide by playing)

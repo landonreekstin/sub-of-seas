@@ -28,6 +28,7 @@ func _ready() -> void:
 		gen.mix_rate = RATE
 		gen.buffer_length = 0.4
 		_out = AudioStreamPlayer3D.new()
+		_out.bus = "Voice"
 		_out.stream = gen
 		_out.unit_size = 3.0
 		_out.max_distance = 30.0

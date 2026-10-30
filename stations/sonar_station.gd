@@ -177,7 +177,7 @@ func _draw_scope() -> void:
 
 func station_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion:
-		trained = fposmod(trained + event.relative.x * 0.15, 360.0)
+		trained = fposmod(trained + event.relative.x * 0.15 * float(Settings.get_value("sensitivity")), 360.0)
 	elif key_pressed(event, KEY_A):
 		trained = fposmod(trained - 5.0, 360.0)
 		click(-4.0)

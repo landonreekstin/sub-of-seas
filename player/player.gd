@@ -7,7 +7,6 @@ extends CharacterBody3D
 const SPEED := 3.2
 const GRAVITY := 12.0
 const JUMP := 3.2
-const LOOK_SENSITIVITY := 0.0025
 const EYE_HEIGHT := 1.6
 const REACH := 2.2
 
@@ -74,7 +73,10 @@ func _build() -> void:
 	Build.sphere(face, 0.045, Vector3(0, -0.04, -0.24), Color("#E3B48C"))
 
 	camera = Camera3D.new()
-	camera.fov = 75.0
+	camera.fov = Settings.get_value("fov")
+	Settings.changed.connect(func(key: String) -> void:
+		if key == "fov":
+			camera.fov = Settings.get_value("fov"))
 	camera.near = 0.05
 	head.add_child(camera)
 	ray = RayCast3D.new()
@@ -300,7 +302,7 @@ func breathing() -> Vector2:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not is_local() or is_knocked_out():
+	if not is_local() or is_knocked_out() or Game.instance.menu_open():
 		return
 	if station != null:
 		if event.is_action_pressed("leave_station"):
@@ -314,12 +316,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		return
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
-		rotate_y(-event.relative.x * LOOK_SENSITIVITY)
-		head.rotation.x = clampf(head.rotation.x - event.relative.y * LOOK_SENSITIVITY, -1.45, 1.45)
-	elif event is InputEventMouseButton and event.pressed and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
+		rotate_y(-event.relative.x * Settings.look())
+		head.rotation.x = clampf(head.rotation.x - event.relative.y * Settings.look(true), -1.45, 1.45)
+	elif event is InputEventMouseButton and event.pressed and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED and not Game.instance.menu_open():
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-	elif event.is_action_pressed("leave_station"):
-		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	elif event.is_action_pressed("interact") and not climbing:
 		var target := _interact_target()
 		if target != null:
@@ -337,7 +337,7 @@ func _physics_process(delta: float) -> void:
 		velocity = Vector3.ZERO
 		return
 	var input := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
-	if is_knocked_out():
+	if is_knocked_out() or Game.instance.menu_open():
 		input = Vector2.ZERO
 	var dir := (transform.basis * Vector3(input.x, 0.0, input.y)).normalized()
 	# Wading through flood water is slow.
@@ -348,7 +348,7 @@ func _physics_process(delta: float) -> void:
 	velocity.x = dir.x * speed
 	velocity.z = dir.z * speed
 	if is_on_floor():
-		if Input.is_action_just_pressed("jump"):
+		if Input.is_action_just_pressed("jump") and not Game.instance.menu_open():
 			velocity.y = JUMP
 	else:
 		velocity.y -= GRAVITY * delta

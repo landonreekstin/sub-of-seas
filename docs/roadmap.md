@@ -69,7 +69,7 @@ Each milestone ends playable and committed. Tick items as they land.
 
 ## M8 — Blaney's list (2026-10-29)
 Added by Blaney after playing. In his words where it matters.
-- [ ] **Pause menu**: Esc brings up a menu (resume, settings, leave to main menu). The boat
+- [x] **Pause menu**: Esc brings up a menu (resume, settings, leave to main menu). The boat
       keeps going while it is open when others are aboard; it only truly pauses in single player.
 - [x] **Fix the helm wheel**: it turns on the wrong axis. It should spin around its own
       axle, like a car's steering wheel, when the rudder moves.
@@ -90,7 +90,7 @@ Added by Blaney after playing. In his words where it matters.
 ## M9 — Lando's list (2026-10-30)
 Added by lando. Direction: **more arcadey, not strict realism**. Every existing mechanic
 stays for now, until they have been tried with others.
-- [ ] **Settings menu**: audio (master / music / effects / voice volumes), graphics
+- [x] **Settings menu**: audio (master / music / effects / voice volumes), graphics
       (resolution, window mode, quality, field of view), controls (mouse sensitivity, invert
       Y, key rebinding). Reachable from the main menu and the pause menu (M8).
 - [ ] **Keep pushing the art toward Sea of Thieves**, and a bit more detailed than now:

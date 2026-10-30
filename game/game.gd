@@ -19,6 +19,7 @@ var interior: SubInterior ## built once we know the boat: at once on the host, o
 var sub_class: SubClassData
 var exterior: ExteriorWorld
 var hud: Hud
+var pause_menu: PauseMenu
 var local_player: Player
 var crew := {}
 var _players: Node3D
@@ -48,10 +49,17 @@ func _exit_tree() -> void:
 func _ready() -> void:
 	exterior = ExteriorWorld.create()
 	add_child(exterior.viewport)
+	Settings.apply_quality(exterior.viewport)
+	Settings.changed.connect(func(key: String) -> void:
+		if key == "quality":
+			Settings.apply_quality(exterior.viewport))
+	pause_menu = PauseMenu.new()
+	add_child(pause_menu)
 	get_viewport().size_changed.connect(_fit_exterior)
 	_fit_exterior()
 	hud = Hud.new()
 	add_child(hud)
+	move_child(pause_menu, -1)
 
 	_players = Node3D.new()
 	_players.name = "Players"
@@ -303,9 +311,20 @@ func _on_peer_disconnected(id: int) -> void:
 	push_crew()
 
 
+## Back to the main menu (F10, or the pause menu).
+func leave() -> void:
+	_quit("")
+
+
+## True while the pause menu is up: the local player's hands are off the controls.
+func menu_open() -> bool:
+	return pause_menu != null and pause_menu.is_open
+
+
 func _quit(reason: String) -> void:
 	Net.last_error = reason
 	Net.stop()
+	get_tree().paused = false
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	get_tree().change_scene_to_file(MENU_SCENE)
 

@@ -30,6 +30,7 @@ func play(sound: String, volume_db := 0.0, pitch := 1.0) -> void:
 		if _pool.size() >= 16:
 			return
 		p = AudioStreamPlayer.new()
+		p.bus = "Effects"
 		add_child(p)
 		_pool.append(p)
 	p.stream = stream(sound)
@@ -41,6 +42,7 @@ func play(sound: String, volume_db := 0.0, pitch := 1.0) -> void:
 ## A one-shot from a place inside `parent` (freed when done).
 func play_at(parent: Node3D, sound: String, pos: Vector3, volume_db := 0.0, pitch := 1.0) -> void:
 	var p := AudioStreamPlayer3D.new()
+	p.bus = "Effects"
 	p.stream = stream(sound)
 	p.volume_db = volume_db
 	p.pitch_scale = pitch
@@ -54,6 +56,7 @@ func play_at(parent: Node3D, sound: String, pos: Vector3, volume_db := 0.0, pitc
 ## A looping source at `pos` in `parent`, playing.
 func loop_at(parent: Node3D, sound: String, pos := Vector3.ZERO, volume_db := 0.0, unit_size := 4.0) -> AudioStreamPlayer3D:
 	var p := AudioStreamPlayer3D.new()
+	p.bus = "Effects"
 	p.stream = stream(sound)
 	p.volume_db = volume_db
 	p.unit_size = unit_size

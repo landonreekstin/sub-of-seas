@@ -316,4 +316,4 @@ func _leave_hint(step: Dictionary) -> String:
 	var ok: Array = step.get("ok", [])
 	if here == step.get("at", step.get("needs", "")) or ok.has(here) or ok.has("any"):
 		return ""
-	return "▶ You're at the %s. Press Q to leave it first." % me.station.display_name.to_lower()
+	return "▶ You're at the %s. Press %s to leave it first." % [me.station.display_name.to_lower(), OS.get_keycode_string(Settings.key_for("leave_station"))]

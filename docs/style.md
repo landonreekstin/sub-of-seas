@@ -64,6 +64,11 @@ and update "Current style" in the same commit.
   a deep clang for doors and outer doors, a chain rattle for a reload, a diesel turning over and
   catching, pencil on the chart, boots on the steel deck, a clang per ladder rung, a clink
   picking up or putting down a tool.
+- **Menus:** the same dark panel with a brass border and cream type as the station screens.
+  Esc pauses (Blaney): resume, settings, leave to the main menu; the boat carries on while
+  others are aboard and only truly pauses for a host alone. Q leaves a station. Settings
+  (lando) has audio, graphics and controls tabs, reachable from the main menu and the pause
+  menu, and applies each change as you make it.
 - **Hits:** camera shake, lights stutter, paint flakes shake down from the deckhead.
 - **Night:** a deep blue-black sky, cold dim moonlight, black water with silver foam; inside,
   submerged, the boat rigs for red (`#FF4A35` light). Rough seas are big rolling waves.

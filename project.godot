@@ -20,6 +20,7 @@ driver/enable_input=true
 
 [autoload]
 
+Settings="*res://autoload/settings.gd"
 Controls="*res://autoload/controls.gd"
 Net="*res://autoload/net.gd"
 Sim="*res://autoload/sim.gd"

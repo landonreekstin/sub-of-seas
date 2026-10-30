@@ -83,6 +83,11 @@ func _ready() -> void:
 	join.pressed.connect(_join)
 	join_row.add_child(join)
 
+	var settings := Button.new()
+	settings.text = "Settings"
+	settings.pressed.connect(func() -> void: add_child(SettingsMenu.new()))
+	box.add_child(settings)
+
 	if Net.last_error != "":
 		box.add_child(UiKit.label(Net.last_error, 16, UiKit.BAD))
 		Net.last_error = ""

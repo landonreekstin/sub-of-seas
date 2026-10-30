@@ -47,7 +47,7 @@ Godot **4.7.2**, GDScript, Jolt 3D physics. Repo: github.com/landonreekstin/sub-
 ### Layout
 | Path | Holds |
 |---|---|
-| `autoload/` | `controls.gd` (input map), `net.gd` (host/join, CLI args), `sim.gd` (ocean world, host-run, replicated), `sfx.gd` (sound one-shots and loops) |
+| `autoload/` | `settings.gd` (`Settings`: volumes, graphics, mouse, rebound keys in user://settings.cfg; loads first), `controls.gd` (input map, rebindable from Settings), `net.gd` (host/join, CLI args), `sim.gd` (ocean world, host-run, replicated), `sfx.gd` (sound one-shots and loops, on the Effects bus; music goes on Music, crew voices on Voice) |
 | `game/` | `game.gd`: patrol root — builds boat, spawns crew, owns crew state (doors, stations, tubes) and the host-side request RPCs; `tutorial.gd`: the training patrol's checklist and script; `profile.gd`: each player's career, rank and look (user://profile.cfg) |
 | `assets/` | `textures/` (grey detail maps from `tools/make_textures.py`), `audio/` (sounds from `tools/make_sounds.sh`): generated, regenerate rather than hand-edit |
 | `tools/` | `publish.sh`: export the pack to the NAS drop for the launcher; `ship_gallery.gd`: one ship model close up, for screenshots |
@@ -56,7 +56,7 @@ Godot **4.7.2**, GDScript, Jolt 3D physics. Repo: github.com/landonreekstin/sub-
 | `stations/` | station base class and each station |
 | `player/` | first-person crew controller, held tools (`tools.gd`), proximity voice (`voice.gd`) |
 | `world/` | exterior ocean scene, ocean shader, ship models |
-| `ui/` | main menu, HUD, station overlays, `chart_view.gd` (the plot) |
+| `ui/` | main menu, HUD, station overlays, `chart_view.gd` (the plot), `pause_menu.gd` (Esc), `settings_menu.gd` |
 | `data/` | `.tres` balance data and their `Resource` scripts: `subs/`, `ships/` (8 classes), `missions/` (patrols: groups + objectives; `MissionData.KEYS` is the menu order) |
 | `tests/` | headless test runner + `test_*.gd` |
 
@@ -103,7 +103,8 @@ The build id (commit) is baked into the pack; a host turns away a different buil
 `dev` (running from source). Publish only committed, tested work.
 
 ### Controls
-WASD + mouse, E interact, Space jump, Q/Esc leave station, Tab next station in a cluster
+WASD + mouse, E interact, Space jump, Q leave station, Esc pause menu (settings, leave),
+Tab next station in a cluster
 (helm/dive; periscope/TDC in the conning tower; the S-boat's conn: helm, periscope, sonar, TDC).
 Helm: W/S telegraph, A/D rudder. Dive: W/S depth ±5 (Shift ±1), 1–4 presets.
 Periscope: mouse train, Z power, R raise/lower, F stadimeter, M mark for the TDC.

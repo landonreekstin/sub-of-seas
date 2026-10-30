@@ -159,4 +159,5 @@ static func key_pressed(event: InputEvent, key: Key) -> bool:
 
 
 static func footer(cluster_hint: bool) -> String:
-	return "[Q] leave station" + ("    [Tab] next station" if cluster_hint else "")
+	return "[%s] leave station" % OS.get_keycode_string(Settings.key_for("leave_station")) \
+		+ ("    [%s] next station" % OS.get_keycode_string(Settings.key_for("next_station")) if cluster_hint else "")
