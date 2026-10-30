@@ -70,7 +70,7 @@ func _ready() -> void:
 	var training := Button.new()
 	training.text = "Training patrol"
 	training.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	training.pressed.connect(_training)
+	training.pressed.connect(_show_courses)
 	buttons.add_child(training)
 
 	box.add_child(UiKit.label("Join a crew at", 16))
@@ -137,6 +137,43 @@ func _host() -> void:
 func _training() -> void:
 	Net.mission = "training"
 	_start(Net.Mode.HOST)
+
+
+## Training: pick the job to learn (a short course each), or the whole boat.
+func _show_courses() -> void:
+	var cover := Control.new()
+	cover.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(cover)
+	var dim := ColorRect.new()
+	dim.color = Color("#0B1C2E")
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	cover.add_child(dim)
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	cover.add_child(center)
+	var p := UiKit.panel()
+	center.add_child(p)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 6)
+	box.custom_minimum_size.x = 520
+	p.add_child(box)
+	box.add_child(UiKit.label("TRAINING", 32, UiKit.BRASS))
+	box.add_child(UiKit.label("Pick the job you want to learn. The rest of the crew is played for you.", 15, UiKit.DIM))
+	for key: String in Tutorial.COURSES:
+		var b := Button.new()
+		b.text = Tutorial.COURSES[key]
+		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
+		b.pressed.connect(func() -> void:
+			Net.course = key
+			_training())
+		box.add_child(b)
+		var blurb := UiKit.label(Tutorial.BLURBS[key], 14, UiKit.DIM)
+		blurb.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		box.add_child(blurb)
+	var back := Button.new()
+	back.text = "Back"
+	back.pressed.connect(cover.queue_free)
+	box.add_child(back)
 
 
 func _join() -> void:

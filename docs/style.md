@@ -135,6 +135,11 @@ and update "Current style" in the same commit.
   that show the water and nearby hulls; reefs,
   undersea mountains and shelves; sharks, whales, octopus and fish; music (menu, patrol,
   combat); emotes seen in third person; a rec room for whimsical fun and mini games.
+- **Training crew calls (Blaney):** in the short per-job courses, the crewmates you would
+  hear are played for you: a big line near the top, the speaker in brass caps and the words
+  in cream quotes ("CAPTAIN: \"Come to course zero-niner-zero.\""), with a short bell like an
+  order over the boat's speakers. Training opens on a list of jobs to pick from; the long
+  whole-boat course stays at the bottom.
 - **UI:** typewriter / stencil feel, cream on dark panels, minimal HUD (crosshair, carried
   tool, interaction prompt).
 
@@ -160,3 +165,4 @@ and update "Current style" in the same commit.
 | 2026-10-30 | Blaney | The low hum is horrible. (Asked: it is the electric motor; he chose a soft whirr instead.) |
 | 2026-10-30 | lando | There should be ding sounds when you change the sub's speed, and sound effects for turning the helm. Everything should have sound effects. |
 | 2026-10-30 | Blaney | The footsteps make it sound like someone is knocking on my door, which is not optimal. |
+| 2026-10-30 | Blaney | Tutorials per job: pick the job from a list when you click Training patrol; crew calls show as a big line with who said it and a little bell; keep the long whole-boat training at the bottom of the list. |

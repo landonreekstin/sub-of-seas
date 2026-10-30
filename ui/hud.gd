@@ -6,6 +6,8 @@ var _root: Control
 var _crosshair: Label
 var _prompt: Label
 var _message: Label
+var _call: RichTextLabel
+var _call_tween: Tween
 var _status: Label
 var _overlay: Control
 var _message_tween: Tween
@@ -142,6 +144,36 @@ func set_prompt(text: String) -> void:
 
 func set_status(text: String) -> void:
 	_status.text = text
+
+
+## A call from a crewmate the training stands in for ("Captain: come to 090"): big, under
+## the message line, with a bell like an order over the boat's speakers.
+func crew_call(who: String, text: String, seconds := 9.0) -> void:
+	if _call == null:
+		_call = RichTextLabel.new()
+		_call.bbcode_enabled = true
+		_call.fit_content = true
+		_call.scroll_active = false
+		_call.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_call.add_theme_font_size_override("normal_font_size", 30)
+		_call.add_theme_font_size_override("bold_font_size", 30)
+		_call.add_theme_constant_override("outline_size", 8)
+		_call.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
+		_root.add_child(_call)
+		_call.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+		_call.grow_horizontal = Control.GROW_DIRECTION_BOTH
+		_call.offset_top = 210
+		_call.offset_left = -460
+		_call.offset_right = 460
+	_call.text = "[center][b][color=#%s]%s:[/color][/b] [color=#%s]\"%s\"[/color][/center]" % [
+		UiKit.BRASS.to_html(false), who.to_upper(), UiKit.CREAM.to_html(false), text]
+	_call.modulate.a = 1.0
+	Sfx.play("telegraph_ding", -6.0, 1.35)
+	if _call_tween != null:
+		_call_tween.kill()
+	_call_tween = create_tween()
+	_call_tween.tween_interval(seconds)
+	_call_tween.tween_property(_call, "modulate:a", 0.0, 1.5)
 
 
 func show_message(text: String, seconds := 5.0) -> void:

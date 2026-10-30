@@ -21,6 +21,7 @@ var port := DEFAULT_PORT ## --port n (the packaged game uses 7845, forwarded ove
 var build := "dev"
 var sub_key := "gato" ## the boat the host takes out (--sub s_boat | gato | narwhal)
 var mission := "convoy" ## a MissionData key or "training"; chosen by the host (--mission, --training)
+var course := "full" ## which training course (--training <course>): a Tutorial.COURSES key
 var debug_charges := false ## --test-charges: the host drops a pattern on the boat (testing)
 var start_bots: PackedStringArray = [] ## --bots helm,dive,...: the host posts bot crewmen there at the start
 var debug_reef := false ## --reef: the host's boat starts just off an island's reef, shallow, a whale close by
@@ -61,9 +62,11 @@ func _ready() -> void:
 				if i + 1 < args.size():
 					mission = args[i + 1]
 					cli_start = Mode.HOST
-			"--training": # host the training patrol
+			"--training": # host the training patrol: --training [helm|scope|torpedo|sonar|damage|engine|full]
 				mission = "training"
 				cli_start = Mode.HOST
+				if i + 1 < args.size() and not args[i + 1].begins_with("--"):
+					course = args[i + 1]
 			"--test-charges":
 				debug_charges = true
 			"--test-air":
