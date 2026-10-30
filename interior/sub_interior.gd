@@ -61,7 +61,7 @@ var _flicker := 0.0
 var _rockers: Array[Array] = [[], []] ## per diesel (port, starboard): cylinder-head covers
 var _next_tube := 0
 var _diesel_sound: AudioStreamPlayer3D
-var _motor_sound: AudioStreamPlayer
+var _motor_sound: AudioStreamPlayer3D
 var _creak_timer := 5.0
 var _vents_were := false
 
@@ -144,11 +144,8 @@ func build() -> void:
 		l.set_meta("energy", l.light_energy)
 	var er := comp("engine")
 	_diesel_sound = Sfx.loop_at(self, "diesel_loop", Vector3(0, 1.0, (er.z0 + er.z1) * 0.5), -80.0, 8.0)
-	_motor_sound = AudioStreamPlayer.new()
-	_motor_sound.stream = Sfx.stream("motor_loop")
-	_motor_sound.volume_db = -80.0
-	add_child(_motor_sound)
-	_motor_sound.play()
+	var mr := comp("maneuvering") if comp_index("maneuvering") >= 0 else er
+	_motor_sound = Sfx.loop_at(self, "motor_loop", Vector3(0, 1.0, (mr.z0 + mr.z1) * 0.5), -80.0, 10.0)
 	for i in 6:
 		spawn_points.append(Vector3(-0.6 + (i % 3) * 0.6, 0.1, ct.z1 - 2.6 - (i / 3) * 0.7))
 
@@ -492,7 +489,8 @@ func _process(delta: float) -> void:
 			l.text = text[kind]
 
 
-## The boat's own noises: diesels thudding in the engine room, the motors whining with speed,
+## The boat's own noises: diesels thudding in the engine room, the motors whirring aft (soft
+## at slow speed, louder flat out),
 ## the hull creaking deeper down (a lot past test depth), the klaxon when the vents open.
 func _sounds(sub: SubState, delta: float) -> void:
 	if _diesel_sound == null:
@@ -500,8 +498,9 @@ func _sounds(sub: SubState, delta: float) -> void:
 	var running := sub.diesels_running()
 	_diesel_sound.volume_db = -80.0 if running == 0 else (-4.0 if running == 2 else -9.0)
 	var on_motors := running == 0 and absf(sub.speed) > 0.1
-	_motor_sound.volume_db = linear_to_db(clampf(absf(sub.speed) / (sub.data.submerged_speed_kn * SubState.KNOT), 0.02, 1.0)) - 6.0 if on_motors else -80.0
-	_motor_sound.pitch_scale = 0.8 + 0.4 * clampf(absf(sub.speed) / 5.0, 0.0, 1.0)
+	var flank := clampf(absf(sub.speed) / (sub.data.submerged_speed_kn * SubState.KNOT), 0.0, 1.0)
+	_motor_sound.volume_db = linear_to_db(lerpf(0.12, 1.0, flank * flank)) - 10.0 if on_motors else -80.0
+	_motor_sound.pitch_scale = 0.85 + 0.3 * flank
 	if sub.vents_open and not _vents_were:
 		Sfx.play("klaxon")
 	_vents_were = sub.vents_open
