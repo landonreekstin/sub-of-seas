@@ -281,7 +281,8 @@ func _footsteps() -> void:
 	_step_dist += Vector2(moved.x, moved.z).length()
 	if _step_dist > 0.8:
 		_step_dist = 0.0
-		Sfx.play_at(self, "step_%d" % randi_range(1, 3), Vector3(0, 0.05, 0), -4.0, randf_range(0.9, 1.1))
+		# Your own feet quieter than a crewmate's: you hear them all the time.
+		Sfx.play_at(self, "step_%d" % randi_range(1, 3), Vector3(0, 0.05, 0), -10.0 if is_local() else -4.0, randf_range(0.9, 1.1))
 
 
 func add_trauma(amount: float) -> void:

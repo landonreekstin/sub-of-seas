@@ -64,7 +64,9 @@ and update "Current style" in the same commit.
   not snap), heavy lever clunks, small dial clicks, a roar of air when the vents open and a hard
   hiss while blowing, a hydraulic whine as the periscope moves, a gurgling rush flooding a tube,
   a deep clang for doors and outer doors, a chain rattle for a reload, a diesel turning over and
-  catching, pencil on the chart, boots on the steel deck, a clang per ladder rung, a clink
+  catching, pencil on the chart, boots on the steel deck (a soft heel and gritty scuff
+  with a faint plate ring, no low thud: Blaney found the first version sounded like knocking
+  on his door; your own steps are quieter than a crewmate's), a clang per ladder rung, a clink
   picking up or putting down a tool.
 - **Handling** (Blaney): livelier than the real boat but still heavy and submarine-like, not a
   rocket ship. Speed changes are twice as quick, turns 1.6× and dives 1.5× (a Gato: 0 to 9 kn

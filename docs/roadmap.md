@@ -90,6 +90,8 @@ Added by Blaney after playing. In his words where it matters.
 - [ ] **Footsteps that don't sound like knocking**: "the footsteps make it sound like someone
       is knocking on my door which is not optimal". They should read as boots on a steel deck,
       not a knock on wood (ask Blaney what he wants instead when this is picked up).
+      *(Redone: a soft heel and gritty scuff with a faint ring, no low thud, and your own steps
+      quieter. Left open until Blaney says whether it works.)*
 ## M9 — Lando's list (2026-10-30)
 Added by lando. Direction: **more arcadey, not strict realism**. Every existing mechanic
 stays for now, until they have been tried with others.
