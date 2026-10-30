@@ -9,11 +9,16 @@ const GRAVITY := 12.0
 const JUMP := 3.2
 const EYE_HEIGHT := 1.6
 const REACH := 2.2
+## Emotes: key -> name, and how long each plays (seconds).
+const EMOTE_KEYS := {KEY_1: "wave", KEY_2: "salute", KEY_3: "jig", KEY_4: "point", KEY_5: "cheer"}
+const EMOTE_TIME := {"wave": 2.5, "salute": 2.5, "jig": 5.0, "point": 2.5, "cheer": 3.0}
 
 var peer_id := 1
 var station: Station = null
 var requested_station := ""
 var climbing := false
+var emote := "" ## the emote being played, replicated so everyone sees it
+var _emote_t := 0.0
 var _step_pos := Vector3.ZERO ## for footsteps
 var _step_dist := 0.0 ## distance since the last footstep or rung
 var held_tool := "" ## from crew state (host-owned)
@@ -29,8 +34,8 @@ var camera: Camera3D
 var ray: RayCast3D
 var body: Node3D ## the sailor below the head: torso, arms and legs that swing as he walks
 var _limbs := {} ## "arm_l", "arm_r", "leg_l", "leg_r" -> pivot Node3D
-var _shirt_parts: Array[MeshInstance3D] = []
 var _hat: Node3D
+var _face: Node3D ## on the head: face, hair, beard, hat
 var _look := {}
 var _last_pos := Vector3.ZERO
 var _stride := 0.0
@@ -59,18 +64,17 @@ func _build() -> void:
 	shape.position.y = 0.875
 	add_child(shape)
 
-	_build_sailor(Color.from_hsv(fposmod(peer_id * 0.618034, 1.0), 0.45, 0.85))
-
+	body = Node3D.new()
+	body.name = "Body"
+	add_child(body)
 	head = Node3D.new()
 	head.name = "Head"
 	head.position.y = EYE_HEIGHT
 	add_child(head)
-	# A big round head under a white "Dixie cup" sailor's hat; dot eyes, a nose.
-	var face := Build.sphere(head, 0.24, Vector3(0, -0.05, 0), Color("#F0C9A0"))
-	_hat = _make_hat(face, "dixie")
-	Build.box(face, Vector3(0.05, 0.07, 0.02), Vector3(-0.08, 0.03, -0.23), Color.BLACK, false)
-	Build.box(face, Vector3(0.05, 0.07, 0.02), Vector3(0.08, 0.03, -0.23), Color.BLACK, false)
-	Build.sphere(face, 0.045, Vector3(0, -0.04, -0.24), Color("#E3B48C"))
+	_face = Node3D.new()
+	_face.name = "Face"
+	head.add_child(_face)
+	_rebuild({})
 
 	camera = Camera3D.new()
 	camera.fov = Settings.get_value("fov")
@@ -102,7 +106,7 @@ func _build() -> void:
 	var sync := MultiplayerSynchronizer.new()
 	sync.name = "Sync"
 	var cfg := SceneReplicationConfig.new()
-	for prop: String in [".:position", ".:rotation", "Head:rotation", ".:climbing"]:
+	for prop: String in [".:position", ".:rotation", "Head:rotation", ".:climbing", ".:emote"]:
 		var path := NodePath(prop)
 		cfg.add_property(path)
 		cfg.property_set_spawn(path, true)
@@ -111,51 +115,37 @@ func _build() -> void:
 	add_child(sync)
 
 
-## Peak-like sailor: chunky chambray-blue shirt in the crewman's colour, navy dungarees,
-## black boots, arms and legs on pivots so a walk can swing them.
-func _build_sailor(shirt: Color) -> void:
-	body = Node3D.new()
-	body.name = "Body"
-	add_child(body)
-	var torso := MeshInstance3D.new()
-	var cm := CapsuleMesh.new()
-	cm.radius = 0.27
-	cm.height = 0.8
-	torso.mesh = cm
-	torso.material_override = Build.mat(shirt)
-	_shirt_parts.append(torso)
-	torso.position.y = 1.08
-	body.add_child(torso)
-	Build.box(body, Vector3(0.5, 0.12, 0.34), Vector3(0, 0.74, 0), Color("#2B3A55"), false) # belt line
-	for side in [-1.0, 1.0]:
-		var leg := Node3D.new()
-		leg.position = Vector3(side * 0.13, 0.78, 0)
-		body.add_child(leg)
-		Build.cyl(leg, 0.11, 0.62, Vector3(0, -0.34, 0), Color("#2B3A55"))
-		Build.box(leg, Vector3(0.18, 0.12, 0.28), Vector3(0, -0.72, -0.05), Color("#1E1E20"), false)
-		_limbs["leg_l" if side < 0.0 else "leg_r"] = leg
-		var arm := Node3D.new()
-		arm.position = Vector3(side * 0.34, 1.36, 0)
-		body.add_child(arm)
-		_shirt_parts.append(Build.cyl(arm, 0.08, 0.55, Vector3(0, -0.28, 0), shirt))
-		Build.sphere(arm, 0.08, Vector3(0, -0.6, 0), Color("#F0C9A0"))
-		_limbs["arm_l" if side < 0.0 else "arm_r"] = arm
+## The crewman's body and face from a look (Crewman builds them): shirt colour by player
+## number unless they picked one.
+func _rebuild(look: Dictionary) -> void:
+	for c in body.get_children():
+		c.queue_free()
+	for c in _face.get_children():
+		c.queue_free()
+	var hue: float = look.get("hue", -1.0)
+	var shirt := Color.from_hsv(fposmod(peer_id * 0.618034, 1.0) if hue < 0.0 else hue, 0.45, 0.85)
+	var parts := Crewman.build_body(body, look, shirt)
+	_limbs = {"arm_l": parts.arm_l, "arm_r": parts.arm_r, "leg_l": parts.leg_l, "leg_r": parts.leg_r}
+	Crewman.build_face(_face, look)
+	_hat = _make_hat(_face, look.get("hat", "dixie"))
+	_show_self(false)
 
 
-## The look from the player's profile: hat and shirt colour (crew state, so all agree).
+## Your own crewman is only a shadow in first person, and fully there in an emote's third person.
+func _show_self(seen: bool) -> void:
+	if not is_inside_tree() or not is_local():
+		return
+	for m: MeshInstance3D in body.find_children("*", "MeshInstance3D", true, false):
+		m.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if seen else GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
+	_face.visible = seen
+
+
+## The look from the player's profile (crew state, so all agree).
 func set_looks(look: Dictionary) -> void:
 	if look == _look or look.is_empty():
 		return
 	_look = look
-	var hue: float = look.get("hue", -1.0)
-	var shirt := Color.from_hsv(fposmod(peer_id * 0.618034, 1.0) if hue < 0.0 else hue, 0.45, 0.85)
-	for m in _shirt_parts:
-		m.material_override = Build.mat(shirt)
-	var face: Node3D = _hat.get_parent()
-	_hat.queue_free()
-	_hat = _make_hat(face, look.get("hat", "dixie"))
-	if is_local():
-		_hat.visible = false
+	_rebuild(look)
 
 
 static func _make_hat(face: Node3D, kind: String) -> Node3D:
@@ -191,6 +181,14 @@ func _animate_body(delta: float) -> void:
 	var speed := Vector2(v.x, v.z).length()
 	_stride += delta * speed * 3.2
 	var swing := sin(_stride) * clampf(speed / SPEED, 0.0, 1.0) * 0.6
+	if emote != "":
+		_emote_t += delta
+		_pose_emote(_emote_t)
+		return
+	_emote_t = 0.0
+	body.rotation.y = 0.0
+	for k: String in _limbs:
+		_limbs[k].rotation.z = 0.0
 	var at_station: bool = Game.instance.crew.get("stations", {}).values().has(peer_id)
 	_limbs.leg_l.rotation.x = swing
 	_limbs.leg_r.rotation.x = -swing
@@ -206,9 +204,7 @@ func is_local() -> bool:
 func _ready() -> void:
 	if is_local():
 		camera.current = true
-		for m: MeshInstance3D in body.find_children("*", "MeshInstance3D", true, false):
-			m.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
-		head.get_child(0).visible = false
+		_show_self(false)
 		name_tag.visible = false
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 		Game.instance.local_player = self
@@ -321,6 +317,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		head.rotation.x = clampf(head.rotation.x - event.relative.y * Settings.look(true), -1.45, 1.45)
 	elif event is InputEventMouseButton and event.pressed and Input.mouse_mode != Input.MOUSE_MODE_CAPTURED and not Game.instance.menu_open():
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	elif event is InputEventKey and event.pressed and not event.echo and EMOTE_KEYS.has(event.physical_keycode) and not climbing:
+		_start_emote(EMOTE_KEYS[event.physical_keycode])
 	elif event.is_action_pressed("interact") and not climbing:
 		var target := _interact_target()
 		if target != null:
@@ -361,6 +359,12 @@ func _process(delta: float) -> void:
 	if not is_local():
 		_animate_body(delta)
 		return
+	if emote != "":
+		_emote_t += delta
+		_pose_emote(_emote_t)
+		var moving := Input.get_vector("move_left", "move_right", "move_forward", "move_back") != Vector2.ZERO
+		if _emote_t > float(EMOTE_TIME.get(emote, 2.5)) or moving or station != null:
+			_end_emote()
 	_apply_hull_tilt()
 	_apply_shake(delta)
 	var hud := Game.instance.hud
@@ -425,7 +429,7 @@ func _apply_shake(delta: float) -> void:
 
 ## The interior never moves; the sub's pitch and roll are shown by tilting the view.
 func _apply_hull_tilt() -> void:
-	if Sim.world == null or station != null:
+	if Sim.world == null or station != null or camera.top_level: # a station's or an emote's view
 		return
 	var sub := Sim.world.sub
 	var roll := clampf(-sub.turn_rate * 1.2, -4.0, 4.0)
@@ -498,6 +502,79 @@ func _tween_camera(to: Transform3D) -> Tween:
 	_camera_tween = create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	_camera_tween.tween_property(camera, "global_transform", to, 0.35)
 	return _camera_tween
+
+
+# --- Emotes ----------------------------------------------------------------
+
+## Plays an emote: the camera swings out in front to third person so you see yourself do it
+## (lando), and everyone else sees it too.
+func _start_emote(e: String) -> void:
+	if emote != "":
+		_end_emote()
+	emote = e
+	_emote_t = 0.0
+	_show_self(true)
+	var pivot := head.global_position
+	var fwd := -global_basis.z
+	# In front and a little to one side, wherever there is the most room in the hull.
+	var want := pivot
+	var space := get_world_3d().direct_space_state
+	for ang in [0.5, -0.5, 1.1, -1.1, 0.0, 1.8, -1.8]:
+		var at := pivot + fwd.rotated(Vector3.UP, ang) * 2.0 + Vector3.UP * 0.25
+		var hit := space.intersect_ray(PhysicsRayQueryParameters3D.create(pivot, at, 1, [get_rid()]))
+		if not hit.is_empty():
+			at = pivot.lerp(hit.position, 0.85)
+		if at.distance_to(pivot) > want.distance_to(pivot) + 0.05:
+			want = at
+		if want.distance_to(pivot) > 1.9:
+			break
+	var from := camera.global_transform
+	camera.top_level = true
+	camera.global_transform = from
+	_tween_camera(Transform3D(Basis.looking_at(pivot - Vector3.UP * 0.35 - want, Vector3.UP), want))
+
+
+func _end_emote() -> void:
+	emote = ""
+	_reset_pose()
+	_tween_camera(head.global_transform).finished.connect(func() -> void:
+		if station == null and emote == "":
+			camera.top_level = false
+			camera.transform = Transform3D.IDENTITY
+			_show_self(false))
+
+
+func _reset_pose() -> void:
+	body.rotation.y = 0.0
+	body.position.y = 0.0
+	for k: String in _limbs:
+		_limbs[k].rotation = Vector3.ZERO
+
+
+## Arms hang from the shoulder: rotation.x swings forward/up, rotation.z raises one sideways
+## (+ for the right arm, - for the left).
+func _pose_emote(t: float) -> void:
+	_reset_pose()
+	var al: Node3D = _limbs.arm_l
+	var ar: Node3D = _limbs.arm_r
+	match emote:
+		"wave":
+			ar.rotation.z = 2.7 + 0.35 * sin(t * 9.0)
+		"salute":
+			ar.rotation = Vector3(-2.2, 0.0, -0.6)
+		"jig":
+			body.rotation.y = sin(t * 3.0) * 0.5
+			body.position.y = absf(sin(t * 10.0)) * 0.08
+			_limbs.leg_l.rotation.x = maxf(0.0, sin(t * 10.0)) * -0.9
+			_limbs.leg_r.rotation.x = maxf(0.0, -sin(t * 10.0)) * -0.9
+			al.rotation = Vector3(-0.3, 0.0, -0.9 - 0.3 * sin(t * 10.0))
+			ar.rotation = Vector3(-0.3, 0.0, 0.9 + 0.3 * sin(t * 10.0))
+		"point":
+			ar.rotation.x = -1.6
+		"cheer":
+			body.position.y = absf(sin(t * 7.0)) * 0.1
+			al.rotation.z = -2.8 - 0.2 * sin(t * 14.0)
+			ar.rotation.z = 2.8 + 0.2 * sin(t * 14.0)
 
 
 # --- Ladders ---------------------------------------------------------------

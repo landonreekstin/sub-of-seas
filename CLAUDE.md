@@ -54,9 +54,9 @@ Godot **4.7.2**, GDScript, Jolt 3D physics. Repo: github.com/landonreekstin/sub-
 | `sim/` | pure simulation classes: sub (incl. battery, diesels, ballast, HP air), `air.gd` (CO2/O2, smoke, scrubber), `tdc.gd` (marks → track → gyro), `formations.gd` (convoy, task force, hunter-killer), `conditions.gd` (night, sea state, layer), `aircraft.gd` (carrier search planes), `sandbox.gd` (open patrol director), ships (gunfire on a surfaced boat), torpedoes, depth charges, `detection.gd`, `ship_ai.gd` (escort state machine), `hull.gd` (water, leaks, fires, broken stations), `whale.gd` (whales: wander, breathe, sing; false sonar contacts), `seabed.gd` (islands, reefs, seamounts, shelves: floor depth, laid out per patrol clear of every track; grounding, ships steering clear) |
 | `interior/` | `sub_interior.gd` builds any boat from `LAYOUTS` (compartments fore to aft; the control room ends at z 0), doors, tool racks, parts crate, `damage_view.gd` (draws the hull state), `porthole.gd` |
 | `stations/` | station base class and each station |
-| `player/` | first-person crew controller, held tools (`tools.gd`), proximity voice (`voice.gd`) |
+| `player/` | first-person crew controller (emotes too), `crewman.gd` (the crewman's body and face from a look), held tools (`tools.gd`), proximity voice (`voice.gd`) |
 | `world/` | exterior ocean scene, ocean shader, ship models, `terrain_view.gd` (islands and sea floor meshes from the seabed), `sea_life_view.gd` (whales, fish schools, sharks, octopus), `porthole_eye.gd` (a second camera in the ocean for the porthole you look at) |
-| `ui/` | main menu, HUD, station overlays, `chart_view.gd` (the plot), `pause_menu.gd` (Esc), `settings_menu.gd` |
+| `ui/` | main menu, HUD, station overlays, `chart_view.gd` (the plot), `pause_menu.gd` (Esc), `settings_menu.gd`, `sailor_editor.gd` (make your crewman) |
 | `data/` | `.tres` balance data and their `Resource` scripts: `subs/`, `ships/` (8 classes), `missions/` (patrols: groups + objectives; `MissionData.KEYS` is the menu order) |
 | `tests/` | headless test runner + `test_*.gd` |
 
@@ -103,7 +103,7 @@ The build id (commit) is baked into the pack; a host turns away a different buil
 `dev` (running from source). Publish only committed, tested work.
 
 ### Controls
-WASD + mouse, E interact, Space jump, Q leave station, Esc pause menu (settings, leave),
+WASD + mouse, E interact, Space jump, 1–5 emotes (wave, salute, jig, point, cheer), Q leave station, Esc pause menu (settings, leave),
 Tab next station in a cluster
 (helm/dive; periscope/TDC in the conning tower; the S-boat's conn: helm, periscope, sonar, TDC).
 Helm: W/S telegraph, A/D rudder. Dive: W/S depth ±5 (Shift ±1), 1–4 presets.

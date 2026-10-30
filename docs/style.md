@@ -87,6 +87,13 @@ and update "Current style" in the same commit.
   octopus on a shallow bottom; humpbacks (dark slate, pale belly, long white flippers) that
   blow a spout at the surface. Coral on the island reefs is Blaney's Frutiger Aero look:
   glossy candy-coloured brain coral, staghorn and sea fans, with bubbles rising.
+- **Crewmen** (lando: customisable, like Sea of Thieves crew): stylised and exaggerated, big
+  forearms and hands, chunky boots, a sailor's collar and neckerchief, a big nose, ears and
+  heavy brows. Pick build (average, wiry, stocky, barrel-chested), six skin tones, hair (seven
+  styles, seven colours), beard (seven), an extra (eyepatch, gold earring, scar, pipe,
+  bandana), the rank hats and a shirt colour, in "Your sailor..." on the main menu.
+- **Emotes:** 1 wave, 2 salute, 3 jig, 4 point, 5 cheer. The camera swings out in front, a
+  little to one side wherever the hull has room, so you see yourself; moving ends it.
 - **Music** (synthesised, `tools/make_music.py`; style picked by Claude while lando was away,
   to match the Sea of Thieves direction; change it freely): the menu is an original D-minor
   sea shanty on a two-reed accordion with oom-pah bass and stomp-clap; a patrol is a calm,

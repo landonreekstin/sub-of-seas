@@ -100,7 +100,7 @@ stays for now, until they have been tried with others.
       Y, key rebinding). Reachable from the main menu and the pause menu (M8).
 - [ ] **Keep pushing the art toward Sea of Thieves**, and a bit more detailed than now:
       hand-painted colour variation, stronger toon banding, more props and detail.
-- [ ] **Customisable characters that look like Sea of Thieves crew**: stylised, exaggerated
+- [x] **Customisable characters that look like Sea of Thieves crew**: stylised, exaggerated
       proportions, with faces, hair, body shape, clothes and hats to choose from (builds on the
       M7 rank hats).
 - [x] **Visible torpedo trails**: a bubble wake you can see from the periscope from launch
@@ -120,7 +120,7 @@ stays for now, until they have been tried with others.
       and animal sounds, and have to tell them apart.
 - [x] **Music**: a soundtrack (menu, patrol, combat / being hunted), with its own volume in
       the settings menu.
-- [ ] **Third-person emotes**: the camera pulls out to third person while you play an emote
+- [x] **Third-person emotes**: the camera pulls out to third person while you play an emote
       (wave, salute, dance, ...) so you can see your own crewman.
 - [ ] **Rec room**: a compartment for whimsical fun and mini games, separate from the
       mission objectives. Matters most in the generative free-roam mode.

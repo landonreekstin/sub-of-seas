@@ -1,3 +1,4 @@
+class_name MainMenu
 extends Control
 ## Title screen: name, pick and host a patrol (or the training patrol), or join by IP.
 
@@ -102,37 +103,21 @@ func _ready() -> void:
 	Net.cli_start = Net.Mode.NONE
 
 
-## Rank, career and the look you take aboard (hats unlock with rank).
+## Rank, career, and the sailor you take aboard (the editor makes them).
 func _sailor_row(box: VBoxContainer) -> void:
 	var p := Net.profile
-	box.add_child(UiKit.label("%s — %d t sunk, %d patrols" % [Profile.RANKS[p.rank()][0], p.tons, p.patrols], 15, UiKit.BRASS))
 	var row := HBoxContainer.new()
 	box.add_child(row)
-	var hat := OptionButton.new()
-	var keys := Profile.HATS.keys()
-	for i in keys.size():
-		var h: String = keys[i]
-		var need: int = Profile.HATS[h][1]
-		hat.add_item(Profile.HATS[h][0] + ("" if p.unlocked(h) else "  (%s)" % Profile.RANKS[need][0]))
-		hat.set_item_disabled(i, not p.unlocked(h))
-	hat.select(keys.find(p.hat))
-	hat.item_selected.connect(func(i: int) -> void:
-		p.hat = keys[i]
-		p.save())
-	row.add_child(hat)
-	var shirt := OptionButton.new()
-	shirt.add_item("Shirt: by crew number")
-	for hue: float in Profile.SHIRTS:
-		var c := Color.from_hsv(hue, 0.45, 0.85)
-		shirt.add_icon_item(_swatch(c), "Shirt")
-	shirt.select(0 if p.shirt_hue < 0.0 else maxi(Profile.SHIRTS.find(p.shirt_hue), 0) + 1)
-	shirt.item_selected.connect(func(i: int) -> void:
-		p.shirt_hue = -1.0 if i == 0 else Profile.SHIRTS[i - 1]
-		p.save())
-	row.add_child(shirt)
+	var career := UiKit.label("%s — %d t sunk, %d patrols" % [Profile.RANKS[p.rank()][0], p.tons, p.patrols], 15, UiKit.BRASS)
+	career.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(career)
+	var edit := Button.new()
+	edit.text = "Your sailor..."
+	edit.pressed.connect(func() -> void: add_child(SailorEditor.new()))
+	row.add_child(edit)
 
 
-static func _swatch(c: Color) -> Texture2D:
+static func swatch(c: Color) -> Texture2D:
 	var img := Image.create(16, 16, false, Image.FORMAT_RGB8)
 	img.fill(c)
 	return ImageTexture.create_from_image(img)

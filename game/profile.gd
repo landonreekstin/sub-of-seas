@@ -22,6 +22,8 @@ var ships := 0
 var patrols := 0
 var hat := "dixie"
 var shirt_hue := -1.0
+## Indexes into Crewman's lists: build, skin, hair, hair colour, beard, extra.
+var face := {"build": 0, "skin": 0, "hair": 0, "hair_col": 0, "beard": 0, "extra": 0}
 
 
 static func load_or_new() -> Profile:
@@ -34,6 +36,8 @@ static func load_or_new() -> Profile:
 		p.patrols = cfg.get_value("career", "patrols", 0)
 		p.hat = cfg.get_value("look", "hat", "dixie")
 		p.shirt_hue = cfg.get_value("look", "shirt_hue", -1.0)
+		for k: String in p.face:
+			p.face[k] = int(cfg.get_value("look", k, 0))
 	if not p.unlocked(p.hat):
 		p.hat = "dixie"
 	return p
@@ -47,6 +51,8 @@ func save() -> void:
 	cfg.set_value("career", "patrols", patrols)
 	cfg.set_value("look", "hat", hat)
 	cfg.set_value("look", "shirt_hue", shirt_hue)
+	for k: String in face:
+		cfg.set_value("look", k, face[k])
 	cfg.save(PATH)
 
 
@@ -80,4 +86,6 @@ func credit(sunk_tons: int, sunk_ships: int, came_home: bool) -> String:
 
 ## What the host and other players need to draw this sailor.
 func looks() -> Dictionary:
-	return {"hat": hat, "hue": shirt_hue, "rank": rank()}
+	var l := {"hat": hat, "hue": shirt_hue, "rank": rank()}
+	l.merge(face)
+	return l
