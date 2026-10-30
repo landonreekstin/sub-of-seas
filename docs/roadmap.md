@@ -67,6 +67,26 @@ Each milestone ends playable and committed. Tick items as they land.
 - [x] Optional in-game proximity voice (push to talk: Caps Lock; checked end to end with a test tone, not yet with a real microphone)
 - [ ] Builds for friends (needs Godot export templates in nixos-config). Linux friends on the homelab are covered by the published pack and the launcher (M2.5); Windows `.exe` builds still need the templates
 
+## M8 — Blaney's list (2026-10-29)
+Added by Blaney after playing. In his words where it matters.
+- [ ] **Pause menu**: Esc brings up a menu (resume, settings, leave to main menu). The boat
+      keeps going while it is open when others are aboard; it only truly pauses in single player.
+- [ ] **Fix the helm wheel**: it turns on the wrong axis. It should spin around its own
+      axle, like a car's steering wheel, when the rudder moves.
+- [ ] **Tutorial: tell you to leave a station**: when the next step is somewhere else,
+      prompt "press Q to leave the station" before sending you on.
+- [ ] **A more nimble boat**: "more nimble than physically possible to a slight extent so
+      that people don't get bored, but not so that we're in a rocket ship". Faster turns, dives
+      and speed changes than the real thing, still heavy and submarine-like.
+- [ ] **Portholes**: some windows to look out of from inside the boat.
+- [ ] **Frutiger Aero coral reef**: shallow, bright, clear water with coral, fish and sea
+      floor terrain to look at through the portholes and periscope, "almost like you'd see
+      on a nostalgic soap pump bottle at school".
+- [ ] **Tutorials per crew position**: the one 29-step training patrol is too long. Split it
+      so you pick the position you want to play (helm, dive, periscope/TDC, sonar, torpedoes,
+      engine/air, damage control...) and do a short tutorial just for that. Each one includes
+      the information you would normally hear from the other players aboard (e.g. "Captain:
+      come to 090", "Sonar: contact bearing 270") so it works alone.
 ## M9 — Lando's list (2026-10-30)
 Added by lando. Direction: **more arcadey, not strict realism**. Every existing mechanic
 stays for now, until they have been tried with others.

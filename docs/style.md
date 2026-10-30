@@ -61,6 +61,10 @@ and update "Current style" in the same commit.
 - **Aircraft:** low-wing carrier planes, green-grey with red roundels.
 - **Hats by rank:** white Dixie cup (Seaman), navy watch cap, ball cap, officer's peaked
   cap with a brass badge, and a salt-stained grey skipper's cap for a Commander.
+- **Planned (Blaney's list, M8):** the boat handles a bit more nimbly than a real one, but
+  never like a rocket ship; portholes to look out of; bright, shallow Frutiger Aero coral
+  reefs (glossy, cheerful, aqua and green, like a nostalgic school soap-pump bottle) with fish
+  and sea-floor terrain.
 - **Planned (lando's list, M9):** an arcade feel over strict realism (all current mechanics
   stay until tried with others); art pushed on toward Sea of Thieves and a bit more detailed;
   customisable Sea of Thieves-style crew; torpedoes leave a visible bubble trail; portholes
@@ -75,6 +79,10 @@ and update "Current style" in the same commit.
 | Date | Who | Direction |
 |---|---|---|
 | 2026-10-28 | lando | Simple art style like Peak to start; add textures later to move toward Sea of Thieves. |
+| 2026-10-29 | Blaney | The sub should be more nimble than physically possible, to a slight extent, so people don't get bored, but not so that we're just in a rocket ship. |
+| 2026-10-29 | Blaney | Add some portholes. |
+| 2026-10-29 | Blaney | Add a Frutiger Aero themed coral reef (almost like you'd see on a nostalgic soap pump bottle at school) so we can view fish and the terrain in shallow, bright waters. |
+| 2026-10-29 | Blaney | The helm wheel is not rotating on the correct axis. |
 | 2026-10-30 | lando | Make the game more arcadey; it doesn't need to be strict realism. Keep all the existing mechanics for now until they have been tried with others. |
 | 2026-10-30 | lando | Keep improving the graphics and art until it looks like Sea of Thieves, and a bit more detailed. |
 | 2026-10-30 | lando | Characters should be customisable and look like Sea of Thieves characters. |
