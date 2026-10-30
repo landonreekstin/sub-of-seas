@@ -25,7 +25,7 @@ func _process(_delta: float) -> void:
 	if Sim.world == null:
 		return
 	var sub := Sim.world.sub
-	_wheel.rotation.x = deg_to_rad(sub.rudder_angle() * 4.0)
+	_wheel.rotation.z = deg_to_rad(sub.rudder_angle() * 4.0)
 	_telegraph_handle.rotation.x = deg_to_rad(-sub.telegraph * 20.0)
 	if overlay != null:
 		_lines[0].text = "TELEGRAPH  %-15s [W/S]" % SubState.TELEGRAPH_NAMES[sub.telegraph]
