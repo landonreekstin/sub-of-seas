@@ -1140,6 +1140,9 @@ func _on_sim_event(kind: String, data: Dictionary) -> void:
 	if not multiplayer.is_server():
 		return
 	match kind:
+		"track_spotted":
+			# Sonar hears it: screws speeding up and turning toward us.
+			announce.rpc("Sonar: the %s's speeding up, turning down our torpedo track!" % data.name)
 		"ping":
 			var now := Sim.world.time
 			if data.echo and now - _last_ping_notice > PING_NOTICE_GAP:

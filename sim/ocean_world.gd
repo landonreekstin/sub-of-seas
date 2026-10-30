@@ -9,6 +9,9 @@ extends RefCounted
 signal event(kind: String, data: Dictionary)
 
 const SHIP_DIR := "res://data/ships/%s.tres"
+const TRACK_SIGHT := 1500.0 ## by day in a moderate sea, how far a lookout sees a torpedo track
+const TRACK_SPOT_RATE := 0.6 ## per second, close by
+const TRACK_MIN_RUN := 150.0 ## a fresh track is too short to follow back
 const BATTERY_WARNINGS := [0.2, 0.1] ## announce when the charge falls past these
 const BREAKDOWN_TEXT := {
 	"engine": "The diesels are knocking: the engine controls are down. Wrench, engine room!",
@@ -163,6 +166,7 @@ func step(dt: float, authoritative := true) -> void:
 			event.emit("beached", {"x": t.pos.x, "y": t.pos.y})
 	torpedoes = torpedoes.filter(func(t: Torpedo) -> bool: return t.alive)
 	if authoritative:
+		_spot_tracks(dt)
 		ships = ships.filter(func(s: ShipState) -> bool: return s.sink < 1.0)
 		_step_charges(dt)
 		hull.step(dt, rng)
@@ -221,6 +225,26 @@ func _think(ship: ShipState, dt: float) -> void:
 		ship.alert()
 		raise_alarm(sub.pos, ship.pos.distance_to(sub.pos) * 0.15)
 		event.emit("spotted", {"ship": ship.id, "name": ship.data.display_name})
+
+
+## Warship lookouts who see a torpedo's bubble track know where it came from (design: "the
+## wake can give the sub away") and come down it. Merchants don't react to a track: dodging
+## the very torpedo they saw would be too harsh for the arcade game.
+func _spot_tracks(dt: float) -> void:
+	for t in torpedoes:
+		if t.spotted or t.run < TRACK_MIN_RUN:
+			continue
+		for ship in ships:
+			if ship.ai == null or ship.is_sinking() or ship.passive:
+				continue
+			var d := ship.pos.distance_to(t.pos)
+			var sight := TRACK_SIGHT * conditions.visual_factor()
+			if d > sight or rng.randf() > TRACK_SPOT_RATE * (1.0 - d / sight) * Detection.sharpness * dt:
+				continue
+			t.spotted = true
+			ship.ai.report(t.origin(), 250.0, rng, 0.85)
+			event.emit("track_spotted", {"ship": ship.id, "name": ship.data.display_name})
+			break
 
 
 func _step_charges(dt: float) -> void:

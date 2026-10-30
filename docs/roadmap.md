@@ -147,8 +147,9 @@ lando: "we can finish the current arcadey ww2 mode first". The nuclear-era boats
 then. What `docs/design.md` promises that wasn't built yet:
 - [x] **Two on the hoist**: a crewmate standing by a tube makes its reload 1.7× quicker.
 - [x] **Crouch** (hold Ctrl): lower, half speed, near-silent feet; crewmates see it.
-- [ ] **Torpedo tracks give the boat away**: an escort or lookout that sees a bubble track
-      comes down it toward where it was fired from.
+- [x] **Torpedo tracks give the boat away**: a warship whose lookouts see a bubble track
+      (1.5 km by day, less at night or in rough seas) comes down it toward where it was fired
+      from, and sonar calls it. Merchants don't dodge a track (too harsh for arcade).
 - [ ] **The fixed bilge pump** in the control room: drains far faster than the portable pump,
       needs battery, can break.
 

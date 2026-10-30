@@ -268,7 +268,9 @@ sings out about shoal water ahead. The host runs them through the same order pat
 3. TDC sends the **gyro angle** to the torpedo room, where the tube panel shows "SOLUTION
    READY". Captain calls "Fire one!", torpedoman fires.
 4. Mk 14 torpedoes: 46 kn, ~4 km range, small chance to run deep or dud (historically
-   accurate, deliberately frustrating at low odds — tunable to 0). The wake can give the sub away.
+   accurate, deliberately frustrating at low odds — tunable to 0). The wake can give the sub away:
+   a warship that sees a track (1.5 km by day) comes down it toward the firing point
+   (`OceanWorld._spot_tracks`); merchants don't dodge one.
 
 Without a solution players can still fire straight down the bow on a gut call.
 

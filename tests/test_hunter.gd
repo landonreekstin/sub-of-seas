@@ -221,3 +221,24 @@ func test_hard_driven_gear_wears_out() -> bool:
 	_run(w, 1800.0, 0.5)
 	runner.check(said.has("engine") and said.has("helm"), "half an hour flat out broke something: %s" % [said])
 	return true
+
+
+## A torpedo track seen by a destroyer's lookouts sends her down it, toward where it was
+## fired from; without the torpedo she never knows the boat is there.
+func test_torpedo_track_gives_the_boat_away() -> bool:
+	for fire in [false, true]:
+		var w := _world(5)
+		w.sub.depth = 60.0
+		w.sub.ordered_depth = 60.0
+		w.sub.telegraph = 0
+		w.sub.speed = 0.0
+		var dd := w.add_ship(DESTROYER, Vector2(300, 2600), 270.0, 6.0)
+		if fire:
+			w.fire_torpedo(0.0)
+		_run(w, 60.0)
+		if fire:
+			runner.check(dd.ai.mode >= ShipAI.Mode.SEARCH, "the destroyer saw the track and came looking (mode %d)" % dd.ai.mode)
+			runner.check(dd.ai.contact_pos.distance_to(w.sub.pos) < 800.0, "toward where it was fired from (%.0f m off)" % dd.ai.contact_pos.distance_to(w.sub.pos))
+		else:
+			runner.check(dd.ai.mode == ShipAI.Mode.PATROL, "with no torpedo she never knew (mode %d)" % dd.ai.mode)
+	return true
