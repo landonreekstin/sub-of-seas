@@ -242,3 +242,22 @@ func test_torpedo_track_gives_the_boat_away() -> bool:
 		else:
 			runner.check(dd.ai.mode == ShipAI.Mode.PATROL, "with no torpedo she never knew (mode %d)" % dd.ai.mode)
 	return true
+
+
+## The fixed bilge pump drains the wettest compartment fast, off the battery, and is loud.
+func test_bilge_pump() -> bool:
+	var w := _world()
+	w.hull.comps[0].water = 0.3
+	w.hull.comps[2].water = 0.1
+	var quiet := Detection.sub_noise(w.sub)
+	var battery := w.sub.battery
+	w.hull.bilge_on = true
+	_run(w, 5.0)
+	runner.check(w.hull.bilge_from == 0, "it draws from the wettest compartment")
+	runner.check(w.hull.comps[0].water < 0.3 - 0.06, "and drains it fast (%.2f)" % w.hull.comps[0].water)
+	runner.check(Detection.sub_noise(w.sub) > quiet + 0.2, "it's loud")
+	runner.check(w.sub.battery < battery, "it runs off the battery")
+	w.sub.battery = 0.0
+	_run(w, 1.0)
+	runner.check(not w.hull.bilge_on and w.hull.bilge_from < 0, "no power, no pump")
+	return true

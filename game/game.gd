@@ -678,6 +678,9 @@ func apply_order(station_id: String, key: String, value: Variant, by: int) -> vo
 				sub.ballast_order(key)
 				if key == "emergency" and sub.blowing == 2:
 					announce.rpc("EMERGENCY BLOW! All main ballast tanks blowing.")
+		"bilge":
+			if key == "pump":
+				Sim.world.hull.bilge_on = bool(value) and sub.battery > 0.0
 		"air":
 			var air := Sim.world.air
 			if key == "canister":

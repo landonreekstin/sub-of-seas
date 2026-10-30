@@ -57,6 +57,8 @@ func _keys() -> String:
 			return "[P] report the loudest contact"
 		"ballast":
 			return "[V] flood the tanks    [L] blow them"
+		"bilge":
+			return "[P] start / stop the pump"
 	return ""
 
 
@@ -97,6 +99,10 @@ func _input(event: InputEvent) -> void:
 		_send("vent")
 	elif station_id == "ballast" and k == KEY_L:
 		_send("blow")
+	elif station_id == "bilge" and k == KEY_P:
+		if _bot().auto:
+			_send("auto")
+		_send("pump", not Sim.world.hull.bilge_on)
 
 
 func _send(key: String, value: Variant = null) -> void:

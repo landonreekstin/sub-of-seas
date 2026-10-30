@@ -132,6 +132,7 @@ Chart table (control room, starboard aft): W/S or wheel zoom, LMB pencil mark, R
 O outer door, A/D gyro, Space fire. A crewmate standing by the tube (off station) makes a reload 1.7× quicker. Sonar: A/D or mouse train, P active ping.
 Engine (after end of the engine room): 1/2 start/stop a diesel (surfaced only; stop them before diving).
 Ballast (control room, port aft): V vents (flood to dive), B blow (to surface), X twice emergency blow.
+Bilge pump (control room, forward bulkhead, port of the door): P start/stop. Drains the wettest compartment 4× a portable pump, off the battery; escorts can hear it.
 Air (engine room, starboard fwd): C fresh CO2 canister, O oxygen bleed.
 Rec room (Gato, Narwhal: aft of the mess): darts station (mouse aim, LMB/Space throw), E at the jukebox for the next record.
 Voice: hold Caps Lock to talk (proximity: you hear crewmates near you).

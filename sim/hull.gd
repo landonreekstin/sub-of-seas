@@ -7,6 +7,7 @@ extends RefCounted
 const DECK_HEIGHT := 2.6
 const FLOW := 0.6 ## volume per second per unit of level difference through an open door
 const PUMP_RATE := 0.05 ## volume per second per portable pump
+const BILGE_RATE := 0.2 ## the fixed bilge pump (control room): from the wettest compartment
 const FIRE_GROWTH := 0.012 ## size per second
 const FIRE_MAX_PER_ROOM := 3
 const LEAK_SIZES := [0.03, 0.06, 0.12] ## volume per second; a 14 m room holds 14
@@ -24,6 +25,8 @@ var fires: Array[Dictionary] = [] ## {id, c, p: Vector3, size}
 var pumps: Array[Dictionary] = [] ## {c, p: Vector3}
 var broken := {} ## station_id -> seconds of wrench work left
 var needs_parts := {} ## station_id -> seconds of fitting spare parts left (wrecked, not just broken)
+var bilge_on := false ## the fixed bilge pump switched on (the host turns it off without power or when broken)
+var bilge_from := -1 ## the compartment it is drawing from this moment, -1 none
 var harshness := 1.0 ## the realism level: leaks run and fires grow this much faster (Realism)
 var _next_id := 1
 
@@ -65,6 +68,13 @@ func step(dt: float, rng: RandomNumberGenerator) -> void:
 		_add_water(l.c, l.rate * dt)
 	for p in pumps:
 		_add_water(p.c, -PUMP_RATE * dt)
+	bilge_from = -1
+	if bilge_on and not is_broken("bilge"):
+		for i in comps.size():
+			if comps[i].water > 0.005 and (bilge_from < 0 or comps[i].water > comps[bilge_from].water):
+				bilge_from = i
+		if bilge_from >= 0:
+			_add_water(bilge_from, -BILGE_RATE * dt)
 	for d: String in links:
 		if not doors_open.get(d, false):
 			continue
@@ -222,7 +232,7 @@ func is_broken(station_id: String) -> bool:
 func to_snapshot() -> Dictionary:
 	return {
 		"w": comps.map(func(c: Dictionary) -> float: return c.water),
-		"l": leaks, "f": fires, "pu": pumps, "b": broken, "np": needs_parts,
+		"l": leaks, "f": fires, "pu": pumps, "b": broken, "np": needs_parts, "bp": bilge_on, "bf": bilge_from,
 	}
 
 
@@ -234,6 +244,8 @@ func apply_snapshot(s: Dictionary) -> void:
 	pumps.assign(s.pu)
 	broken = s.b
 	needs_parts = s.np
+	bilge_on = s.get("bp", false)
+	bilge_from = s.get("bf", -1)
 
 
 func _take_id() -> int:

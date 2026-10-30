@@ -49,6 +49,7 @@ var ballast := 0.0 ## main ballast tanks: 0 blown dry (rides high) .. 1 flooded 
 var vents_open := false ## main ballast vents: open floods the tanks
 var blowing := 0 ## 0 no, 1 normal blow, 2 emergency blow
 var hp_air := 1.0 ## high-pressure air banks 0..1
+var bilge_running := false ## the bilge pump is pumping: escorts can hear it (Detection)
 var handling := 1.0 ## 1 = the arcade boat, 0 = the real one (for the realism modes to come)
 
 

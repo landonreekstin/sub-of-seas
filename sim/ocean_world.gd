@@ -12,6 +12,7 @@ const SHIP_DIR := "res://data/ships/%s.tres"
 const TRACK_SIGHT := 1500.0 ## by day in a moderate sea, how far a lookout sees a torpedo track
 const TRACK_SPOT_RATE := 0.6 ## per second, close by
 const TRACK_MIN_RUN := 150.0 ## a fresh track is too short to follow back
+const BILGE_DRAIN := 1.0 / 3600.0 ## battery per second the bilge pump takes (an hour flat out empties it)
 const BATTERY_WARNINGS := [0.2, 0.1] ## announce when the charge falls past these
 const BREAKDOWN_TEXT := {
 	"engine": "The diesels are knocking: the engine controls are down. Wrench, engine room!",
@@ -169,7 +170,14 @@ func step(dt: float, authoritative := true) -> void:
 		_spot_tracks(dt)
 		ships = ships.filter(func(s: ShipState) -> bool: return s.sink < 1.0)
 		_step_charges(dt)
+		# The bilge pump runs off the battery, and it's loud.
+		if hull.bilge_on and (sub.battery <= 0.0 or hull.is_broken("bilge")):
+			hull.bilge_on = false
+			event.emit("power", {"text": "The bilge pump has stopped." if sub.battery > 0.0 else "No power: the bilge pump has stopped."})
 		hull.step(dt, rng)
+		sub.bilge_running = hull.bilge_from >= 0
+		if sub.bilge_running:
+			sub.battery = maxf(0.0, sub.battery - BILGE_DRAIN * dt)
 		if air.smoke.size() != hull.comps.size():
 			air.smoke.resize(hull.comps.size())
 		air.step(dt, sub.is_surfaced(), crew_count, hull)

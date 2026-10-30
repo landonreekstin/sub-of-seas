@@ -5,6 +5,7 @@ class_name Detection
 
 const VISUAL_RATE := 0.012
 const HEARING_RATE := 0.04
+const BILGE_NOISE := 0.35 ## the bilge pump is loud: as loud as running at half speed
 const SURFACED_EXPOSURE := 6.0
 
 ## The patrol's conditions; OceanWorld sets this before stepping its ships.
@@ -20,6 +21,8 @@ static func sub_noise(sub: SubState) -> float:
 		noise = 0.6 + 0.7 * minf(frac, 1.0) + 0.15 * sub.diesels_running()
 	elif sub.depth < 20.0 and frac > 0.5:
 		noise *= 1.3 # shallow screws cavitate
+	if sub.bilge_running and not sub.is_surfaced():
+		noise += BILGE_NOISE
 	return noise
 
 

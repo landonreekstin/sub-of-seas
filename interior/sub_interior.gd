@@ -330,6 +330,8 @@ func _control_room(c: Dictionary, hatch: Rect2) -> void:
 	# Planes and ballast to port, helm to starboard; sonar and chart further aft.
 	var cl := "conn" if not has_conning_tower else "helm_dive"
 	_add_station(DiveStation.new().setup("dive", "Dive planes", "helm_dive"), Vector3(-1.85, 0, z0 + 2.0))
+	# The fixed bilge pump, low on the forward bulkhead, port of the door, facing aft.
+	_add_station(BilgeStation.new().setup("bilge", "Bilge pump"), Vector3(-1.05, 0, z0 + 0.3), PI / 2.0)
 	_add_station(HelmStation.new().setup("helm", "Helm", cl), Vector3(1.8, 0, z0 + 2.0))
 	_gauge_board(Vector3(-1.25, 1.7, z0 + 0.12), ["depth", "ordered"])
 	_gauge_board(Vector3(1.25, 1.7, z0 + 0.12), ["speed", "heading", "battery"])

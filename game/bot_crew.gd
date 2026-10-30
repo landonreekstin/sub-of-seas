@@ -21,7 +21,7 @@ static func job(station_id: String) -> String:
 	if station_id.begins_with("tube_"):
 		return "torpedoman"
 	return {"helm": "helmsman", "dive": "planesman", "ballast": "ballast man", "periscope": "lookout",
-		"tdc": "TDC operator", "sonar": "sonarman", "engine": "motor machinist", "air": "auxiliaryman",
+		"tdc": "TDC operator", "sonar": "sonarman", "engine": "motor machinist", "air": "auxiliaryman", "bilge": "pump man",
 		"nav": "navigator", "darts": "darts player"}.get(station_id, "crewman")
 
 
@@ -72,6 +72,8 @@ func request(station_id: String, key: String, value: Variant) -> void:
 					b.depth = clampf(float(value), 0.0, sub.data.test_depth)
 				"fire", "mark", "report", "vent", "blow":
 					b[key] = true
+				"pump":
+					b.pump = bool(value)
 	game.push_crew()
 
 
@@ -253,6 +255,16 @@ func _air(b: Dictionary, _hunted: bool) -> void:
 		_order("air", b, "bleed", true)
 	elif air.o2 > 20.0 and air.bleed:
 		_order("air", b, "bleed", false)
+
+
+## Runs the bilge pump while there's water aboard, but stops it while the boat is hunted.
+## On orders, he runs it or stops it as told.
+func _bilge(b: Dictionary, hunted: bool) -> void:
+	var hull := Sim.world.hull
+	var wet := hull.comps.any(func(c: Dictionary) -> bool: return c.water > 0.02)
+	var want: bool = (wet and not hunted) if b.auto else bool(b.get("pump", hull.bilge_on))
+	if want != hull.bilge_on:
+		_order("bilge", b, "pump", want)
 
 
 ## Watches the chart ahead and sings out about shoal water.
