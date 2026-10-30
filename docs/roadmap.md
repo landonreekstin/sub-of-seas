@@ -150,6 +150,7 @@ then. What `docs/design.md` promises that wasn't built yet:
 - [x] **Torpedo tracks give the boat away**: a warship whose lookouts see a bubble track
       (1.5 km by day, less at night or in rough seas) comes down it toward where it was fired
       from, and sonar calls it. Merchants don't dodge a track (too harsh for arcade).
-- [ ] **The fixed bilge pump** in the control room: drains far faster than the portable pump,
-      needs battery, can break.
+- [x] **The fixed bilge pump** in the control room: drains the wettest compartment 4× a
+      portable pump, off the battery, loud enough for escorts to hear; it can break, and a bot
+      pump man runs it while there's water aboard and stops it while hunted.
 

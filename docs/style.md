@@ -110,6 +110,9 @@ and update "Current style" in the same commit.
   standing their station with hands on the gear and a name tag with their job ("Sparks
   (planesman)", "— on orders" when following yours). They speak through the same announcements
   as everything else: "Stubby (sonar): contact bearing 270, warship, turns for 20 knots."
+- **Bilge pump:** a grey-green panel low on the control room's forward bulkhead with a blue
+  ribbed motor, a suction pipe into the bilge, a red switch and a green lamp; it shakes and
+  whirrs while it pumps.
 - **Crouch:** hold Ctrl: your eye drops to 1.05 m, you move at half speed and your boots are
   near silent; crewmates see you squat down.
 - **Emotes:** 1 wave, 2 salute, 3 jig, 4 point, 5 cheer. The camera swings out in front, a

@@ -108,7 +108,9 @@ and its **systems** (each with health 0–100).
   damage, lights out, people knocked over.
 - **Leaks**: fix with the **welding torch** (hold on the breach; bigger leaks take longer).
 - **Water**: **portable pump** (carry it, place it, it drains that compartment slowly) and the
-  fixed **bilge pump** in the pump room (fast, needs power, can break).
+  fixed **bilge pump** (fast, needs power, can break). Built on the control room's forward
+  bulkhead rather than a pump room below: it draws from the wettest compartment, and it is
+  loud, so it is a choice while escorts are listening.
 - **Fire**: **extinguisher** (limited charges, refill at rack), or close the doors and let it
   burn out the compartment's oxygen (anyone inside passes out).
 - **Broken systems**: **wrench** + a **spare-parts box** carried from stores.
