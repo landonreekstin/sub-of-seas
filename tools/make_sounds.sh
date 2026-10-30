@@ -38,9 +38,9 @@ sox -n $R $T/k1.wav synth 0.55 square 220-330 lowpass 1500 fade q 0.02 0.55 0.08
 sox $T/k1.wav $T/k1.wav $R $A/klaxon.wav pad 0 0.15 gain -n -3
 # General alarm bell.
 sox -n $R $A/alarm.wav synth 0.08 sine 900 sine 1350 fade q 0.001 0.08 0.07 repeat 9 gain -n -6
-# Loops (whole cycles): diesel chug, electric motor whine, water spraying, fire, torch hiss.
+# Loops (whole cycles): diesel chug, electric motor whirr (soft, airy, no hum), water spraying, fire, torch hiss.
 sox -n $R $A/diesel_loop.wav synth 2.0 brownnoise lowpass 220 tremolo 12 70 gain -n -6
-sox -n $R $A/motor_loop.wav synth 2.0 sine 120 sine 240 sine 360 gain -n -12
+sox -n $R $A/motor_loop.wav synth 2.0 pinknoise gain -6 highpass 300 lowpass 1500 tremolo 25 12 gain -n -14
 sox -n $R $A/water_loop.wav synth 2.0 whitenoise gain -6 highpass 900 lowpass 6000 tremolo 7 20 gain -n -10
 sox -n $R $A/fire_loop.wav synth 2.0 brownnoise lowpass 900 tremolo 17 80 gain -n -8
 sox -n $R $A/torch_loop.wav synth 2.0 whitenoise gain -6 highpass 2500 gain -n -14
