@@ -82,6 +82,11 @@ and update "Current style" in the same commit.
 - **Handling** (Blaney): livelier than the real boat but still heavy and submarine-like, not a
   rocket ship. Speed changes are twice as quick, turns 1.6× and dives 1.5× (a Gato: 0 to 9 kn
   in about 15 s, a full circle in about 75 s, periscope depth to 45 m in about 28 s).
+  That is **Arcade**, the default. The host can pick **Standard** or **Realistic** under the
+  boat on the menu (lando: modes on an arcade ↔ realism scale): Standard is half way to the
+  real boat, Realistic is the real boat's figures, with more dud torpedoes (one in four, the
+  1942 Mark 14), leaks and fires that get away faster, air that fouls faster and sharper
+  escorts. The level shows after the patrol name, top right, and on the debrief.
 - **Menus:** the same dark panel with a brass border and cream type as the station screens.
   Esc pauses (Blaney): resume, settings, leave to the main menu; the boat carries on while
   others are aboard and only truly pauses for a host alone. Q leaves a station. Settings

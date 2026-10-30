@@ -220,7 +220,7 @@ func show_debrief(crew: Dictionary, career := "") -> void:
 	var m := MissionData.load_key(crew.mission)
 	box.add_child(UiKit.label(titles.get(crew.result, "PATROL OVER"), 34, UiKit.BAD if lost else (UiKit.WARN if crew.result == "escaped" else UiKit.GOOD)))
 	if m != null:
-		box.add_child(UiKit.label(m.title, 18, UiKit.BRASS))
+		box.add_child(UiKit.label("%s  ·  %s" % [m.title, Realism.level(crew.get("realism", "arcade")).title], 18, UiKit.BRASS))
 	box.add_child(UiKit.label(crew.result_text, 20))
 	box.add_child(UiKit.label(" ", 8))
 	var done := 0

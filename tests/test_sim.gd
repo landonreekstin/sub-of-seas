@@ -395,3 +395,28 @@ func test_tdc_more_marks_beat_stadimeter_error() -> bool:
 		worst = maxf(worst, absf(est.speed_kn - 10.0))
 	runner.check(worst < 3.0, "four marks over 90 s: speed within 3 kn (worst %.1f)" % worst)
 	return true
+
+
+## Arcade ↔ realism: realistic is the real boat, more duds, faster flooding and fouler air;
+## arcade leaves everything as it was.
+func test_realism_levels_set_the_knobs() -> bool:
+	var a := _world()
+	Realism.apply(a, "arcade")
+	runner.check(a.sub.handling == 1.0 and a.dud_chance == 0.05 and a.hull.harshness == 1.0, "arcade is the game as it was")
+	var r := _world()
+	Realism.apply(r, "realistic")
+	runner.check(r.sub.handling == 0.0 and r.dud_chance > 0.2, "realistic: the real boat and the Mark 14")
+	a.sub.telegraph = 4
+	r.sub.telegraph = 4
+	a.sub.diesels.assign([1.0, 1.0])
+	r.sub.diesels.assign([1.0, 1.0])
+	_run(a, 20.0)
+	_run(r, 20.0)
+	runner.check(a.sub.speed > r.sub.speed * 1.5, "arcade picks up speed faster (%.1f vs %.1f m/s)" % [a.sub.speed, r.sub.speed])
+	for w in [a, r]:
+		w.hull.setup([{"name": "a", "z0": -10.0, "z1": 0.0}], {}, {})
+	runner.check(r.hull.add_leak(0, 1, r.rng).rate > a.hull.add_leak(0, 1, a.rng).rate, "realistic leaks run faster")
+	var unknown := _world()
+	Realism.apply(unknown, "nonsense")
+	runner.check(unknown.realism == "arcade", "an unknown level falls back to arcade")
+	return true

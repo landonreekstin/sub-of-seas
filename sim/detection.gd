@@ -9,6 +9,7 @@ const SURFACED_EXPOSURE := 6.0
 
 ## The patrol's conditions; OceanWorld sets this before stepping its ships.
 static var conditions := Conditions.new()
+static var sharpness := 1.0 ## the realism level: lookouts and hydrophones pick the boat up this much faster
 
 
 ## Sound the sub makes, 0.1 (creeping) .. ~1.6 (flank on the surface, both diesels).
@@ -49,7 +50,7 @@ static func awareness_gain(ship: ShipState, sub: SubState) -> float:
 	if ship.data.hydrophone_range > 0.0 and d < ship.data.hydrophone_range:
 		var f := 1.0 - d / ship.data.hydrophone_range
 		gain += HEARING_RATE * sub_noise(sub) * f * f * hearing_factor(ship) * conditions.hearing_factor(sub.depth)
-	return gain
+	return gain * sharpness
 
 
 ## Chance that one active-sonar ping returns an echo from the sub.

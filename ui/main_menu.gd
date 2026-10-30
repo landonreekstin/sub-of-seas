@@ -8,6 +8,8 @@ var _name_edit: LineEdit
 var _ip_edit: LineEdit
 var _mission: OptionButton
 var _sub: OptionButton
+var _realism: OptionButton
+var _realism_blurb: Label
 const SUBS: Array[String] = ["s_boat", "gato", "narwhal"]
 var _briefing: Label
 
@@ -60,6 +62,19 @@ func _ready() -> void:
 		_sub.add_item("%s   (crew %d–%d)" % [d.display_name, d.crew_min, d.crew_max])
 	_sub.select(maxi(SUBS.find(Net.sub_key), 0))
 	box.add_child(_sub)
+	# Arcade ↔ realism (lando, M9).
+	_realism = OptionButton.new()
+	for k in Realism.KEYS:
+		_realism.add_item(Realism.level(k).title)
+	_realism.select(maxi(Realism.KEYS.find(Net.realism), 0))
+	box.add_child(_realism)
+	_realism_blurb = UiKit.label("", 14, UiKit.DIM)
+	_realism_blurb.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_realism_blurb.custom_minimum_size = Vector2(420, 0)
+	box.add_child(_realism_blurb)
+	var show_realism := func(i: int) -> void: _realism_blurb.text = Realism.level(Realism.KEYS[i]).blurb
+	_realism.item_selected.connect(show_realism)
+	show_realism.call(_realism.selected)
 	var buttons := HBoxContainer.new()
 	box.add_child(buttons)
 	var host := Button.new()
@@ -131,6 +146,7 @@ func _show_briefing() -> void:
 func _host() -> void:
 	Net.mission = MissionData.KEYS[_mission.selected] # starts on --mission's, if given
 	Net.sub_key = SUBS[_sub.selected]
+	Net.realism = Realism.KEYS[_realism.selected]
 	_start(Net.Mode.HOST)
 
 

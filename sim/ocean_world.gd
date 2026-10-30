@@ -32,6 +32,8 @@ var _ground_cooldown := 0.0
 var crew_count := 1 ## players aboard, set by the host; they breathe
 var lost := "" ## why the boat was lost, once it is
 var dud_chance := 0.05
+var realism := "arcade" ## a Realism key, set by Realism.apply
+var escort_sharpness := 1.0 ## the realism level: escorts pick the boat up this much faster
 var rng := RandomNumberGenerator.new()
 var _next_id := 1
 var _battery_was := 1.0
@@ -142,6 +144,7 @@ func fire_torpedo(gyro: float, stern := false) -> Torpedo:
 func step(dt: float, authoritative := true) -> void:
 	time += dt
 	Detection.conditions = conditions
+	Detection.sharpness = escort_sharpness
 	var before := sub.pos
 	sub.step(dt)
 	_check_ground(before, dt, authoritative)

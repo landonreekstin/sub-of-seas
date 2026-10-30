@@ -161,6 +161,7 @@ func _initial_crew() -> Dictionary:
 		"result_text": "",
 		"time": 0.0,
 		"mission": "convoy", ## a MissionData key, or "training"; set by the host
+		"realism": "arcade", ## a Realism key; set by the host
 		"objectives": [], ## from the mission: each with "done", shown top right
 		"sunk_by": {}, ## ship class key -> ships sunk
 		"tutorial": {"step": 0, "course": Net.course}, ## course: a Tutorial.COURSES key
@@ -202,6 +203,8 @@ func _setup_mission() -> void:
 	Sim.world.conditions.night = m.night
 	Sim.world.conditions.sea_state = m.sea_state
 	Sim.world.conditions.layer_depth = m.layer_depth
+	Realism.apply(Sim.world, Net.realism)
+	crew.realism = Sim.world.realism
 	for g: Dictionary in m.groups:
 		Formations.spawn(Sim.world, g)
 	if m.sandbox:
@@ -339,7 +342,7 @@ func _show_objectives() -> void:
 			"survive":
 				progress = "  (%d:%02d)" % [int(Sim.world.time) / 60, int(Sim.world.time) % 60] if Sim.world != null else ""
 		lines.append("%s  %s%s" % ["✓" if o.get("done", false) else "○", o.text, progress])
-	hud.set_objective(m.title.to_upper(), ("\n".join(lines) + "\n\n" if not lines.is_empty() else "") + crew_roles())
+	hud.set_objective(m.title.to_upper() + ("" if crew.get("realism", "arcade") == "arcade" else "  ·  " + Realism.level(crew.realism).title.to_upper()), ("\n".join(lines) + "\n\n" if not lines.is_empty() else "") + crew_roles())
 
 
 ## Suggested jobs for whoever is aboard, in joining order (the host first).

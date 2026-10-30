@@ -24,6 +24,7 @@ var build := "dev"
 var dedicated := false
 var sub_key := "gato" ## the boat the host takes out (--sub s_boat | gato | narwhal)
 var mission := "convoy" ## a MissionData key or "training"; chosen by the host (--mission, --training)
+var realism := "arcade" ## how arcadey or realistic the host's patrol plays (--realism arcade | standard | realistic): a Realism key
 var course := "full" ## which training course (--training <course>): a Tutorial.COURSES key
 var debug_charges := false ## --test-charges: the host drops a pattern on the boat (testing)
 var start_bots: PackedStringArray = [] ## --bots helm,dive,...: the host posts bot crewmen there at the start
@@ -61,6 +62,9 @@ func _ready() -> void:
 			"--address":
 				if i + 1 < args.size():
 					address = args[i + 1]
+			"--realism":
+				if i + 1 < args.size():
+					realism = args[i + 1]
 			"--sub":
 				if i + 1 < args.size():
 					sub_key = args[i + 1]

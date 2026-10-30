@@ -24,6 +24,7 @@ var fires: Array[Dictionary] = [] ## {id, c, p: Vector3, size}
 var pumps: Array[Dictionary] = [] ## {c, p: Vector3}
 var broken := {} ## station_id -> seconds of wrench work left
 var needs_parts := {} ## station_id -> seconds of fitting spare parts left (wrecked, not just broken)
+var harshness := 1.0 ## the realism level: leaks run and fires grow this much faster (Realism)
 var _next_id := 1
 
 
@@ -83,7 +84,7 @@ func _add_water(c: int, volume: float) -> void:
 func _step_fires(dt: float, rng: RandomNumberGenerator) -> void:
 	var spread: Array[int] = []
 	for f in fires:
-		f.size = minf(1.0, f.size + FIRE_GROWTH * dt)
+		f.size = minf(1.0, f.size + FIRE_GROWTH * harshness * dt)
 		if comps[f.c].water * DECK_HEIGHT > 0.45:
 			f.size = 0.0 # drowned
 		if f.size > 0.7 and rng.randf() < 0.01 * dt:
@@ -109,7 +110,7 @@ func fires_in(c: int) -> int:
 func add_leak(c: int, size: int, rng: RandomNumberGenerator, side := 0.0) -> Dictionary:
 	if side == 0.0:
 		side = -1.0 if rng.randf() < 0.5 else 1.0
-	var rate: float = LEAK_SIZES[clampi(size, 0, LEAK_SIZES.size() - 1)]
+	var rate: float = LEAK_SIZES[clampi(size, 0, LEAK_SIZES.size() - 1)] * harshness
 	var leak := {
 		"id": _take_id(), "c": c, "rate": rate, "hp": rate * TORCH_SECONDS_PER_RATE,
 		"p": Vector3(side * 1.88, rng.randf_range(0.5, 2.1), _random_z(c, rng)),

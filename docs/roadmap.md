@@ -133,6 +133,8 @@ stays for now, until they have been tried with others.
       realistic it plays, from the arcade mode above up to a most-realistic mode. Includes the
       nuclear era, e.g. a full Typhoon-class boat with its exact deck layout as the most
       realistic.
+      *(Started: Arcade / Standard / Realistic picked by the host (`Realism`): handling, duds,
+      flooding, fires, air, escorts. Still to come: the nuclear-era boats.)*
 - [x] **Sound effects for everything**: every control, station and action makes a sound. To
       start: a telegraph ding when the ordered speed changes, and the helm wheel and rudder
       gear sound as it turns. *(Every station, door, tool, footstep and ladder now has one;

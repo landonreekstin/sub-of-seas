@@ -51,7 +51,7 @@ Godot **4.7.2**, GDScript, Jolt 3D physics. Repo: github.com/landonreekstin/sub-
 | `game/` | `bot_crew.gd` (bot crewmen: post, orders, the host's brains for every station), `game.gd`: patrol root — builds boat, spawns crew, owns crew state (doors, stations, tubes) and the host-side request RPCs; `tutorial.gd`: the training courses (one per crew job, with crew calls played for you, and the whole boat): checklists and scripts; `profile.gd`: each player's career, rank and look (user://profile.cfg) |
 | `assets/` | `textures/` (grey detail maps from `tools/make_textures.py`), `audio/` (sounds from `tools/make_sounds.sh`): generated, regenerate rather than hand-edit |
 | `tools/` | `make_music.py` (the soundtrack, numpy + ffmpeg), `publish.sh`: export the pack to the NAS drop for the launcher; `ship_gallery.gd`: one ship model close up, for screenshots |
-| `sim/` | pure simulation classes: sub (incl. battery, diesels, ballast, HP air), `air.gd` (CO2/O2, smoke, scrubber), `tdc.gd` (marks → track → gyro), `formations.gd` (convoy, task force, hunter-killer), `conditions.gd` (night, sea state, layer), `aircraft.gd` (carrier search planes), `sandbox.gd` (open patrol director), ships (gunfire on a surfaced boat), torpedoes, depth charges, `detection.gd`, `ship_ai.gd` (escort state machine), `hull.gd` (water, leaks, fires, broken stations), `whale.gd` (whales: wander, breathe, sing; false sonar contacts), `seabed.gd` (islands, reefs, seamounts, shelves: floor depth, laid out per patrol clear of every track; grounding, ships steering clear) |
+| `sim/` | pure simulation classes: sub (incl. battery, diesels, ballast, HP air), `air.gd` (CO2/O2, smoke, scrubber), `tdc.gd` (marks → track → gyro), `formations.gd` (convoy, task force, hunter-killer), `conditions.gd` (night, sea state, layer), `aircraft.gd` (carrier search planes), `sandbox.gd` (open patrol director), ships (gunfire on a surfaced boat), torpedoes, depth charges, `detection.gd`, `ship_ai.gd` (escort state machine), `hull.gd` (water, leaks, fires, broken stations), `whale.gd` (whales: wander, breathe, sing; false sonar contacts), `realism.gd` (the host's arcade ↔ realism level: handling, duds, damage, air, escorts), `seabed.gd` (islands, reefs, seamounts, shelves: floor depth, laid out per patrol clear of every track; grounding, ships steering clear) |
 | `interior/` | `sub_interior.gd` builds any boat from `LAYOUTS` (compartments fore to aft; the control room ends at z 0), doors, tool racks, parts crate, `damage_view.gd` (draws the hull state), `porthole.gd`, `bot_view.gd` (a bot crewman at his station), `jukebox.gd` |
 | `stations/` | station base class and each station |
 | `player/` | first-person crew controller (emotes too), `crewman.gd` (the crewman's body and face from a look), held tools (`tools.gd`), proximity voice (`voice.gd`) |
@@ -78,6 +78,7 @@ godot --path . -- --join 127.0.0.1  # join straight away
 godot --path . -- --training [course]  # host a training course (the tutorial): helm, scope, torpedo, sonar, damage, engine, full
 godot --path . -- --mission <key>   # host a patrol: convoy, tankers, hunted, carrier, task_force, sandbox
 godot --path . -- --sub s_boat      # the boat to take out: s_boat, gato (default), narwhal
+godot --path . -- --realism realistic  # host: arcade (default), standard, realistic (sim/realism.gd)
 ```
 Two-player test on one machine: start one with `--host`, one with `--join 127.0.0.1`.
 Testing aids: `--name <n>`, `--spawn x,y,z` (start the local player there, e.g.
@@ -95,6 +96,7 @@ goes off around the boat 3 s in and the helm is knocked out; leak/fire positions
 - From a clone: `./play server [mission] [sub]` (default `sandbox gato`, port 7845).
 - Directly (e.g. a systemd unit):
   `godot --headless --path <checkout> -- --server --mission sandbox --sub gato --port 7845`
+  (add `--realism standard` or `realistic` for a harder boat; `./play server sandbox gato -- --realism realistic`)
   or with the published pack: `godot --headless --main-pack sub-of-seas.pck -- --server ...`.
   Players join it like any host. A source checkout reports build `dev` (add `--build <id>`
   to pin one); a pack reports its commit and turns away other builds.

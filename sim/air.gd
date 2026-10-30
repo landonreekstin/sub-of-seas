@@ -34,6 +34,7 @@ var canisters := 8
 var canister_left := 0.0 ## seconds of scrubbing left in the canister in the scrubber
 var bleed := false
 var o2_bank := 1.0
+var harshness := 1.0 ## the realism level: the boat fouls her air this much faster (Realism)
 
 
 func setup(comp_count: int, canisters_aboard: int) -> AirState:
@@ -60,7 +61,7 @@ func step(dt: float, surfaced: bool, crew_count: int, hull: HullState) -> void:
 		for i in smoke.size():
 			smoke[i] = lerpf(smoke[i], 0.0, k)
 	else:
-		var made := (CO2_BASE_PER_MIN + CO2_PER_CREW_PER_MIN * crew_count) / 60.0 * dt
+		var made := (CO2_BASE_PER_MIN + CO2_PER_CREW_PER_MIN * crew_count) * harshness / 60.0 * dt
 		co2 += made
 		o2 -= made * O2_PER_CO2
 	if canister_left > 0.0:
