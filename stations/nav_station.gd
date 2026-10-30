@@ -35,7 +35,7 @@ func _build_overlay(root: Control) -> void:
 	_chart.clip_contents = true
 	box.add_child(_chart)
 	var home := "   [H] head home (ends the patrol)" if Game.instance.crew.mission == "sandbox" else ""
-	var help := UiKit.label("CHART   [W/S] zoom   [LMB] pencil mark   [RMB] rub out   red: TDC   blue: sonar%s    %s" % [home, footer(cluster != "")], 14, UiKit.CREAM)
+	var help := UiKit.label("CHART   [W/S] zoom   [LMB] pencil mark   [RMB] rub out   red: TDC   ◆ last marked   blue: sonar, soundings (m)%s    %s" % [home, footer(cluster != "")], 14, UiKit.CREAM)
 	help.add_theme_constant_override("outline_size", 5)
 	help.add_theme_color_override("font_outline_color", Color.BLACK)
 	box.add_child(help)

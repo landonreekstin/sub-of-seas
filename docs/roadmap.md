@@ -105,14 +105,14 @@ stays for now, until they have been tried with others.
       M7 rank hats).
 - [x] **Visible torpedo trails**: a bubble wake you can see from the periscope from launch
       to hit or miss.
-- [ ] **Navigation station**: a chart with each target at its last marked position and the
+- [x] **Navigation station**: a chart with each target at its last marked position and the
       land masses drawn in (builds on the M3 chart table).
-- [ ] **Islands and land masses** in the ocean world, which the boat has to steer around.
+- [x] **Islands and land masses** in the ocean world, which the boat has to steer around.
 - [ ] **Portholes** along the sides of the boat, showing the water and any ship hull on that
       side (overlaps Blaney's M8 portholes).
 - [x] **Well-lit water like Sea of Thieves**: bright, clear and readable under the surface,
       not murky.
-- [ ] **Sea floor with reefs and mountains / shelves** the boat has to avoid (running into
+- [x] **Sea floor with reefs and mountains / shelves** the boat has to avoid (running into
       them damages it); pairs with Blaney's M8 coral reef.
 - [ ] **Sea life**: fish, sharks, whales and octopus. Whales show up on sonar as false
       contacts.

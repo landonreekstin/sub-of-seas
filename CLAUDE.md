@@ -51,11 +51,11 @@ Godot **4.7.2**, GDScript, Jolt 3D physics. Repo: github.com/landonreekstin/sub-
 | `game/` | `game.gd`: patrol root — builds boat, spawns crew, owns crew state (doors, stations, tubes) and the host-side request RPCs; `tutorial.gd`: the training patrol's checklist and script; `profile.gd`: each player's career, rank and look (user://profile.cfg) |
 | `assets/` | `textures/` (grey detail maps from `tools/make_textures.py`), `audio/` (sounds from `tools/make_sounds.sh`): generated, regenerate rather than hand-edit |
 | `tools/` | `publish.sh`: export the pack to the NAS drop for the launcher; `ship_gallery.gd`: one ship model close up, for screenshots |
-| `sim/` | pure simulation classes: sub (incl. battery, diesels, ballast, HP air), `air.gd` (CO2/O2, smoke, scrubber), `tdc.gd` (marks → track → gyro), `formations.gd` (convoy, task force, hunter-killer), `conditions.gd` (night, sea state, layer), `aircraft.gd` (carrier search planes), `sandbox.gd` (open patrol director), ships (gunfire on a surfaced boat), torpedoes, depth charges, `detection.gd`, `ship_ai.gd` (escort state machine), `hull.gd` (water, leaks, fires, broken stations) |
+| `sim/` | pure simulation classes: sub (incl. battery, diesels, ballast, HP air), `air.gd` (CO2/O2, smoke, scrubber), `tdc.gd` (marks → track → gyro), `formations.gd` (convoy, task force, hunter-killer), `conditions.gd` (night, sea state, layer), `aircraft.gd` (carrier search planes), `sandbox.gd` (open patrol director), ships (gunfire on a surfaced boat), torpedoes, depth charges, `detection.gd`, `ship_ai.gd` (escort state machine), `hull.gd` (water, leaks, fires, broken stations), `seabed.gd` (islands, reefs, seamounts, shelves: floor depth, laid out per patrol clear of every track; grounding, ships steering clear) |
 | `interior/` | `sub_interior.gd` builds any boat from `LAYOUTS` (compartments fore to aft; the control room ends at z 0), doors, tool racks, parts crate, `damage_view.gd` (draws the hull state) |
 | `stations/` | station base class and each station |
 | `player/` | first-person crew controller, held tools (`tools.gd`), proximity voice (`voice.gd`) |
-| `world/` | exterior ocean scene, ocean shader, ship models |
+| `world/` | exterior ocean scene, ocean shader, ship models, `terrain_view.gd` (islands and sea floor meshes from the seabed) |
 | `ui/` | main menu, HUD, station overlays, `chart_view.gd` (the plot), `pause_menu.gd` (Esc), `settings_menu.gd` |
 | `data/` | `.tres` balance data and their `Resource` scripts: `subs/`, `ships/` (8 classes), `missions/` (patrols: groups + objectives; `MissionData.KEYS` is the menu order) |
 | `tests/` | headless test runner + `test_*.gd` |

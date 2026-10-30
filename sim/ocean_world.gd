@@ -26,6 +26,8 @@ var planes: Array[Aircraft] = []
 var hull := HullState.new()
 var air := AirState.new()
 var conditions := Conditions.new()
+var seabed := Seabed.new()
+var _ground_cooldown := 0.0
 var crew_count := 1 ## players aboard, set by the host; they breathe
 var lost := "" ## why the boat was lost, once it is
 var dud_chance := 0.05
@@ -124,15 +126,20 @@ func fire_torpedo(gyro: float, stern := false) -> Torpedo:
 func step(dt: float, authoritative := true) -> void:
 	time += dt
 	Detection.conditions = conditions
+	var before := sub.pos
 	sub.step(dt)
+	_check_ground(before, dt, authoritative)
 	for ship in ships:
 		if authoritative:
 			_think(ship, dt)
-		ship.step(dt, rng if authoritative else null)
+		ship.step(dt, rng if authoritative else null, seabed)
 	for t in torpedoes:
 		t.step(dt)
 		if authoritative and t.alive:
 			_check_hits(t)
+		if authoritative and t.alive and seabed.floor_depth(t.pos) < 2.0:
+			t.alive = false
+			event.emit("beached", {"x": t.pos.x, "y": t.pos.y})
 	torpedoes = torpedoes.filter(func(t: Torpedo) -> bool: return t.alive)
 	if authoritative:
 		ships = ships.filter(func(s: ShipState) -> bool: return s.sink < 1.0)
@@ -153,6 +160,31 @@ func step(dt: float, authoritative := true) -> void:
 			dc.step(dt)
 		for p in planes:
 			p.pos += p.direction() * Aircraft.SPEED * dt
+
+
+## Striking bottom or running aground: she stops dead where the water got too shallow, sits on
+## a bottom she dives onto, and a hard hit opens a leak in the bow.
+func _check_ground(before: Vector2, dt: float, authoritative: bool) -> void:
+	_ground_cooldown = maxf(0.0, _ground_cooldown - dt)
+	var floor_at := seabed.floor_depth(sub.pos)
+	var keel := maxf(sub.depth, SubState.AWASH_DEPTH)
+	if floor_at >= keel:
+		return
+	var impact := absf(sub.speed)
+	if floor_at < SubState.AWASH_DEPTH or seabed.floor_depth(before) >= keel:
+		sub.pos = before # the ground rises ahead of her: no further that way
+		sub.speed = 0.0
+	else:
+		impact *= 0.3 # settling onto the bottom she dived to
+	sub.depth = minf(sub.depth, maxf(floor_at - 0.2, 0.0))
+	if not authoritative or _ground_cooldown > 0.0:
+		return
+	_ground_cooldown = 8.0
+	if impact > 1.0 and not hull.comps.is_empty():
+		hull.add_leak(0, 1 if impact > 2.5 else 0, rng)
+		event.emit("grounded", {"text": "We've struck bottom! Leak in the %s!" % hull.comps[0].name, "hard": true})
+	else:
+		event.emit("grounded", {"text": "Touched bottom at %d m." % roundi(floor_at), "hard": false})
 
 
 func _think(ship: ShipState, dt: float) -> void:

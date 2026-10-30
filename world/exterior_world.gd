@@ -20,6 +20,7 @@ var _env: Environment
 var _sky: ProceduralSkyMaterial
 var _sun: DirectionalLight3D
 var _look := "" ## the conditions last applied to the sky, sun and sea
+var _terrain: TerrainView
 var _under := false ## the eye is under the surface (the sky shows the water's light instead)
 
 
@@ -59,7 +60,7 @@ func _ready() -> void:
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	env.fog_enabled = true
 	env.fog_light_color = Color("#BFD8E8")
-	env.fog_density = 0.00004
+	env.fog_density = 0.00002 # light haze: islands still read 10 km off
 	env.fog_sky_affect = 0.0
 	var we := WorldEnvironment.new()
 	we.environment = env
@@ -91,9 +92,12 @@ func _ready() -> void:
 	_ocean_far.position.y = -0.3
 	add_child(_ocean_far)
 
+	_terrain = TerrainView.new()
+	add_child(_terrain)
+
 	camera = Camera3D.new()
 	camera.far = 30000.0
-	camera.near = 0.2
+	camera.near = 1.0
 	camera.current = true
 	add_child(camera)
 
@@ -113,6 +117,7 @@ func _process(_delta: float) -> void:
 	var snap := Vector3(snappedf(camera.position.x, GRID_SNAP), 0.0, snappedf(camera.position.z, GRID_SNAP))
 	_ocean_near.position = snap
 	_ocean_far.position = Vector3(snap.x, -0.3, snap.z)
+	_terrain.sync(Sim.world.seabed)
 	_sync_ships()
 	_sync_torpedoes()
 	_sync_planes()
@@ -191,7 +196,7 @@ func _underwater(depth: float) -> void:
 		if _under:
 			_under = false
 			_look = "" # puts the sky and fog back
-			_env.fog_density = 0.00004
+			_env.fog_density = 0.00002
 			_apply_conditions(Sim.world.conditions)
 		return
 	_under = true

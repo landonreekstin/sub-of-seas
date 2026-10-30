@@ -164,6 +164,7 @@ func _setup_mission() -> void:
 	if crew.mission == "training":
 		_start_tutorial()
 		tutorial.setup_world()
+		_lay_seabed(true)
 		return
 	var m := MissionData.load_key(crew.mission)
 	if m == null:
@@ -193,6 +194,22 @@ func _setup_mission() -> void:
 	crew.objectives = m.objectives.duplicate(true)
 	for o: Dictionary in crew.objectives:
 		o.done = false
+	_lay_seabed()
+
+
+## Islands, reefs, seamounts and shelves for this patrol, clear of the boat, of every ship's
+## track (30 km on along its course) and of the run in from the boat to each ship. Training
+## gets a far-off island or two to look at and nothing to hit.
+func _lay_seabed(islands_only := false) -> void:
+	var w := Sim.world
+	var keep: Array[Vector2] = [w.sub.pos]
+	var routes := []
+	for s in w.ships:
+		keep.append(s.pos)
+		routes.append([s.pos, s.pos + s.direction() * 30000.0])
+		routes.append([w.sub.pos, s.pos])
+	w.seabed.generate(w.rng.randi(), w.sub.pos, keep, routes, 2500.0, islands_only)
+	crew.seabed = w.seabed.to_array()
 
 
 func _start_tutorial() -> void:
@@ -364,6 +381,8 @@ func set_crew(state: Dictionary) -> void:
 
 func _apply_crew() -> void:
 	interior.apply_crew(crew)
+	if not multiplayer.is_server() and Sim.world != null and crew.get("seabed", []) != Sim.world.seabed.features:
+		Sim.world.seabed.from_array(crew.get("seabed", []))
 	if crew.mission == "training":
 		_start_tutorial()
 	for p: Player in _players.get_children():
@@ -571,6 +590,10 @@ func _tdc_mark(id: int, bearing: float, range_m: float) -> void:
 		tdc.speed_adj = 0.0
 		tdc.course_adj = 0.0
 	tdc.marks.append(Tdc.make_mark(Sim.world.time, Sim.world.sub.pos, fposmod(bearing, 360.0), range_m))
+	# The chart keeps every target where it was last marked, after the TDC moves on.
+	var at := Tdc.mark_pos(tdc.marks[-1])
+	var contacts: Dictionary = crew.get_or_add("contacts", {})
+	contacts[id] = {"x": at.x, "y": at.y, "t": Sim.world.time, "name": ship.data.display_name, "sunk": false}
 	if tdc.marks.size() > 8:
 		tdc.marks.pop_front()
 	announce.rpc("MARK! Bearing %03d, range %d." % [roundi(fposmod(bearing, 360.0)) % 360, roundi(range_m / 50.0) * 50])
@@ -922,16 +945,21 @@ func _event_sound(kind: String, data: Dictionary) -> void:
 			Sfx.play("sonar_ping")
 		"fired":
 			Sfx.play("torpedo_launch")
-		"hit":
+		"hit", "beached":
 			Sfx.play("torpedo_hit")
+		"grounded":
+			Sfx.play("clang", 4.0 if data.hard else -2.0, 0.6)
+			Sfx.play("creak_%d" % randi_range(1, 3), 0.0, 0.7)
 		"sunk":
 			Sfx.play("creak_%d" % randi_range(1, 3), -4.0, 0.5) # breaking up
 
 
 func _on_sim_event(kind: String, data: Dictionary) -> void:
 	_event_sound(kind, data)
-	if kind == "hit":
+	if kind == "hit" or kind == "beached":
 		exterior.explosion(Vector2(data.x, data.y))
+	elif kind == "grounded" and local_player != null:
+		local_player.add_trauma(0.8 if data.hard else 0.3)
 	elif kind == "shell":
 		exterior.water_column(Vector2(data.x, data.y), 4.0)
 	elif kind == "blast":
@@ -971,9 +999,11 @@ func _on_sim_event(kind: String, data: Dictionary) -> void:
 			announce.rpc("The convoy is zig-zagging. They've spotted us!")
 		"aircraft":
 			announce.rpc("The plane has seen us! Escorts will be coming.")
-		"leak", "power", "breakdown":
+		"leak", "power", "breakdown", "grounded":
 			announce.rpc(data.text)
 			push_crew()
+		"beached":
+			announce.rpc("A torpedo ran into the shallows and went off.")
 		"lost":
 			end_patrol("lost", data.reason)
 		"hit":
@@ -983,6 +1013,8 @@ func _on_sim_event(kind: String, data: Dictionary) -> void:
 		"sunk":
 			crew.sunk += 1
 			crew.tonnage += int(data.tons)
+			if crew.get("contacts", {}).has(int(data.ship)):
+				crew.contacts[int(data.ship)].sunk = true
 			crew.sunk_by[data["class"]] = int(crew.sunk_by.get(data["class"], 0)) + 1
 			push_crew()
 			var left := Sim.world.ships.filter(func(s: ShipState) -> bool: return not s.is_sinking()).size()

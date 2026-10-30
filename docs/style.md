@@ -78,6 +78,12 @@ and update "Current style" in the same commit.
   others are aboard and only truly pauses for a host alone. Q leaves a station. Settings
   (lando) has audio, graphics and controls tabs, reachable from the main menu and the pause
   menu, and applies each change as you make it.
+- **Islands:** low-poly and flat-shaded like everything else: bare rock peaks, deep jungle,
+  green scrub, a pale sand beach with a few leaning palms, then a reef of sand and coral
+  (pink, orange, violet) and blue-grey slopes into the deep. Light haze so they read 10 km off.
+- **Chart:** land in buff, reefs (under 12 m) blue, shallows (under 100 m) pale blue, the least
+  depth over seamounts and shelves as a blue sounding, and each marked target as a red
+  diamond at its last marked position with how long ago (grey once sunk).
 - **Hits:** camera shake, lights stutter, paint flakes shake down from the deckhead.
 - **Night:** a deep blue-black sky, cold dim moonlight, black water with silver foam; inside,
   submerged, the boat rigs for red (`#FF4A35` light). Rough seas are big rolling waves.

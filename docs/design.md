@@ -234,6 +234,17 @@ the shirt colour is free. Looks and rank travel in crew state; name tags carry t
 mono 16 kHz 16-bit (32 KB/s, fine on a LAN) and sent unreliably; each crewman's voice plays
 from his head in 3D, fading over ~30 m. Discord still works alongside.
 
+## 5b. Land and the sea floor
+
+Each patrol gets 2–3 islands 4–10 km out, ringed by reefs, plus seamounts (peaks 18–70 m
+down) and sometimes a wide shelf at 55–90 m (`sim/seabed.gd`). They are laid clear of the
+boat's start, every ship's track for 30 km and the run in to each ship, so a mission is never
+blocked. Running onto a reef or a slope stops the boat dead; a hit over 2 kn opens a leak in
+the forward compartment. Diving onto a seamount or shelf sets her down on it gently (a real
+trick: sit on the bottom and go quiet). The dive station shows the water under the keel; the
+chart shows land, reefs, shallows and soundings. Ships' navigators steer around anything
+shallower than 10 m in the next 1.5 km. A torpedo that reaches the shallows goes off there.
+
 ## 6. Torpedoes (simplified TDC)
 
 1. Periscope: put the crosshair on the target, use the **stadimeter** (match top of mast to

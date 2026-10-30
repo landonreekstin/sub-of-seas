@@ -23,6 +23,9 @@ var leader: ShipState = null ## host: in formation, keeps station on this ship u
 var station_offset := Vector2.ZERO ## (right, ahead) of the leader, metres
 var _zig_timer := 30.0
 
+const DRAFT := 10.0 ## metres of water a ship needs under her
+const LOOKOUT_AHEAD := 1500.0 ## metres ahead the navigator watches for shoal water
+
 
 func _init(ship_class: ShipClassData) -> void:
 	data = ship_class
@@ -45,7 +48,7 @@ func distance_to_hull(p: Vector2) -> float:
 
 
 ## `rng` is only passed on the host: decisions (zig-zag legs) are made there and replicated.
-func step(dt: float, rng: RandomNumberGenerator) -> void:
+func step(dt: float, rng: RandomNumberGenerator, seabed: Seabed = null) -> void:
 	if is_sinking():
 		ordered_speed = 0.0
 		sink = minf(1.0, sink + dt / data.sink_time)
@@ -59,6 +62,8 @@ func step(dt: float, rng: RandomNumberGenerator) -> void:
 			var leg := data.zigzag_angle * (2.0 if alerted else 1.0)
 			course = fposmod(base_course + rng.randf_range(-leg, leg), 360.0)
 			_zig_timer = rng.randf_range(40.0, 90.0) * (0.5 if alerted else 1.0)
+	if rng != null and seabed != null and not is_sinking():
+		course = seabed.clear_course(pos, course, DRAFT, LOOKOUT_AHEAD) # the navigator keeps her off the rocks
 	speed = move_toward(speed, ordered_speed, 0.3 * dt)
 	var turn := wrapf(course - heading, -180.0, 180.0)
 	var max_turn := data.max_turn_rate * dt
