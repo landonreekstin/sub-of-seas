@@ -8,6 +8,8 @@ extends Node3D
 const SUB_DIR := "res://data/subs/%s.tres"
 const MENU_SCENE := "res://ui/main_menu.tscn"
 const RELOAD_TIME := 30.0 ## seconds of hands-on work at the tube
+const HELP_RELOAD := 1.7 ## a second crewmate on the hoist speeds a reload this much
+const HELP_REACH := 2.2 ## metres from the tube (along the deck) a helper stands
 const PING_NOTICE_GAP := 20.0 ## s between "they have us" announcements
 const CLEAR_TIME := 60.0 ## s with no escort hunting nearby before the patrol counts as done
 const PASS_OUT_AFTER := 6.0 ## s breathing air at its worst before a crewman passes out
@@ -917,9 +919,16 @@ func _host_tick(delta: float) -> void:
 		if t.reload > 0.0 and station_occupant("tube_%d" % (i + 1)) != 0:
 			reloading = true
 			# A small crew has its hands full: reloads go a little quicker with fewer aboard.
-			t.reload += delta / (RELOAD_TIME * clampf(0.6 + 0.1 * crew.names.size(), 0.8, 1.2))
+			# A second pair of hands on the hoist (a crewmate standing by, off station) makes
+			# it go faster still (design: "2 people faster").
+			var helped := _reload_helper(i)
+			if helped != t.get("helped", false):
+				t.helped = helped
+				push_crew()
+			t.reload += delta * (HELP_RELOAD if helped else 1.0) / (RELOAD_TIME * clampf(0.6 + 0.1 * crew.names.size(), 0.8, 1.2))
 			if t.reload >= 1.0:
 				t.reload = 0.0
+				t.helped = false
 				t.loaded = true
 				announce.rpc("Tube %d loaded." % (i + 1))
 				push_crew()
@@ -928,6 +937,17 @@ func _host_tick(delta: float) -> void:
 		if _push_timer > 0.25:
 			_push_timer = 0.0
 			push_crew()
+
+
+## Whether a crewmate off station stands within reach of tube `i` to help the reload.
+func _reload_helper(i: int) -> bool:
+	var st: Station = interior.stations.get("tube_%d" % (i + 1))
+	var working := station_occupant("tube_%d" % (i + 1))
+	var on_station: Array = crew.get("stations", {}).values()
+	for p: Player in _players.get_children():
+		if p.peer_id != working and not on_station.has(p.peer_id) and Vector2(p.global_position.x - st.global_position.x, p.global_position.z - st.global_position.z).length() < HELP_REACH:
+			return true
+	return false
 
 
 ## Surfaced, the lookouts call any plane within 7 km (by day; 2 km at night).

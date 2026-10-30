@@ -8,6 +8,8 @@ const SPEED := 3.2
 const GRAVITY := 12.0
 const JUMP := 3.2
 const EYE_HEIGHT := 1.6
+const CROUCH_EYE := 1.05
+const CROUCH_SPEED := 0.5 ## of walking speed
 const REACH := 2.2
 ## Emotes: key -> name, and how long each plays (seconds).
 const EMOTE_KEYS := {KEY_1: "wave", KEY_2: "salute", KEY_3: "jig", KEY_4: "point", KEY_5: "cheer"}
@@ -18,6 +20,8 @@ var station: Station = null
 var requested_station := ""
 var climbing := false
 var emote := "" ## the emote being played, replicated so everyone sees it
+var crouching := false ## held Ctrl: lower, slower, quieter feet; replicated
+var _crouch := 0.0 ## 0 standing .. 1 down, eased
 var _emote_t := 0.0
 var _step_pos := Vector3.ZERO ## for footsteps
 var _step_dist := 0.0 ## distance since the last footstep or rung
@@ -106,7 +110,7 @@ func _build() -> void:
 	var sync := MultiplayerSynchronizer.new()
 	sync.name = "Sync"
 	var cfg := SceneReplicationConfig.new()
-	for prop: String in [".:position", ".:rotation", "Head:rotation", ".:climbing", ".:emote"]:
+	for prop: String in [".:position", ".:rotation", "Head:rotation", ".:climbing", ".:emote", ".:crouching"]:
 		var path := NodePath(prop)
 		cfg.add_property(path)
 		cfg.property_set_spawn(path, true)
@@ -278,7 +282,20 @@ func _footsteps() -> void:
 	if _step_dist > 0.8:
 		_step_dist = 0.0
 		# Your own feet quieter than a crewmate's: you hear them all the time.
-		Sfx.play_at(self, "step_%d" % randi_range(1, 3), Vector3(0, 0.05, 0), -10.0 if is_local() else -4.0, randf_range(0.9, 1.1))
+		# Crouched, you creep: barely a sound.
+		Sfx.play_at(self, "step_%d" % randi_range(1, 3), Vector3(0, 0.05, 0), (-10.0 if is_local() else -4.0) - (12.0 if crouching else 0.0), randf_range(0.9, 1.1))
+
+
+## Crouched: the eye drops (yours) and the body squats down (everyone else's view of you).
+func _pose_crouch(delta: float) -> void:
+	_crouch = move_toward(_crouch, 1.0 if crouching and station == null and not climbing else 0.0, delta * 5.0)
+	var k := _crouch * _crouch * (3.0 - 2.0 * _crouch)
+	if is_local():
+		if not camera.top_level:
+			head.position.y = lerpf(EYE_HEIGHT, CROUCH_EYE, k)
+	else:
+		head.position.y = lerpf(EYE_HEIGHT, CROUCH_EYE, k)
+		body.scale.y = lerpf(1.0, 0.68, k)
 
 
 func add_trauma(amount: float) -> void:
@@ -349,7 +366,10 @@ func _physics_process(delta: float) -> void:
 	var wade := 0.0
 	if Game.instance.interior != null:
 		wade = clampf(Game.instance.interior.damage.water_height_at(position.z) - position.y, 0.0, 1.2) / 1.2
+	crouching = Input.is_action_pressed("crouch") and not Game.instance.menu_open() and emote == ""
 	var speed := SPEED * lerpf(1.0, 0.4, wade) * lerpf(1.0, 0.55, breathing().x) # bad air makes your legs heavy
+	if crouching:
+		speed *= CROUCH_SPEED
 	velocity.x = dir.x * speed
 	velocity.z = dir.z * speed
 	if is_on_floor():
@@ -362,6 +382,7 @@ func _physics_process(delta: float) -> void:
 
 func _process(delta: float) -> void:
 	_footsteps()
+	_pose_crouch(delta)
 	if not is_local():
 		_animate_body(delta)
 		return

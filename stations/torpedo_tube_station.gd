@@ -46,7 +46,7 @@ func _process(_delta: float) -> void:
 	if ready:
 		status = "READY — [SPACE] FIRE"
 	elif t.reload > 0.0:
-		status = "RELOADING %d%% — stay on the tube" % roundi(t.reload * 100.0)
+		status = "RELOADING %d%% — %s" % [roundi(t.reload * 100.0), "TWO ON THE HOIST, quicker" if t.get("helped", false) else "stay on the tube (a 2nd hand helps)"]
 	elif not t.loaded:
 		status = "EMPTY — shut door, drain, then [L] reload" if (t.door or t.flooded) else "EMPTY — [L] reload"
 	elif not t.flooded:

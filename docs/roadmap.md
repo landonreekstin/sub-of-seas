@@ -141,3 +141,14 @@ stays for now, until they have been tried with others.
       anything new gets its sound when it is made.)*
 - [x] **Optional bot crew**: AI crewmen you assign to stations and either give orders to or
       leave to act on their own, to fill out a small crew.
+
+## M10 — Finish the WW2 arcade mode (2026-10-30)
+lando: "we can finish the current arcadey ww2 mode first". The nuclear-era boats wait until
+then. What `docs/design.md` promises that wasn't built yet:
+- [x] **Two on the hoist**: a crewmate standing by a tube makes its reload 1.7× quicker.
+- [x] **Crouch** (hold Ctrl): lower, half speed, near-silent feet; crewmates see it.
+- [ ] **Torpedo tracks give the boat away**: an escort or lookout that sees a bubble track
+      comes down it toward where it was fired from.
+- [ ] **The fixed bilge pump** in the control room: drains far faster than the portable pump,
+      needs battery, can break.
+

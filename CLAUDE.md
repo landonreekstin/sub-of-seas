@@ -122,14 +122,14 @@ The build id (commit) is baked into the pack; a host turns away a different buil
 `dev` (running from source). Publish only committed, tested work.
 
 ### Controls
-WASD + mouse, E interact, Space jump, 1–5 emotes (wave, salute, jig, point, cheer), Q leave station, Esc pause menu (settings, leave),
+WASD + mouse, E interact, Space jump, Ctrl (hold) crouch: lower, half speed, near-silent feet, 1–5 emotes (wave, salute, jig, point, cheer), Q leave station, Esc pause menu (settings, leave),
 Tab next station in a cluster, B post a bot crewman to the empty station you look at (B at a bot stands him down; E at a bot gives orders: T orders/own initiative, plus his station's keys)
 (helm/dive; periscope/TDC in the conning tower; the S-boat's conn: helm, periscope, sonar, TDC).
 Helm: W/S telegraph, A/D rudder. Dive: W/S depth ±5 (Shift ±1), 1–4 presets.
 Periscope: mouse train, Z power, R raise/lower, F stadimeter, M mark for the TDC.
 TDC (conning tower, starboard): W/S target speed ±1 kn, A/D course ±5°, C clear marks, T send to the tubes (gyros follow).
 Chart table (control room, starboard aft): W/S or wheel zoom, LMB pencil mark, RMB rub out. Sonar: M puts the bearing on the chart. Sonar is the listening station: the hydrophone plays the contact it is trained on in your headphones (whales too; hold it there 3 s for the readout). Tubes: L reload, F flood,
-O outer door, A/D gyro, Space fire. Sonar: A/D or mouse train, P active ping.
+O outer door, A/D gyro, Space fire. A crewmate standing by the tube (off station) makes a reload 1.7× quicker. Sonar: A/D or mouse train, P active ping.
 Engine (after end of the engine room): 1/2 start/stop a diesel (surfaced only; stop them before diving).
 Ballast (control room, port aft): V vents (flood to dive), B blow (to surface), X twice emergency blow.
 Air (engine room, starboard fwd): C fresh CO2 canister, O oxygen bleed.

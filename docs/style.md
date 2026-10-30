@@ -110,6 +110,8 @@ and update "Current style" in the same commit.
   standing their station with hands on the gear and a name tag with their job ("Sparks
   (planesman)", "— on orders" when following yours). They speak through the same announcements
   as everything else: "Stubby (sonar): contact bearing 270, warship, turns for 20 knots."
+- **Crouch:** hold Ctrl: your eye drops to 1.05 m, you move at half speed and your boots are
+  near silent; crewmates see you squat down.
 - **Emotes:** 1 wave, 2 salute, 3 jig, 4 point, 5 cheer. The camera swings out in front, a
   little to one side wherever the hull has room, so you see yourself; moving ends it.
 - **Rec room** (games picked by Claude while lando was away; add more): between the mess and
