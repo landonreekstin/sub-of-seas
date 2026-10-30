@@ -172,7 +172,12 @@ to every session in every clone.
   `feat/`/`fix/`/`tweak/` branch with a PR, the same as in the NixOS config.
 - **Merge Blaney's PRs only when lando asks**, after the game has been run on that branch:
   `gh pr checkout <n>`, run the tests (see "Test"), play it. Merge with
-  `gh pr merge <n> --merge`.
+  `gh pr merge <n> --merge --delete-branch`.
+- **Always delete a branch once it is merged**, locally and on GitHub
+  (`git branch -d <b>`, `git push origin --delete <b>`, then `git fetch --prune`). At the
+  start of a session, delete any merged branches left over
+  (`git branch --merged origin/main`, `git branch -r --merged origin/main`). Never delete
+  a branch that isn't merged.
 - Publish (`tools/publish.sh`) only from a tested `main`, so the pack Blaney plays is code
   that is on GitHub.
 
