@@ -111,3 +111,4 @@ and update "Current style" in the same commit.
 | 2026-10-30 | lando | Besides the arcade mode, add modes and submarines that vary from arcade to realism, into the nuclear era; the most realistic, e.g., a full Typhoon-class boat with its exact deck layout. |
 | 2026-10-30 | Blaney | The low hum is horrible. (Asked: it is the electric motor; he chose a soft whirr instead.) |
 | 2026-10-30 | lando | There should be ding sounds when you change the sub's speed, and sound effects for turning the helm. Everything should have sound effects. |
+| 2026-10-30 | Blaney | The footsteps make it sound like someone is knocking on my door, which is not optimal. |
