@@ -323,6 +323,12 @@ func _unhandled_input(event: InputEvent) -> void:
 		var target := _interact_target()
 		if target != null:
 			target.interact(self)
+	elif event.is_action_pressed("bot") and not climbing:
+		var target := _interact_target()
+		if target is Station:
+			Game.instance.rq_bot.rpc_id(1, (target as Station).station_id, "post", null)
+		elif target is BotView:
+			Game.instance.rq_bot.rpc_id(1, (target as BotView).station_id, "dismiss", null)
 	elif event.is_action_pressed("drop_tool") and held_tool != "":
 		Game.instance.rq_tool.rpc_id(1, "")
 	elif event.is_action_pressed("use_tool") and held_tool == "pump" and is_on_floor():

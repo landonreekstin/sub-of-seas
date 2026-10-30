@@ -563,6 +563,27 @@ func apply_crew(crew: Dictionary) -> void:
 	for id: String in crew.doors:
 		if doors.has(id):
 			doors[id].set_open(crew.doors[id])
+	_sync_bots(crew.get("bots", {}))
+
+
+var _bot_views := {} ## station id -> BotView
+
+
+## A BotView at each station a bot crewman has, from crew state.
+func _sync_bots(bots: Dictionary) -> void:
+	for sid: String in bots:
+		if not stations.has(sid):
+			continue
+		if not _bot_views.has(sid):
+			var v := BotView.create(stations[sid], bots[sid])
+			add_child(v)
+			_bot_views[sid] = v
+		else:
+			(_bot_views[sid] as BotView).refresh(bots[sid])
+	for sid: String in _bot_views.keys():
+		if not bots.has(sid):
+			_bot_views[sid].queue_free()
+			_bot_views.erase(sid)
 
 
 func next_in_cluster(current: Station) -> Station:

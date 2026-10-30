@@ -46,7 +46,9 @@ func get_prompt(player: Player) -> String:
 	var occupant := Game.instance.station_occupant(station_id)
 	if occupant != 0 and occupant != multiplayer.get_unique_id():
 		return "%s — manned by %s" % [display_name, Game.instance.crew_name(occupant)]
-	return "[E] %s" % display_name
+	if occupant < 0:
+		return "%s — manned by %s" % [display_name, Game.instance.crew_name(occupant)]
+	return "[E] %s    [%s] post a bot here" % [display_name, OS.get_keycode_string(Settings.key_for("bot"))]
 
 
 func interact(player: Player) -> void:

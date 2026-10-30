@@ -92,6 +92,10 @@ and update "Current style" in the same commit.
   heavy brows. Pick build (average, wiry, stocky, barrel-chested), six skin tones, hair (seven
   styles, seven colours), beard (seven), an extra (eyepatch, gold earring, scar, pipe,
   bandana), the rank hats and a shirt colour, in "Your sailor..." on the main menu.
+- **Bot crewmen:** look like any crewman (random build, face and shirt, a navy watch cap),
+  standing their station with hands on the gear and a name tag with their job ("Sparks
+  (planesman)", "— on orders" when following yours). They speak through the same announcements
+  as everything else: "Stubby (sonar): contact bearing 270, warship, turns for 20 knots."
 - **Emotes:** 1 wave, 2 salute, 3 jig, 4 point, 5 cheer. The camera swings out in front, a
   little to one side wherever the hull has room, so you see yourself; moving ends it.
 - **Rec room** (games picked by Claude while lando was away; add more): between the mess and

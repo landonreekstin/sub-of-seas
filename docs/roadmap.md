@@ -132,5 +132,5 @@ stays for now, until they have been tried with others.
       start: a telegraph ding when the ordered speed changes, and the helm wheel and rudder
       gear sound as it turns. *(Every station, door, tool, footstep and ladder now has one;
       anything new gets its sound when it is made.)*
-- [ ] **Optional bot crew**: AI crewmen you assign to stations and either give orders to or
+- [x] **Optional bot crew**: AI crewmen you assign to stations and either give orders to or
       leave to act on their own, to fill out a small crew.

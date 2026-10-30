@@ -245,6 +245,19 @@ trick: sit on the bottom and go quiet). The dive station shows the water under t
 chart shows land, reefs, shallows and soundings. Ships' navigators steer around anything
 shallower than 10 m in the next 1.5 km. A torpedo that reaches the shallows goes off there.
 
+## 5c. Bot crewmen
+
+Optional AI crew for small crews (lando). B at an empty station posts one; he either follows
+orders given at him (E) or acts on his own. On his own: the helmsman holds course and, when
+hunted, turns away at a crawl; the planesman keeps periscope depth and goes under the layer
+when hunted (never onto the bottom); the ballast man floods and blows for the ordered depth;
+the sonarman calls the loudest contact every 20 s and plots it; the lookout raises the scope
+at periscope depth and marks the nearest ship every 25 s; the TDC operator sends a two-mark
+solution; torpedomen keep their tubes loaded and flooded, open the doors with a solution and
+fire when it is good and inside 3 km; the motor machinist charges on the surface and stops the
+diesels for a dive; the auxiliaryman changes CO2 canisters and works the oxygen; the navigator
+sings out about shoal water ahead. The host runs them through the same order path as players.
+
 ## 6. Torpedoes (simplified TDC)
 
 1. Periscope: put the crosshair on the target, use the **stadimeter** (match top of mast to

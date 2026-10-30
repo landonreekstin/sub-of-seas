@@ -20,6 +20,8 @@ var sub_class: SubClassData
 var exterior: ExteriorWorld
 var hud: Hud
 var pause_menu: PauseMenu
+var bot_crew: BotCrew
+var bot_orders: BotOrders ## open while the local player gives a bot orders
 var _hunted_for := 0.0 ## seconds the hunted music has left to run
 var local_player: Player
 var crew := {}
@@ -59,6 +61,9 @@ func _ready() -> void:
 	var eye := PortholeEye.new()
 	eye.game = self
 	add_child(eye)
+	bot_crew = BotCrew.new()
+	bot_crew.game = self
+	add_child(bot_crew)
 	get_viewport().size_changed.connect(_fit_exterior)
 	_fit_exterior()
 	hud = Hud.new()
@@ -98,6 +103,8 @@ func _ready() -> void:
 			_debug_win.call_deferred()
 		if Net.debug_torpedo:
 			_debug_torpedo.call_deferred()
+		for sid in Net.start_bots:
+			bot_crew.request.call_deferred(sid, "post", null)
 		if Net.debug_air:
 			Sim.world.air.co2 = 4.6
 			var cr := interior.comp_index("control")
@@ -391,7 +398,16 @@ func leave() -> void:
 
 ## True while the pause menu is up: the local player's hands are off the controls.
 func menu_open() -> bool:
-	return pause_menu != null and pause_menu.is_open
+	return (pause_menu != null and pause_menu.is_open) or bot_orders != null
+
+
+## The orders panel for the bot at `station_id`.
+func open_bot_orders(station_id: String) -> void:
+	if bot_orders != null:
+		bot_orders.close()
+	bot_orders = BotOrders.new()
+	bot_orders.station_id = station_id
+	hud.add_child(bot_orders)
 
 
 func _quit(reason: String) -> void:
@@ -409,6 +425,10 @@ func station_occupant(id: String) -> int:
 
 
 func crew_name(id: int) -> String:
+	if id < 0: # a bot crewman
+		for b: Dictionary in crew.get("bots", {}).values():
+			if int(b.id) == id:
+				return b.name
 	return crew.names.get(id, "Sailor %d" % id)
 
 
@@ -537,6 +557,13 @@ func rq_door(door_id: String) -> void:
 	push_crew()
 
 
+## Any crewman: post a bot to a station, stand one down, or give one orders (BotCrew).
+@rpc("any_peer", "call_local", "reliable")
+func rq_bot(station_id: String, key: String, value: Variant) -> void:
+	if multiplayer.is_server():
+		bot_crew.request(station_id, key, value)
+
+
 ## Any crewman: the jukebox's next record.
 @rpc("any_peer", "call_local", "reliable")
 func rq_jukebox() -> void:
@@ -550,6 +577,11 @@ func rq_jukebox() -> void:
 func rq_order(station_id: String, key: String, value: Variant) -> void:
 	if not multiplayer.is_server() or station_occupant(station_id) != _sender():
 		return
+	apply_order(station_id, key, value, _sender())
+
+
+## Host: an order at a station from whoever mans it, a player or a bot (`by`).
+func apply_order(station_id: String, key: String, value: Variant, by: int) -> void:
 	if Sim.world.hull.is_broken(station_id):
 		push_crew()
 		return
@@ -632,7 +664,7 @@ func rq_order(station_id: String, key: String, value: Variant) -> void:
 		"darts":
 			if key == "score":
 				var best: Dictionary = crew.get_or_add("darts", {})
-				var who := crew_name(_sender())
+				var who := crew_name(by)
 				if int(value) > int(best.get(who, -1)):
 					best[who] = clampi(int(value), 0, 180)
 				announce.rpc("%s throws %d%s" % [who, int(value), "  — ONE HUNDRED AND EIGHTY!" if int(value) == 180 else ""])
