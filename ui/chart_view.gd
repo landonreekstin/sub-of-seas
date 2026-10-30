@@ -88,7 +88,7 @@ func _draw() -> void:
 ## chart, redrawn when the zoom or seabed changes or the boat moves a fair way.
 func _draw_land() -> void:
 	var seabed := Sim.world.seabed
-	if seabed.features.is_empty():
+	if seabed.features.is_empty() or size.x < 1.0 or size.y < 1.0:
 		return
 	var span := Vector2(half_width, half_width * size.y / maxf(size.x, 1.0)) * 1.3
 	var here := Sim.world.sub.pos
