@@ -87,6 +87,9 @@ Added by Blaney after playing. In his words where it matters.
       engine/air, damage control...) and do a short tutorial just for that. Each one includes
       the information you would normally hear from the other players aboard (e.g. "Captain:
       come to 090", "Sonar: contact bearing 270") so it works alone.
+- [ ] **Footsteps that don't sound like knocking**: "the footsteps make it sound like someone
+      is knocking on my door which is not optimal". They should read as boots on a steel deck,
+      not a knock on wood (ask Blaney what he wants instead when this is picked up).
 ## M9 — Lando's list (2026-10-30)
 Added by lando. Direction: **more arcadey, not strict realism**. Every existing mechanic
 stays for now, until they have been tried with others.
