@@ -38,6 +38,13 @@ func test_settings_round_trip() -> bool:
 	return true
 
 
+func test_sprint_is_a_rebindable_hold() -> bool:
+	runner.check(Controls.BINDINGS.sprint == [KEY_SHIFT], "Shift sprints by default")
+	runner.check(Controls.REBINDABLE.has("sprint"), "sprint can be rebound in Settings")
+	runner.check(Player.SPRINT_SPEED > 1.0 and Player.CROUCH_SPEED < 1.0, "running is faster than walking, crouching slower")
+	return true
+
+
 func test_built_meshes_are_closed_and_sized() -> bool:
 	var m := Build.bevel_box_mesh(Vector3(2.0, 0.5, 1.0))
 	var aabb := m.get_aabb()

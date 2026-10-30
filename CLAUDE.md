@@ -122,7 +122,7 @@ The build id (commit) is baked into the pack; a host turns away a different buil
 `dev` (running from source). Publish only committed, tested work.
 
 ### Controls
-WASD + mouse, E interact, Space jump, Ctrl (hold) crouch: lower, half speed, near-silent feet, 1–5 emotes (wave, salute, jig, point, cheer), Q leave station, Esc pause menu (settings, leave),
+WASD + mouse, E interact, Space jump, Shift (hold) sprint: 1.75× forward, louder feet, Ctrl (hold) crouch: lower, half speed, near-silent feet, 1–5 emotes (wave, salute, jig, point, cheer), Q leave station, Esc pause menu (settings, leave),
 Tab next station in a cluster, B post a bot crewman to the empty station you look at (B at a bot stands him down; E at a bot gives orders: T orders/own initiative, plus his station's keys)
 (helm/dive; periscope/TDC in the conning tower; the S-boat's conn: helm, periscope, sonar, TDC).
 Helm: W/S telegraph, A/D rudder. Dive: W/S depth ±5 (Shift ±1), 1–4 presets.

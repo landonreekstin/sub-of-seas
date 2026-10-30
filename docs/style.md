@@ -29,6 +29,9 @@ and update "Current style" in the same commit.
 - **Sky:** painted toon clouds, flat white tops and blue-grey bellies with crisp edges,
   drifting slowly; few on a calm day, overcast in a rough sea; a soft round sun; stars on a
   night sky; no clouds under the water.
+- **Sprint:** hold Shift running forward: 1.75× walking speed, the view widens a few degrees
+  and the head bobs, boots ring louder and further apart (crewmates hear it). Not while
+  crouched; foul air takes it away.
 - **Detail inside the boat:** ring frames over the deckhead and down the shoulders with
   stencilled frame numbers, cable runs (black, red, blue) in brass clamps, red handwheel
   valves on the white pipe runs, wire cages round the bulbs, a red extinguisher by each
@@ -202,4 +205,4 @@ and update "Current style" in the same commit.
 | 2026-10-30 | lando | There should be ding sounds when you change the sub's speed, and sound effects for turning the helm. Everything should have sound effects. |
 | 2026-10-30 | Blaney | The footsteps make it sound like someone is knocking on my door, which is not optimal. |
 | 2026-10-30 | Blaney | Tutorials per job: pick the job from a list when you click Training patrol; crew calls show as a big line with who said it and a little bell; keep the long whole-boat training at the bottom of the list. |
-| 2026-10-30 | lando | I want to greatly improve the graphics. Improve the shapes and textures of everything. |
+| 2026-10-30 | lando | I want to greatly improve the graphics. Improve the shapes and textures of everything. Also add a sprint functionality. |

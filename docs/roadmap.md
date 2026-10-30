@@ -155,7 +155,7 @@ then. What `docs/design.md` promises that wasn't built yet:
       pump man runs it while there's water aboard and stops it while hunted.
 
 
-## M11 — Graphics pass (2026-10-30)
+## M11 — Graphics pass and sprint (2026-10-30)
 lando: "I want to greatly improve the graphics. Improve the shapes and textures of everything.
 Also add a sprint functionality".
 - [x] **Shapes**: every box has bevelled edges, cylinders are lathed with chamfered rims;
@@ -171,3 +171,5 @@ Also add a sprint functionality".
       fine painted grain on every colour without its own map; woven cloth on the crew.
 - [x] **Sky**: painted toon clouds with shaded bellies, drifting (more of them in rougher
       seas), a soft sun, stars at night.
+- [x] **Sprint** (hold Shift, forward): 1.75× walking speed, the view widens and the head
+      bobs, longer and louder footsteps that crewmates hear; not crouched, slower in foul air.
