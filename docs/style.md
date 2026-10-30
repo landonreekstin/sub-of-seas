@@ -46,7 +46,8 @@ and update "Current style" in the same commit.
   tiers of bunks both sides and a mess table. Maneuvering: dark switch cubicles with brass
   handles. Torpedo rooms: olive torpedoes racked low, bunks over them.
 - **Sea:** noise-broken foam on the crests, white wakes astern of ships and a bow wave;
-  just under the surface the scope sees murky green.
+  just under the surface the scope sees murky green (to change: lando wants the water well
+  lit like Sea of Thieves, M9).
 - **Crew:** Peak-like sailors: big round head, white Dixie-cup hat, dot eyes, chambray shirt
   in the crewman's own colour, navy dungarees, black boots; arms and legs swing as they walk,
   arms reach forward at a station.
@@ -60,6 +61,11 @@ and update "Current style" in the same commit.
 - **Aircraft:** low-wing carrier planes, green-grey with red roundels.
 - **Hats by rank:** white Dixie cup (Seaman), navy watch cap, ball cap, officer's peaked
   cap with a brass badge, and a salt-stained grey skipper's cap for a Commander.
+- **Planned (lando's list, M9):** an arcade feel over strict realism (all current mechanics
+  stay until tried with others); art pushed on toward Sea of Thieves and a bit more detailed;
+  customisable Sea of Thieves-style crew; torpedoes leave a visible bubble trail; portholes
+  that show the water and nearby hulls; bright, well-lit water like Sea of Thieves; reefs,
+  undersea mountains and shelves; sharks, whales, octopus and fish.
 - **UI:** typewriter / stencil feel, cream on dark panels, minimal HUD (crosshair, carried
   tool, interaction prompt).
 
@@ -68,3 +74,9 @@ and update "Current style" in the same commit.
 | Date | Who | Direction |
 |---|---|---|
 | 2026-10-28 | lando | Simple art style like Peak to start; add textures later to move toward Sea of Thieves. |
+| 2026-10-30 | lando | Make the game more arcadey; it doesn't need to be strict realism. Keep all the existing mechanics for now until they have been tried with others. |
+| 2026-10-30 | lando | Keep improving the graphics and art until it looks like Sea of Thieves, and a bit more detailed. |
+| 2026-10-30 | lando | Characters should be customisable and look like Sea of Thieves characters. |
+| 2026-10-30 | lando | You should be able to see the torpedo trails when they fire. |
+| 2026-10-30 | lando | Portholes on the sides of the sub you can see out of, showing the water and ships' hulls in that direction. |
+| 2026-10-30 | lando | The water should be fairly well lit, like Sea of Thieves. |

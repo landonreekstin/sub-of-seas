@@ -66,3 +66,30 @@ Each milestone ends playable and committed. Tick items as they land.
 - [x] Persistent crew progression / cosmetics
 - [x] Optional in-game proximity voice (push to talk: Caps Lock; checked end to end with a test tone, not yet with a real microphone)
 - [ ] Builds for friends (needs Godot export templates in nixos-config). Linux friends on the homelab are covered by the published pack and the launcher (M2.5); Windows `.exe` builds still need the templates
+
+## M9 — Lando's list (2026-10-30)
+Added by lando. Direction: **more arcadey, not strict realism**. Every existing mechanic
+stays for now, until they have been tried with others.
+- [ ] **Settings menu**: audio (master / music / effects / voice volumes), graphics
+      (resolution, window mode, quality, field of view), controls (mouse sensitivity, invert
+      Y, key rebinding). Reachable from the main menu and the pause menu (M8).
+- [ ] **Keep pushing the art toward Sea of Thieves**, and a bit more detailed than now:
+      hand-painted colour variation, stronger toon banding, more props and detail.
+- [ ] **Customisable characters that look like Sea of Thieves crew**: stylised, exaggerated
+      proportions, with faces, hair, body shape, clothes and hats to choose from (builds on the
+      M7 rank hats).
+- [ ] **Visible torpedo trails**: a bubble wake you can see from the periscope from launch
+      to hit or miss.
+- [ ] **Navigation station**: a chart with each target at its last marked position and the
+      land masses drawn in (builds on the M3 chart table).
+- [ ] **Islands and land masses** in the ocean world, which the boat has to steer around.
+- [ ] **Portholes** along the sides of the boat, showing the water and any ship hull on that
+      side (overlaps Blaney's M8 portholes).
+- [ ] **Well-lit water like Sea of Thieves**: bright, clear and readable under the surface,
+      not murky.
+- [ ] **Sea floor with reefs and mountains / shelves** the boat has to avoid (running into
+      them damages it); pairs with Blaney's M8 coral reef.
+- [ ] **Sea life**: fish, sharks, whales and octopus. Whales show up on sonar as false
+      contacts.
+- [ ] **Listening station**: hydrophone headphones where you hear ship engines and screws
+      and animal sounds, and have to tell them apart.

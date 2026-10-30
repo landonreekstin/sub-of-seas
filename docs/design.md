@@ -5,6 +5,10 @@ LAN. The crew never leaves the boat. They hunt Imperial Japanese Navy surface sh
 Pacific, 1942–44, and survive being hunted back. Fun comes from crew coordination: no one
 person can find, aim, fire and survive alone.
 
+**Arcade over realism (lando, 2026-10-30).** History and real numbers are a starting point,
+not a rule: when fun and accuracy disagree, fun wins. The current mechanics all stay until
+they have been played with others.
+
 Everything here is a starting point. Numbers live in `data/*.tres` and get tuned by playing.
 
 ## 1. Session loop (patrol missions)
