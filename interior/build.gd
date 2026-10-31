@@ -18,7 +18,10 @@ const DETAIL := {
 const RELIEF := {
 	"painted_steel": [3.0, 0.5], "deck_plate": [3.5, 0.6], "brushed": [1.0, 0.2],
 	"wood": [2.5, 0.6], "ship_plating": [2.5, 0.4], "grain": [1.2, 0.0], "cloth": [0.7, 0.15],
+	"skin": [0.8, 0.0], "hair": [2.0, 0.5], "rock": [2.5, 0.5],
 }
+## Named surfaces for `mat(color, 0, surface)`: [metres per repeat, painted blotchiness].
+const SURFACES := {"cloth": [0.2, 0.6], "skin": [0.15, 0.2], "hair": [0.12, 0.25], "rock": [6.0, 0.8]}
 ## Every opaque colour without its own map gets a fine painted grain.
 const DEFAULT_DETAIL := ["grain", 0.6]
 
@@ -49,14 +52,16 @@ static func mat(color: Color, emission := 0.0, surface := "") -> Material:
 		t.set_shader_parameter("albedo", color)
 		t.set_shader_parameter("roughness", SHINY.get(color.to_html(false), 0.75))
 		var dt: Array = DETAIL.get(color.to_html(false), DEFAULT_DETAIL)
+		var paint := 1.0 if dt[1] < 4.0 else 0.6
 		if surface != "":
-			dt = [surface, 0.2]
+			dt = [surface, SURFACES[surface][0]]
+			paint = SURFACES[surface][1]
 		t.set_shader_parameter("detail", detail_texture(dt[0]))
 		t.set_shader_parameter("height_map", detail_texture(dt[0] + "_h"))
 		t.set_shader_parameter("use_detail", true)
 		t.set_shader_parameter("detail_scale", 1.0 / float(dt[1]))
 		t.set_shader_parameter("paint_scale", clampf(1.6 / float(dt[1]), 0.15, 1.0))
-		t.set_shader_parameter("paint", 1.0 if dt[1] < 4.0 else 0.6)
+		t.set_shader_parameter("paint", paint)
 		var relief: Array = RELIEF.get(dt[0], [0.0, 0.0])
 		t.set_shader_parameter("bump", relief[0])
 		t.set_shader_parameter("cavity", relief[1])
@@ -275,6 +280,30 @@ static func torpedo(parent: Node3D, radius: float, length: float, pos: Vector3, 
 			blade.rotation = Vector3(0.0, 0.0, b * PI * 0.5 + k * PI * 0.25)
 			blade.rotation.y = 0.35 if k == 0 else -0.35
 	return root
+
+
+## The toon material for vertex-coloured, two-sided terrain: islands and the sea floor,
+## with the rock map at `metres` per repeat.
+static func terrain_mat(metres := 8.0) -> ShaderMaterial:
+	var key := "terrain/%s" % metres
+	if not _materials.has(key):
+		var sh := Shader.new()
+		sh.code = TOON_SHADER.code.replace("render_mode cull_back;", "render_mode cull_disabled;")
+		var t := ShaderMaterial.new()
+		t.shader = sh
+		t.set_shader_parameter("albedo", Color.WHITE)
+		t.set_shader_parameter("vertex_color", true)
+		t.set_shader_parameter("roughness", 0.95)
+		t.set_shader_parameter("detail", detail_texture("rock"))
+		t.set_shader_parameter("height_map", detail_texture("rock_h"))
+		t.set_shader_parameter("use_detail", true)
+		t.set_shader_parameter("detail_scale", 1.0 / metres)
+		t.set_shader_parameter("paint_scale", 0.05)
+		t.set_shader_parameter("paint", 0.6)
+		t.set_shader_parameter("bump", 2.0)
+		t.set_shader_parameter("cavity", 0.4)
+		_materials[key] = t
+	return _materials[key]
 
 
 # --- Meshes ------------------------------------------------------------------

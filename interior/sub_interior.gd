@@ -551,7 +551,7 @@ func _dressing(c: Dictionary, hatch: Rect2) -> void:
 
 func _near_porthole(side: float, z: float) -> bool:
 	for p in portholes:
-		if signf(p.position.x) == side and absf(p.position.z - z) < 0.45 and p.position.y > 1.75:
+		if signf(p.position.x) == side and absf(p.position.z - z) < Porthole.RADIUS + 0.25:
 			return true
 	return false
 

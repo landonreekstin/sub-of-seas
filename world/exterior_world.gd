@@ -188,6 +188,7 @@ func _apply_conditions(c: Conditions) -> void:
 	m.set_shader_parameter("amplitude", [0.3, 0.5, 0.9][c.sea_state])
 	m.set_shader_parameter("horizon_color", Color(0.12, 0.17, 0.26) if c.night else Color(0.55, 0.70, 0.82))
 	m.set_shader_parameter("shallow_color", Color(0.02, 0.08, 0.12) if c.night else Color(0.05, 0.44, 0.50))
+	m.set_shader_parameter("crest_color", Color(0.05, 0.16, 0.2) if c.night else Color(0.25, 0.85, 0.80))
 
 
 ## Under the surface: clear, well-lit turquoise water like Sea of Thieves (lando), bright from

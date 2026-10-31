@@ -74,7 +74,10 @@ and update "Current style" in the same commit.
   tiers of bunks both sides and a mess table. Maneuvering: dark switch cubicles with brass
   handles. Torpedo rooms: olive Mark 14s racked low in cradle straps (grey warhead, tapering
   tail, four fins, twin brass screws), bunks over them.
-- **Sea:** noise-broken foam on the crests, white wakes astern of ships and a bow wave;
+- **Sea** (lando: do the ocean): five overlapping waves with small ripples bending the light;
+  the crests glow turquoise where the light comes through them; lacy cellular foam spreading
+  down the faces of the bigger waves and in faint patches on the flats; the sun's glint as hard
+  bright flecks; soft toon bands on the swell. Noise-broken foam on the crests, white wakes astern of ships and a bow wave;
   a torpedo leaves a thin white bubble track from the tube to where it is, brightest at the
   head, breaking up and spreading behind and gone about a minute later (lando);
   the open water a brighter teal toward Sea of Thieves. Under the surface it is clear and well
@@ -116,11 +119,19 @@ and update "Current style" in the same commit.
   table and the bunks) and either side of the mess table. Dark glass until you are close and
   looking at one; then it shows the water outside from that spot on the hull, the way you're
   looking through it, with a soft dark edge and a glint.
-- **Sea life:** chunky low-poly fish in bright schools (yellow, sky blue, orange, mint, pink),
+- **Sea life** (lando: do the sea life): smooth streamlined bodies, dark back over a pale
+  belly, flat fins. Fish are deep-bodied with a dorsal fin, forked tail and a dark eye, tinted
+  by their school's colour. Sharks have a tall dorsal, swept pectorals, gill slits and a big
+  upper tail lobe. Humpbacks have throat grooves, knobs on the head, a small dorsal hump and
+  very long white flippers. Chunky fish in bright schools (yellow, sky blue, orange, mint, pink),
   more of them over a reef; grey sharks with white bellies circling now and then; orange
   octopus on a shallow bottom; humpbacks (dark slate, pale belly, long white flippers) that
   blow a spout at the surface. Coral on the island reefs is Blaney's Frutiger Aero look:
   glossy candy-coloured brain coral, staghorn and sea fans, with bubbles rising.
+- **Faces** (lando: do the faces): a round head on a chunky jaw; big eyes (white, dark iris,
+  a glint) under heavy lids and brows; rosy cheeks; a bulbous nose with a bridge; a crooked
+  smile and a lower lip; ears with a fold. Skin is a soft painted texture with no blotches;
+  hair, brows and beards have strands.
 - **Crewmen** (lando: customisable, like Sea of Thieves crew): stylised and exaggerated, big
   forearms and hands, chunky boots, a sailor's collar and neckerchief, a big nose, ears and
   heavy brows. Pick build (average, wiry, stocky, barrel-chested), six skin tones, hair (seven
@@ -152,7 +163,11 @@ and update "Current style" in the same commit.
 - **Hydrophones:** the operator hears contacts in the headphones: merchant screws slow and
   heavy, warships fast and light, capital ships a deep four-shaft churn, whales a long moaning
   song, snapping shrimp over a reef, the sea's hiss under it all.
-- **Islands:** low-poly and flat-shaded like everything else: bare rock peaks, deep jungle,
+- **Islands** (lando: do the islands): the ground carries a rock texture with strata and
+  cracks, and the greens vary patch to patch. The jungle is thick with round, lumpy canopy
+  trees in four greens, so it reads as forest through the periscope. Palms have curving
+  ringed trunks, drooping two-part fronds and coconuts. Grey boulders sit on the beaches and
+  slopes, a few awash. Low-poly and flat-shaded like everything else: bare rock peaks, deep jungle,
   green scrub, a pale sand beach with a few leaning palms, then a reef of sand and coral
   (pink, orange, violet) and blue-grey slopes into the deep. Light haze so they read 10 km off.
 - **Chart:** land in buff, reefs (under 12 m) blue, shallows (under 100 m) pale blue, the least
@@ -206,3 +221,4 @@ and update "Current style" in the same commit.
 | 2026-10-30 | Blaney | The footsteps make it sound like someone is knocking on my door, which is not optimal. |
 | 2026-10-30 | Blaney | Tutorials per job: pick the job from a list when you click Training patrol; crew calls show as a big line with who said it and a little bell; keep the long whole-boat training at the bottom of the list. |
 | 2026-10-30 | lando | I want to greatly improve the graphics. Improve the shapes and textures of everything. Also add a sprint functionality. |
+| 2026-10-30 | lando | (on the graphics pass) I like it. You can merge, and do the faces, the ocean, the islands or the sea life. |

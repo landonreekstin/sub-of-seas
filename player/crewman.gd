@@ -67,24 +67,56 @@ static func build_body(root: Node3D, look: Dictionary, shirt: Color) -> Dictiona
 	return limbs
 
 
-## The face on `face` (a node at the head's centre, looking down -Z).
+## The face on `face` (a node at the head's centre, looking down -Z): Sea of Thieves-ish,
+## a round head on a chunky jaw, big eyes with a glint under heavy brows, rosy cheeks, a
+## bulbous nose, a crooked smile, ears with a fold in them.
 static func build_face(face: Node3D, look: Dictionary) -> void:
 	var skin := SKINS[clampi(int(look.get("skin", 0)), 0, SKINS.size() - 1)]
 	var hair_c := HAIR_COLOURS[clampi(int(look.get("hair_col", 0)), 0, HAIR_COLOURS.size() - 1)]
+	var dark := skin.darkened(0.08)
 	var head := Build.sphere(face, 0.24, Vector3(0, -0.05, 0), skin)
 	head.scale = Vector3(0.95, 1.05, 1.0)
-	# A big nose, ears, heavy brows, dot eyes and a mouth line.
-	var nose := Build.sphere(face, 0.06, Vector3(0, -0.06, -0.25), skin.darkened(0.06))
-	nose.scale = Vector3(0.9, 1.0, 1.3)
+	var jaw := Build.sphere(face, 0.17, Vector3(0, -0.15, -0.07), skin)
+	jaw.scale = Vector3(1.2, 0.85, 1.0)
+	var nose := Build.sphere(face, 0.062, Vector3(0, -0.07, -0.255), dark)
+	nose.scale = Vector3(0.95, 0.9, 1.25)
+	Build.sphere(face, 0.035, Vector3(0, -0.02, -0.235), dark).scale = Vector3(0.9, 1.6, 1.0) # bridge
 	for side in [-1.0, 1.0]:
-		var ear := Build.sphere(face, 0.06, Vector3(side * 0.235, -0.05, 0.0), skin.darkened(0.05))
-		ear.scale = Vector3(0.5, 1.0, 0.8)
-		Build.box(face, Vector3(0.05, 0.07, 0.02), Vector3(side * 0.085, 0.02, -0.225), Color.BLACK, false)
-		var brow := Build.box(face, Vector3(0.11, 0.035, 0.04), Vector3(side * 0.09, 0.08, -0.215), hair_c.darkened(0.2), false)
-		brow.rotation.z = side * -0.15
-	Build.box(face, Vector3(0.1, 0.02, 0.02), Vector3(0, -0.15, -0.215), Color("#6A2E24"), false)
+		var ear := Build.sphere(face, 0.06, Vector3(side * 0.235, -0.05, 0.0), dark)
+		ear.scale = Vector3(0.45, 1.0, 0.75)
+		var fold := Build.sphere(face, 0.035, Vector3(side * 0.255, -0.05, -0.005), skin.darkened(0.25))
+		fold.scale = Vector3(0.3, 1.0, 0.7)
+		# The eye: white, a dark iris looking a touch inward, and a glint.
+		var white := Build.sphere(face, 0.042, Vector3(side * 0.085, 0.015, -0.205), Color("#F4F0E6"))
+		white.scale = Vector3(1.0, 1.1, 0.55)
+		Build.sphere(face, 0.024, Vector3(side * 0.08, 0.012, -0.229), Color("#1C1A18")).scale = Vector3(1.0, 1.15, 0.5)
+		Build.sphere(face, 0.008, Vector3(side * 0.08 + 0.008, 0.024, -0.241), Color.WHITE, 1.5)
+		var lid := Build.sphere(face, 0.046, Vector3(side * 0.085, 0.032, -0.2), dark)
+		lid.scale = Vector3(1.05, 0.45, 0.6) # heavy upper lid
+		var brow := Build.box(face, Vector3(0.12, 0.04, 0.05), Vector3(side * 0.09, 0.085, -0.21), hair_c.darkened(0.2), false)
+		brow.rotation.z = side * -0.18
+		brow.material_override = Build.mat(hair_c.darkened(0.2), 0.0, "hair")
+		var cheek := Build.sphere(face, 0.05, Vector3(side * 0.12, -0.075, -0.185), skin.lerp(Color("#D9665A"), 0.28))
+		cheek.scale = Vector3(1.0, 0.8, 0.5)
+	# A crooked smile, and a lower lip under it.
+	var mouth := Build.arc(face, Vector2(0.01, -0.105), 0.065, PI * 1.2, PI * 1.82, 0.016, -0.232, -0.212, Color("#5A2420"), 8)
+	mouth.position.z = -0.222
+	var lip := Build.sphere(face, 0.03, Vector3(0.01, -0.185, -0.215), skin.lerp(Color("#C0605A"), 0.35))
+	lip.scale = Vector3(1.4, 0.5, 0.6)
+	for m in face.find_children("*", "MeshInstance3D", true, false):
+		var mi := m as MeshInstance3D
+		var c: Color = (mi.material_override as ShaderMaterial).get_shader_parameter("albedo") if mi.material_override is ShaderMaterial else Color.BLACK
+		if c.is_equal_approx(skin) or c.is_equal_approx(dark):
+			mi.material_override = Build.mat(c, 0.0, "skin")
+	var before := face.get_child_count()
 	_hair(face, int(look.get("hair", 0)), hair_c)
 	_beard(face, int(look.get("beard", 0)), hair_c, skin)
+	for i in range(before, face.get_child_count()):
+		for m in [face.get_child(i)] + face.get_child(i).find_children("*", "MeshInstance3D", true, false):
+			if m is MeshInstance3D and (m as MeshInstance3D).material_override is ShaderMaterial:
+				var c: Color = (m as MeshInstance3D).material_override.get_shader_parameter("albedo")
+				if c.is_equal_approx(hair_c) or c.is_equal_approx(hair_c.darkened(0.1)):
+					(m as MeshInstance3D).material_override = Build.mat(c, 0.0, "hair")
 	_extra(face, int(look.get("extra", 0)), skin)
 
 

@@ -202,7 +202,38 @@ def cloth():
     save("cloth", a, h)
 
 
+def skin():
+    """Painted skin: soft warm blotches and fine pores, no seams."""
+    a = 0.95 + 0.05 * (noise(30, 6) - 0.5) + 0.03 * (noise(31, 24, 2) - 0.5)
+    h = 0.5 + 0.08 * (noise(32, 96, 2) - 0.5)
+    save("skin", a, h)
+
+
+def hair():
+    """Hair: strands running one way (down the sides, front to back on top)."""
+    strands = noise(33, 96, 3)[:1, :].repeat(N, 0)
+    wave = noise(34, 4, 2)
+    shift = (wave * 40).astype(int)
+    s2 = np.take_along_axis(strands, (XX + shift) % N, 1)
+    a = 0.78 + 0.28 * s2 + 0.05 * (noise(35, 8) - 0.5)
+    h = 0.5 + 0.35 * (s2 - 0.5)
+    save("hair", a, h)
+
+
+def rock():
+    """Island rock and earth: layered strata, cracks and lichen-ish speckle."""
+    strata = np.sin((YY / N * 10 + noise(36, 4, 3) * 4) * np.pi) * 0.5 + 0.5
+    a = 0.82 + 0.12 * strata + 0.08 * (noise(37, 16, 3) - 0.5)
+    cracks = np.abs(noise(38, 8, 3) - 0.5) < 0.012
+    a -= np.where(cracks, 0.2, 0)
+    h = 0.5 + 0.2 * (strata - 0.5) + 0.15 * (noise(39, 32, 3) - 0.5) - np.where(cracks, 0.25, 0)
+    save("rock", a, blur(h))
+
+
 if __name__ == "__main__":
+    skin()
+    hair()
+    rock()
     painted_steel()
     deck_plate()
     brushed()
