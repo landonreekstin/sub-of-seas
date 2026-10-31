@@ -118,9 +118,11 @@ and update "Current style" in the same commit.
   lit like Sea of Thieves (lando): bright turquoise, light from above and deeper blue below,
   about 60 m of visibility, darkening slowly with depth and at night, and the surface overhead
   a glowing, rippling ceiling with wakes showing white.
-- **Crew:** Peak-like sailors: big round head, white Dixie-cup hat, dot eyes, chambray shirt
-  in the crewman's own colour, navy dungarees, black boots; arms and legs swing as they walk,
-  arms reach forward at a station.
+- **Crew:** WWII US submariners at sea in ordinary human proportions (Blaney, see Crewmen):
+  slim, a head in proportion, small plain features; faded chambray work shirt (only a hint of
+  the crewman's own colour) with an open collar and sleeves to the elbow, belt and buckle,
+  straight navy dungarees, black work boots; arms and legs swing as they walk, hands reach
+  forward onto the gear at a station.
 - **Sound:** synthesised, not sampled (`tools/make_sounds.sh`): clean 1.5 kHz sonar ping,
   harsh metallic echo-ranging when they find us, booms that roll, groaning creaks that come
   more often deeper, an "ah-OO-gah" klaxon on opening the vents, alarm bell on a close one,
@@ -167,11 +169,17 @@ and update "Current style" in the same commit.
   a glint) under heavy lids and brows; rosy cheeks; a bulbous nose with a bridge; a crooked
   smile and a lower lip; ears with a fold. Skin is a soft painted texture with no blotches;
   hair, brows and beards have strands.
-- **Crewmen** (lando: customisable, like Sea of Thieves crew): stylised and exaggerated, big
-  forearms and hands, chunky boots, a sailor's collar and neckerchief, a big nose, ears and
-  heavy brows. Pick build (average, wiry, stocky, barrel-chested), six skin tones, hair (seven
-  styles, seven colours), beard (seven), an extra (eyepatch, gold earring, scar, pipe,
-  bandana), the rank hats and a shirt colour, in "Your sailor..." on the main menu.
+- **Crewmen** (Blaney, replacing lando's Sea of Thieves-style crew: "way too cartoony to the
+  point where they are almost creepy, redesign them so everyone actually looks like sub
+  sailors, make the models take less space"): normal proportions, slimmer (they take less
+  room in the passageways too), a head of real size with small eyes, straight brows, a plain
+  nose and a line of a mouth; no big forearms, glints or rosy cheeks. Still simple painted
+  shapes. Pick build (average, wiry, stocky, broad), six skin tones, hair (cropped, crew cut,
+  slicked back, side parting, wavy, short back and sides, curly; seven colours), face hair
+  (clean-shaven, stubble, full beard, pencil moustache, sideburns, moustache, patrol beard),
+  an extra (glasses, cigarette, scar, pipe, bandage), the rank hats (Dixie cup, watch cap,
+  ball cap, officer's and skipper's caps, sized to the head) and a shirt colour, in
+  "Your sailor..." on the main menu.
 - **Bot crewmen:** look like any crewman (random build, face and shirt, a navy watch cap),
   standing their station with hands on the gear and a name tag with their job ("Sparks
   (planesman)", "— on orders" when following yours). They speak through the same announcements
@@ -263,3 +271,4 @@ and update "Current style" in the same commit.
 | 2026-10-31 | Blaney | Fix the footsteps, they're very annoying and clanky; they should just be very basic and subtle footsteps. |
 | 2026-10-31 | Blaney | When the sub is high enough above water, make it possible to get out and walk on top of it. The boat can't dive with crew out; fall in and you swim back and climb a ladder. |
 | 2026-10-31 | Blaney | Add a top-of-the-sub wrestling game where you try to wrestle the other person into the water, like a simplified Your Only Move Is HUSTLE with only Greco-Roman moves; pick moves then they play out; start it by stepping into a ring marked on deck. |
+| 2026-10-31 | Blaney | The character models are way too cartoony, to the point where they are almost creepy: redesign them so everyone actually looks like sub sailors, and make the models take less space. (Style conflict with lando's 2026-10-30 Sea of Thieves-style crew.) |

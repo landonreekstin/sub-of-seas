@@ -27,11 +27,11 @@ func refresh(bot: Dictionary) -> void:
 	if _tag == null:
 		_tag = Label3D.new()
 		_tag.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-		_tag.position.y = 2.05
+		_tag.position.y = 1.95
 		_tag.font_size = 32
 		_tag.pixel_size = 0.004
 		add_child(_tag)
-		Build.area(self, Vector3(0.6, 1.8, 0.6), Vector3(0, 0.9, 0))
+		Build.area(self, Vector3(0.5, 1.8, 0.5), Vector3(0, 0.9, 0))
 	_tag.text = "%s (%s)%s" % [bot.name, BotCrew.job(station_id), "" if bot.auto else " — on orders"]
 	if look == _look:
 		return
