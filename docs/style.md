@@ -46,7 +46,7 @@ and update "Current style" in the same commit.
   her side. Inside: a ladder up to a hatch ring in the deckhead marked DECK GUN; the
   ammunition scuttle is a hatch flush in the deck with brass rounds showing down the hole.
 - **Sprint:** hold Shift running forward: 1.75× walking speed, the view widens a few degrees
-  and the head bobs, boots ring louder and further apart (crewmates hear it). Not while
+  and the head bobs, footsteps a little louder and further apart (crewmates hear it). Not while
   crouched; foul air takes it away.
 - **Detail inside the boat:** ring frames over the deckhead and down the shoulders with
   stencilled frame numbers, cable runs (black, red, blue) in brass clamps, red handwheel
@@ -114,9 +114,10 @@ and update "Current style" in the same commit.
   not snap), heavy lever clunks, small dial clicks, a roar of air when the vents open and a hard
   hiss while blowing, a hydraulic whine as the periscope moves, a gurgling rush flooding a tube,
   a deep clang for doors and outer doors, a chain rattle for a reload, a diesel turning over and
-  catching, pencil on the chart, boots on the steel deck (a soft heel and gritty scuff
-  with a faint plate ring, no low thud: Blaney found the first version sounded like knocking
-  on his door; your own steps are quieter than a crewmate's), a clang per ladder rung, a clink
+  catching, pencil on the chart, footsteps that are very basic and subtle (a short,
+  soft, muffled shuffle: no clank or plate ring, no low thud; Blaney found the first version
+  sounded like knocking on his door and the second annoying and clanky; your own steps are
+  quieter than a crewmate's), a clang per ladder rung, a clink
   picking up or putting down a tool.
 - **Handling** (Blaney): livelier than the real boat but still heavy and submarine-like, not a
   rocket ship. Speed changes are twice as quick, turns 1.6× and dives 1.5× (a Gato: 0 to 9 kn
@@ -241,3 +242,4 @@ and update "Current style" in the same commit.
 | 2026-10-30 | lando | Work on the deck gun and weather (weather: rain and squalls that roll across the patrol, cutting how far lookouts and the periscope see, cover to close in on a convoy, rougher seas and darker skies with them). |
 | 2026-10-31 | Blaney | Bot crewmates' arms stick out behind them and not toward the station they're at: hands go forward onto the gear. |
 | 2026-10-31 | Blaney | Dart board: no line on the ground that blocks you from moving; you just walk up to the board to play darts. |
+| 2026-10-31 | Blaney | Fix the footsteps, they're very annoying and clanky; they should just be very basic and subtle footsteps. |

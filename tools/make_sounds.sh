@@ -98,14 +98,12 @@ sox $T/s1.wav $T/s2.wav $R $A/diesel_start.wav gain -n -4
 sox -n $R $A/canister.wav synth 0.4 sine 880 sine 1320 sine 1990 fade q 0.001 0.4 0.38 gain -n -9
 # Pencil on the chart.
 sox -n $R $A/pencil.wav synth 0.25 pinknoise highpass 2500 tremolo 30 70 fade q 0.02 0.25 0.08 gain -n -18
-# Boots on the steel deck plates (three variants): a soft heel, a gritty sole scuff and a
-# faint high ring from the plate. No low thud or tone, so it doesn't read as a knock on a
-# door (Blaney).
+# Footsteps (three variants): very basic and subtle (Blaney: the old ones were annoying and
+# clanky). Just a short soft shuffle of a sole: muffled noise, no ring or clank from the
+# plate, and no low thud either (that read as a knock on a door).
 for i in 1 2 3; do
-  sox -n $R $T/f1.wav synth 0.05 pinknoise highpass 400 lowpass 2200 fade q 0.003 0.05 0.045 gain -8
-  sox -n $R $T/f2.wav synth 0.11 whitenoise gain -6 bandpass $((3200 + i * 500)) 2500 fade q 0.015 0.11 0.08 gain -12
-  sox -n $R $T/f3.wav synth 0.3 sine $((1900 + i * 170)) sine $((2870 + i * 230)) fade q 0.002 0.3 0.29 gain -30
-  sox -m $T/f1.wav $T/f2.wav $T/f3.wav $R $A/step_$i.wav gain -n -14
+  sox -n $R $T/f1.wav synth 0.09 pinknoise highpass 280 lowpass $((1100 + i * 150)) fade h 0.012 0.09 0.06
+  sox $T/f1.wav $R $A/step_$i.wav gain -n -12
 done
 sox -n $R $T/f3.wav synth 0.3 sine 520 sine 780 fade q 0.001 0.3 0.29 gain -10
 sox -n $R $T/f4.wav synth 0.05 brownnoise lowpass 800 fade q 0.001 0.05 0.04
