@@ -437,6 +437,8 @@ func _nav_room(c: Dictionary) -> void:
 		Build.box(self, Vector3(0.03, 0.03, 0.16), Vector3(HALF_WIDTH - 0.7, 0.2 + k * 0.22, lz), Color("#C9A04A"), false)
 	var title := Build.label(self, "NAVIGATION", Vector3(HALF_WIDTH - 0.07, 2.0, mid), 40, Color("#2A2E2B"))
 	title.rotation.y = -PI / 2.0
+	if comp_index("rec") < 0:
+		_band_rack(Vector3(HALF_WIDTH - 0.03, 1.3, c.z0 + 1.3), false)
 
 
 ## The rec room (lando: whimsical fun and mini games, apart from the patrol): a dartboard on
@@ -457,6 +459,16 @@ func _rec_room(c: Dictionary) -> void:
 	var p := Porthole.create(Vector3(-HALF_WIDTH + 0.02, 1.6, (c.z0 + c.z1) * 0.5), -1.0)
 	add_child(p)
 	portholes.append(p)
+	_band_rack(Vector3(-HALF_WIDTH + 0.03, 1.35, c.z1 - 1.15), true)
+
+
+## The ship's band's instruments (Blaney): in the rec room, or the navigation room on a boat without one.
+func _band_rack(at: Vector3, port: bool) -> void:
+	var rack := InstrumentRack.new()
+	rack.position = at
+	if port:
+		rack.rotation.y = PI
+	add_child(rack)
 
 
 func _engine_room(c: Dictionary, controls: bool) -> void:

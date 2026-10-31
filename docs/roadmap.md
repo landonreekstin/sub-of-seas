@@ -106,7 +106,8 @@ Added by Blaney after playing. In his words where it matters.
       *(A ring painted across the aft casing: two step in, each turn both pick a Greco-Roman move in secret (push, arm drag, body lock, suplex, brace) and they play out together; driven off your edge, you go in the sea.)*
 - [x] make a navigation room that shows the whole terrain of the region that we are exploring in a topographical map on a wall or a table
       *(A navigation room aft of the control room in every boat, with a raised sand-table model of the whole patrol area and a brass boat marker that moves with us.)*
-- [ ] add instruments of all types that all play parts of a sea shanty like sea of theives, so when all the instruments are in then it is a complete song, first add the song "in the foggy dew" by the chieftains (classic irish melody)
+- [x] add instruments of all types that all play parts of a sea shanty like sea of theives, so when all the instruments are in then it is a complete song, first add the song "in the foggy dew" by the chieftains (classic irish melody)
+      *(A ship's band rack (rec room; the S-boat's in the navigation room): tin whistle, fiddle, concertina, bodhrán, electric guitar, bass, snare, keytar synth. Take one, hold LMB to play; every part runs on one clock so they join in time, all eight make the whole of The Foggy Dew.)*
 - [x] i cannot get into the vpn game with lando, my screen is just grey
       *(Cause: the installed Sub of Seas is the release pin (3a43195), from before the ZSTD
       change, and can't finish connecting to a host on newer code, so it sat on the grey

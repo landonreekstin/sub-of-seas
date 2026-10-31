@@ -30,6 +30,8 @@ var _bob := 0.0 ## head-bob phase
 var _emote_t := 0.0
 var _step_pos := Vector3.ZERO ## for footsteps
 var _step_dist := 0.0 ## distance since the last footstep or rung
+var playing := false ## holding LMB with an instrument: his part of the band's song; replicated
+var _band: AudioStreamPlayer3D ## his instrument's part, kept in time with the band (Band)
 var _swimming := false ## over the side, in the sea round the deck (Deck)
 var held_tool := "" ## from crew state (host-owned)
 var trauma := 0.0 ## camera shake, 0..1, decays
@@ -116,7 +118,7 @@ func _build() -> void:
 	var sync := MultiplayerSynchronizer.new()
 	sync.name = "Sync"
 	var cfg := SceneReplicationConfig.new()
-	for prop: String in [".:position", ".:rotation", "Head:rotation", ".:climbing", ".:emote", ".:crouching", ".:sprinting"]:
+	for prop: String in [".:position", ".:rotation", "Head:rotation", ".:climbing", ".:emote", ".:crouching", ".:sprinting", ".:playing"]:
 		var path := NodePath(prop)
 		cfg.add_property(path)
 		cfg.property_set_spawn(path, true)
@@ -284,6 +286,29 @@ func set_tool(kind: String) -> void:
 		add_child(_hand)
 
 
+## The band: the local player plays while LMB is held with an instrument; everyone hears each
+## player's part from where he stands, in time with the rest (Band).
+func _play_band(_delta: float) -> void:
+	if is_local():
+		playing = Tools.is_instrument(held_tool) and station == null and not climbing and not is_knocked_out() \
+				and not Game.instance.menu_open() and Input.is_action_pressed("use_tool")
+	var on := playing and Tools.is_instrument(held_tool)
+	if on and _band == null:
+		_band = AudioStreamPlayer3D.new()
+		_band.bus = "Music"
+		_band.unit_size = 5.0
+		_band.max_distance = 45.0
+		_band.position = Vector3(0, 1.2, 0)
+		add_child(_band)
+	if _band != null:
+		Band.keep_time(_band, held_tool, on)
+	if _hand != null and on: # a little movement in the hands while playing
+		var t := Time.get_ticks_msec() / 1000.0
+		_hand.rotation.z = sin(t * TAU * 84.0 / 60.0) * 0.08
+	elif _hand != null:
+		_hand.rotation.z = 0.0
+
+
 ## Boots on the deck every stride and a clang per ladder rung, for every crewman, from how far
 ## they moved (so remote players sound the same as the local one).
 func _footsteps() -> void:
@@ -442,6 +467,7 @@ func _physics_process(delta: float) -> void:
 func _process(delta: float) -> void:
 	_footsteps()
 	_pose_crouch(delta)
+	_play_band(delta)
 	if not is_local():
 		_animate_body(delta)
 		return
@@ -466,7 +492,10 @@ func _process(delta: float) -> void:
 	var target := _interact_target()
 	var prompt: String = target.get_prompt(self) if target != null else ""
 	if prompt == "" and held_tool != "":
-		prompt = "%s  —  [G] put it down" % Tools.display_name(held_tool)
+		if Tools.is_instrument(held_tool):
+			prompt = "%s  —  [LMB] hold to play your part of %s    [G] put it back" % [Tools.display_name(held_tool), Band.SONG]
+		else:
+			prompt = "%s  —  [G] put it down" % Tools.display_name(held_tool)
 	hud.set_prompt(prompt)
 	_use_tool(target, delta)
 
