@@ -177,3 +177,10 @@ Also add a sprint functionality".
       sea life"): eyes with a glint, lids, cheeks, jaw and smile, skin and hair textures; five
       waves, ripples, glowing crests, lace foam and sun glints; rock-textured islands thick with
       jungle, better palms, boulders; streamlined fish, sharks and whales.
+
+## M12 — Deck gun and weather (2026-10-30)
+lando: "add deck gun and weather to the roadmap".
+- [ ] **Deck gun**: a gun on the casing for fighting on the surface, crewed from inside (up
+      the conning-tower hatch), against merchants and small escorts, with ammunition passed up.
+- [ ] **Weather**: rain and squalls that roll across the patrol, cutting how far lookouts and
+      the periscope see (cover to close in on a convoy), rougher seas and darker skies with them.
