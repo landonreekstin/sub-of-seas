@@ -161,6 +161,11 @@ func players() -> Array[Node]:
 	return _players.get_children()
 
 
+## Is this instrument on its rack (nobody holding it)?
+func instrument_free(kind: String) -> bool:
+	return not crew.get("tools", {}).values().has(kind)
+
+
 ## Host: is anyone out on deck or in the sea round her?
 func crew_on_deck() -> bool:
 	for p: Player in _players.get_children():
@@ -1011,9 +1016,11 @@ func rq_tool(kind: String) -> void:
 		crew.parts -= 1
 	if had == "parts":
 		crew.parts += 1 # put back in stores
+	if Tools.is_instrument(kind) and crew.tools.values().has(kind):
+		return # one of each instrument aboard, and someone has it
 	if kind == "":
 		crew.tools.erase(peer)
-	elif Tools.KINDS.has(kind):
+	elif Tools.exists(kind):
 		crew.tools[peer] = kind
 	push_crew()
 

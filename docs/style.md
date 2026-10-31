@@ -65,6 +65,15 @@ and update "Current style" in the same commit.
   port, starboard, bridge, keel), all live while you're in the room, and a big screen above;
   man the console and 1-6 picks the big one. The cameras ride on our own boat: on the surface
   you see her decks and the sea, dived the blue water and the hull.
+- **Ship's band** (Blaney: instruments of all types that each play a part of a shanty, like
+  Sea of Thieves; a mix of modern and traditional; take one and play anywhere): a wall board
+  "SHIP'S BAND — THE FOGGY DEW" in the rec room (the S-boat's in the navigation room) with
+  one each of tin whistle, fiddle, concertina, bodhrán, electric guitar, bass guitar, snare
+  and sticks, keytar synth. E takes one, hold LMB to play your part, G puts it back. Every
+  part runs on the same clock, so each joins in time and with all eight it's the whole song.
+  First song: "The Foggy Dew", the traditional air, our own arrangement in E minor at 84 bpm:
+  whistle (octave up) and fiddle on the tune, concertina chords, bodhrán eighths, overdriven
+  power chords, a walking bass, a rock kit, a soft synth pad and arpeggio.
 - **Deck gun** (lando: deck gun crewed from inside, up the conning-tower hatch, ammunition
   passed up): our boat on the surface seen from the gunlayer's seat, a black hull with a teak
   deck, the fairwater and periscope shears behind, the gun's dark barrel in the lower right of
@@ -245,7 +254,7 @@ and update "Current style" in the same commit.
   combat); emotes seen in third person; a rec room for whimsical fun and mini games.
 - **Training crew calls (Blaney):** in the short per-job courses, the crewmates you would
   hear are played for you: a big line near the top, the speaker in brass caps and the words
-  in cream quotes ("CAPTAIN: \"Come to course zero-niner-zero.\""), with a short bell like an
+  in cream quotes ("CAPTAIN: "Come to course zero-niner-zero.""), with a short bell like an
   order over the boat's speakers. Training opens on a list of jobs to pick from; the long
   whole-boat course stays at the bottom.
 - **UI:** typewriter / stencil feel, cream on dark panels, minimal HUD (crosshair, carried
@@ -285,3 +294,4 @@ and update "Current style" in the same commit.
 | 2026-10-31 | Blaney | The character models are way too cartoony, to the point where they are almost creepy: redesign them so everyone actually looks like sub sailors, and make the models take less space. (Style conflict with lando's 2026-10-30 Sea of Thieves-style crew.) |
 | 2026-10-31 | Blaney | Add cameras around the outside of the sub, with a viewing centre: a wall of small screens of every camera, plus pick one to show big. |
 | 2026-10-31 | Blaney | Make a navigation room that shows the whole terrain of the region we're exploring as a topographical map: a raised 3D model on a table (sand table) with our boat as a marker moving on it. |
+| 2026-10-31 | Blaney | Add instruments of all types that all play parts of a sea shanty like Sea of Thieves, so when all the instruments are in it is a complete song; first "The Foggy Dew" (Chieftains, classic Irish melody). A mix of modern and traditional instruments; take one and play it anywhere. |
