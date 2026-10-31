@@ -68,6 +68,7 @@ Each milestone ends playable and committed. Tick items as they land.
 - [ ] Builds for friends (needs Godot export templates in nixos-config). Linux friends on the homelab are covered by the published pack and the launcher (M2.5); Windows `.exe` builds still need the templates
 
 ## M8 — Blaney's list (2026-10-29)
+
 Added by Blaney after playing. In his words where it matters.
 - [x] **Pause menu**: Esc brings up a menu (resume, settings, leave to main menu). The boat
       keeps going while it is open when others are aboard; it only truly pauses in single player.
@@ -107,6 +108,9 @@ Added by Blaney after playing. In his words where it matters.
       screen forever. Now a joiner that hasn't got the boat after 20 s goes back to the menu
       and says why. To play together, both run the same version: the pin needs bumping, or
       Blaney joins from his clone with `./play join`.)*
+- [ ] dart board should not have a line on the ground that blocks you from moving, you should just walk up to the dart board to play darts
+- [x] bot crew mate arms at sticking out behind them and not toward the station theyre at
+      *(Fixed: arms at a station swung backwards; they now reach forward onto the gear, for bots and players alike. The point and salute emotes had the same backwards arm and are fixed too.)*
 
 ## M9 — Lando's list (2026-10-30)
 Added by lando. Direction: **more arcadey, not strict realism**. Every existing mechanic

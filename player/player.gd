@@ -201,8 +201,8 @@ func _animate_body(delta: float) -> void:
 	var at_station: bool = Game.instance.crew.get("stations", {}).values().has(peer_id)
 	_limbs.leg_l.rotation.x = swing
 	_limbs.leg_r.rotation.x = -swing
-	_limbs.arm_l.rotation.x = -1.1 if at_station else -swing * 0.8
-	_limbs.arm_r.rotation.x = -1.1 if at_station else swing * 0.8
+	_limbs.arm_l.rotation.x = 1.1 if at_station else -swing * 0.8
+	_limbs.arm_r.rotation.x = 1.1 if at_station else swing * 0.8
 	body.position.y = absf(sin(_stride)) * 0.04 * clampf(speed / SPEED, 0.0, 1.0)
 
 
@@ -601,7 +601,7 @@ func _reset_pose() -> void:
 		_limbs[k].rotation = Vector3.ZERO
 
 
-## Arms hang from the shoulder: rotation.x swings forward/up, rotation.z raises one sideways
+## Arms hang from the shoulder: + rotation.x swings forward/up, rotation.z raises one sideways
 ## (+ for the right arm, - for the left).
 func _pose_emote(t: float) -> void:
 	_reset_pose()
@@ -611,7 +611,7 @@ func _pose_emote(t: float) -> void:
 		"wave":
 			ar.rotation.z = 2.7 + 0.35 * sin(t * 9.0)
 		"salute":
-			ar.rotation = Vector3(-2.2, 0.0, -0.6)
+			ar.rotation = Vector3(2.2, 0.0, -0.6)
 		"jig":
 			body.rotation.y = sin(t * 3.0) * 0.5
 			body.position.y = absf(sin(t * 10.0)) * 0.08
@@ -620,7 +620,7 @@ func _pose_emote(t: float) -> void:
 			al.rotation = Vector3(-0.3, 0.0, -0.9 - 0.3 * sin(t * 10.0))
 			ar.rotation = Vector3(-0.3, 0.0, 0.9 + 0.3 * sin(t * 10.0))
 		"point":
-			ar.rotation.x = -1.6
+			ar.rotation.x = 1.6
 		"cheer":
 			body.position.y = absf(sin(t * 7.0)) * 0.1
 			al.rotation.z = -2.8 - 0.2 * sin(t * 14.0)
