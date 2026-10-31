@@ -54,6 +54,17 @@ and update "Current style" in the same commit.
   lock, off balance doubles how far you're driven. A panel at the bottom: the two names, the
   clinch on a SEA |----X----| SEA bar, the move keys, the last turn. Driven past your edge,
   you go over the side into the sea and swim back to a ladder.
+- **Navigation room** (Blaney): a compartment just aft of the control room in every boat.
+  In the middle a wooden sand table: a raised model of the whole patrol area (at least 16 km
+  across) built from the sea floor, islands standing up green with rocky peaks and beaches,
+  pale reef shallows, the deep going dark blue, under a clear sheet of sea, with a little brass
+  boat that moves and turns with ours; "N ↑" and the scale on the rim. A chart locker in the
+  starboard after corner.
+- **Outside cameras** (Blaney: a viewing centre; both a wall of small screens and a big one):
+  on the port side of the navigation room, a grey console under six small screens (bow, stern,
+  port, starboard, bridge, keel), all live while you're in the room, and a big screen above;
+  man the console and 1-6 picks the big one. The cameras ride on our own boat: on the surface
+  you see her decks and the sea, dived the blue water and the hull.
 - **Deck gun** (lando: deck gun crewed from inside, up the conning-tower hatch, ammunition
   passed up): our boat on the surface seen from the gunlayer's seat, a black hull with a teak
   deck, the fairwater and periscope shears behind, the gun's dark barrel in the lower right of
@@ -272,3 +283,5 @@ and update "Current style" in the same commit.
 | 2026-10-31 | Blaney | When the sub is high enough above water, make it possible to get out and walk on top of it. The boat can't dive with crew out; fall in and you swim back and climb a ladder. |
 | 2026-10-31 | Blaney | Add a top-of-the-sub wrestling game where you try to wrestle the other person into the water, like a simplified Your Only Move Is HUSTLE with only Greco-Roman moves; pick moves then they play out; start it by stepping into a ring marked on deck. |
 | 2026-10-31 | Blaney | The character models are way too cartoony, to the point where they are almost creepy: redesign them so everyone actually looks like sub sailors, and make the models take less space. (Style conflict with lando's 2026-10-30 Sea of Thieves-style crew.) |
+| 2026-10-31 | Blaney | Add cameras around the outside of the sub, with a viewing centre: a wall of small screens of every camera, plus pick one to show big. |
+| 2026-10-31 | Blaney | Make a navigation room that shows the whole terrain of the region we're exploring as a topographical map: a raised 3D model on a table (sand table) with our boat as a marker moving on it. |
