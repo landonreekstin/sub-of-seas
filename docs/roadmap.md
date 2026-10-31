@@ -120,7 +120,8 @@ Added by Blaney after playing. In his words where it matters.
       *(Fixed: arms at a station swung backwards; they now reach forward onto the gear, for bots and players alike. The point and salute emotes had the same backwards arm and are fixed too.)*
 - [x] the character models are way too cartoony to the point where they are almost creepy, redesign them so everyone actually looks like sub sailors, make the models take less space
       *(Redesigned as WWII US submariners in ordinary proportions: slimmer, a real-size head with plain features, chambray shirt, dungarees, boots; period hair and face-hair options; smaller collision so they take less room.)*
-- [ ] clean up the game files, do a quick check for bugs, make sure lando can see all the changes
+- [x] clean up the game files, do a quick check for bugs, make sure lando can see all the changes
+      *(Every training course, all six patrols on all three boats with bots, and a two-player session run with no script errors; old merged branches removed; leftover debug code checked for; every change is on GitHub in PRs #16 and #18-#26, merged in that order.)*
 
 ## M9 — Lando's list (2026-10-30)
 Added by lando. Direction: **more arcadey, not strict realism**. Every existing mechanic
