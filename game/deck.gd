@@ -250,7 +250,7 @@ func _switch_view(on: bool) -> void:
 
 ## The crew out on deck, as figures on the boat in the exterior (seen only from the deck).
 func _sync_figures(on: bool, delta: float) -> void:
-	var own: Node3D = Game.instance.exterior.own_boat() if on else null
+	var own: Node3D = Game.instance.exterior.own_boat() # the figures show from the outside cameras too
 	var seen := {}
 	if own != null:
 		var me := Game.instance.local_player
@@ -264,6 +264,7 @@ func _sync_figures(on: bool, delta: float) -> void:
 					f.node.queue_free()
 				f = {"node": _figure(p.look(), p.peer_id), "look": p.look(), "stride": 0.0}
 				own.add_child(f.node)
+				ExteriorWorld.set_own_layer(f.node)
 				_figures[p.peer_id] = f
 			var n: Node3D = f.node
 			var at := p.global_position - ORIGIN

@@ -26,6 +26,7 @@ func _ready() -> void:
 	camera.near = 0.3
 	camera.far = 4000.0
 	camera.current = true
+	camera.cull_mask = 0xFFFFF & ~ExteriorWorld.OWN_LAYER # inside our own hull
 	viewport.add_child(camera)
 	_sky = ToonSky.new()
 	var sky := Sky.new()

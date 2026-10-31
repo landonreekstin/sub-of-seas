@@ -26,18 +26,18 @@ const BUNK := Color("#D8D2C0")
 const LAYOUTS := {
 	"s_boat": [
 		{"type": "fwd_torpedo", "length": 11.0}, {"type": "battery", "length": 8.0},
-		{"type": "control", "length": 9.0}, {"type": "engine", "length": 13.0},
+		{"type": "control", "length": 9.0}, {"type": "nav", "length": 5.0}, {"type": "engine", "length": 13.0},
 	],
 	"gato": [
 		{"type": "fwd_torpedo", "length": 14.0}, {"type": "battery", "length": 8.0},
-		{"type": "control", "length": 8.0}, {"type": "crew", "length": 8.0},
+		{"type": "control", "length": 8.0}, {"type": "nav", "length": 6.0}, {"type": "crew", "length": 8.0},
 		{"type": "rec", "length": 6.0},
 		{"type": "engine", "length": 14.0}, {"type": "maneuvering", "length": 6.0},
 		{"type": "aft_torpedo", "length": 10.0},
 	],
 	"narwhal": [
 		{"type": "fwd_torpedo", "length": 16.0}, {"type": "battery", "length": 9.0},
-		{"type": "control", "length": 9.0}, {"type": "crew", "length": 9.0},
+		{"type": "control", "length": 9.0}, {"type": "nav", "length": 6.0}, {"type": "crew", "length": 9.0},
 		{"type": "rec", "length": 6.0},
 		{"type": "engine", "length": 12.0}, {"type": "engine2", "length": 12.0},
 		{"type": "maneuvering", "length": 7.0}, {"type": "aft_torpedo", "length": 12.0},
@@ -45,7 +45,7 @@ const LAYOUTS := {
 }
 const TITLES := {
 	"fwd_torpedo": "forward torpedo room", "battery": "officers' country / battery",
-	"control": "control room", "crew": "crew's mess / stores", "rec": "rec room", "engine": "engine room",
+	"control": "control room", "nav": "navigation room", "crew": "crew's mess / stores", "rec": "rec room", "engine": "engine room",
 	"engine2": "after engine room", "maneuvering": "maneuvering room", "aft_torpedo": "after torpedo room",
 }
 
@@ -135,6 +135,8 @@ func build() -> void:
 				_crew(c)
 			"rec":
 				_rec_room(c)
+			"nav":
+				_nav_room(c)
 			"engine", "engine2":
 				_engine_room(c, c.type == "engine")
 			"maneuvering":
@@ -419,6 +421,22 @@ func _crew(c: Dictionary) -> void:
 	Build.box(self, Vector3(1.0, 0.04, 1.9), Vector3(1.3, 0.77, c.z1 - 1.2), Color("#E8DFC4"), false)
 	# The magazine is under the mess: its scuttle to port, opposite the table.
 	_add_station(AmmoStation.new().setup("ammo", "Ammunition scuttle"), Vector3(0, 0, c.z1 - 3.4)).set_meta("where", "crew's mess")
+
+
+## The navigation room (Blaney): the sand table of the patrol area in the middle, and the
+## outside cameras' bank of screens on the port side, a chart locker to starboard.
+func _nav_room(c: Dictionary) -> void:
+	var mid: float = (c.z0 + c.z1) * 0.5
+	_add_station(NavTableStation.new().setup("sand_table", "Sand table"), Vector3(0.1, 0, mid))
+	_add_station(CameraStation.new().setup("cameras", "Outside cameras"), Vector3(-HALF_WIDTH + 1.0, 0, mid), PI / 2.0)
+	# A chart locker of wide flat drawers in the starboard after corner, clear of the walkway.
+	var lz: float = c.z1 - 0.75
+	Build.box(self, Vector3(0.55, 1.0, 1.0), Vector3(HALF_WIDTH - 0.4, 0.5, lz), WOOD)
+	for k in 4:
+		Build.box(self, Vector3(0.02, 0.18, 0.85), Vector3(HALF_WIDTH - 0.68, 0.2 + k * 0.22, lz), Color("#5A3E26"), false)
+		Build.box(self, Vector3(0.03, 0.03, 0.16), Vector3(HALF_WIDTH - 0.7, 0.2 + k * 0.22, lz), Color("#C9A04A"), false)
+	var title := Build.label(self, "NAVIGATION", Vector3(HALF_WIDTH - 0.07, 2.0, mid), 40, Color("#2A2E2B"))
+	title.rotation.y = -PI / 2.0
 
 
 ## The rec room (lando: whimsical fun and mini games, apart from the patrol): a dartboard on
