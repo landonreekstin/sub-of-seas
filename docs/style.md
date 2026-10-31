@@ -239,3 +239,4 @@ and update "Current style" in the same commit.
 | 2026-10-30 | lando | I want to greatly improve the graphics. Improve the shapes and textures of everything. Also add a sprint functionality. |
 | 2026-10-30 | lando | (on the graphics pass) I like it. You can merge, and do the faces, the ocean, the islands or the sea life. |
 | 2026-10-30 | lando | Work on the deck gun and weather (weather: rain and squalls that roll across the patrol, cutting how far lookouts and the periscope see, cover to close in on a convoy, rougher seas and darker skies with them). |
+| 2026-10-31 | Blaney | Bot crewmates' arms stick out behind them and not toward the station they're at: hands go forward onto the gear. |

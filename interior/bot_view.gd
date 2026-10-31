@@ -54,8 +54,8 @@ func _process(_delta: float) -> void:
 	# Hands on the gear, working it a little.
 	var t := Time.get_ticks_msec() / 1000.0
 	if _arms.has("l"):
-		_arms.l.rotation.x = -1.1 + sin(t * 1.3) * 0.08
-		_arms.r.rotation.x = -1.1 + sin(t * 1.7 + 1.0) * 0.08
+		_arms.l.rotation.x = 1.1 + sin(t * 1.3) * 0.08
+		_arms.r.rotation.x = 1.1 + sin(t * 1.7 + 1.0) * 0.08
 
 
 func get_prompt(_player: Player) -> String:
