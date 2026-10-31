@@ -12,7 +12,7 @@ var game: Game
 var viewport: SubViewport
 var camera: Camera3D
 var _env: Environment
-var _sky: ProceduralSkyMaterial
+var _sky: ToonSky
 var _shown: Porthole
 
 
@@ -27,7 +27,7 @@ func _ready() -> void:
 	camera.far = 4000.0
 	camera.current = true
 	viewport.add_child(camera)
-	_sky = ProceduralSkyMaterial.new()
+	_sky = ToonSky.new()
 	var sky := Sky.new()
 	sky.sky_material = _sky
 	_env = game.exterior.environment().duplicate()

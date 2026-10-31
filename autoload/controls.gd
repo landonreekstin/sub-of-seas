@@ -11,6 +11,7 @@ const BINDINGS := {
 	"move_right": [KEY_D],
 	"jump": [KEY_SPACE],
 	"crouch": [KEY_CTRL], # hold
+	"sprint": [KEY_SHIFT], # hold
 	"interact": [KEY_E],
 	"leave_station": [KEY_Q],
 	"next_station": [KEY_TAB],
@@ -23,7 +24,7 @@ const BINDINGS := {
 ## The rebindable actions, in the settings menu's order, with their names there.
 const REBINDABLE := {
 	"move_forward": "Walk forward", "move_back": "Walk back", "move_left": "Step left",
-	"move_right": "Step right", "jump": "Jump", "crouch": "Crouch (hold)", "interact": "Use / man a station",
+	"move_right": "Step right", "jump": "Jump", "crouch": "Crouch (hold)", "sprint": "Sprint (hold)", "interact": "Use / man a station",
 	"leave_station": "Leave a station", "next_station": "Next station in a cluster",
 	"drop_tool": "Put a tool down", "voice": "Talk (hold)", "bot": "Post / stand down a bot", "quit_to_menu": "Leave to the menu",
 }

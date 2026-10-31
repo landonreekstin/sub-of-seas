@@ -10,6 +10,8 @@ const JUMP := 3.2
 const EYE_HEIGHT := 1.6
 const CROUCH_EYE := 1.05
 const CROUCH_SPEED := 0.5 ## of walking speed
+const SPRINT_SPEED := 1.75 ## of walking speed, running forward
+const SPRINT_FOV := 7.0 ## degrees the view widens at a run
 const REACH := 2.2
 ## Emotes: key -> name, and how long each plays (seconds).
 const EMOTE_KEYS := {KEY_1: "wave", KEY_2: "salute", KEY_3: "jig", KEY_4: "point", KEY_5: "cheer"}
@@ -22,6 +24,9 @@ var climbing := false
 var emote := "" ## the emote being played, replicated so everyone sees it
 var crouching := false ## held Ctrl: lower, slower, quieter feet; replicated
 var _crouch := 0.0 ## 0 standing .. 1 down, eased
+var sprinting := false ## held Shift running forward: faster, louder feet; replicated
+var _sprint := 0.0 ## 0 walking .. 1 running, eased (view widens, head bobs)
+var _bob := 0.0 ## head-bob phase
 var _emote_t := 0.0
 var _step_pos := Vector3.ZERO ## for footsteps
 var _step_dist := 0.0 ## distance since the last footstep or rung
@@ -110,7 +115,7 @@ func _build() -> void:
 	var sync := MultiplayerSynchronizer.new()
 	sync.name = "Sync"
 	var cfg := SceneReplicationConfig.new()
-	for prop: String in [".:position", ".:rotation", "Head:rotation", ".:climbing", ".:emote", ".:crouching"]:
+	for prop: String in [".:position", ".:rotation", "Head:rotation", ".:climbing", ".:emote", ".:crouching", ".:sprinting"]:
 		var path := NodePath(prop)
 		cfg.add_property(path)
 		cfg.property_set_spawn(path, true)
@@ -279,11 +284,11 @@ func _footsteps() -> void:
 	if absf(moved.y) > 0.03: # in the air
 		return
 	_step_dist += Vector2(moved.x, moved.z).length()
-	if _step_dist > 0.8:
+	if _step_dist > (1.15 if sprinting else 0.8):
 		_step_dist = 0.0
 		# Your own feet quieter than a crewmate's: you hear them all the time.
 		# Crouched, you creep: barely a sound.
-		Sfx.play_at(self, "step_%d" % randi_range(1, 3), Vector3(0, 0.05, 0), (-10.0 if is_local() else -4.0) - (12.0 if crouching else 0.0), randf_range(0.9, 1.1))
+		Sfx.play_at(self, "step_%d" % randi_range(1, 3), Vector3(0, 0.05, 0), (-10.0 if is_local() else -4.0) - (12.0 if crouching else 0.0) + (3.0 if sprinting else 0.0), randf_range(0.9, 1.1))
 
 
 ## Crouched: the eye drops (yours) and the body squats down (everyone else's view of you).
@@ -352,6 +357,18 @@ func _unhandled_input(event: InputEvent) -> void:
 		_place_pump()
 
 
+## Running: the view widens a little and the head bobs with the stride.
+func _pose_sprint(delta: float) -> void:
+	var moving := Vector2(velocity.x, velocity.z).length() > 0.5 and is_on_floor()
+	_sprint = move_toward(_sprint, 1.0 if sprinting and moving and station == null else 0.0, delta * 4.0)
+	if camera.top_level:
+		return
+	camera.fov = float(Settings.get_value("fov")) + SPRINT_FOV * _sprint * _sprint
+	_bob += delta * Vector2(velocity.x, velocity.z).length() * 2.6
+	camera.position.y = absf(sin(_bob)) * 0.05 * _sprint
+	camera.position.x = sin(_bob) * 0.025 * _sprint
+
+
 func _physics_process(delta: float) -> void:
 	if not is_local() or climbing:
 		return
@@ -370,6 +387,11 @@ func _physics_process(delta: float) -> void:
 	var speed := SPEED * lerpf(1.0, 0.4, wade) * lerpf(1.0, 0.55, breathing().x) # bad air makes your legs heavy
 	if crouching:
 		speed *= CROUCH_SPEED
+	# Sprint: forward (or forward and to the side), not crouched, and not in foul air.
+	sprinting = Input.is_action_pressed("sprint") and not crouching and input.y < -0.3 \
+			and not Game.instance.menu_open() and emote == ""
+	if sprinting:
+		speed *= lerpf(SPRINT_SPEED, 1.0, breathing().x)
 	velocity.x = dir.x * speed
 	velocity.z = dir.z * speed
 	if is_on_floor():
@@ -394,6 +416,7 @@ func _process(delta: float) -> void:
 			_end_emote()
 	_apply_hull_tilt()
 	_apply_shake(delta)
+	_pose_sprint(delta)
 	var hud := Game.instance.hud
 	var air := breathing()
 	hud.set_air(air.x, air.y, is_knocked_out())

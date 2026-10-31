@@ -7,6 +7,9 @@ const CLASSES := ["subchaser", "kaibokan", "destroyer", "freighter", "tanker", "
 
 
 func _initialize() -> void:
+	DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)
+	DisplayServer.window_set_size(Vector2i(1280, 720))
+	DisplayServer.window_set_position(Vector2i.ZERO)
 	var root3d := Node3D.new()
 	root.add_child(root3d)
 	var env := Environment.new()
@@ -30,8 +33,7 @@ func _initialize() -> void:
 		root3d.add_child(p)
 		var c := Camera3D.new()
 		root3d.add_child(c)
-		c.position = Vector3(-14, 9, 12)
-		c.look_at(p.position)
+		c.look_at_from_position(Vector3(-14, 9, 12), p.position)
 		return
 	var d: ShipClassData = load("res://data/ships/%s.tres" % k)
 	var m := ShipModels.build(d)
@@ -44,5 +46,12 @@ func _initialize() -> void:
 	cam.fov = 40.0
 	cam.far = 10000.0
 	root3d.add_child(cam)
-	cam.position = Vector3(-d.length * 0.25, d.length * 0.35, d.length * 1.3)
-	cam.look_at(Vector3(0, d.length * 0.05, 0))
+	cam.look_at_from_position(Vector3(d.length * 0.62, d.length * 0.14, d.length * 0.3), Vector3(d.length * 0.12, d.length * 0.05, 0))
+	if args.size() > 1: # an output path: save a screenshot there and quit
+		_save(args[1])
+
+
+func _save(path: String) -> void:
+	await create_timer(2.0).timeout
+	root.get_texture().get_image().save_png(path)
+	quit()

@@ -17,7 +17,7 @@ var _ships := {} ## ship id -> Node3D
 var _tracks := {} ## torpedo id -> {from, head (3D xz), ended (sim time, or -1 while running)}
 var _planes := {} ## aircraft id -> Node3D
 var _env: Environment
-var _sky: ProceduralSkyMaterial
+var _sky: ToonSky
 var _sun: DirectionalLight3D
 var _look := "" ## the conditions last applied to the sky, sun and sea
 var _terrain: TerrainView
@@ -41,12 +41,8 @@ static func create() -> ExteriorWorld:
 
 
 func _ready() -> void:
-	var sky_mat := ProceduralSkyMaterial.new()
+	var sky_mat := ToonSky.new()
 	_sky = sky_mat
-	sky_mat.sky_top_color = Color("#3F7FBF")
-	sky_mat.sky_horizon_color = Color("#BFD8E8")
-	sky_mat.ground_horizon_color = Color("#BFD8E8")
-	sky_mat.ground_bottom_color = Color("#1F4E79")
 	var sky := Sky.new()
 	sky.sky_material = sky_mat
 	var env := Environment.new()
@@ -180,6 +176,8 @@ func _apply_conditions(c: Conditions) -> void:
 	_sky.sky_horizon_color = Color("#22324A") if c.night else Color("#BFD8E8")
 	_sky.ground_horizon_color = _sky.sky_horizon_color
 	_sky.ground_bottom_color = Color("#050A12") if c.night else Color("#1F4E79")
+	_sky.night = c.night
+	_sky.clouds = [0.3, 0.5, 0.8][c.sea_state] # calm and clear .. rough and overcast
 	_sun.light_energy = 0.25 if c.night else 1.2
 	_sun.light_color = Color("#9DB4D8") if c.night else Color.WHITE
 	_env.ambient_light_color = Color("#2A3A55") if c.night else Color("#8FA8BF")
@@ -213,13 +211,14 @@ func environment() -> Environment:
 
 ## Sets `env` and its `sky` up for an eye `depth` metres under the surface (the periscope's,
 ## or a porthole's own environment).
-static func paint_water(env: Environment, sky: ProceduralSkyMaterial, depth: float, night: bool) -> void:
+static func paint_water(env: Environment, sky: ToonSky, depth: float, night: bool) -> void:
 	var dark := clampf(clampf(depth / 150.0, 0.0, 0.7) + (0.55 if night else 0.0), 0.0, 0.9)
 	var mid := Color("#2FB3C4").lerp(Color("#04182A"), dark)
 	sky.sky_top_color = Color("#B4F2F2").lerp(Color("#0A2A40"), dark)
 	sky.sky_horizon_color = mid
 	sky.ground_horizon_color = mid
 	sky.ground_bottom_color = Color("#0D5878").lerp(Color("#020A14"), dark)
+	sky.clouds = 0.0
 	env.fog_enabled = true
 	env.fog_light_color = mid
 	env.fog_density = 0.016

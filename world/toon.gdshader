@@ -1,7 +1,8 @@
 // The painted toon look every opaque primitive shares (Build.mat): the palette colour,
 // broken up by hand-painted blotches and a slight per-piece shade so no two plates match,
 // times the grey detail map (triplanar, in the piece's own space so it rides along on a
-// moving ship), lit in soft-edged toon bands with a warm rim on the lit side.
+// moving ship), bumped by its height map (seams sink, rivets and tread stand up, the hollows
+// hold grime), lit in soft-edged toon bands with a warm rim on the lit side.
 shader_type spatial;
 render_mode cull_back;
 
@@ -9,6 +10,9 @@ uniform vec4 albedo : source_color = vec4(1.0);
 uniform sampler2D detail : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform bool use_detail = false;
 uniform float detail_scale = 1.0; // repeats per metre
+uniform sampler2D height_map : hint_default_white, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform float bump = 0.0; // how hard the height map bends the light
+uniform float cavity = 0.0; // how dark the low places of the height map get
 uniform float roughness = 0.75;
 uniform float paint = 1.0; // how strong the painted variation is
 uniform float paint_scale = 1.0; // blotches per metre (big plating gets big, soft ones)
@@ -53,8 +57,28 @@ void fragment() {
 		vec3 w = pow(abs(local_norm), vec3(4.0));
 		w /= w.x + w.y + w.z;
 		vec3 q = local_pos * detail_scale;
-		vec3 d = texture(detail, vec2(q.z, -q.y)).rgb * w.x + texture(detail, q.xz).rgb * w.y + texture(detail, vec2(q.x, -q.y)).rgb * w.z;
+		vec2 ux = vec2(q.z, -q.y);
+		vec2 uy = q.xz;
+		vec2 uz = vec2(q.x, -q.y);
+		vec3 d = texture(detail, ux).rgb * w.x + texture(detail, uy).rgb * w.y + texture(detail, uz).rgb * w.z;
 		col *= d;
+		if (bump > 0.0 || cavity > 0.0) {
+			// Height, and its slope one texel across, in each of the three projections.
+			float e = 1.5 / 512.0;
+			float hx = texture(height_map, ux).r;
+			float hy = texture(height_map, uy).r;
+			float hz = texture(height_map, uz).r;
+			vec2 gx = vec2(texture(height_map, ux + vec2(e, 0.0)).r - hx, texture(height_map, ux + vec2(0.0, e)).r - hx);
+			vec2 gy = vec2(texture(height_map, uy + vec2(e, 0.0)).r - hy, texture(height_map, uy + vec2(0.0, e)).r - hy);
+			vec2 gz = vec2(texture(height_map, uz + vec2(e, 0.0)).r - hz, texture(height_map, uz + vec2(0.0, e)).r - hz);
+			float h = hx * w.x + hy * w.y + hz * w.z;
+			col *= mix(1.0, smoothstep(0.1, 0.5, h) * 0.45 + 0.55, cavity);
+			// The slope as a local-space vector (u, v axes of each projection), off the normal.
+			vec3 g = vec3(0.0, -gx.y, gx.x) * w.x + vec3(gy.x, 0.0, gy.y) * w.y + vec3(gz.x, -gz.y, 0.0) * w.z;
+			g -= dot(g, local_norm) * local_norm;
+			vec3 dv = (VIEW_MATRIX * (MODEL_MATRIX * vec4(-g * bump, 0.0))).xyz;
+			NORMAL = normalize(NORMAL + dv);
+		}
 	}
 	ALBEDO = col;
 	ROUGHNESS = roughness;

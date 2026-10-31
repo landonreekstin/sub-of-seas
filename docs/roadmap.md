@@ -154,3 +154,22 @@ then. What `docs/design.md` promises that wasn't built yet:
       portable pump, off the battery, loud enough for escorts to hear; it can break, and a bot
       pump man runs it while there's water aboard and stops it while hunted.
 
+
+## M11 — Graphics pass and sprint (2026-10-30)
+lando: "I want to greatly improve the graphics. Improve the shapes and textures of everything.
+Also add a sprint functionality".
+- [x] **Shapes**: every box has bevelled edges, cylinders are lathed with chamfered rims;
+      the boat's hull curves at the shoulders and bilges, with curved ring frames; torpedoes
+      are real Mark 14s (warhead, tail cone, fins, screws) in cradle straps.
+- [x] **Ships**: lofted hulls (fine bow with flare and a raked stem, sheer, round bilges, a
+      rounded stern and transom, raised forecastles and poops), a red bottom showing above
+      the water, a dark rubbing strake; turrets on barbettes with sloped faces and tapered
+      barrels, funnels with caps, window bands and overhanging roofs, masts with yards, ship's
+      boats, portholes, hangar openings and elevators on the carrier.
+- [x] **Textures**: 512 px detail maps with height maps; the toon shader bumps the light with
+      them and darkens the hollows (seams, rivet rows, tread, plank joints, lapped strakes); a
+      fine painted grain on every colour without its own map; woven cloth on the crew.
+- [x] **Sky**: painted toon clouds with shaded bellies, drifting (more of them in rougher
+      seas), a soft sun, stars at night.
+- [x] **Sprint** (hold Shift, forward): 1.75× walking speed, the view widens and the head
+      bobs, longer and louder footsteps that crewmates hear; not crouched, slower in foul air.

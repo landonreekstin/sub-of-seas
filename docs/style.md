@@ -17,6 +17,21 @@ and update "Current style" in the same commit.
   and each plate a touch different from its neighbour (soft and large on ship hulls, finer
   inside the boat); a warm rim on the lit side; a small hard highlight on brass. Glowing and
   see-through things stay plain.
+- **Shapes** (lando: improve the shapes and textures of everything): nothing has a knife
+  edge. Boxes are bevelled (a hair on a card, a hand's width on a ship's bridge) so every edge
+  catches the toon light; cylinders are lathed with chamfered rims. Inside, the hull curves
+  over at the shoulders into the deckhead and down at the bilges, with ring frames following
+  the curve, so a compartment reads as the inside of a pressure hull. The textures carry
+  relief: each detail map has a height map, and the toon shader bends the light with it and
+  darkens the hollows, so seams sink and rivet rows, deck tread, plank joints and lapped ship
+  strakes stand up. Every colour without its own map gets a fine painted grain; the crew's
+  shirts and dungarees are woven cloth.
+- **Sky:** painted toon clouds, flat white tops and blue-grey bellies with crisp edges,
+  drifting slowly; few on a calm day, overcast in a rough sea; a soft round sun; stars on a
+  night sky; no clouds under the water.
+- **Sprint:** hold Shift running forward: 1.75× walking speed, the view widens a few degrees
+  and the head bobs, boots ring louder and further apart (crewmates hear it). Not while
+  crouched; foul air takes it away.
 - **Detail inside the boat:** ring frames over the deckhead and down the shoulders with
   stencilled frame numbers, cable runs (black, red, blue) in brass clamps, red handwheel
   valves on the white pipe runs, wire cages round the bulbs, a red extinguisher by each
@@ -44,8 +59,12 @@ and update "Current style" in the same commit.
   a quality bar under them that runs red → amber → green.
 - **Chart:** cream paper, pale blue-grey 1 km grid, pencil-grey own track and boat, red for
   the TDC, blue for sonar bearings. Hand-plotted, not a radar screen.
-- **Enemy ships:** primitive hulls with a pointed prism bow, grey (`#4A4E55`) with a red
-  boot-top, tan decks, light grey upperworks, black funnel caps and gun barrels. Each class
+- **Enemy ships:** lofted hulls: a fine bow with flare and a raked stem, sheer rising to the
+  bow, round bilges, a rounded stern with a transom, raised forecastles and poops; grey
+  (`#4A4E55`) with the red bottom showing a hand's width above the water and a dark rubbing
+  strake under the deck edge, tan decks, turrets on round barbettes with sloped faces and
+  tapered barrels, funnels with a lip and black cap, deckhouses with a dark window band and an
+  overhanging roof, pole masts with a yard, white ship's boats, portholes amidships, light grey upperworks, black funnel caps and gun barrels. Each class
   has one read-at-a-glance silhouette feature: the battleship's stacked pagoda, the cruiser's
   raked trunked funnel and big bridge, the carrier's flat deck and starboard island, the
   tanker's long low well deck. A hit tanker (and any ship going down) burns orange under a
@@ -53,7 +72,8 @@ and update "Current style" in the same commit.
 - **Compartments:** each reads at a glance. Officers' country: bunks to port, a wardroom
   table with a cream cloth, brass-handled battery-well hatches underfoot. Crew's mess: two
   tiers of bunks both sides and a mess table. Maneuvering: dark switch cubicles with brass
-  handles. Torpedo rooms: olive torpedoes racked low, bunks over them.
+  handles. Torpedo rooms: olive Mark 14s racked low in cradle straps (grey warhead, tapering
+  tail, four fins, twin brass screws), bunks over them.
 - **Sea:** noise-broken foam on the crests, white wakes astern of ships and a bow wave;
   a torpedo leaves a thin white bubble track from the tube to where it is, brightest at the
   head, breaking up and spreading behind and gone about a minute later (lando);
@@ -185,3 +205,4 @@ and update "Current style" in the same commit.
 | 2026-10-30 | lando | There should be ding sounds when you change the sub's speed, and sound effects for turning the helm. Everything should have sound effects. |
 | 2026-10-30 | Blaney | The footsteps make it sound like someone is knocking on my door, which is not optimal. |
 | 2026-10-30 | Blaney | Tutorials per job: pick the job from a list when you click Training patrol; crew calls show as a big line with who said it and a little bell; keep the long whole-boat training at the bottom of the list. |
+| 2026-10-30 | lando | I want to greatly improve the graphics. Improve the shapes and textures of everything. Also add a sprint functionality. |
