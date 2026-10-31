@@ -21,7 +21,7 @@ static func job(station_id: String) -> String:
 	if station_id.begins_with("tube_"):
 		return "torpedoman"
 	return {"helm": "helmsman", "dive": "planesman", "ballast": "ballast man", "periscope": "lookout",
-		"tdc": "TDC operator", "sonar": "sonarman", "engine": "motor machinist", "air": "auxiliaryman", "bilge": "pump man",
+		"tdc": "TDC operator", "sonar": "sonarman", "engine": "motor machinist", "air": "auxiliaryman", "bilge": "pump man", "gun": "gunlayer", "ammo": "ammunition passer",
 		"nav": "navigator", "darts": "darts player"}.get(station_id, "crewman")
 
 
@@ -70,6 +70,10 @@ func request(station_id: String, key: String, value: Variant) -> void:
 					b.depth = clampf(float(b.depth) + float(value), 0.0, sub.data.test_depth)
 				"depth_to":
 					b.depth = clampf(float(value), 0.0, sub.data.test_depth)
+				"fire" when station_id == "gun": # open fire / cease fire
+					b.fire = not b.get("fire", false)
+				"pass": # pass ammunition up / hold it
+					b.pass = not b.get("pass", true)
 				"fire", "mark", "report", "vent", "blow":
 					b[key] = true
 				"pump":
@@ -265,6 +269,45 @@ func _bilge(b: Dictionary, hunted: bool) -> void:
 	var want: bool = (wet and not hunted) if b.auto else bool(b.get("pump", hull.bilge_on))
 	if want != hull.bilge_on:
 		_order("bilge", b, "pump", want)
+
+
+## Lays the gun on the nearest ship in range and fires as fast as it's loaded, leading her by the
+## shell's time of flight, his range a few percent out. On his own he engages whatever comes in
+## range while she's on the surface; on orders, only after "open fire".
+func _gun(b: Dictionary, _hunted: bool) -> void:
+	var w := Sim.world
+	var gun: Dictionary = game.crew.get("gun", {})
+	if not w.sub.is_surfaced() or int(gun.get("ready", 0)) <= 0 or w.time < float(gun.get("next", 0.0)):
+		return
+	if not b.auto and not b.get("fire", false):
+		return
+	var target := _gun_target()
+	if target == null:
+		return
+	var flight := target.pos.distance_to(w.sub.pos) / OceanWorld.SHELL_SPEED
+	var aim := target.pos + target.direction() * target.speed * flight
+	var r := w.sub.pos.distance_to(aim) * (1.0 + randf_range(-0.04, 0.04))
+	_order("gun", b, "fire", [ShipState.bearing(w.sub.pos, aim) + randf_range(-0.3, 0.3), r])
+
+
+## The nearest ship afloat within the gun's reach and arc.
+func _gun_target() -> ShipState:
+	var sub := Sim.world.sub
+	var best: ShipState = null
+	for s in Sim.world.ships:
+		var d := s.pos.distance_to(sub.pos)
+		var rel := wrapf(ShipState.bearing(sub.pos, s.pos) - sub.heading, -180.0, 180.0)
+		if s.is_sinking() or s.passive or d > sub.data.gun_range * 0.85 or absf(rel) > GunStation.ARC:
+			continue
+		if best == null or d < best.pos.distance_to(sub.pos):
+			best = s
+	return best
+
+
+## Passes rounds up to the gun whenever there's room in its locker (unless told to hold).
+func _ammo(b: Dictionary, _hunted: bool) -> void:
+	if b.auto or b.get("pass", true):
+		_order("ammo", b, "pass")
 
 
 ## Watches the chart ahead and sings out about shoal water.

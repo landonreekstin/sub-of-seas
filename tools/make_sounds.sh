@@ -139,3 +139,8 @@ sox -n $R $T/r1.wav synth 3.0 pinknoise gain -6 highpass 900 lowpass 7000 gain -
 sox -n $R $T/r2.wav synth 3.0 whitenoise gain -6 bandpass 2400 1200 tremolo 23 70 tremolo 7 40 gain -8
 sox -n $R $T/r3.wav synth 3.0 brownnoise gain -6 lowpass 300 tremolo 0.3 30 gain -10
 sox -m $T/r1.wav $T/r2.wav $T/r3.wav $R $A/rain_loop.wav gain -n -14
+# The deck gun: a hard crack, a deep boom and the report rolling away over the water.
+sox -n $R $T/g1.wav synth 0.06 whitenoise lowpass 5000 fade q 0.001 0.06 0.05
+sox -n $R $T/g2.wav synth 1.6 brownnoise lowpass 300 fade q 0.003 1.6 1.4 gain -2
+sox -n $R $T/g3.wav synth 0.35 sine 55 fade q 0.002 0.35 0.3 gain -3
+sox -m $T/g1.wav $T/g2.wav $T/g3.wav $R $A/deck_gun.wav reverb 60 40 100 pad 0 0.6 gain -n -1

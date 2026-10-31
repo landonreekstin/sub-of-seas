@@ -97,6 +97,8 @@ leaving station mode. One player per station; others see who is on it.
 | Engine (diesel) | Start/stop each of two diesels (1/2), battery gauge | Surfaced only: diving with them running floods them (controls broken + a leak). One diesel = 70 % surface speed, two = full; what the screws don't use charges the battery (Gato: flat to full in 8 min stopped) |
 | Electrical | Battery charge, motor switchboard, lights | Battery damaged + seawater = chlorine gas (M3+) |
 | Air | O2 bleed, CO2 scrubbers (absorbent canisters) | Submerged CO2 rises with crew count and time |
+| Deck gun | Up the bridge hatch, surfaced only: train, set the range, fire; walk the fall of shot onto the target | A few ready rounds at the gun, the rest passed up the ammunition scuttle. Loud: every ship within 12 km knows, and the escorts shoot back. Diving clears the deck |
+| Ammunition scuttle | Pass rounds up from the magazine to the gun | One every 1.5 s while held; a bot can do it |
 
 ## 4. Damage, repair and tools
 

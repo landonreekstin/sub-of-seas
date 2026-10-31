@@ -40,6 +40,10 @@ func _orders_now(b: Dictionary, sub: SubState) -> String:
 			return "course %03d°, %s" % [roundi(b.course) % 360, SubState.TELEGRAPH_NAMES[int(b.speed)]]
 		"dive":
 			return "depth %d m" % roundi(b.depth)
+		"gun":
+			return "OPEN FIRE" if b.get("fire", false) else "hold fire"
+		"ammo":
+			return "passing rounds up" if b.get("pass", true) else "holding the rounds below"
 	return "standing by for your word"
 
 
@@ -59,6 +63,10 @@ func _keys() -> String:
 			return "[V] flood the tanks    [L] blow them"
 		"bilge":
 			return "[P] start / stop the pump"
+		"gun":
+			return "[F] open fire / cease fire (on the nearest ship in range)"
+		"ammo":
+			return "[P] pass rounds up / hold them"
 	return ""
 
 
@@ -99,6 +107,14 @@ func _input(event: InputEvent) -> void:
 		_send("vent")
 	elif station_id == "ballast" and k == KEY_L:
 		_send("blow")
+	elif station_id == "gun" and k == KEY_F:
+		if _bot().auto:
+			_send("auto")
+		_send("fire")
+	elif station_id == "ammo" and k == KEY_P:
+		if _bot().auto:
+			_send("auto")
+		_send("pass")
 	elif station_id == "bilge" and k == KEY_P:
 		if _bot().auto:
 			_send("auto")

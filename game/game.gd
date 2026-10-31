@@ -14,6 +14,7 @@ const PING_NOTICE_GAP := 20.0 ## s between "they have us" announcements
 const CLEAR_TIME := 60.0 ## s with no escort hunting nearby before the patrol counts as done
 const PASS_OUT_AFTER := 6.0 ## s breathing air at its worst before a crewman passes out
 const KNOCKED_OUT_TIME := 15.0
+const PASS_TIME := 1.5 ## s for the ammunition party to pass one round up to the gun
 
 static var instance: Game
 
@@ -176,6 +177,9 @@ func _initial_crew() -> Dictionary:
 		"tdc": {"target": -1, "marks": [], "speed_adj": 0.0, "course_adj": 0.0, "follow": false},
 		"plot": [], ## sonar bearings on the chart: {t, x, y (own position), b}
 		"pencil": [], ## pencil marks on the chart: {x, y}
+		## The deck gun: ready-use rounds at the gun, the rest in the magazine below; `next` is
+		## the sim time it can fire again, `pass_next` when the next round can come up.
+		"gun": {"ready": sub_class.gun_ready, "magazine": sub_class.gun_rounds - sub_class.gun_ready, "next": 0.0, "pass_next": 0.0},
 	}
 
 
@@ -556,6 +560,12 @@ func announce(text: String) -> void:
 	hud.show_message(text)
 
 
+## Host -> one crewman: a message just for him.
+@rpc("authority", "call_local", "reliable")
+func notice(text: String) -> void:
+	hud.show_message(text, 4.0)
+
+
 func _sender() -> int:
 	var s := multiplayer.get_remote_sender_id()
 	return s if s != 0 else multiplayer.get_unique_id()
@@ -590,6 +600,10 @@ func rq_station_enter(station_id: String) -> void:
 		return
 	var peer := _sender()
 	if station_occupant(station_id) not in [0, peer] or crew.knocked.has(peer):
+		push_crew()
+		return
+	if station_id == "gun" and not Sim.world.sub.is_surfaced():
+		notice.rpc_id(peer, "The hatch is shut: the gun can only be manned on the surface.")
 		push_crew()
 		return
 	_clear_stations_of(peer)
@@ -627,6 +641,33 @@ func rq_jukebox() -> void:
 	if not multiplayer.is_server():
 		return
 	crew.jukebox = (int(crew.get("jukebox", 0)) + 1) % Jukebox.RECORDS.size()
+	push_crew()
+
+
+## Host: the deck gun fires a round on true bearing `brg` set for `range_m`, if she is on the
+## surface, has a round at the gun and is ready again.
+func _fire_gun(brg: float, range_m: float) -> void:
+	var gun: Dictionary = crew.gun
+	var w := Sim.world
+	if not w.sub.is_surfaced() or int(gun.ready) <= 0 or w.time < float(gun.next):
+		return
+	gun.ready = int(gun.ready) - 1
+	gun.next = w.time + sub_class.gun_reload
+	w.fire_gun(brg, clampf(range_m, 200.0, sub_class.gun_range), sub_class.gun_damage)
+	if int(gun.ready) == 0:
+		announce.rpc("Gun: out of ready rounds! %s" % ("Pass ammunition up (ammo scuttle, %s)." % interior.stations.ammo.get_meta("where") if int(gun.magazine) > 0 else "The magazine's empty."))
+	push_crew()
+
+
+## Host: the ammunition party passes one round up from the magazine to the gun.
+func _pass_ammo() -> void:
+	var gun: Dictionary = crew.gun
+	var w := Sim.world
+	if int(gun.magazine) <= 0 or int(gun.ready) >= sub_class.gun_ready or w.time < float(gun.pass_next):
+		return
+	gun.magazine = int(gun.magazine) - 1
+	gun.ready = int(gun.ready) + 1
+	gun.pass_next = w.time + PASS_TIME
 	push_crew()
 
 
@@ -688,6 +729,12 @@ func apply_order(station_id: String, key: String, value: Variant, by: int) -> vo
 		"bilge":
 			if key == "pump":
 				Sim.world.hull.bilge_on = bool(value) and sub.battery > 0.0
+		"gun":
+			if key == "fire" and value is Array and value.size() == 2:
+				_fire_gun(float(value[0]), float(value[1]))
+		"ammo":
+			if key == "pass":
+				_pass_ammo()
 		"air":
 			var air := Sim.world.air
 			if key == "canister":
@@ -917,6 +964,10 @@ func _host_tick(delta: float) -> void:
 	if sub.periscope_raised and Sim.world.hull.is_broken("periscope"):
 		sub.periscope_raised = false
 	Sim.world.crew_count = crew.names.size()
+	if station_occupant("gun") > 0 and not sub.is_surfaced():
+		crew.stations.erase("gun")
+		announce.rpc("Clear the deck! The gun crew tumbles down the hatch.")
+		push_crew()
 	_breathe(delta)
 	_tdc_follow()
 	_lookouts()
@@ -1135,6 +1186,13 @@ func _event_sound(kind: String, data: Dictionary) -> void:
 				Sfx.play("splash")
 		"own_ping":
 			Sfx.play("sonar_ping")
+		"gun":
+			var on_gun := local_player != null and local_player.station != null and local_player.station.station_id == "gun"
+			Sfx.play("deck_gun", 0.0 if on_gun else -12.0, randf_range(0.95, 1.05)) # muffled through the hull below
+		"gun_hit":
+			var watching := local_player != null and local_player.station != null and local_player.station.station_id in ["gun", "periscope"]
+			if watching:
+				Sfx.play("shell_hit", -14.0, 0.6) # far off, a flat bang
 		"fired":
 			Sfx.play("torpedo_launch")
 		"hit", "beached":
@@ -1154,6 +1212,14 @@ func _on_sim_event(kind: String, data: Dictionary) -> void:
 		local_player.add_trauma(0.8 if data.hard else 0.3)
 	elif kind == "shell":
 		exterior.water_column(Vector2(data.x, data.y), 4.0)
+	elif kind == "gun":
+		exterior.gun_fired()
+		if local_player != null and local_player.station != null and local_player.station.station_id == "gun":
+			local_player.add_trauma(0.25)
+	elif kind == "gun_splash":
+		exterior.shell_splash(Vector2(data.x, data.y))
+	elif kind == "gun_hit":
+		exterior.shell_burst(Vector2(data.x, data.y))
 	elif kind == "blast":
 		exterior.water_column(Vector2(data.x, data.y), data.d)
 		var dist: float = data.dist
@@ -1203,6 +1269,10 @@ func _on_sim_event(kind: String, data: Dictionary) -> void:
 			end_patrol("lost", data.reason)
 		"hit":
 			announce.rpc("HIT! %s" % data.name)
+		"gun_hit":
+			var ship := Sim.world.find_ship(int(data.ship))
+			if ship != null and not ship.is_sinking():
+				announce.rpc("Gun: a hit on the %s!" % data.name)
 		"dud":
 			announce.rpc("Dud... clang on the %s's hull. They know we're here." % data.name)
 		"sunk":

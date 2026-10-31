@@ -180,8 +180,12 @@ Also add a sprint functionality".
 
 ## M12 — Deck gun and weather (2026-10-30)
 lando: "add deck gun and weather to the roadmap".
-- [ ] **Deck gun**: a gun on the casing for fighting on the surface, crewed from inside (up
+- [x] **Deck gun**: a gun on the casing for fighting on the surface, crewed from inside (up
       the conning-tower hatch), against merchants and small escorts, with ammunition passed up.
+      *(S-boat 4-inch, Gato 5-inch, Narwhal 6-inch. Mouse trains, the range is set on the sight
+      (rangefinder on F), fall of shot to walk onto the target; a few ready rounds at the gun and
+      the rest passed up the scuttle by a crewmate or bot; firing alerts every ship within 12 km
+      and the escorts shoot back; diving clears the deck. Bot gunlayer and passer.)*
 - [x] **Weather**: rain and squalls that roll across the patrol, cutting how far lookouts and
       the periscope see (cover to close in on a convoy), rougher seas and darker skies with them.
       *(Squalls drift with the wind, by sea state (a mission can set how many); in one, their

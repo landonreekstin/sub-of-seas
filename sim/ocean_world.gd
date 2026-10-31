@@ -13,6 +13,10 @@ const TRACK_SIGHT := 1500.0 ## by day in a moderate sea, how far a lookout sees 
 const TRACK_SPOT_RATE := 0.6 ## per second, close by
 const TRACK_MIN_RUN := 150.0 ## a fresh track is too short to follow back
 const BILGE_DRAIN := 1.0 / 3600.0 ## battery per second the bilge pump takes (an hour flat out empties it)
+const SHELL_SPEED := 550.0 ## m/s, a deck-gun shell's average speed over its flight
+const GUN_HEARD := 12000.0 ## m: every ship this close hears (and by night sees the flash of) our deck gun
+const GUN_SPREAD := 0.25 ## degrees, one sigma, of a round's line
+const GUN_RANGE_SPREAD := 0.012 ## and of its range, as a fraction
 const BATTERY_WARNINGS := [0.2, 0.1] ## announce when the charge falls past these
 const BREAKDOWN_TEXT := {
 	"engine": "The diesels are knocking: the engine controls are down. Wrench, engine room!",
@@ -26,6 +30,8 @@ var sub: SubState
 var ships: Array[ShipState] = []
 var torpedoes: Array[Torpedo] = []
 var charges: Array[DepthCharge] = []
+## Our deck gun's shells in flight (host): {from, land (Vector2), range, t (s to go), dmg}.
+var shells: Array[Dictionary] = []
 var planes: Array[Aircraft] = []
 var whales: Array[Whale] = []
 var hull := HullState.new()
@@ -171,6 +177,7 @@ func step(dt: float, authoritative := true) -> void:
 		_spot_tracks(dt)
 		ships = ships.filter(func(s: ShipState) -> bool: return s.sink < 1.0)
 		_step_charges(dt)
+		_step_shells(dt)
 		# The bilge pump runs off the battery, and it's loud.
 		if hull.bilge_on and (sub.battery <= 0.0 or hull.is_broken("bilge")):
 			hull.bilge_on = false
@@ -254,6 +261,90 @@ func _spot_tracks(dt: float) -> void:
 			ship.ai.report(t.origin(), 250.0, rng, 0.85)
 			event.emit("track_spotted", {"ship": ship.id, "name": ship.data.display_name})
 			break
+
+
+## Our deck gun fires a round on true bearing `brg` set for `range_m`: it lands after its time
+## of flight somewhere near there (each round strays a little). The bang carries: every ship
+## within GUN_HEARD knows there's a submarine on the surface here.
+func fire_gun(brg: float, range_m: float, damage: float) -> void:
+	var b := brg + rng.randfn(0.0, GUN_SPREAD)
+	var r := range_m * (1.0 + rng.randfn(0.0, GUN_RANGE_SPREAD))
+	var rad := deg_to_rad(b)
+	var land := sub.pos + Vector2(sin(rad), cos(rad)) * r
+	shells.append({"from": sub.pos, "land": land, "range": r, "t": r / SHELL_SPEED, "dmg": damage})
+	event.emit("gun", {"x": sub.pos.x, "y": sub.pos.y, "b": brg})
+	for ship in ships:
+		if ship.is_sinking() or ship.passive or ship.pos.distance_to(sub.pos) > GUN_HEARD:
+			continue
+		if ship.ai != null:
+			ship.ai.report(sub.pos, 200.0, rng, 0.9)
+		else:
+			ship.alert()
+
+
+## How steeply a round comes down at this range, degrees: flat close in, plunging far out.
+static func shell_descent(range_m: float) -> float:
+	var k := range_m / 1000.0
+	return minf(0.6 + 0.9 * k * k, 45.0)
+
+
+## How high a ship stands out of the water, for a round coming down on her.
+static func ship_height(data: ShipClassData) -> float:
+	return clampf(data.length * 0.07, 5.0, 20.0)
+
+
+## Where along its flight a round would strike `ship`, or Vector2.INF if it misses her: a round
+## landing short is a miss, but one going over can still hit her side or superstructure on the
+## way down if she stands tall enough there (the flatter the fall, the further over).
+static func shell_strike(from: Vector2, land: Vector2, range_m: float, ship: ShipState) -> Vector2:
+	var back := (from - land).normalized()
+	var slope := tan(deg_to_rad(shell_descent(range_m)))
+	var reach := minf(ship_height(ship.data) / slope, range_m)
+	var d := 0.0
+	while d <= reach:
+		var p := land + back * d
+		if ship.distance_to_hull(p) < ship.data.beam * 0.5 + 1.0 and d * slope <= ship_height(ship.data):
+			return p
+		d += 4.0
+	return Vector2.INF
+
+
+func _step_shells(dt: float) -> void:
+	var flying: Array[Dictionary] = []
+	for sh in shells:
+		sh.t -= dt
+		if sh.t > 0.0:
+			flying.append(sh)
+			continue
+		var hit: ShipState = null
+		var at: Vector2 = sh.land
+		for ship in ships:
+			if ship.is_sinking() or ship.sink > 0.0:
+				continue
+			var p := shell_strike(sh.from, sh.land, sh.range, ship)
+			if p != Vector2.INF:
+				hit = ship
+				at = p
+				break
+		if hit == null:
+			event.emit("gun_splash", {"x": at.x, "y": at.y})
+			continue
+		var info := {"ship": hit.id, "x": at.x, "y": at.y, "name": hit.data.display_name}
+		event.emit("gun_hit", info)
+		damage_ship(hit, sh.dmg, info)
+	shells = flying
+
+
+## A hit on `ship` for `amount` of her hp (a torpedo is 1): she knows she's under attack, and
+## sinking is announced with what she was worth.
+func damage_ship(ship: ShipState, amount: float, info: Dictionary) -> void:
+	ship.alert()
+	ship.hp -= amount
+	if ship.is_sinking():
+		info["tons"] = ship.data.tonnage
+		info["class"] = ship.data.key
+		info["role"] = ship.data.role
+		event.emit("sunk", info)
 
 
 func _step_charges(dt: float) -> void:
@@ -414,13 +505,8 @@ func _check_hits(t: Torpedo) -> void:
 		if t.dud:
 			event.emit("dud", info)
 			return
-		ship.hp -= 1.0
 		event.emit("hit", info)
-		if ship.is_sinking():
-			info["tons"] = ship.data.tonnage
-			info["class"] = ship.data.key
-			info["role"] = ship.data.role
-			event.emit("sunk", info)
+		damage_ship(ship, 1.0, info)
 		return
 
 

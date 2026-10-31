@@ -11,6 +11,11 @@ var viewport: SubViewport
 var camera: Camera3D
 var scope_bearing := 0.0 ## relative bearing, set by the periscope station
 var scope_fov := 32.0
+var eye_mode := "scope" ## "scope": the periscope's eye; "gun": the deck gun's sight, set by the gun station
+var gun_bearing := 0.0 ## the gun's training, relative to the bow
+var gun_fov := 45.0
+var gun_range := 1500.0 ## the range on the sight: the line of sight comes down to the sea there
+var _own: Node3D ## our own boat, seen only from the gun
 var _ocean_near: MeshInstance3D
 var _ocean_far: MeshInstance3D
 var _ships := {} ## ship id -> Node3D
@@ -113,9 +118,18 @@ func _process(delta: float) -> void:
 		return
 	var sub := Sim.world.sub
 	var h := sub.scope_height()
-	camera.position = to_3d(sub.pos, maxf(h, 0.5) if h > 0.0 else maxf(h, -4.0))
-	camera.rotation = Vector3(0.0, -deg_to_rad(sub.heading + scope_bearing), 0.0)
-	camera.fov = scope_fov
+	if eye_mode == "gun":
+		_place_own(sub)
+		var eye := _own.get_node("Gun/Eye") as Node3D
+		eye.rotation.x = -atan2(eye.global_position.y, gun_range) # laid on the waterline at the set range
+		camera.global_transform = eye.global_transform
+		camera.fov = gun_fov
+	else:
+		if _own != null:
+			_own.visible = false
+		camera.position = to_3d(sub.pos, maxf(h, 0.5) if h > 0.0 else maxf(h, -4.0))
+		camera.rotation = Vector3(0.0, -deg_to_rad(sub.heading + scope_bearing), 0.0)
+		camera.fov = scope_fov
 	var snap := Vector3(snappedf(camera.position.x, GRID_SNAP), 0.0, snappedf(camera.position.z, GRID_SNAP))
 	_ocean_near.position = snap
 	_ocean_far.position = Vector3(snap.x, -0.3, snap.z)
@@ -128,7 +142,74 @@ func _process(delta: float) -> void:
 	_weather.sync(Sim.world.conditions, camera.position)
 	_feed_squalls(Sim.world.conditions)
 	_apply_conditions(Sim.world.conditions)
-	_underwater(maxf(-camera.position.y, 0.01) if h <= 0.0 else 0.0)
+	_underwater(maxf(-camera.position.y, 0.01) if h <= 0.0 and eye_mode != "gun" else 0.0)
+
+
+## Our own boat under the gun crew, riding the swell, with the gun trained.
+func _place_own(sub: SubState) -> void:
+	if _own == null:
+		_own = ShipModels.own_boat(sub.data)
+		add_child(_own)
+	_own.visible = true
+	var t := Sim.world.time
+	var sea := Sim.world.conditions.sea_at(sub.pos)
+	_own.position = to_3d(sub.pos, sin(t * 0.7) * 0.15 * (1.0 + sea))
+	_own.rotation = Vector3(sin(t * 0.45) * 0.006 * (1.0 + sea), -deg_to_rad(sub.heading), sin(t * 0.6) * 0.012 * (1.0 + sea))
+	(_own.get_node("Gun") as Node3D).rotation.y = -deg_to_rad(gun_bearing)
+
+
+## Our deck gun fires: a flash and a puff of smoke at the muzzle, the barrel slamming back.
+func gun_fired() -> void:
+	if _own == null or not _own.visible:
+		return
+	var barrel: Node3D = _own.get_node("Gun/Barrel")
+	var muzzle: Node3D = barrel.get_node("Muzzle")
+	var fx := Node3D.new()
+	add_child(fx)
+	fx.global_transform = muzzle.global_transform
+	var flash := Build.sphere(fx, 0.6, Vector3.ZERO, Color("#FFC36A"), 6.0)
+	var smoke := Build.particles(fx, Color(0.8, 0.8, 0.78, 0.45), 14, 1.6, Vector3.FORWARD, 7.0, 20.0, Vector3(0, 0.6, 0), 0.7)
+	smoke.one_shot = true
+	smoke.explosiveness = 0.9
+	smoke.local_coords = false
+	var tw := fx.create_tween()
+	tw.tween_property(flash, "scale", Vector3.ONE * 2.5, 0.06)
+	tw.tween_property(flash, "visible", false, 0.0)
+	tw.tween_interval(3.0)
+	tw.tween_callback(fx.queue_free)
+	var kick := barrel.create_tween()
+	kick.tween_property(barrel, "position:z", 0.45, 0.05)
+	kick.tween_property(barrel, "position:z", 0.0, 0.5).set_ease(Tween.EASE_OUT)
+
+
+## Fall of shot: a round from our gun going into the sea, a tall thin white splash.
+func shell_splash(p: Vector2) -> void:
+	var fx := Node3D.new()
+	fx.position = to_3d(p)
+	add_child(fx)
+	var col := Build.cyl(fx, 3.0, 1.0, Vector3.ZERO, Color(0.95, 0.97, 1.0, 0.95))
+	var tw := fx.create_tween()
+	tw.tween_property(col, "scale", Vector3(1.3, 30.0, 1.3), 0.6).set_ease(Tween.EASE_OUT)
+	tw.parallel().tween_property(col, "position:y", 15.0, 0.6).set_ease(Tween.EASE_OUT)
+	tw.tween_property(col, "scale", Vector3(3.5, 0.1, 3.5), 2.2).set_ease(Tween.EASE_IN)
+	tw.parallel().tween_property(col, "position:y", 0.0, 2.2).set_ease(Tween.EASE_IN)
+	tw.tween_callback(fx.queue_free)
+
+
+## A round from our gun bursting on a ship: a flash and a puff of black smoke on her side.
+func shell_burst(p: Vector2) -> void:
+	var fx := Node3D.new()
+	fx.position = to_3d(p, 4.0)
+	add_child(fx)
+	var flash := Build.sphere(fx, 2.5, Vector3.ZERO, Color("#FF9A3A"), 5.0)
+	var smoke := Build.particles(fx, Color(0.1, 0.1, 0.1, 0.85), 30, 4.0, Vector3.UP, 6.0, 40.0, Vector3(0.8, 1.5, 0), 5.0)
+	smoke.one_shot = true
+	smoke.explosiveness = 0.8
+	var tw := fx.create_tween()
+	tw.tween_property(flash, "scale", Vector3.ONE * 2.0, 0.12)
+	tw.tween_property(flash, "visible", false, 0.0)
+	tw.tween_interval(5.0)
+	tw.tween_callback(fx.queue_free)
 
 
 func _sync_ships() -> void:

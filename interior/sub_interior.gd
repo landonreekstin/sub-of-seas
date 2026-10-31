@@ -328,6 +328,8 @@ func _battery(c: Dictionary) -> void:
 		Build.box(self, Vector3(0.3, 0.04, 0.05), Vector3(0, 0.05, z), BRASS, false)
 	Build.label(self, "BATTERY WELL", Vector3(0, 0.06, c.z0 + 2.0), 22, Color("#C9A04A")).rotation.x = -PI / 2.0
 	_rack(c.type, c.z1 - 1.4)
+	if comp_index("crew") < 0: # no crew's mess (S-boat): the magazine scuttle is aft in officers' country
+		_add_station(AmmoStation.new().setup("ammo", "Ammunition scuttle"), Vector3(0, 0, c.z0 + 4.0)).set_meta("where", "officers' country")
 
 
 func _control_room(c: Dictionary, hatch: Rect2) -> void:
@@ -348,6 +350,10 @@ func _control_room(c: Dictionary, hatch: Rect2) -> void:
 		# S-boat: the periscope comes down into the control room and the TDC sits by the helm.
 		_add_station(PeriscopeStation.new().setup("periscope", "Periscope", "conn"), Vector3(0, 0, z0 + 4.6))
 		_add_station(TdcStation.new().setup("tdc", "Torpedo Data Computer", "conn"), Vector3(1.55, 0, z0 + 3.6))
+		# No conning tower: the ladder to the bridge hatch and the gun goes up from here.
+		var gun := GunStation.new().setup("gun", "Deck gun") as GunStation
+		gun.overhead = DECK_HEIGHT
+		_add_station(gun, Vector3(0, 0, z0 + 6.6))
 		_rack(c.type, z0 + 5.4)
 		return
 	_rack(c.type, z0 + 4.4)
@@ -397,8 +403,12 @@ func _conning_tower(c: Dictionary, hatch: Rect2) -> void:
 	Build.sphere(self, 0.08, Vector3(0, CT_FLOOR + h - 0.05, mid), LIGHT, 3.0)
 	Build.label(self, "CONNING TOWER", Vector3(0, CT_FLOOR + h - 0.25, z0 + 0.13), 40, Color("#2B2B26"))
 	_add_station(PeriscopeStation.new().setup("periscope", "Attack periscope", "attack"), Vector3(0, CT_FLOOR, z1 - 0.9))
-	_gauge_board(Vector3(-0.8, CT_FLOOR + 1.7, z0 + 0.12), ["depth", "heading"])
+	_gauge_board(Vector3(0.3, CT_FLOOR + 1.7, z0 + 0.12), ["depth", "heading"])
 	_add_station(TdcStation.new().setup("tdc", "Torpedo Data Computer", "attack"), Vector3(hw - 0.45, CT_FLOOR, z0 + 2.2))
+	# The ladder up through the bridge hatch to the deck gun, port forward corner.
+	var gun := GunStation.new().setup("gun", "Deck gun") as GunStation
+	gun.overhead = h
+	_add_station(gun, Vector3(-1.1, CT_FLOOR, z0 + 0.65))
 
 
 func _crew(c: Dictionary) -> void:
@@ -407,6 +417,8 @@ func _crew(c: Dictionary) -> void:
 	_bunks(c.z0 + 2.5, c.z1 - 2.5)
 	Build.box(self, Vector3(0.9, 0.75, 1.8), Vector3(1.3, 0.38, c.z1 - 1.2), WOOD)
 	Build.box(self, Vector3(1.0, 0.04, 1.9), Vector3(1.3, 0.77, c.z1 - 1.2), Color("#E8DFC4"), false)
+	# The magazine is under the mess: its scuttle to port, opposite the table.
+	_add_station(AmmoStation.new().setup("ammo", "Ammunition scuttle"), Vector3(0, 0, c.z1 - 3.4)).set_meta("where", "crew's mess")
 
 
 ## The rec room (lando: whimsical fun and mini games, apart from the patrol): a dartboard on
