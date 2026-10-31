@@ -36,6 +36,14 @@ and update "Current style" in the same commit.
   fog closes the horizon in to a km or two, the sea turns dull grey-green, runs higher and is
   pocked white by drops, and rain streaks down past the eye. Rain drums on the hull near the
   surface. The lookouts call it when one comes over and when it clears.
+- **Out on deck** (Blaney: get out and walk on top of the boat when she's high enough above
+  the water): surfaced, look up at the bridge hatch over the gun's ladder and press E to climb
+  out onto the teak casing between the fairwater and the gun; the sea, the sky and the crew on
+  deck all as seen from the real boat, rolling with her, and the sound of the sea. Walk off the
+  edge and you splash in and swim (head just above the water, slower), then climb back up the
+  rung ladders on either side, aft of the fairwater. E at the deck hatch goes below. The boat
+  can't dive while anyone is out (Blaney): the dive and vent orders are refused with "Can't
+  dive: there's crew out on deck!"; if she goes under anyway, everyone on deck is sent down.
 - **Deck gun** (lando: deck gun crewed from inside, up the conning-tower hatch, ammunition
   passed up): our boat on the surface seen from the gunlayer's seat, a black hull with a teak
   deck, the fairwater and periscope shears behind, the gun's dark barrel in the lower right of
@@ -243,3 +251,4 @@ and update "Current style" in the same commit.
 | 2026-10-31 | Blaney | Bot crewmates' arms stick out behind them and not toward the station they're at: hands go forward onto the gear. |
 | 2026-10-31 | Blaney | Dart board: no line on the ground that blocks you from moving; you just walk up to the board to play darts. |
 | 2026-10-31 | Blaney | Fix the footsteps, they're very annoying and clanky; they should just be very basic and subtle footsteps. |
+| 2026-10-31 | Blaney | When the sub is high enough above water, make it possible to get out and walk on top of it. The boat can't dive with crew out; fall in and you swim back and climb a ladder. |

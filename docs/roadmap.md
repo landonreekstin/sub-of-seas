@@ -96,7 +96,8 @@ Added by Blaney after playing. In his words where it matters.
       not a knock on wood (ask Blaney what he wants instead when this is picked up).
       *(Redone: a soft heel and gritty scuff with a faint ring, no low thud, and your own steps
       quieter. Left open until Blaney says whether it works.)*
-- [ ] when the sub is high enough above water make it possible to get out and walk on the top of it
+- [x] when the sub is high enough above water make it possible to get out and walk on the top of it
+      *(Surfaced, E at the bridge hatch over the gun's ladder climbs out on deck; off the side you swim and climb back up a side ladder; no diving while anyone is out.)*
 - [ ] add cameras around the outside of the sub, there should be a viewing center
 - [x] fix the footsteps, theyre very annoying and clanky, they should just be very basic and subtle footsteps
       *(Redone again: a short soft muffled shuffle, no clank, ring or thud, and quieter all round. Covers the knocking item above too.)*
@@ -113,6 +114,8 @@ Added by Blaney after playing. In his words where it matters.
       *(No line and nothing invisible on the floor any more: walk up to the board and press E at it.)*
 - [x] bot crew mate arms at sticking out behind them and not toward the station theyre at
       *(Fixed: arms at a station swung backwards; they now reach forward onto the gear, for bots and players alike. The point and salute emotes had the same backwards arm and are fixed too.)*
+- [ ] the character models are way too cartoony to the point where they are almost creepy, redesign them so everyone actually looks like sub sailors, make the models take less space
+- [ ] clean up the game files, do a quick check for bugs, make sure lando can see all the changes
 
 ## M9 — Lando's list (2026-10-30)
 Added by lando. Direction: **more arcadey, not strict realism**. Every existing mechanic

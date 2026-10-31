@@ -19,6 +19,8 @@ const JOIN_TIMEOUT := 20.0 ## s a joining client waits for the boat before givin
 
 static var instance: Game
 
+var deck: Deck ## the casing out on deck (built with the boat)
+var _deck_notice := -INF ## when "crew on deck" was last announced
 var interior: SubInterior ## built once we know the boat: at once on the host, on the first crew state on a client
 var sub_class: SubClassData
 var exterior: ExteriorWorld
@@ -150,6 +152,37 @@ func _build_boat(key: String) -> void:
 	move_child(interior, 0)
 	Sim.world.hull.setup(interior.compartments, interior.door_links, interior.station_compartments())
 	Sim.world.air.setup(interior.compartments.size(), sub_class.co2_canisters)
+	deck = Deck.create(sub_class)
+	add_child(deck)
+
+
+func players() -> Array[Node]:
+	return _players.get_children()
+
+
+## Host: is anyone out on deck or in the sea round her?
+func crew_on_deck() -> bool:
+	for p: Player in _players.get_children():
+		if Deck.is_out(p.global_position):
+			return true
+	return false
+
+
+## Host: the boat can't dive with anyone out on deck (Blaney). Says so, now and then.
+func _deck_blocks_dive() -> bool:
+	if not crew_on_deck():
+		return false
+	if Sim.world.time - _deck_notice > 6.0:
+		_deck_notice = Sim.world.time
+		announce.rpc("Can't dive: there's crew out on deck! Get them below first.")
+	return true
+
+
+## Host -> one player out on deck: she's going under, down the hatch with you.
+@rpc("authority", "call_local", "reliable")
+func send_below() -> void:
+	if local_player != null and Deck.is_out(local_player.global_position):
+		local_player.go_below()
 
 
 func _initial_crew() -> Dictionary:
@@ -701,6 +734,9 @@ func apply_order(station_id: String, key: String, value: Variant, by: int) -> vo
 				sub.rudder = clampi(int(value), -3, 3)
 		"dive":
 			if key == "depth":
+				if float(value) > 0.0 and _deck_blocks_dive():
+					push_crew()
+					return
 				sub.ordered_depth = clampf(float(value), 0.0, 200.0)
 		"periscope":
 			if key == "raised":
@@ -732,6 +768,9 @@ func apply_order(station_id: String, key: String, value: Variant, by: int) -> vo
 				Sim.world.set_diesel(int(value[0]), bool(value[1]))
 		"ballast":
 			if key in ["vent", "shut", "blow", "emergency", "stop"]:
+				if key == "vent" and _deck_blocks_dive():
+					push_crew()
+					return
 				sub.ballast_order(key)
 				if key == "emergency" and sub.blowing == 2:
 					announce.rpc("EMERGENCY BLOW! All main ballast tanks blowing.")
@@ -973,6 +1012,10 @@ func _host_tick(delta: float) -> void:
 	if sub.periscope_raised and Sim.world.hull.is_broken("periscope"):
 		sub.periscope_raised = false
 	Sim.world.crew_count = crew.names.size()
+	if not sub.is_surfaced(): # going under anyway (flooding): everyone on deck down the hatch
+		for p: Player in _players.get_children():
+			if Deck.is_out(p.global_position):
+				send_below.rpc_id(p.peer_id)
 	if station_occupant("gun") > 0 and not sub.is_surfaced():
 		crew.stations.erase("gun")
 		announce.rpc("Clear the deck! The gun crew tumbles down the hatch.")

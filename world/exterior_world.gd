@@ -11,7 +11,9 @@ var viewport: SubViewport
 var camera: Camera3D
 var scope_bearing := 0.0 ## relative bearing, set by the periscope station
 var scope_fov := 32.0
-var eye_mode := "scope" ## "scope": the periscope's eye; "gun": the deck gun's sight, set by the gun station
+var eye_mode := "scope" ## "scope": the periscope's eye; "gun": the deck gun's sight, set by the gun station; "deck": a crewman out on deck (Deck)
+var deck_eye := Transform3D.IDENTITY ## the deck crewman's eye in our boat's own space, set by Deck
+var deck_fov := 75.0
 var gun_bearing := 0.0 ## the gun's training, relative to the bow
 var gun_fov := 45.0
 var gun_range := 1500.0 ## the range on the sight: the line of sight comes down to the sea there
@@ -118,7 +120,11 @@ func _process(delta: float) -> void:
 		return
 	var sub := Sim.world.sub
 	var h := sub.scope_height()
-	if eye_mode == "gun":
+	if eye_mode == "deck":
+		_place_own(sub)
+		camera.global_transform = _own.global_transform * deck_eye
+		camera.fov = deck_fov
+	elif eye_mode == "gun":
 		_place_own(sub)
 		var eye := _own.get_node("Gun/Eye") as Node3D
 		eye.rotation.x = -atan2(eye.global_position.y, gun_range) # laid on the waterline at the set range
@@ -142,7 +148,15 @@ func _process(delta: float) -> void:
 	_weather.sync(Sim.world.conditions, camera.position)
 	_feed_squalls(Sim.world.conditions)
 	_apply_conditions(Sim.world.conditions)
-	_underwater(maxf(-camera.position.y, 0.01) if h <= 0.0 and eye_mode != "gun" else 0.0)
+	if eye_mode == "deck":
+		_underwater(maxf(-camera.position.y, 0.01) if camera.position.y < 0.0 else 0.0)
+	else:
+		_underwater(maxf(-camera.position.y, 0.01) if h <= 0.0 and eye_mode != "gun" else 0.0)
+
+
+## Our own boat model (for the figures of the crew out on deck), or null before it is placed.
+func own_boat() -> Node3D:
+	return _own
 
 
 ## Our own boat under the gun crew, riding the swell, with the gun trained.

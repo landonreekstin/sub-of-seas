@@ -37,6 +37,33 @@ static func build(data: ShipClassData) -> Node3D:
 ## raked stem and flared bow, parallel sides amidships, a rounded stern with a transom; round
 ## bilges below water, a red bottom showing a little above the waterline, a tan deck with
 ## sheer forward and `raised` decks ([t0, t1, height]: forecastle, poop) stepping up.
+## Half the beam at station t (0 the stem, 1 the stern) of a hull drawn by `_hull`.
+static func hull_half(t: float, beam: float) -> float:
+	var p := 1.0
+	if t < 0.32:
+		p = 1.0 - pow(1.0 - t / 0.32, 2.2)
+	elif t > 0.82:
+		p = 1.0 - 0.32 * pow((t - 0.82) / 0.18, 2.0)
+	return beam * 0.5 * p
+
+
+## The deck's height above the waterline at station t, with no raised decks.
+static func hull_deck(t: float, freeboard: float) -> float:
+	return freeboard + freeboard * 0.22 * pow(maxf(0.0, 1.0 - t / 0.18), 2.0)
+
+
+## Our own boat's measurements, shared by its model and the deck the crew walk on (Deck).
+## z runs bow (-) to stern (+), y up from the waterline.
+static func own_dims(sub: SubClassData) -> Dictionary:
+	var l := sub.length
+	var d := {"length": l, "beam": clampf(l * 0.088, 6.0, 10.0), "deck": clampf(l * 0.028, 2.2, 3.2),
+		"ct_z": -l * 0.06, "ct_len": l * 0.16, "ct_h": 4.2}
+	d.gun_z = d.ct_z - d.ct_len * 0.5 - 6.0
+	d.hatch_z = d.ct_z - d.ct_len * 0.5 - 2.6 # the deck hatch, between the gun and the fairwater
+	d.ladder_z = d.ct_z + d.ct_len * 0.5 + 3.0 # rungs up the side from the water, both sides
+	return d
+
+
 static func _hull(root: Node3D, length: float, beam: float, freeboard: float, draft: float, color: Color,
 		raised := []) -> void:
 	var ts: Array[float] = []
@@ -56,12 +83,7 @@ static func _hull(root: Node3D, length: float, beam: float, freeboard: float, dr
 			y += float(r[2]) * minf(up, down)
 		return y
 	var half := func(t: float) -> float:
-		var p := 1.0
-		if t < 0.32:
-			p = 1.0 - pow(1.0 - t / 0.32, 2.2)
-		elif t > 0.82:
-			p = 1.0 - 0.32 * pow((t - 0.82) / 0.18, 2.0)
-		return beam * 0.5 * p
+		return hull_half(t, beam)
 	var keel := func(t: float) -> float:
 		var k := draft
 		if t < 0.1:
@@ -175,15 +197,16 @@ static func _hull(root: Node3D, length: float, beam: float, freeboard: float, dr
 static func own_boat(sub: SubClassData) -> Node3D:
 	var root := Node3D.new()
 	root.name = "OwnBoat"
-	var l := sub.length
-	var beam := clampf(l * 0.088, 6.0, 10.0)
-	var fb := clampf(l * 0.028, 2.2, 3.2)
+	var d := own_dims(sub)
+	var l: float = d.length
+	var beam: float = d.beam
+	var fb: float = d.deck
 	_hull(root, l, beam, fb, 4.5, Color("#2C3034"))
 	var deck_y := fb
 	# The fairwater round the conning tower and bridge, a little forward of amidships.
-	var ct_z := -l * 0.06
-	var ct_len := l * 0.16
-	var ct_h := 4.2
+	var ct_z: float = d.ct_z
+	var ct_len: float = d.ct_len
+	var ct_h: float = d.ct_h
 	Build.box(root, Vector3(beam * 0.32, ct_h, ct_len), Vector3(0, deck_y + ct_h * 0.5, ct_z), Color("#33373C"))
 	Build.cyl(root, beam * 0.16, ct_h, Vector3(0, deck_y + ct_h * 0.5, ct_z - ct_len * 0.5), Color("#33373C"))
 	Build.box(root, Vector3(beam * 0.34, 0.15, ct_len + 0.6), Vector3(0, deck_y + ct_h, ct_z), BLACK) # bridge rail
@@ -193,7 +216,7 @@ static func own_boat(sub: SubClassData) -> Node3D:
 	# The gun on the casing forward of the fairwater.
 	var gun := Node3D.new()
 	gun.name = "Gun"
-	gun.position = Vector3(0, deck_y, ct_z - ct_len * 0.5 - 6.0)
+	gun.position = Vector3(0, deck_y, d.gun_z)
 	root.add_child(gun)
 	var bore := 0.06 + sub.gun_damage * 0.12 # bigger guns, fatter barrels
 	Build.lathe(root, [Vector2(0, 0), Vector2(0.75, 0), Vector2(0.55, 0.25), Vector2(0.4, 0.9), Vector2(0, 0.9)],
@@ -222,6 +245,18 @@ static func own_boat(sub: SubClassData) -> Node3D:
 	# Ready-use ammunition lockers by the fairwater.
 	for side in [-1.0, 1.0]:
 		Build.box(root, Vector3(0.6, 0.7, 1.4), Vector3(side * beam * 0.22, deck_y + 0.35, ct_z - ct_len * 0.5 - 1.5), Color("#3A3F44"))
+	# The deck hatch the crew climb out of, and rungs up the side from the water.
+	var hz: float = d.hatch_z
+	Build.cyl(root, 0.48, 0.16, Vector3(0, deck_y + 0.08, hz), Color("#3A3F44"))
+	Build.cyl(root, 0.42, 0.06, Vector3(0, deck_y + 0.19, hz), Color("#2E3236"))
+	Build.box(root, Vector3(0.5, 0.05, 0.06), Vector3(0, deck_y + 0.24, hz), Color("#B23A2E"), false) # dogging bar
+	var lt: float = (float(d.ladder_z) + l * 0.5) / l
+	for side in [-1.0, 1.0]:
+		var x: float = side * (hull_half(lt, beam) + 0.12)
+		for rail in [-0.25, 0.25]:
+			Build.box(root, Vector3(0.06, deck_y + 1.6, 0.06), Vector3(x, deck_y * 0.5 - 0.8 + 0.1, d.ladder_z + rail), Color("#8A8F86"), false)
+		for k in int((deck_y + 1.4) / 0.35):
+			Build.box(root, Vector3(0.06, 0.05, 0.5), Vector3(x, -1.4 + k * 0.35, d.ladder_z), Color("#8A8F86"), false)
 	return root
 
 
