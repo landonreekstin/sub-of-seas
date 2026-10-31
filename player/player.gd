@@ -30,6 +30,7 @@ var _bob := 0.0 ## head-bob phase
 var _emote_t := 0.0
 var _step_pos := Vector3.ZERO ## for footsteps
 var _step_dist := 0.0 ## distance since the last footstep or rung
+var _swimming := false ## over the side, in the sea round the deck (Deck)
 var held_tool := "" ## from crew state (host-owned)
 var trauma := 0.0 ## camera shake, 0..1, decays
 
@@ -150,6 +151,10 @@ func _show_self(seen: bool) -> void:
 
 
 ## The look from the player's profile (crew state, so all agree).
+func look() -> Dictionary:
+	return _look
+
+
 func set_looks(look: Dictionary) -> void:
 	if look == _look or look.is_empty():
 		return
@@ -223,6 +228,8 @@ func _ready() -> void:
 		($Voice as Voice).test_tone = Net.debug_voice
 		if Net.debug_station != "":
 			_man_on_spawn.call_deferred()
+		if Net.debug_deck:
+			_deck_on_spawn.call_deferred()
 
 
 ## Testing aid (--station): ask for the station once the crew state has arrived.
@@ -231,6 +238,13 @@ func _man_on_spawn() -> void:
 	var s: Station = Game.instance.interior.stations.get(Net.debug_station)
 	if s != null:
 		request_station(s)
+
+
+## Testing aid (--deck): out on deck once the boat is built.
+func _deck_on_spawn() -> void:
+	await get_tree().create_timer(1.5).timeout
+	if Game.instance.deck != null:
+		go_on_deck()
 
 
 func set_display_name(n: String) -> void:
@@ -281,7 +295,7 @@ func _footsteps() -> void:
 			_step_dist = 0.0
 			Sfx.play_at(self, "rung", Vector3(0, 0.9, 0), -2.0, randf_range(0.92, 1.08))
 		return
-	if absf(moved.y) > 0.03: # in the air
+	if absf(moved.y) > 0.03 or Deck.is_swimming(global_position): # in the air, or in the sea
 		return
 	_step_dist += Vector2(moved.x, moved.z).length()
 	if _step_dist > (1.15 if sprinting else 0.8):
@@ -392,13 +406,27 @@ func _physics_process(delta: float) -> void:
 			and not Game.instance.menu_open() and emote == ""
 	if sprinting:
 		speed *= lerpf(SPRINT_SPEED, 1.0, breathing().x)
+	var swim := Deck.is_swimming(global_position)
+	if swim:
+		speed *= 0.55
+		sprinting = false
+		crouching = false
 	velocity.x = dir.x * speed
 	velocity.z = dir.z * speed
-	if is_on_floor():
+	if swim:
+		# Float with the eye just above the water; sinking in from a fall, bob back up.
+		var float_y := Deck.ORIGIN.y + Deck.SWIM_EYE - EYE_HEIGHT
+		velocity.y = clampf((float_y - global_position.y) * 3.0, -4.0, 2.5)
+		if not _swimming:
+			_swimming = true
+			Sfx.play_at(self, "splash", Vector3(0, 1.0, 0), -2.0, randf_range(0.9, 1.1))
+	elif is_on_floor():
 		if Input.is_action_just_pressed("jump") and not Game.instance.menu_open():
 			velocity.y = JUMP
 	else:
 		velocity.y -= GRAVITY * delta
+	if not swim:
+		_swimming = false
 	move_and_slide()
 
 
@@ -480,6 +508,9 @@ func _apply_shake(delta: float) -> void:
 ## The interior never moves; the sub's pitch and roll are shown by tilting the view.
 func _apply_hull_tilt() -> void:
 	if Sim.world == null or station != null or camera.top_level: # a station's or an emote's view
+		return
+	if Deck.is_out(global_position): # out on deck the boat's own roll is in the view
+		camera.basis = Basis.IDENTITY
 		return
 	var sub := Sim.world.sub
 	var roll := clampf(-sub.turn_rate * 1.2, -4.0, 4.0)
@@ -631,6 +662,27 @@ func _pose_emote(t: float) -> void:
 
 ## Climb along a list of global points (a ladder's path). Movement is a tween, synced
 ## like any other movement.
+## Up the bridge hatch onto the deck (Deck), facing forward.
+func go_on_deck() -> void:
+	if station != null:
+		leave_station()
+	velocity = Vector3.ZERO
+	global_position = Game.instance.deck.hatch_spot()
+	rotation.y = 0.0
+	Sfx.play_at(self, "door_open", Vector3(0, 1.0, 0), -6.0)
+
+
+## Down the hatch to the foot of the ladder by the gun.
+func go_below() -> void:
+	var gun: Station = Game.instance.interior.stations.get("gun")
+	velocity = Vector3.ZERO
+	_swimming = false
+	if gun != null:
+		global_position = gun.global_transform * Vector3(0, 0.05, 0.75)
+		rotation.y = gun.global_rotation.y # facing the ladder, as he came down it
+	Sfx.play_at(self, "door_open", Vector3(0, 1.0, 0), -6.0)
+
+
 func climb(points: Array[Vector3]) -> void:
 	climbing = true
 	velocity = Vector3.ZERO

@@ -37,7 +37,12 @@ func _ready() -> void:
 	var dog := Build.box(self, Vector3(0.5, 0.04, 0.06), Vector3(0, overhead - 0.16, -0.1), Color("#B23A2E"), false) # the hatch's dogging wheel bar
 	dog.rotation.y = 0.6
 	Build.label(self, "DECK GUN ↑", Vector3(0, 1.95, 0.12), 34, UiKit.BRASS)
-	Build.hitbox(self, Vector3(0.7, 2.2, 0.35), Vector3(0, 1.1, 0))
+	Build.hitbox(self, Vector3(0.7, 1.9, 0.35), Vector3(0, 0.95, 0))
+	# Look up at the hatch itself to climb out on deck (Blaney: walk on top of the boat).
+	var hatch := BridgeHatch.new()
+	hatch.position = Vector3(0, overhead - 0.06, -0.1)
+	add_child(hatch)
+	Build.area(hatch, Vector3(0.9, 0.25, 0.9), Vector3.ZERO)
 	set_view(Vector3(0, 1.6, 0.8), Vector3(0, overhead, -0.1))
 
 
@@ -188,3 +193,15 @@ func _rangefinder() -> void:
 	_set_range(snappedf(d, 25.0))
 	_reading.text = "RANGEFINDER: %d m" % roundi(range_m)
 	click(0.0, 1.3)
+
+
+## The bridge hatch in the deckhead over the gun's ladder: up it onto the deck (Deck).
+class BridgeHatch extends Node3D:
+	func get_prompt(_player: Player) -> String:
+		if not Deck.can_go_out():
+			return "Bridge hatch — shut while she's dived"
+		return "[E] Climb out on deck"
+
+	func interact(player: Player) -> void:
+		if Deck.can_go_out():
+			player.go_on_deck()
