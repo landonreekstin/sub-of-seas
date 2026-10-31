@@ -95,6 +95,19 @@ Added by Blaney after playing. In his words where it matters.
       not a knock on wood (ask Blaney what he wants instead when this is picked up).
       *(Redone: a soft heel and gritty scuff with a faint ring, no low thud, and your own steps
       quieter. Left open until Blaney says whether it works.)*
+- [ ] when the sub is high enough above water make it possible to get out and walk on the top of it
+- [ ] add cameras around the outside of the sub, there should be a viewing center
+- [ ] fix the footsteps, theyre very annoying and clanky, they should just be very basic and subtle footsteps
+- [ ] add a top of the sub wrestling game where you are trying to wrestle the other person into the water, it should work like a simplified version of your only move is hustle where only greco roman wrestling moves are allowed
+- [ ] make a navigation room that shows the whole terrain of the region that we are exploring in a topographical map on a wall or a table
+- [ ] add instruments of all types that all play parts of a sea shanty like sea of theives, so when all the instruments are in then it is a complete song, first add the song "in the foggy dew" by the chieftains (classic irish melody)
+- [x] i cannot get into the vpn game with lando, my screen is just grey
+      *(Cause: the installed Sub of Seas is the release pin (3a43195), from before the ZSTD
+      change, and can't finish connecting to a host on newer code, so it sat on the grey
+      screen forever. Now a joiner that hasn't got the boat after 20 s goes back to the menu
+      and says why. To play together, both run the same version: the pin needs bumping, or
+      Blaney joins from his clone with `./play join`.)*
+
 ## M9 — Lando's list (2026-10-30)
 Added by lando. Direction: **more arcadey, not strict realism**. Every existing mechanic
 stays for now, until they have been tried with others.

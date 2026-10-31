@@ -15,6 +15,7 @@ const CLEAR_TIME := 60.0 ## s with no escort hunting nearby before the patrol co
 const PASS_OUT_AFTER := 6.0 ## s breathing air at its worst before a crewman passes out
 const KNOCKED_OUT_TIME := 15.0
 const PASS_TIME := 1.5 ## s for the ammunition party to pass one round up to the gun
+const JOIN_TIMEOUT := 20.0 ## s a joining client waits for the boat before giving up
 
 static var instance: Game
 
@@ -129,6 +130,14 @@ func _ready() -> void:
 			hud.show_message("%s\n(%s)" % [MissionData.load_key(crew.mission).briefing, Sim.world.conditions.describe()], 14.0)
 	else:
 		hud.show_message("Joining %s ..." % Net.address, 3.0)
+		get_tree().create_timer(JOIN_TIMEOUT).timeout.connect(_check_joined)
+
+
+## A client still without a boat this long after joining gives up and says why, instead of
+## a grey screen. Different builds (one from before the ZSTD change) never finish connecting.
+func _check_joined() -> void:
+	if interior == null:
+		_quit("No answer from the host at %s:%d after %d seconds.\nIf the host is up, you are probably on different versions of the game:\ncompare the version on both main menus." % [Net.address, Net.port, int(JOIN_TIMEOUT)])
 
 
 ## The boat: its sim, its interior and the hull model's compartments. Clients call this
