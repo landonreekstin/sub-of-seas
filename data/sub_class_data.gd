@@ -23,5 +23,13 @@ extends Resource
 @export var flood_seconds := 30.0 ## main ballast vents open to decks awash
 @export var co2_canisters := 8 ## CO2 absorbent canisters aboard
 @export var spare_parts := 6 ## spare-parts boxes in stores
+@export_group("Deck gun")
+@export var gun_name := "4-inch/50" ## shown on the gun station
+@export var gun_rounds := 80 ## rounds in the magazine
+@export var gun_ready := 8 ## ready-use rounds at the gun; more have to be passed up
+@export var gun_damage := 0.15 ## a hit, in ship hp (a torpedo is 1)
+@export var gun_range := 6000.0 ## m, the most the sight is graduated to
+@export var gun_reload := 3.0 ## s between rounds
+@export_group("")
 ## Suggested jobs, most important first: player N is offered roles[N-1]. Not locks.
 @export var roles: Array[String] = []

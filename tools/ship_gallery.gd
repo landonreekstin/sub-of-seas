@@ -1,6 +1,6 @@
 extends SceneTree
 ## A ship model on a flat sea, three-quarter view, for checking how it looks:
-##   godot --path . --rendering-driver opengl3 -s tools/ship_gallery.gd -- <class | plane>
+##   godot --path . --rendering-driver opengl3 -s tools/ship_gallery.gd -- <class | plane | crew | sealife | own[_<sub>]> [out.png] [eye]
 ## (under xvfb-run, add a screenshot). Bow points right.
 
 const CLASSES := ["subchaser", "kaibokan", "destroyer", "freighter", "tanker", "cruiser", "battleship", "carrier"]
@@ -67,6 +67,23 @@ func _initialize() -> void:
 		cs.fov = 50.0
 		root3d.add_child(cs)
 		cs.look_at_from_position(Vector3(-4, 7, 22), Vector3(0, 4, 2))
+		if args.size() > 1:
+			_save(args[1])
+		return
+	if k.begins_with("own"): # our own boat on the surface, by the gun: own, own_s_boat, own_narwhal
+		var sk := k.trim_prefix("own_") if k != "own" else "gato"
+		var sd: SubClassData = load("res://data/subs/%s.tres" % sk)
+		var ob := ShipModels.own_boat(sd)
+		root3d.add_child(ob)
+		var gun: Node3D = ob.get_node("Gun")
+		gun.rotation.y = deg_to_rad(-25.0)
+		var co := Camera3D.new()
+		co.fov = 50.0
+		root3d.add_child(co)
+		if args.size() > 2 and args[2] == "eye": # what the gunlayer sees
+			co.transform = gun.transform * (gun.get_node("Eye") as Node3D).transform
+		else:
+			co.look_at_from_position(Vector3(sd.length * 0.35, sd.length * 0.12, -sd.length * 0.25), Vector3(0, 2, -sd.length * 0.15))
 		if args.size() > 1:
 			_save(args[1])
 		return

@@ -36,6 +36,15 @@ and update "Current style" in the same commit.
   fog closes the horizon in to a km or two, the sea turns dull grey-green, runs higher and is
   pocked white by drops, and rain streaks down past the eye. Rain drums on the hull near the
   surface. The lookouts call it when one comes over and when it clears.
+- **Deck gun** (lando: deck gun crewed from inside, up the conning-tower hatch, ammunition
+  passed up): our boat on the surface seen from the gunlayer's seat, a black hull with a teak
+  deck, the fairwater and periscope shears behind, the gun's dark barrel in the lower right of
+  the view, the bow ahead. A plain ring-and-cross gunsight in the middle, the range set on it
+  in a small panel at the top. Firing: a flash and a small puff of smoke at the muzzle, the
+  barrel slams back, a hard crack and boom (muffled for the crew below), the view kicks. Fall
+  of shot is a tall thin white splash; a hit is an orange flash and a puff of black smoke on
+  her side. Inside: a ladder up to a hatch ring in the deckhead marked DECK GUN; the
+  ammunition scuttle is a hatch flush in the deck with brass rounds showing down the hole.
 - **Sprint:** hold Shift running forward: 1.75× walking speed, the view widens a few degrees
   and the head bobs, boots ring louder and further apart (crewmates hear it). Not while
   crouched; foul air takes it away.
