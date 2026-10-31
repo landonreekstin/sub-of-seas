@@ -39,6 +39,7 @@ var _planes_called := {} ## plane id -> true once the lookouts have called it
 var sandbox: Sandbox ## host, open patrol only
 var track: Array[Vector2] = [] ## own track for the chart, sampled on every peer
 var _track_timer := 0.0
+var _in_rain := false ## host: the lookouts have called a squall over us
 
 
 func _enter_tree() -> void:
@@ -205,6 +206,7 @@ func _setup_mission() -> void:
 	Sim.world.conditions.night = m.night
 	Sim.world.conditions.sea_state = m.sea_state
 	Sim.world.conditions.layer_depth = m.layer_depth
+	Sim.world.conditions.setup_weather(m.squalls, Sim.world.sub.pos, Sim.world.rng)
 	Realism.apply(Sim.world, Net.realism)
 	crew.realism = Sim.world.realism
 	for g: Dictionary in m.groups:
@@ -219,6 +221,11 @@ func _setup_mission() -> void:
 		Sim.world.add_whale(Sim.world.rng.randf_range(1500.0, 6000.0))
 	if Net.debug_reef:
 		_debug_reef()
+	if Net.debug_squall != "":
+		var c := Sim.world.conditions
+		c.squall_count = maxi(c.squall_count, 1)
+		c.squalls.clear()
+		c.add_squall(sub.pos + (sub.direction() * 4000.0 if Net.debug_squall == "ahead" else Vector2.ZERO), Sim.world.rng, 400.0)
 
 
 ## Testing aid (--reef): the boat sits stopped at 9 m just off the first island's reef, beam on
@@ -913,6 +920,7 @@ func _host_tick(delta: float) -> void:
 	_breathe(delta)
 	_tdc_follow()
 	_lookouts()
+	_weather_calls()
 	if sandbox != null:
 		sandbox.tick(Sim.world, delta)
 	_check_patrol_complete(delta)
@@ -958,12 +966,27 @@ func _lookouts() -> void:
 	var w := Sim.world
 	if not w.sub.is_surfaced():
 		return
-	var r := 7000.0 * (0.3 if w.conditions.night else 1.0)
+	var r := 7000.0 * (0.3 if w.conditions.night else 1.0) * lerpf(1.0, Conditions.RAIN_SIGHT, w.conditions.rain_at(w.sub.pos))
 	for p in w.planes:
 		if not _planes_called.has(p.id) and p.pos.distance_to(w.sub.pos) < r:
 			_planes_called[p.id] = true
 			announce.rpc("AIRCRAFT, bearing %03d! Clear the bridge — DIVE, DIVE!" % (roundi(ShipState.bearing(w.sub.pos, p.pos)) % 360))
 			alarm.rpc()
+
+
+## The lookouts call it when a squall comes over the boat, and when it clears (only near the
+## surface: deep down nobody sees the sky).
+func _weather_calls() -> void:
+	var w := Sim.world
+	var rain := w.conditions.rain_at(w.sub.pos)
+	var near_top := w.sub.depth <= w.sub.data.periscope_depth + 2.0
+	if not _in_rain and rain > 0.5 and near_top:
+		_in_rain = true
+		announce.rpc("Rain squall over us! The lookouts can't see a mile, and neither can theirs: good cover to close in.")
+	elif _in_rain and rain < 0.15:
+		_in_rain = false
+		if near_top:
+			announce.rpc("We're out of the rain. They can see us again.")
 
 
 @rpc("authority", "call_local", "reliable")

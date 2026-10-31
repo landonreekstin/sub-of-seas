@@ -151,6 +151,7 @@ func step(dt: float, authoritative := true) -> void:
 	Detection.sharpness = escort_sharpness
 	var before := sub.pos
 	sub.step(dt)
+	conditions.step(dt, sub.pos, rng if authoritative else null)
 	_check_ground(before, dt, authoritative)
 	for ship in ships:
 		if authoritative:
@@ -246,7 +247,7 @@ func _spot_tracks(dt: float) -> void:
 			if ship.ai == null or ship.is_sinking() or ship.passive:
 				continue
 			var d := ship.pos.distance_to(t.pos)
-			var sight := TRACK_SIGHT * conditions.visual_factor()
+			var sight := TRACK_SIGHT * conditions.visual_between(ship.pos, t.pos)
 			if d > sight or rng.randf() > TRACK_SPOT_RATE * (1.0 - d / sight) * Detection.sharpness * dt:
 				continue
 			t.spotted = true

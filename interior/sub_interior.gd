@@ -66,6 +66,7 @@ var _rockers: Array[Array] = [[], []] ## per diesel (port, starboard): cylinder-
 var _next_tube := 0
 var _diesel_sound: AudioStreamPlayer3D
 var _motor_sound: AudioStreamPlayer3D
+var _rain_sound: AudioStreamPlayer3D
 var _creak_timer := 5.0
 var _vents_were := false
 
@@ -155,6 +156,7 @@ func build() -> void:
 	_diesel_sound = Sfx.loop_at(self, "diesel_loop", Vector3(0, 1.0, (er.z0 + er.z1) * 0.5), -80.0, 8.0)
 	var mr := comp("maneuvering") if comp_index("maneuvering") >= 0 else er
 	_motor_sound = Sfx.loop_at(self, "motor_loop", Vector3(0, 1.0, (mr.z0 + mr.z1) * 0.5), -80.0, 10.0)
+	_rain_sound = Sfx.loop_at(self, "rain_loop", Vector3(0, DECK_HEIGHT, (ct.z0 + ct.z1) * 0.5), -80.0, 30.0)
 	for i in 6:
 		spawn_points.append(Vector3(-0.6 + (i % 3) * 0.6, 0.1, ct.z1 - 2.6 - (i / 3) * 0.7))
 
@@ -640,6 +642,11 @@ func _sounds(sub: SubState, delta: float) -> void:
 	var flank := clampf(absf(sub.speed) / (sub.data.submerged_speed_kn * SubState.KNOT), 0.0, 1.0)
 	_motor_sound.volume_db = linear_to_db(lerpf(0.12, 1.0, flank * flank)) - 10.0 if on_motors else -80.0
 	_motor_sound.pitch_scale = 0.85 + 0.3 * flank
+	# Rain drumming on the casing and the bridge, heard through the boat near the surface.
+	var shallow := clampf((sub.data.periscope_depth + 4.0 - sub.depth) / (sub.data.periscope_depth + 4.0 - SubState.AWASH_DEPTH), 0.0, 1.0)
+	var rain := Sim.world.conditions.rain_at(sub.pos) * shallow
+	_rain_sound.volume_db = linear_to_db(maxf(rain, 0.0001)) - 2.0
+	_rain_sound.stream_paused = rain <= 0.01
 	if sub.vents_open and not _vents_were:
 		Sfx.play("klaxon")
 	_vents_were = sub.vents_open

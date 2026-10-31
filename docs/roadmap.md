@@ -182,5 +182,8 @@ Also add a sprint functionality".
 lando: "add deck gun and weather to the roadmap".
 - [ ] **Deck gun**: a gun on the casing for fighting on the surface, crewed from inside (up
       the conning-tower hatch), against merchants and small escorts, with ammunition passed up.
-- [ ] **Weather**: rain and squalls that roll across the patrol, cutting how far lookouts and
+- [x] **Weather**: rain and squalls that roll across the patrol, cutting how far lookouts and
       the periscope see (cover to close in on a convoy), rougher seas and darker skies with them.
+      *(Squalls drift with the wind, by sea state (a mission can set how many); in one, their
+      lookouts and planes see a quarter as far, hydrophones hear less, our periscope sees a km or
+      two; rain on the hull; the lookouts call it.)*

@@ -23,6 +23,10 @@ uniform int ship_count = 0;
 uniform vec4 torps[8];
 uniform vec2 torp_life[8];
 uniform int torp_count = 0;
+// Rain squalls: (x, z, radius, strength) in world space. Rain dulls and roughens the sea under
+// them and pocks it with drops.
+uniform vec4 squalls[8];
+uniform int squall_count = 0;
 
 varying float v_crest;
 varying float v_foam;
@@ -160,7 +164,12 @@ void fragment() {
 	float r0 = vnoise(rp + TIME * 0.35) + vnoise(rp * 2.3 - TIME * 0.5) * 0.5;
 	float rx = vnoise(rp + vec2(e, 0.0) + TIME * 0.35) + vnoise((rp + vec2(e, 0.0)) * 2.3 - TIME * 0.5) * 0.5;
 	float rz = vnoise(rp + vec2(0.0, e) + TIME * 0.35) + vnoise((rp + vec2(0.0, e)) * 2.3 - TIME * 0.5) * 0.5;
-	vec3 slope = vec3(rx - r0, 0.0, rz - r0) * 0.9 * v_fade;
+	float rain = 0.0;
+	for (int i = 0; i < squall_count; i++) {
+		float d = distance(world.xz, squalls[i].xy);
+		rain = max(rain, squalls[i].w * smoothstep(squalls[i].z, squalls[i].z * 0.55, d));
+	}
+	vec3 slope = vec3(rx - r0, 0.0, rz - r0) * (0.9 + rain * 1.4) * v_fade;
 	NORMAL = normalize(NORMAL - (VIEW_MATRIX * vec4(slope, 0.0)).xyz);
 	// The light through the crests: a glowing turquoise near the tops of the waves.
 	col = mix(col, crest_color.rgb, smoothstep(0.1 * amplitude, 1.6 * amplitude, v_crest) * 0.55 * (0.4 + 0.6 * facing));
@@ -171,7 +180,13 @@ void fragment() {
 	foam = max(foam, lc * 0.35 * smoothstep(0.55, 0.85, vnoise(world.xz * 0.04 + TIME * 0.02)) * v_fade);
 	foam = max(foam, wake(world.xz) * smoothstep(0.25, 0.6, n));
 	foam = max(foam, torp_track(world.xz, n));
+	// Under a squall: a dull grey-green sea, pocked white by the drops close up.
+	col = mix(col, mix(deep_color.rgb, vec3(0.33, 0.38, 0.41), 0.6), rain * 0.75);
 	col = mix(col, foam_color.rgb, foam * 0.85);
+	vec2 cell = floor(world.xz * 3.0);
+	float drop = fract(sin(dot(cell, vec2(12.9898, 78.233))) * 43758.5453);
+	float pock = step(0.92, fract(drop * 7.0 + TIME * (0.6 + drop))) * smoothstep(0.35, 0.1, length(fract(world.xz * 3.0) - 0.5));
+	col = mix(col, foam_color.rgb, pock * rain * v_fade * 0.7);
 	if (!FRONT_FACING) {
 		// The surface from underneath: bright and rippling, the daylight coming through it,
 		// with wakes and torpedo tracks showing as white water.

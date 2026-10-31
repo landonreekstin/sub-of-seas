@@ -22,6 +22,7 @@ var _sun: DirectionalLight3D
 var _look := "" ## the conditions last applied to the sky, sun and sea
 var _terrain: TerrainView
 var _life: SeaLifeView
+var _weather: WeatherView
 var _under := false ## the eye is under the surface (the sky shows the water's light instead)
 
 
@@ -93,6 +94,8 @@ func _ready() -> void:
 	add_child(_terrain)
 	_life = SeaLifeView.new()
 	add_child(_life)
+	_weather = WeatherView.new()
+	add_child(_weather)
 
 	camera = Camera3D.new()
 	camera.far = 30000.0
@@ -122,6 +125,8 @@ func _process(delta: float) -> void:
 	_sync_torpedoes()
 	_sync_planes()
 	_feed_wakes()
+	_weather.sync(Sim.world.conditions, camera.position)
+	_feed_squalls(Sim.world.conditions)
 	_apply_conditions(Sim.world.conditions)
 	_underwater(maxf(-camera.position.y, 0.01) if h <= 0.0 else 0.0)
 
@@ -165,27 +170,44 @@ func _feed_wakes() -> void:
 		m.set_shader_parameter("ship_count", mini(near.size(), 16))
 
 
+## The ocean shader dulls and pocks the sea under each squall.
+func _feed_squalls(c: Conditions) -> void:
+	var data := PackedVector4Array()
+	for s: Array in c.squalls.slice(0, 8):
+		data.append(Vector4(s[0], -float(s[1]), s[2], Conditions.squall_strength(s)))
+	var count := data.size()
+	data.resize(8)
+	for m: ShaderMaterial in [_ocean_near.material_override, _ocean_far.material_override]:
+		m.set_shader_parameter("squalls", data)
+		m.set_shader_parameter("squall_count", count)
+
+
 ## Night: a dark blue sky, a dim cold moon, black water with silver foam. Sea state sets the
-## height of the waves.
+## height of the waves. Under a squall: a low grey sky, the sun gone, a rougher sea and rain
+## fog that closes the horizon in to a km or two.
 func _apply_conditions(c: Conditions) -> void:
-	var key := "%s/%d" % [c.night, c.sea_state]
+	var rain := snappedf(_weather.rain_here, 0.05)
+	var key := "%s/%d/%.2f" % [c.night, c.sea_state, rain]
 	if key == _look:
 		return
 	_look = key
-	_sky.sky_top_color = Color("#0B1426") if c.night else Color("#3F7FBF")
-	_sky.sky_horizon_color = Color("#22324A") if c.night else Color("#BFD8E8")
+	var grey := Color("#1A1F26") if c.night else Color("#6F7A84")
+	_sky.sky_top_color = (Color("#0B1426") if c.night else Color("#3F7FBF")).lerp(grey * 0.8, rain)
+	_sky.sky_horizon_color = (Color("#22324A") if c.night else Color("#BFD8E8")).lerp(grey, rain)
 	_sky.ground_horizon_color = _sky.sky_horizon_color
 	_sky.ground_bottom_color = Color("#050A12") if c.night else Color("#1F4E79")
-	_sky.night = c.night
-	_sky.clouds = [0.3, 0.5, 0.8][c.sea_state] # calm and clear .. rough and overcast
-	_sun.light_energy = 0.25 if c.night else 1.2
+	_sky.night = c.night and rain < 0.5
+	_sky.clouds = lerpf([0.3, 0.5, 0.8][c.sea_state], 1.0, rain) # calm and clear .. rough and overcast
+	_sun.light_energy = (0.25 if c.night else 1.2) * lerpf(1.0, 0.35, rain)
 	_sun.light_color = Color("#9DB4D8") if c.night else Color.WHITE
-	_env.ambient_light_color = Color("#2A3A55") if c.night else Color("#8FA8BF")
+	_env.ambient_light_color = Color("#2A3A55") if c.night else Color("#8FA8BF").lerp(Color("#8A939B"), rain)
 	_env.ambient_light_energy = 0.35 if c.night else 0.55
-	if _env.fog_density < 0.01:
+	if not _under:
 		_env.fog_light_color = _sky.sky_horizon_color
+		_env.fog_density = lerpf(0.00002, 0.0011, rain)
+		_env.fog_sky_affect = rain * 0.9 # the horizon closes in grey
 	var m := _ocean_near.material_override as ShaderMaterial
-	m.set_shader_parameter("amplitude", [0.3, 0.5, 0.9][c.sea_state])
+	m.set_shader_parameter("amplitude", lerpf([0.3, 0.5, 0.9][c.sea_state], [0.6, 0.9, 1.2][c.sea_state], rain))
 	m.set_shader_parameter("horizon_color", Color(0.12, 0.17, 0.26) if c.night else Color(0.55, 0.70, 0.82))
 	m.set_shader_parameter("shallow_color", Color(0.02, 0.08, 0.12) if c.night else Color(0.05, 0.44, 0.50))
 	m.set_shader_parameter("crest_color", Color(0.05, 0.16, 0.2) if c.night else Color(0.25, 0.85, 0.80))
@@ -200,6 +222,7 @@ func _underwater(depth: float) -> void:
 			_under = false
 			_look = "" # puts the sky and fog back
 			_env.fog_density = 0.00002
+			_env.fog_sky_affect = 0.0
 			_apply_conditions(Sim.world.conditions)
 		return
 	_under = true
