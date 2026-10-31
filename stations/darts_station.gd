@@ -1,7 +1,7 @@
 class_name DartsStation
 extends Station
 ## The rec room's dartboard, for whimsy between attacks (lando: a rec room with mini games).
-## Man the oche, aim with the mouse while your hand sways, LMB (or Space) throws. Three darts a
+## Walk up to the board, aim with the mouse while your hand sways, LMB (or Space) throws. Three darts a
 ## turn; the crew's best turns go up on the chalkboard (crew state, so everyone sees them).
 
 const BOARD_R := 0.225 ## the board's radius, m (a real one scored to 0.17)
@@ -37,10 +37,10 @@ func _ready() -> void:
 		l.pixel_size = 0.0012
 	_reticle = Build.sphere(_board, 0.008, Vector3(0, 0, 0.03), Color("#FFE24A"), 2.0)
 	_reticle.visible = false
-	Build.box(self, Vector3(0.6, 0.01, 0.04), Vector3(0, 0.005, 0), Color("#E8DFC4"), false) # the oche line
 	_chalk = Build.label(self, "", Vector3(0.75, 1.75, -OCHE + 0.06), 22, Color("#E8E4DA"))
 	Build.box(self, Vector3(0.62, 0.8, 0.03), Vector3(0.75, 1.6, -OCHE + 0.03), Color("#22302A"), false) # chalkboard
-	Build.hitbox(self, Vector3(0.8, 1.8, 0.6), Vector3(0, 0.9, -0.2))
+	# Nothing on the floor to bump into: walk up and press E at the board itself.
+	Build.area(self, Vector3(0.9, 0.9, 0.06), Vector3(0, 1.73, -OCHE + 0.03)) # thin, so the eye is never inside it
 	set_view(Vector3(0, 1.72, -1.1), Vector3(0, 1.73, -OCHE)) # nearer than the oche, so the board reads
 
 
