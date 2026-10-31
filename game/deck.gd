@@ -19,6 +19,9 @@ var _view: CanvasLayer
 var _figures := {} ## peer id -> {node, look, last}
 var _sea: AudioStreamPlayer
 var _was_on := false
+var _bout_view: CanvasLayer ## the wrestling panel, while a bout is on and we're out on deck
+var _bout_lines: Array[Label] = []
+var _thrown := -1.0 ## the bout (its start time) we were already thrown out of
 
 
 static func create(sub: SubClassData) -> Deck:
@@ -110,6 +113,109 @@ func _process(delta: float) -> void:
 		ext.deck_eye = cam
 		ext.deck_fov = me.camera.fov
 	_sync_figures(on, delta)
+	_sync_bout(on)
+
+
+## Standing in the wrestling ring on the aft casing (not swimming)?
+func in_ring(p: Vector3) -> bool:
+	var at := p - ORIGIN
+	return is_out(p) and absf(at.z - float(dims.ring_z)) < 1.0 and absf(at.x) < float(dims.ring_edge) - 0.3 \
+		and at.y > float(dims.deck) - 0.5
+
+
+## The bout this crewman is fighting in, or empty.
+func bout_of(peer: int) -> Dictionary:
+	var w: Dictionary = Game.instance.crew.get("wrestle", {})
+	if w.is_empty() or w.phase == "done" or (w.a != peer and w.b != peer):
+		return {}
+	return w
+
+
+## Where a wrestler stands in the clinch (interior space) and which way he faces.
+func bout_spot(w: Dictionary, peer: int) -> Transform3D:
+	var side := -1.0 if peer == w.a else 1.0
+	var at := ORIGIN + Vector3(float(w.pos) + side * Wrestling.GAP, float(dims.deck) + 0.02, float(dims.ring_z))
+	var t := Transform3D(Basis(Vector3.UP, side * PI / 2.0), at) # facing the other man, across the deck
+	return t
+
+
+## The local wrestler is held in the clinch: Deck places him, his feet don't move him.
+func pinned(player: Player) -> bool:
+	return not bout_of(player.peer_id).is_empty()
+
+
+func _sync_bout(on: bool) -> void:
+	var me := Game.instance.local_player
+	var w: Dictionary = Game.instance.crew.get("wrestle", {})
+	var show := on and not w.is_empty()
+	if me != null and not w.is_empty():
+		var mine: bool = not bout_of(me.peer_id).is_empty()
+		if mine:
+			var t := bout_spot(w, me.peer_id)
+			me.global_position = t.origin
+			me.rotation.y = t.basis.get_euler().y
+			me.velocity = Vector3.ZERO
+		# Lost: over the side on our own edge, into the sea.
+		if w.phase == "done" and int(w.winner) != me.peer_id and (w.a == me.peer_id or w.b == me.peer_id) and _thrown != float(w.start):
+			_thrown = float(w.start)
+			var side := -1.0 if me.peer_id == w.a else 1.0
+			me.global_position = ORIGIN + Vector3(side * (float(dims.ring_edge) + 1.6), -0.9, float(dims.ring_z))
+			me.velocity = Vector3.ZERO
+	if not show:
+		if _bout_view != null:
+			_bout_view.queue_free()
+			_bout_view = null
+		return
+	if _bout_view == null:
+		_bout_view = CanvasLayer.new()
+		_bout_view.layer = 2
+		add_child(_bout_view)
+		var root := UiKit.overlay_root()
+		root.theme = UiKit.theme()
+		_bout_view.add_child(root)
+		var box := UiKit.bottom_panel(root)
+		_bout_lines.clear()
+		for i in 5:
+			var l := UiKit.label("", 22 if i == 0 else 18, UiKit.BRASS if i == 0 else UiKit.CREAM)
+			l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			box.add_child(l)
+			_bout_lines.append(l)
+	var g := Game.instance
+	var mine: bool = me != null and (w.a == me.peer_id or w.b == me.peer_id)
+	var left := maxf(0.0, float(w.until) - Sim.world.time)
+	var na := g.crew_name(int(w.a))
+	var nb := g.crew_name(int(w.b))
+	_bout_lines[0].text = "WRESTLING — %s (port) vs %s (starboard)" % [na, nb]
+	# The clinch between the two edges: port | ...X... | starboard
+	var edge: float = dims.ring_edge
+	var cells := 21
+	var at := clampi(roundi((float(w.pos) + edge) / (edge * 2.0) * (cells - 1)), 0, cells - 1)
+	var bar := ""
+	for i in cells:
+		bar += "X" if i == at else "-"
+	var state := ""
+	if int(w.lock) != 0:
+		state += "   %s has a body lock" % g.crew_name(int(w.lock))
+	if int(w.off) != 0:
+		state += "   %s is off balance" % g.crew_name(int(w.off))
+	_bout_lines[1].text = "SEA |%s| SEA%s" % [bar, state]
+	match String(w.phase):
+		"count":
+			_bout_lines[2].text = "Into the clinch ... %d" % ceili(left)
+		"choose":
+			var picked: bool = mine and w.moves.has("a" if w.a == me.peer_id else "b")
+			if mine:
+				_bout_lines[2].text = ("Move picked: %s. Waiting ... %d" % [Wrestling.NAMES[w.moves["a" if w.a == me.peer_id else "b"]], ceili(left)]) if picked \
+						else "Pick your move (%d s):\n[1] Push   [2] Arm drag   [3] Body lock\n[4] Suplex (needs a lock)   [5] Brace" % ceili(left)
+			else:
+				_bout_lines[2].text = "They're picking their moves ... %d" % ceili(left)
+		"show":
+			_bout_lines[2].text = ""
+		"done":
+			_bout_lines[2].text = "%s wins!" % g.crew_name(int(w.winner))
+	var last := String(w.last).split("\n")
+	_bout_lines[3].text = last[0] if last.size() > 0 else ""
+	_bout_lines[4].text = "\n".join(last.slice(1)) if last.size() > 1 else "Greco-Roman: upper body only. Drive him off his edge into the sea."
 
 
 ## Looking at the sea from the deck: the exterior on the whole screen, under the HUD.
@@ -171,6 +277,13 @@ func _sync_figures(on: bool, delta: float) -> void:
 			limbs.leg_r.rotation.x = -swing
 			limbs.arm_l.rotation.x = -swing * 0.8
 			limbs.arm_r.rotation.x = swing * 0.8
+			if not bout_of(p.peer_id).is_empty(): # in the clinch: arms round the other man, leaning in
+				limbs.arm_l.rotation.x = 1.25
+				limbs.arm_r.rotation.x = 1.25
+				n.rotation.y = bout_spot(bout_of(p.peer_id), p.peer_id).basis.get_euler().y
+				n.get_child(0).rotation.x = -0.2
+			else:
+				n.get_child(0).rotation.x = 0.0
 	for id: int in _figures.keys():
 		if not seen.has(id):
 			if is_instance_valid(_figures[id].node):

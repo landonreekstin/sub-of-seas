@@ -21,6 +21,7 @@ static var instance: Game
 
 var deck: Deck ## the casing out on deck (built with the boat)
 var _deck_notice := -INF ## when "crew on deck" was last announced
+var _ring_free_at := 0.0 ## sim time the wrestling ring takes a new bout
 var interior: SubInterior ## built once we know the boat: at once on the host, on the first crew state on a client
 var sub_class: SubClassData
 var exterior: ExteriorWorld
@@ -176,6 +177,82 @@ func _deck_blocks_dive() -> bool:
 		_deck_notice = Sim.world.time
 		announce.rpc("Can't dive: there's crew out on deck! Get them below first.")
 	return true
+
+
+## Host: the wrestling ring on the aft casing (Wrestling). Two crewmen standing in it start a
+## bout; each turn waits for both moves (or the clock), plays out, and ends when one goes in.
+func _wrestle_tick() -> void:
+	var now := Sim.world.time
+	var w: Dictionary = crew.get("wrestle", {})
+	if w.is_empty():
+		if now < _ring_free_at or not Sim.world.sub.is_surfaced():
+			return
+		var inside: Array[int] = []
+		for p: Player in _players.get_children():
+			if deck.in_ring(p.global_position):
+				inside.append(p.peer_id)
+		if inside.size() >= 2:
+			inside.sort()
+			crew.wrestle = Wrestling.new_bout(inside[0], inside[1], now)
+			push_crew()
+		return
+	var gone: bool = not crew.names.has(w.a) or not crew.names.has(w.b) or not Sim.world.sub.is_surfaced()
+	match String(w.phase):
+		"count":
+			var pa := _players.get_node_or_null(str(w.a)) as Player
+			var pb := _players.get_node_or_null(str(w.b)) as Player
+			if gone or pa == null or pb == null or not deck.in_ring(pa.global_position) or not deck.in_ring(pb.global_position):
+				crew.erase("wrestle")
+				push_crew()
+			elif now >= w.until:
+				_wrestle_phase(w, "choose", Wrestling.CHOOSE_TIME)
+		"choose":
+			if gone:
+				crew.erase("wrestle")
+				push_crew()
+			elif w.moves.size() == 2 or now >= w.until:
+				var r := Wrestling.resolve(w, w.moves.get("a", "brace"), w.moves.get("b", "brace"), crew_name(w.a), crew_name(w.b))
+				w.pos += r.shift
+				w.lock = r.lock
+				w.off = r.off
+				w.last = r.text
+				_wrestle_phase(w, "show", Wrestling.SHOW_TIME)
+		"show":
+			if now >= w.until:
+				var won := Wrestling.winner(w, deck.dims.ring_edge)
+				if gone:
+					crew.erase("wrestle")
+					push_crew()
+				elif won != 0:
+					w.winner = won
+					w.last = "%s\n%s goes over the side!" % [w.last, crew_name(w.b if won == w.a else w.a)]
+					_wrestle_phase(w, "done", Wrestling.DONE_TIME)
+				else:
+					w.moves = {}
+					_wrestle_phase(w, "choose", Wrestling.CHOOSE_TIME)
+		"done":
+			if now >= w.until:
+				crew.erase("wrestle")
+				_ring_free_at = now + 3.0
+				push_crew()
+
+
+func _wrestle_phase(w: Dictionary, phase: String, time: float) -> void:
+	w.phase = phase
+	w.until = Sim.world.time + time
+	push_crew()
+
+
+## A wrestler's secret move for this turn.
+@rpc("any_peer", "call_local", "reliable")
+func rq_wrestle(move: String) -> void:
+	var w: Dictionary = crew.get("wrestle", {})
+	if not multiplayer.is_server() or w.is_empty() or w.phase != "choose" or move not in Wrestling.MOVES:
+		return
+	if _sender() == w.a:
+		w.moves.a = move
+	elif _sender() == w.b:
+		w.moves.b = move
 
 
 ## Host -> one player out on deck: she's going under, down the hatch with you.
@@ -1012,6 +1089,7 @@ func _host_tick(delta: float) -> void:
 	if sub.periscope_raised and Sim.world.hull.is_broken("periscope"):
 		sub.periscope_raised = false
 	Sim.world.crew_count = crew.names.size()
+	_wrestle_tick()
 	if not sub.is_surfaced(): # going under anyway (flooding): everyone on deck down the hatch
 		for p: Player in _players.get_children():
 			if Deck.is_out(p.global_position):
