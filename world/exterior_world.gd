@@ -17,7 +17,8 @@ var deck_fov := 75.0
 var gun_bearing := 0.0 ## the gun's training, relative to the bow
 var gun_fov := 45.0
 var gun_range := 1500.0 ## the range on the sight: the line of sight comes down to the sea there
-var _own: Node3D ## our own boat, seen only from the gun
+var _own: Node3D ## our own boat, on render layer OWN_LAYER: seen from the gun, the deck and the outside cameras, never the periscope or portholes (they are inside it)
+const OWN_LAYER := 2
 var _ocean_near: MeshInstance3D
 var _ocean_far: MeshInstance3D
 var _ships := {} ## ship id -> Node3D
@@ -120,19 +121,17 @@ func _process(delta: float) -> void:
 		return
 	var sub := Sim.world.sub
 	var h := sub.scope_height()
+	_place_own(sub)
+	camera.cull_mask = 0xFFFFF if eye_mode in ["deck", "gun"] else 0xFFFFF & ~OWN_LAYER
 	if eye_mode == "deck":
-		_place_own(sub)
 		camera.global_transform = _own.global_transform * deck_eye
 		camera.fov = deck_fov
 	elif eye_mode == "gun":
-		_place_own(sub)
 		var eye := _own.get_node("Gun/Eye") as Node3D
 		eye.rotation.x = -atan2(eye.global_position.y, gun_range) # laid on the waterline at the set range
 		camera.global_transform = eye.global_transform
 		camera.fov = gun_fov
 	else:
-		if _own != null:
-			_own.visible = false
 		camera.position = to_3d(sub.pos, maxf(h, 0.5) if h > 0.0 else maxf(h, -4.0))
 		camera.rotation = Vector3(0.0, -deg_to_rad(sub.heading + scope_bearing), 0.0)
 		camera.fov = scope_fov
@@ -154,6 +153,13 @@ func _process(delta: float) -> void:
 		_underwater(maxf(-camera.position.y, 0.01) if h <= 0.0 and eye_mode != "gun" else 0.0)
 
 
+## Puts everything drawn under `n` on our own boat's render layer.
+static func set_own_layer(n: Node) -> void:
+	for m in [n] + n.find_children("*", "VisualInstance3D", true, false):
+		if m is VisualInstance3D:
+			(m as VisualInstance3D).layers = OWN_LAYER
+
+
 ## Our own boat model (for the figures of the crew out on deck), or null before it is placed.
 func own_boat() -> Node3D:
 	return _own
@@ -164,10 +170,11 @@ func _place_own(sub: SubState) -> void:
 	if _own == null:
 		_own = ShipModels.own_boat(sub.data)
 		add_child(_own)
-	_own.visible = true
+		set_own_layer(_own)
 	var t := Sim.world.time
 	var sea := Sim.world.conditions.sea_at(sub.pos)
-	_own.position = to_3d(sub.pos, sin(t * 0.7) * 0.15 * (1.0 + sea))
+	var under := sub.depth if sub.depth > 1.0 else 0.0 # dived, she's down there for the outside cameras
+	_own.position = to_3d(sub.pos, sin(t * 0.7) * 0.15 * (1.0 + sea) - under)
 	_own.rotation = Vector3(sin(t * 0.45) * 0.006 * (1.0 + sea), -deg_to_rad(sub.heading), sin(t * 0.6) * 0.012 * (1.0 + sea))
 	(_own.get_node("Gun") as Node3D).rotation.y = -deg_to_rad(gun_bearing)
 
