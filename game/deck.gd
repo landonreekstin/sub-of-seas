@@ -112,7 +112,7 @@ func _process(delta: float) -> void:
 		cam.origin -= ORIGIN
 		ext.deck_eye = cam
 		ext.deck_fov = me.camera.fov
-	_sync_figures(on, delta)
+	_sync_figures(delta)
 	_sync_bout(on)
 
 
@@ -249,7 +249,7 @@ func _switch_view(on: bool) -> void:
 
 
 ## The crew out on deck, as figures on the boat in the exterior (seen only from the deck).
-func _sync_figures(on: bool, delta: float) -> void:
+func _sync_figures(delta: float) -> void:
 	var own: Node3D = Game.instance.exterior.own_boat() # the figures show from the outside cameras too
 	var seen := {}
 	if own != null:
