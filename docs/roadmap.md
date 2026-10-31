@@ -108,7 +108,8 @@ Added by Blaney after playing. In his words where it matters.
       screen forever. Now a joiner that hasn't got the boat after 20 s goes back to the menu
       and says why. To play together, both run the same version: the pin needs bumping, or
       Blaney joins from his clone with `./play join`.)*
-- [ ] dart board should not have a line on the ground that blocks you from moving, you should just walk up to the dart board to play darts
+- [x] dart board should not have a line on the ground that blocks you from moving, you should just walk up to the dart board to play darts
+      *(No line and nothing invisible on the floor any more: walk up to the board and press E at it.)*
 - [x] bot crew mate arms at sticking out behind them and not toward the station theyre at
       *(Fixed: arms at a station swung backwards; they now reach forward onto the gear, for bots and players alike. The point and salute emotes had the same backwards arm and are fixed too.)*
 
