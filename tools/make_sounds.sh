@@ -134,3 +134,8 @@ sox $T/s4.wav $R $A/whale_loop.wav reverb 80 50 100 pad 0.3 3.0 trim 0 8.0 gain 
 sox -n $R $A/shrimp_loop.wav synth 2.0 whitenoise gain -6 highpass 2500 tremolo 41 100 tremolo 13 60 gain -n -16
 # The sea itself in the headphones: a soft hiss.
 sox -n $R $A/sea_loop.wav synth 2.0 pinknoise gain -6 lowpass 900 tremolo 0.5 20 gain -n -22
+# Rain on the casing and the sea (loop): a steady hiss with a drumming patter through it.
+sox -n $R $T/r1.wav synth 3.0 pinknoise gain -6 highpass 900 lowpass 7000 gain -4
+sox -n $R $T/r2.wav synth 3.0 whitenoise gain -6 bandpass 2400 1200 tremolo 23 70 tremolo 7 40 gain -8
+sox -n $R $T/r3.wav synth 3.0 brownnoise gain -6 lowpass 300 tremolo 0.3 30 gain -10
+sox -m $T/r1.wav $T/r2.wav $T/r3.wav $R $A/rain_loop.wav gain -n -14

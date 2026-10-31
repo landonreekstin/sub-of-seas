@@ -46,13 +46,13 @@ static func hearing_factor(ship: ShipState) -> float:
 static func awareness_gain(ship: ShipState, sub: SubState) -> float:
 	var d := ship.pos.distance_to(sub.pos)
 	var gain := 0.0
-	var see_range := ship.data.lookout_range * (2.0 if sub.is_surfaced() else 1.0) * conditions.visual_factor()
+	var see_range := ship.data.lookout_range * (2.0 if sub.is_surfaced() else 1.0) * conditions.visual_between(ship.pos, sub.pos)
 	if d < see_range:
 		var f := 1.0 - d / see_range
 		gain += VISUAL_RATE * sub_exposure(sub) * f * f
 	if ship.data.hydrophone_range > 0.0 and d < ship.data.hydrophone_range:
 		var f := 1.0 - d / ship.data.hydrophone_range
-		gain += HEARING_RATE * sub_noise(sub) * f * f * hearing_factor(ship) * conditions.hearing_factor(sub.depth)
+		gain += HEARING_RATE * sub_noise(sub) * f * f * hearing_factor(ship) * conditions.hearing_at(ship.pos, sub.depth)
 	return gain * sharpness
 
 

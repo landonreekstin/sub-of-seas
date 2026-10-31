@@ -41,7 +41,7 @@ static func sight_range(sub: SubState, c: Conditions) -> float:
 		r = SEE_SCOPE
 	if sub.depth < 22.0:
 		r = maxf(r, SEE_SHALLOW)
-	return r * c.visual_factor()
+	return r * c.visual_factor() * lerpf(1.0, Conditions.RAIN_SIGHT, c.rain_at(sub.pos)) # a boat under a squall is hidden from above
 
 
 ## Host step. Returns true while it should stay in the world.

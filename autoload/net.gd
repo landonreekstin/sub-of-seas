@@ -28,6 +28,7 @@ var realism := "arcade" ## how arcadey or realistic the host's patrol plays (--r
 var course := "full" ## which training course (--training <course>): a Tutorial.COURSES key
 var debug_charges := false ## --test-charges: the host drops a pattern on the boat (testing)
 var start_bots: PackedStringArray = [] ## --bots helm,dive,...: the host posts bot crewmen there at the start
+var debug_squall := "" ## --squall [over|ahead]: the host's patrol has a squall raining on the boat (over), or 4 km dead ahead
 var debug_reef := false ## --reef: the host's boat starts just off an island's reef, shallow, a whale close by
 var debug_depth := -1.0 ## --depth <m>: the host's patrol starts at this keel depth (testing)
 var debug_station := "" ## --station <id>: man this station as soon as you are aboard (testing)
@@ -92,6 +93,10 @@ func _ready() -> void:
 					start_bots = args[i + 1].split(",", false)
 			"--reef":
 				debug_reef = true
+			"--squall": # --squall [over|ahead]
+				debug_squall = "over"
+				if i + 1 < args.size() and not args[i + 1].begins_with("--"):
+					debug_squall = args[i + 1]
 			"--depth":
 				if i + 1 < args.size():
 					debug_depth = float(args[i + 1])

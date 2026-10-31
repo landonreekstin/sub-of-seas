@@ -29,6 +29,13 @@ and update "Current style" in the same commit.
 - **Sky:** painted toon clouds, flat white tops and blue-grey bellies with crisp edges,
   drifting slowly; few on a calm day, overcast in a rough sea; a soft round sun; stars on a
   night sky; no clouds under the water.
+- **Weather** (lando: rain and squalls): rain squalls a couple of km across drift across the
+  patrol with the wind, building up and blowing through in a quarter of an hour. From outside,
+  a dark lumpy cloud base with a grey curtain of rain hanging to the sea, in broad veils and
+  fine streaks, dark at night. Inside one: the sky goes low and grey, the sun dims, grey rain
+  fog closes the horizon in to a km or two, the sea turns dull grey-green, runs higher and is
+  pocked white by drops, and rain streaks down past the eye. Rain drums on the hull near the
+  surface. The lookouts call it when one comes over and when it clears.
 - **Sprint:** hold Shift running forward: 1.75× walking speed, the view widens a few degrees
   and the head bobs, boots ring louder and further apart (crewmates hear it). Not while
   crouched; foul air takes it away.
@@ -222,3 +229,4 @@ and update "Current style" in the same commit.
 | 2026-10-30 | Blaney | Tutorials per job: pick the job from a list when you click Training patrol; crew calls show as a big line with who said it and a little bell; keep the long whole-boat training at the bottom of the list. |
 | 2026-10-30 | lando | I want to greatly improve the graphics. Improve the shapes and textures of everything. Also add a sprint functionality. |
 | 2026-10-30 | lando | (on the graphics pass) I like it. You can merge, and do the faces, the ocean, the islands or the sea life. |
+| 2026-10-30 | lando | Work on the deck gun and weather (weather: rain and squalls that roll across the patrol, cutting how far lookouts and the periscope see, cover to close in on a convoy, rougher seas and darker skies with them). |
