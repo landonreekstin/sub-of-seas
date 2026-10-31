@@ -27,6 +27,49 @@ func _initialize() -> void:
 	Build.box(root3d, Vector3(3000, 0.1, 400), Vector3(600, -0.05, 0), Color("#1F4E79"), false)
 	var args := OS.get_cmdline_user_args()
 	var k: String = args[0] if not args.is_empty() else "destroyer"
+	if k == "crew": # a line of sailors with different looks, faces close up
+		for i in 4:
+			var m := Node3D.new()
+			m.position = Vector3((i - 1.5) * 0.9, 0, 0)
+			m.rotation.y = (i - 1.5) * -0.2
+			root3d.add_child(m)
+			var look := {"skin": i, "hair": [0, 3, 6, 2][i], "hair_col": i + 1, "beard": [0, 2, 5, 1][i], "extra": [0, 2, 4, 1][i], "build": i}
+			Crewman.build_body(m, look, Color.from_hsv(0.15 * i + 0.5, 0.45, 0.85))
+			var face := Node3D.new()
+			face.position.y = 1.6 # Player.EYE_HEIGHT (Player needs the autoloads)
+			m.add_child(face)
+			Crewman.build_face(face, look)
+		var cc := Camera3D.new()
+		cc.fov = 35.0
+		root3d.add_child(cc)
+		cc.look_at_from_position(Vector3(0.2, 1.55, -2.6), Vector3(0, 1.4, 0))
+		env.background_color = Color("#14324F")
+		if args.size() > 1:
+			_save(args[1])
+		return
+	if k == "sealife": # a humpback, a shark and a few fish, side by side
+		var w := Creatures.whale()
+		w.rotation.y = PI * 0.5
+		w.position = Vector3(0, 4, 0)
+		root3d.add_child(w)
+		var sh := Creatures.shark()
+		sh.rotation.y = PI * 0.5
+		sh.position = Vector3(2, 4, 9)
+		root3d.add_child(sh)
+		for i in 4:
+			var f := MeshInstance3D.new()
+			f.mesh = Creatures.fish_mesh()
+			f.material_override = Creatures.creature_mat()
+			f.position = Vector3(-4 + i * 1.2, 5.5, 10)
+			f.rotation.y = PI * 0.5
+			root3d.add_child(f)
+		var cs := Camera3D.new()
+		cs.fov = 50.0
+		root3d.add_child(cs)
+		cs.look_at_from_position(Vector3(-4, 7, 22), Vector3(0, 4, 2))
+		if args.size() > 1:
+			_save(args[1])
+		return
 	if k == "plane": # the patrol plane, in the air
 		var p := ShipModels.plane()
 		p.position.y = 3.0

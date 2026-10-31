@@ -173,3 +173,7 @@ Also add a sprint functionality".
       seas), a soft sun, stars at night.
 - [x] **Sprint** (hold Shift, forward): 1.75× walking speed, the view widens and the head
       bobs, longer and louder footsteps that crewmates hear; not crouched, slower in foul air.
+- [x] **Faces, ocean, islands, sea life** (lando: "do the faces, the ocean, the islands or the
+      sea life"): eyes with a glint, lids, cheeks, jaw and smile, skin and hair textures; five
+      waves, ripples, glowing crests, lace foam and sun glints; rock-textured islands thick with
+      jungle, better palms, boulders; streamlined fish, sharks and whales.

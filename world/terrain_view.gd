@@ -1,8 +1,9 @@
 class_name TerrainView
 extends Node3D
 ## The islands and the sea floor around them, built from the Seabed as low-poly, flat-shaded
-## meshes: rock and jungle up top, grass, a sand beach, then pale sand and coral on the reef
-## and blue-grey slopes into the deep. A few palms stand on each island. Rebuilt whenever the
+## meshes in the toon material with a rock texture: rock and jungle up top, grass, a sand
+## beach, then pale sand and coral on the reef and blue-grey slopes into the deep. Palms with
+## coconuts behind the beach, round-canopied jungle trees on the slopes, boulders. Rebuilt whenever the
 ## seabed's features change.
 
 const DEEPEST_DRAWN := 260.0 ## floor deeper than this is never seen, so isn't built
@@ -28,6 +29,8 @@ func sync(seabed: Seabed) -> void:
 			add_child(mesh)
 		if f.kind == "island":
 			_palms(seabed, f, rng)
+			_jungle(seabed, f, rng)
+			_boulders(seabed, f, rng)
 			_coral(seabed, f, rng)
 
 
@@ -66,11 +69,7 @@ func _build(seabed: Seabed, centre: Vector2, reach: float, cells: int, rng: Rand
 	st.generate_normals()
 	var m := MeshInstance3D.new()
 	m.mesh = st.commit()
-	var mat := StandardMaterial3D.new()
-	mat.vertex_color_use_as_albedo = true
-	mat.roughness = 0.95
-	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-	m.material_override = mat
+	m.material_override = Build.terrain_mat()
 	return m
 
 
@@ -79,10 +78,12 @@ func _colour(y: float, rng: RandomNumberGenerator) -> Color:
 	var c: Color
 	if y > 140.0:
 		c = Color("#6E6A5E") # bare rock peaks
+	elif y > 110.0:
+		c = Color("#6E6A5E").lerp(Color("#3E7D3F"), rng.randf() * 0.6) # rock breaking through
 	elif y > 45.0:
-		c = Color("#3E7D3F") # deep jungle
+		c = [Color("#2F6A33"), Color("#3E7D3F"), Color("#356F37")][rng.randi() % 3] # deep jungle
 	elif y > 3.0:
-		c = Color("#5FA35A") # grass and scrub
+		c = [Color("#4F8E48"), Color("#5A9A4E"), Color("#46803F"), Color("#6A9E50")][rng.randi() % 4] # grass and scrub
 	elif y > -0.5:
 		c = Color("#EAD9A6") # beach
 	elif y > -14.0:
@@ -141,7 +142,8 @@ func _coral(seabed: Seabed, f: Dictionary, rng: RandomNumberGenerator) -> void:
 		placed += 1
 
 
-## Palms on the low ground behind the beach, each leaning a little its own way.
+## Palms on the low ground behind the beach, each leaning its own way: a curving ringed
+## trunk, a crown of drooping fronds, a cluster of coconuts.
 func _palms(seabed: Seabed, f: Dictionary, rng: RandomNumberGenerator) -> void:
 	var placed := 0
 	for attempt in 300:
@@ -153,16 +155,119 @@ func _palms(seabed: Seabed, f: Dictionary, rng: RandomNumberGenerator) -> void:
 			continue
 		var palm := Node3D.new()
 		palm.position = _to_3d(p, y - 0.5)
-		palm.rotation = Vector3(rng.randf_range(-0.2, 0.2), rng.randf() * TAU, rng.randf_range(-0.2, 0.2))
+		palm.rotation.y = rng.randf() * TAU
 		var tall := rng.randf_range(12.0, 20.0)
-		Build.cyl(palm, 0.5, tall, Vector3(0, tall * 0.5, 0), Color("#8A6A45"))
-		for k in 6:
-			var leaf := Node3D.new()
-			leaf.position.y = tall
-			leaf.rotation = Vector3(-0.45, k * TAU / 6.0, 0.0)
-			palm.add_child(leaf)
-			Build.box(leaf, Vector3(1.6, 0.25, 8.0), Vector3(0, -0.8, -4.0), Color("#3F8A3A"), false)
+		var lean := rng.randf_range(0.15, 0.45)
+		# The trunk in five segments, each bending a little more, narrowing to the top.
+		var top := Node3D.new()
+		palm.add_child(top)
+		var seg := tall / 5.0
+		for k in 5:
+			var r := lerpf(0.6, 0.35, k / 5.0)
+			Build.lathe(top, [Vector2(0, 0), Vector2(r, 0), Vector2(r * 1.08, seg * 0.15), Vector2(r * 0.92, seg),
+					Vector2(0, seg)], Vector3.ZERO, Color("#8A6A45"), Vector3.UP, 10)
+			var next := Node3D.new()
+			next.position.y = seg
+			next.rotation.x = lean * 0.22 * (k + 1) / 3.0
+			top.add_child(next)
+			top = next
+		for k in 3:
+			Build.sphere(top, 0.42, Vector3(cos(k * 2.1) * 0.45, -0.35, sin(k * 2.1) * 0.45), Color("#6B4A2A"))
+		for k in 8:
+			var frond := Node3D.new()
+			frond.rotation = Vector3(-0.25 - rng.randf() * 0.2, k * TAU / 8.0 + rng.randf() * 0.3, 0.0)
+			top.add_child(frond)
+			# Two pieces: out from the crown, then drooping down at the tip.
+			Build.box(frond, Vector3(1.8, 0.15, 4.2), Vector3(0, 0, -2.1), Color("#3F8A3A"), false)
+			var tip := Node3D.new()
+			tip.position.z = -4.0
+			tip.rotation.x = 0.6
+			frond.add_child(tip)
+			Build.box(tip, Vector3(1.3, 0.12, 3.4), Vector3(0, 0, -1.7), Color("#4E9C42"), false)
 		add_child(palm)
+		placed += 1
+
+
+const TREES_PER_ISLAND := 450
+const CANOPY_COLOURS: Array[Color] = [Color("#2F6E35"), Color("#3E7D3F"), Color("#4C8E3E"), Color("#2A5E33")]
+
+
+## Jungle on the slopes: round, lumpy canopy trees, darker greens than the scrub, thick
+## enough to read as forest from the periscope. Drawn as two MultiMeshes (trunks, canopy).
+func _jungle(seabed: Seabed, f: Dictionary, rng: RandomNumberGenerator) -> void:
+	var trunks: Array[Transform3D] = []
+	var blobs: Array[Transform3D] = []
+	var colours: Array[Color] = []
+	for attempt in TREES_PER_ISLAND * 4:
+		if trunks.size() >= TREES_PER_ISLAND:
+			break
+		var p := Vector2(f.x, f.y) + Vector2.from_angle(rng.randf() * TAU) * sqrt(rng.randf()) * float(f.r) * float(f.stretch) * 0.85
+		var y := -seabed.floor_depth(p)
+		if y < 4.0 or y > 130.0:
+			continue
+		var base := _to_3d(p, y - 1.0)
+		var s := rng.randf_range(7.0, 13.0)
+		trunks.append(Transform3D(Basis.from_scale(Vector3(s * 0.12, s * 1.2, s * 0.12)), base + Vector3(0, s * 0.6, 0)))
+		var col := CANOPY_COLOURS[rng.randi() % CANOPY_COLOURS.size()]
+		for k in 3:
+			var off := Vector3(rng.randf_range(-0.5, 0.5), rng.randf_range(0.0, 0.4), rng.randf_range(-0.5, 0.5)) * s
+			var r := s * rng.randf_range(0.55, 0.8)
+			blobs.append(Transform3D(Basis.from_euler(Vector3(0, rng.randf() * TAU, 0)).scaled(Vector3(r, r * 0.8, r)), base + Vector3(0, s * 1.35, 0) + off))
+			colours.append(col.lerp(Color("#6FAE4A"), k * 0.12))
+	if trunks.is_empty():
+		return
+	var trunk_mesh := Build.lathe_mesh([Vector2(0, -0.5), Vector2(1.0, -0.5), Vector2(0.7, 0.5), Vector2(0, 0.5)], 8)
+	add_child(_multi(trunk_mesh, trunks, [], Build.mat(Color("#5A4632"))))
+	var blob := SphereMesh.new()
+	blob.radius = 1.0
+	blob.height = 2.0
+	blob.radial_segments = 10
+	blob.rings = 6
+	var leaf := (Build.mat(Color.WHITE) as ShaderMaterial).duplicate() as ShaderMaterial
+	leaf.set_shader_parameter("vertex_color", true)
+	leaf.set_shader_parameter("paint_scale", 0.3)
+	add_child(_multi(blob, blobs, colours, leaf))
+
+
+func _multi(mesh: Mesh, xforms: Array[Transform3D], colours: Array[Color], material: Material) -> MultiMeshInstance3D:
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.use_colors = not colours.is_empty()
+	mm.mesh = mesh
+	mm.instance_count = xforms.size()
+	for i in xforms.size():
+		mm.set_instance_transform(i, xforms[i])
+		if mm.use_colors:
+			mm.set_instance_color(i, colours[i])
+	var mi := MultiMeshInstance3D.new()
+	mi.multimesh = mm
+	mi.material_override = material
+	return mi
+
+
+## Grey boulders on the beaches and the rocky slopes, and a few awash at the waterline.
+func _boulders(seabed: Seabed, f: Dictionary, rng: RandomNumberGenerator) -> void:
+	var placed := 0
+	for attempt in 300:
+		if placed >= 30:
+			return
+		var p := Vector2(f.x, f.y) + Vector2.from_angle(rng.randf() * TAU) * rng.randf_range(0.4, 1.0) * float(f.r) * float(f.stretch)
+		var y := -seabed.floor_depth(p)
+		if y < -3.0 or y > 160.0:
+			continue
+		var s := rng.randf_range(1.5, 5.0)
+		var b := MeshInstance3D.new()
+		var m := SphereMesh.new()
+		m.radius = 1.0
+		m.height = 2.0
+		m.radial_segments = 7
+		m.rings = 4
+		b.mesh = m
+		b.material_override = Build.mat(Color("#7A766A"), 0.0, "rock")
+		b.position = _to_3d(p, y + s * 0.2)
+		b.scale = Vector3(s * rng.randf_range(0.8, 1.3), s * rng.randf_range(0.5, 0.8), s * rng.randf_range(0.8, 1.3))
+		b.rotation = Vector3(rng.randf() * 0.4, rng.randf() * TAU, rng.randf() * 0.4)
+		add_child(b)
 		placed += 1
 
 

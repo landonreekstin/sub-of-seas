@@ -15,6 +15,7 @@ uniform float bump = 0.0; // how hard the height map bends the light
 uniform float cavity = 0.0; // how dark the low places of the height map get
 uniform float roughness = 0.75;
 uniform float paint = 1.0; // how strong the painted variation is
+uniform bool vertex_color = false; // multiply in the mesh's vertex colours (terrain)
 uniform float paint_scale = 1.0; // blotches per metre (big plating gets big, soft ones)
 
 varying vec3 local_pos;
@@ -45,6 +46,9 @@ void vertex() {
 
 void fragment() {
 	vec3 col = albedo.rgb;
+	if (vertex_color) {
+		col *= COLOR.rgb;
+	}
 	// Hand-painted: big soft blotches of lighter and darker paint, a warm/cool drift
 	// between them, and each piece a touch different from its neighbour.
 	vec3 p = (local_pos + seed * 0.37) * paint_scale;

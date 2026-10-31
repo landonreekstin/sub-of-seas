@@ -63,3 +63,19 @@ func test_built_meshes_are_closed_and_sized() -> bool:
 	runner.check(box.position.y < -3.0, "the hull goes down below the waterline")
 	ship.free()
 	return true
+
+
+func test_creatures_and_faces_build() -> bool:
+	var fish := Creatures.fish_mesh()
+	runner.check(fish.get_aabb().size.z > 0.6 and fish.get_aabb().size.y > 0.3, "a fish is a fish's length and depth")
+	var w := Creatures.whale()
+	runner.check(w.has_node("Flukes") and w.has_node("Spout"), "the whale keeps its flukes and spout for SeaLifeView")
+	var s := Creatures.shark()
+	runner.check(s.has_node("Tail"), "the shark keeps its tail for SeaLifeView")
+	var face := Node3D.new()
+	Crewman.build_face(face, {"hair": 6, "beard": 6, "extra": 4})
+	runner.check(face.get_child_count() > 20, "a face has eyes, lids, cheeks, mouth, hair and beard")
+	w.free()
+	s.free()
+	face.free()
+	return true

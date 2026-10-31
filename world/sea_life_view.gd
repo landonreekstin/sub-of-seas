@@ -19,7 +19,7 @@ var _t := 0.0
 
 func _ready() -> void:
 	_rng.randomize()
-	var fish := _fish_mesh()
+	var fish := Creatures.fish_mesh()
 	for i in SCHOOLS:
 		var mm := MultiMesh.new()
 		mm.transform_format = MultiMesh.TRANSFORM_3D
@@ -31,14 +31,11 @@ func _ready() -> void:
 			mm.set_instance_color(k, c.lerp(Color.WHITE, _rng.randf() * 0.25))
 		var mi := MultiMeshInstance3D.new()
 		mi.multimesh = mm
-		var mat := StandardMaterial3D.new()
-		mat.vertex_color_use_as_albedo = true
-		mat.roughness = 0.3
-		mi.material_override = mat
+		mi.material_override = Creatures.creature_mat()
 		add_child(mi)
 		_schools.append({"mm": mm, "centre": Vector3.INF, "vel": Vector3.ZERO, "phase": _rng.randf() * TAU, "size": _rng.randf_range(3.0, 6.0)})
 	for i in 2:
-		var s := _shark()
+		var s := Creatures.shark()
 		s.visible = false
 		add_child(s)
 		_sharks.append(s)
@@ -74,7 +71,7 @@ func _sync_whales() -> void:
 		seen[wh.id] = true
 		var node: Node3D = _whales.get(wh.id)
 		if node == null:
-			node = _whale()
+			node = Creatures.whale()
 			add_child(node)
 			_whales[wh.id] = node
 		node.position = ExteriorWorld.to_3d(wh.pos, -wh.depth - 1.0)
@@ -90,53 +87,7 @@ func _sync_whales() -> void:
 			_whales.erase(id)
 
 
-## A humpback: long dark body, pale belly, long white-edged flippers, broad flukes. Bow to -Z.
-func _whale() -> Node3D:
-	var w := Node3D.new()
-	var body := Build.sphere(w, 1.0, Vector3.ZERO, Color("#34495A"))
-	body.scale = Vector3(1.9, 1.6, Whale.LENGTH * 0.5)
-	var belly := Build.sphere(w, 1.0, Vector3(0, -0.5, -1.0), Color("#C9D2D6"))
-	belly.scale = Vector3(1.5, 1.1, Whale.LENGTH * 0.38)
-	for side in [-1.0, 1.0]:
-		var fin := Build.box(w, Vector3(4.5, 0.25, 1.0), Vector3(side * 3.6, -0.6, -2.5), Color("#D8DEE2"), false)
-		fin.rotation = Vector3(0.0, side * 0.45, side * -0.35)
-	var flukes := Node3D.new()
-	flukes.name = "Flukes"
-	flukes.position = Vector3(0, 0.1, Whale.LENGTH * 0.45)
-	w.add_child(flukes)
-	Build.box(flukes, Vector3(0.6, 0.6, 2.5), Vector3(0, 0, 1.0), Color("#34495A"), false)
-	for side in [-1.0, 1.0]:
-		var lobe := Build.box(flukes, Vector3(2.4, 0.2, 1.2), Vector3(side * 1.3, 0, 2.4), Color("#2B3B48"), false)
-		lobe.rotation.y = side * -0.35
-	var spout := Build.particles(w, Color(1, 1, 1, 0.8), 40, 1.6, Vector3.UP, 9.0, 12.0, Vector3(0, -4, 0), 0.8)
-	spout.name = "Spout"
-	spout.position = Vector3(0, 1.6, -3.5)
-	spout.emitting = false
-	return w
-
-
 # --- Fish ----------------------------------------------------------------------
-
-## A little flat-sided fish, nose to -Z.
-func _fish_mesh() -> Mesh:
-	var st := SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	st.set_smooth_group(-1)
-	var nose := Vector3(0, 0, -0.18)
-	var top := Vector3(0, 0.08, 0.0)
-	var bot := Vector3(0, -0.07, 0.0)
-	var l := Vector3(-0.04, 0, 0.0)
-	var r := Vector3(0.04, 0, 0.0)
-	var tail := Vector3(0, 0, 0.12)
-	var tt := Vector3(0, 0.07, 0.2)
-	var tb := Vector3(0, -0.07, 0.2)
-	for tri: Array in [[nose, top, r], [nose, r, bot], [nose, bot, l], [nose, l, top],
-			[tail, r, top], [tail, bot, r], [tail, l, bot], [tail, top, l], [tail, tt, tb], [tail, tb, tt]]:
-		for v: Vector3 in tri:
-			st.add_vertex(v * 3.0) # chunky, readable through a porthole
-	st.generate_normals()
-	return st.commit()
-
 
 ## A school milling around a centre that wanders, kept near the boat (and off the bottom).
 func _school(s: Dictionary, here: Vector3, fwd: Vector3, floor_at: float, delta: float, show: bool) -> void:
@@ -166,26 +117,6 @@ func _school(s: Dictionary, here: Vector3, fwd: Vector3, floor_at: float, delta:
 
 
 # --- Sharks ------------------------------------------------------------------
-
-func _shark() -> Node3D:
-	var s := Node3D.new()
-	var body := Build.sphere(s, 1.0, Vector3.ZERO, Color("#7E8B95"))
-	body.scale = Vector3(0.45, 0.5, 1.9)
-	var belly := Build.sphere(s, 1.0, Vector3(0, -0.15, -0.2), Color("#E3E8EA"))
-	belly.scale = Vector3(0.38, 0.35, 1.5)
-	var fin := Build.box(s, Vector3(0.08, 0.7, 0.5), Vector3(0, 0.55, -0.1), Color("#6E7B85"), false)
-	fin.rotation.x = -0.4
-	for side in [-1.0, 1.0]:
-		var pec := Build.box(s, Vector3(0.8, 0.06, 0.35), Vector3(side * 0.55, -0.2, -0.5), Color("#6E7B85"), false)
-		pec.rotation.z = side * -0.3
-	var tail := Node3D.new()
-	tail.name = "Tail"
-	tail.position = Vector3(0, 0, 1.7)
-	s.add_child(tail)
-	var upper := Build.box(tail, Vector3(0.08, 0.9, 0.35), Vector3(0, 0.35, 0.25), Color("#6E7B85"), false)
-	upper.rotation.x = 0.6
-	return s
-
 
 ## Now and then a shark or two circles the boat for a while.
 func _swim_sharks(here: Vector3, _delta: float) -> void:
