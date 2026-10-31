@@ -61,6 +61,8 @@ static func own_dims(sub: SubClassData) -> Dictionary:
 	d.gun_z = d.ct_z - d.ct_len * 0.5 - 6.0
 	d.hatch_z = d.ct_z - d.ct_len * 0.5 - 2.6 # the deck hatch, between the gun and the fairwater
 	d.ladder_z = d.ct_z + d.ct_len * 0.5 + 3.0 # rungs up the side from the water, both sides
+	d.ring_z = d.ladder_z + 6.0 # the wrestling ring painted across the aft casing (Wrestling)
+	d.ring_edge = hull_half((d.ring_z + l * 0.5) / l, d.beam) - 0.15 # where the deck ends, each side
 	return d
 
 
@@ -250,6 +252,13 @@ static func own_boat(sub: SubClassData) -> Node3D:
 	Build.cyl(root, 0.48, 0.16, Vector3(0, deck_y + 0.08, hz), Color("#3A3F44"))
 	Build.cyl(root, 0.42, 0.06, Vector3(0, deck_y + 0.19, hz), Color("#2E3236"))
 	Build.box(root, Vector3(0.5, 0.05, 0.06), Vector3(0, deck_y + 0.24, hz), Color("#B23A2E"), false) # dogging bar
+	# The wrestling ring: two white lines right across the casing and a centre mark.
+	var rz: float = d.ring_z
+	var rw: float = float(d.ring_edge) * 2.0
+	var paint := Color("#E8E4DA")
+	for dz in [-1.0, 1.0]:
+		Build.box(root, Vector3(rw, 0.02, 0.1), Vector3(0, hull_deck(0.6, fb) + 0.01, rz + dz), paint, false)
+	Build.box(root, Vector3(0.1, 0.02, 1.9), Vector3(0, hull_deck(0.6, fb) + 0.01, rz), paint, false)
 	var lt: float = (float(d.ladder_z) + l * 0.5) / l
 	for side in [-1.0, 1.0]:
 		var x: float = side * (hull_half(lt, beam) + 0.12)

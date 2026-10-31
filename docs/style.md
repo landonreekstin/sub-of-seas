@@ -44,6 +44,16 @@ and update "Current style" in the same commit.
   rung ladders on either side, aft of the fairwater. E at the deck hatch goes below. The boat
   can't dive while anyone is out (Blaney): the dive and vent orders are refused with "Can't
   dive: there's crew out on deck!"; if she goes under anyway, everyone on deck is sent down.
+- **Wrestling on deck** (Blaney: a simplified Your Only Move Is HUSTLE, Greco-Roman moves
+  only): a ring painted in white across the aft casing (two lines right across the deck and a
+  centre mark). Two crewmen standing in it start a bout after a 3 s count; they lock into a
+  clinch facing each other across the deck. Each turn both pick a move in secret (8 s; no pick
+  braces): 1 Push, 2 Arm drag, 3 Body lock, 4 Suplex (needs a lock), 5 Brace; then both play
+  out together and a line says what happened. Arm drag beats push, push beats a body lock
+  attempt, a body lock beats an arm drag, a suplex from a lock throws far, an arm drag breaks a
+  lock, off balance doubles how far you're driven. A panel at the bottom: the two names, the
+  clinch on a SEA |----X----| SEA bar, the move keys, the last turn. Driven past your edge,
+  you go over the side into the sea and swim back to a ladder.
 - **Deck gun** (lando: deck gun crewed from inside, up the conning-tower hatch, ammunition
   passed up): our boat on the surface seen from the gunlayer's seat, a black hull with a teak
   deck, the fairwater and periscope shears behind, the gun's dark barrel in the lower right of
@@ -252,3 +262,4 @@ and update "Current style" in the same commit.
 | 2026-10-31 | Blaney | Dart board: no line on the ground that blocks you from moving; you just walk up to the board to play darts. |
 | 2026-10-31 | Blaney | Fix the footsteps, they're very annoying and clanky; they should just be very basic and subtle footsteps. |
 | 2026-10-31 | Blaney | When the sub is high enough above water, make it possible to get out and walk on top of it. The boat can't dive with crew out; fall in and you swim back and climb a ladder. |
+| 2026-10-31 | Blaney | Add a top-of-the-sub wrestling game where you try to wrestle the other person into the water, like a simplified Your Only Move Is HUSTLE with only Greco-Roman moves; pick moves then they play out; start it by stepping into a ring marked on deck. |
