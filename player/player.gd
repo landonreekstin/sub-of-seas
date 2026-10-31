@@ -68,7 +68,7 @@ func _build() -> void:
 	collision_mask = 1
 	var shape := CollisionShape3D.new()
 	var capsule := CapsuleShape3D.new()
-	capsule.radius = 0.26
+	capsule.radius = 0.22
 	capsule.height = 1.75
 	shape.shape = capsule
 	shape.position.y = 0.875
@@ -102,7 +102,7 @@ func _build() -> void:
 
 	name_tag = Label3D.new()
 	name_tag.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	name_tag.position.y = 2.05
+	name_tag.position.y = 1.95
 	name_tag.font_size = 32
 	name_tag.pixel_size = 0.004
 	name_tag.no_depth_test = false
@@ -168,22 +168,25 @@ static func _make_hat(face: Node3D, kind: String) -> Node3D:
 	var white := Color("#F2F0E8")
 	var navy := Color("#2B3A55")
 	match kind:
-		"watch": # navy knit cap
-			Build.sphere(h, 0.23, Vector3(0, 0.12, 0), navy)
-			Build.cyl(h, 0.235, 0.08, Vector3(0, 0.1, 0), Color("#24304A"))
-		"ball":
-			Build.sphere(h, 0.22, Vector3(0, 0.13, 0), navy)
-			Build.box(h, Vector3(0.26, 0.03, 0.2), Vector3(0, 0.12, -0.24), navy, false)
+		"watch": # navy knit watch cap
+			var cap := Build.sphere(h, 0.112, Vector3(0, 0.05, 0.005), navy)
+			cap.scale = Vector3(1.0, 0.75, 1.02)
+			Build.cyl(h, 0.113, 0.035, Vector3(0, 0.035, 0.005), Color("#24304A"))
+		"ball": # ball cap
+			var crown := Build.sphere(h, 0.108, Vector3(0, 0.055, 0.005), navy)
+			crown.scale = Vector3(1.0, 0.7, 1.0)
+			Build.box(h, Vector3(0.12, 0.012, 0.08), Vector3(0, 0.05, -0.12), navy, false)
 		"officer", "skipper": # peaked cap, white top; the skipper's is weathered grey
 			var top := Color("#C9C3B0") if kind == "skipper" else white
-			Build.cyl(h, 0.27, 0.1, Vector3(0, 0.25, 0), top)
-			Build.cyl(h, 0.22, 0.1, Vector3(0, 0.17, 0), Color("#1E1E20"))
-			Build.box(h, Vector3(0.28, 0.025, 0.14), Vector3(0, 0.13, -0.24), Color("#1E1E20"), false)
-			Build.box(h, Vector3(0.1, 0.06, 0.02), Vector3(0, 0.19, -0.22), Color("#C9A04A"), false) # badge
+			Build.cyl(h, 0.125, 0.04, Vector3(0, 0.11, 0), top)
+			Build.cyl(h, 0.106, 0.05, Vector3(0, 0.075, 0), Color("#1E1E20"))
+			var visor := Build.box(h, Vector3(0.13, 0.01, 0.065), Vector3(0, 0.055, -0.115), Color("#1E1E20"), false)
+			visor.rotation.x = 0.2
+			Build.box(h, Vector3(0.04, 0.025, 0.008), Vector3(0, 0.09, -0.107), Color("#C9A04A"), false) # badge
 		_: # white Dixie cup
-			Build.cyl(h, 0.2, 0.14, Vector3(0, 0.22, 0), white)
-			var brim := Build.cyl(h, 0.25, 0.06, Vector3(0, 0.17, 0), white)
-			brim.rotation.x = 0.12
+			Build.cyl(h, 0.098, 0.065, Vector3(0, 0.095, 0), white)
+			var brim := Build.cyl(h, 0.118, 0.03, Vector3(0, 0.07, 0), white)
+			brim.rotation.x = 0.1
 	return h
 
 
@@ -337,6 +340,12 @@ func breathing() -> Vector2:
 func _unhandled_input(event: InputEvent) -> void:
 	if not is_local() or is_knocked_out() or Game.instance.menu_open():
 		return
+	if Game.instance.deck != null and Game.instance.deck.pinned(self):
+		# Wrestling: 1-5 pick the move (not emotes); the mouse still looks around.
+		if event is InputEventKey and event.pressed and not event.echo and Wrestling.KEYS.has(event.physical_keycode):
+			Game.instance.rq_wrestle.rpc_id(1, Wrestling.KEYS[event.physical_keycode])
+			get_viewport().set_input_as_handled()
+			return
 	if station != null:
 		if event.is_action_pressed("leave_station"):
 			leave_station()
@@ -386,7 +395,7 @@ func _pose_sprint(delta: float) -> void:
 func _physics_process(delta: float) -> void:
 	if not is_local() or climbing:
 		return
-	if station != null:
+	if station != null or (Game.instance.deck != null and Game.instance.deck.pinned(self)):
 		velocity = Vector3.ZERO
 		return
 	var input := Input.get_vector("move_left", "move_right", "move_forward", "move_back")

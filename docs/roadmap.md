@@ -115,7 +115,8 @@ Added by Blaney after playing. In his words where it matters.
       *(No line and nothing invisible on the floor any more: walk up to the board and press E at it.)*
 - [x] bot crew mate arms at sticking out behind them and not toward the station theyre at
       *(Fixed: arms at a station swung backwards; they now reach forward onto the gear, for bots and players alike. The point and salute emotes had the same backwards arm and are fixed too.)*
-- [ ] the character models are way too cartoony to the point where they are almost creepy, redesign them so everyone actually looks like sub sailors, make the models take less space
+- [x] the character models are way too cartoony to the point where they are almost creepy, redesign them so everyone actually looks like sub sailors, make the models take less space
+      *(Redesigned as WWII US submariners in ordinary proportions: slimmer, a real-size head with plain features, chambray shirt, dungarees, boots; period hair and face-hair options; smaller collision so they take less room.)*
 - [ ] clean up the game files, do a quick check for bugs, make sure lando can see all the changes
 
 ## M9 — Lando's list (2026-10-30)
