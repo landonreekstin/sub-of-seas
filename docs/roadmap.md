@@ -91,14 +91,15 @@ Added by Blaney after playing. In his words where it matters.
       *(Training patrol on the menu opens a list: Helm & dive, Periscope & TDC, Torpedoes,
       Sonar, Damage control, Engine & air, and the whole boat (long). Crew calls pop up big
       with the speaker's name and a bell.)*
-- [ ] **Footsteps that don't sound like knocking**: "the footsteps make it sound like someone
+- [x] **Footsteps that don't sound like knocking**: "the footsteps make it sound like someone
       is knocking on my door which is not optimal". They should read as boots on a steel deck,
       not a knock on wood (ask Blaney what he wants instead when this is picked up).
       *(Redone: a soft heel and gritty scuff with a faint ring, no low thud, and your own steps
       quieter. Left open until Blaney says whether it works.)*
 - [ ] when the sub is high enough above water make it possible to get out and walk on the top of it
 - [ ] add cameras around the outside of the sub, there should be a viewing center
-- [ ] fix the footsteps, theyre very annoying and clanky, they should just be very basic and subtle footsteps
+- [x] fix the footsteps, theyre very annoying and clanky, they should just be very basic and subtle footsteps
+      *(Redone again: a short soft muffled shuffle, no clank, ring or thud, and quieter all round. Covers the knocking item above too.)*
 - [ ] add a top of the sub wrestling game where you are trying to wrestle the other person into the water, it should work like a simplified version of your only move is hustle where only greco roman wrestling moves are allowed
 - [ ] make a navigation room that shows the whole terrain of the region that we are exploring in a topographical map on a wall or a table
 - [ ] add instruments of all types that all play parts of a sea shanty like sea of theives, so when all the instruments are in then it is a complete song, first add the song "in the foggy dew" by the chieftains (classic irish melody)

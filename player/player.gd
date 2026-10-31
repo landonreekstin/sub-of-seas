@@ -288,7 +288,7 @@ func _footsteps() -> void:
 		_step_dist = 0.0
 		# Your own feet quieter than a crewmate's: you hear them all the time.
 		# Crouched, you creep: barely a sound.
-		Sfx.play_at(self, "step_%d" % randi_range(1, 3), Vector3(0, 0.05, 0), (-10.0 if is_local() else -4.0) - (12.0 if crouching else 0.0) + (3.0 if sprinting else 0.0), randf_range(0.9, 1.1))
+		Sfx.play_at(self, "step_%d" % randi_range(1, 3), Vector3(0, 0.05, 0), (-14.0 if is_local() else -8.0) - (12.0 if crouching else 0.0) + (2.0 if sprinting else 0.0), randf_range(0.9, 1.1))
 
 
 ## Crouched: the eye drops (yours) and the body squats down (everyone else's view of you).
