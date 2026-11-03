@@ -420,3 +420,32 @@ func test_realism_levels_set_the_knobs() -> bool:
 	Realism.apply(unknown, "nonsense")
 	runner.check(unknown.realism == "arcade", "an unknown level falls back to arcade")
 	return true
+
+
+func test_arcade_torpedoes_run_twice_as_fast() -> bool:
+	var w := _world()
+	Realism.apply(w, "arcade")
+	var t := w.fire_torpedo(0.0)
+	runner.check(is_equal_approx(t.speed, Torpedo.SPEED * 2.0), "arcade torpedo at twice the Mk 14's speed")
+	Realism.apply(w, "realistic")
+	runner.check(is_equal_approx(w.fire_torpedo(0.0).speed, Torpedo.SPEED), "realistic torpedo at the Mk 14's speed")
+	runner.check(not Realism.uses_tdc("arcade") and Realism.uses_tdc("standard") and Realism.uses_tdc("realistic"), "only arcade goes without the TDC")
+	return true
+
+
+## Arcade aiming: point the bow at the lead mark on a crossing ship, fire straight, and hit.
+func test_arcade_lead_mark_hits_a_crossing_ship() -> bool:
+	var w := _submerged_world()
+	Realism.apply(w, "arcade")
+	var ship := w.add_ship(FREIGHTER, Vector2(-800, 2000), 90.0, 8.0)
+	ship.passive = true
+	runner.check(not w.arcade_solution().ok, "dead ahead isn't on a ship crossing 800 m off to port")
+	var lead := w.lead_bearing(ship)
+	runner.check(lead > 330.0 or lead < 10.0, "the mark leads him toward the bow: %.1f" % lead)
+	w.sub.heading = lead
+	var sol := w.arcade_solution()
+	runner.check(sol.ok and int(sol.ship) == ship.id, "pointed at the mark, the solution is good")
+	w.fire_torpedo(0.0)
+	_run(w, 60.0)
+	runner.check(ship.hp < FREIGHTER.hp, "the straight shot hit him")
+	return true
