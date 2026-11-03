@@ -40,8 +40,13 @@ func _process(_delta: float) -> void:
 		"YES" if t.loaded else "NO", "FLOODED" if t.flooded else "DRY", "OPEN" if t.door else "SHUT",
 		Game.instance.crew.reserve]
 	var follow: bool = Game.instance.crew.tdc.follow
-	_lines[1].text = "GYRO ANGLE  %+d°   %s" % [t.gyro, "FOLLOWING THE TDC  ([A/D] takes it to manual)" if follow else "[A/D] ±1   [Shift] ±5"]
-	_lines[1].add_theme_color_override("font_color", UiKit.GOOD if follow else UiKit.CREAM)
+	if Game.instance.arcade_aim():
+		var sol: Dictionary = Game.instance.tdc_solution(t.get("stern", false))
+		_lines[1].text = "STRAIGHT OUT OF THE %s   %s" % ["STERN" if t.get("stern", false) else "BOW", "ON TARGET" if sol.ok else sol.get("reason", "")]
+		_lines[1].add_theme_color_override("font_color", UiKit.GOOD if sol.ok else UiKit.CREAM)
+	else:
+		_lines[1].text = "GYRO ANGLE  %+d°   %s" % [t.gyro, "FOLLOWING THE TDC  ([A/D] takes it to manual)" if follow else "[A/D] ±1   [Shift] ±5"]
+		_lines[1].add_theme_color_override("font_color", UiKit.GOOD if follow else UiKit.CREAM)
 	var status := ""
 	if ready:
 		status = "READY — [SPACE] FIRE"

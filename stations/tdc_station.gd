@@ -38,6 +38,18 @@ func _process(_delta: float) -> void:
 		sound_on_change("course", tdc.course_adj, "click")
 		sound_on_change("marks", tdc.marks.size(), "click")
 		sound_on_change("follow", tdc.follow, "lever")
+	if Game.instance.arcade_aim():
+		# Arcade has no TDC (Blaney): the cabinet stands dark and says how to aim instead.
+		for d: Label3D in _dials:
+			d.text = "--"
+		_quality_bar.scale.z = 0.01
+		if overlay != null:
+			_lines[0].text = "ARCADE — no TDC on this patrol"
+			_lines[1].text = "Point the bow at the periscope's red AIM mark and fire: torpedoes run straight out of the bow."
+			_lines[2].text = "The TDC and gyro angles are for Standard and Realistic."
+			_lines[3].text = ""
+			_bar.size.x = 0.0
+		return
 	var sol: Dictionary = Game.instance.tdc_solution()
 	var est: Dictionary = sol.est
 	_dials[0].text = "%.0f kn" % est.speed_kn if est.ok else "--"

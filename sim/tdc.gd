@@ -69,12 +69,12 @@ static func target_at(est: Dictionary, now: float) -> Vector2:
 
 ## Intercept for a torpedo fired now from `launch` on a boat heading `heading`.
 ## {ok, gyro, run (m), range (m), aob (deg, + starboard), reason}.
-static func solve(est: Dictionary, now: float, launch: Vector2, heading: float) -> Dictionary:
+static func solve(est: Dictionary, now: float, launch: Vector2, heading: float, speed := Torpedo.SPEED) -> Dictionary:
 	if not est.get("ok", false):
 		return {"ok": false, "reason": "NO MARKS"}
 	var p := target_at(est, now) - launch
 	var v: Vector2 = est.vel
-	var s := Torpedo.SPEED
+	var s := speed
 	# |p + v t| = s t  ->  (v.v - s²) t² + 2 p.v t + p.p = 0
 	var a := v.dot(v) - s * s
 	var b := 2.0 * p.dot(v)
@@ -117,3 +117,20 @@ static func quality(marks: Array, range_m: float) -> float:
 		q = 0.4 + minf(0.25, (span - MIN_SPAN) / 60.0 * 0.25) + minf(0.15, (marks.size() - 2) * 0.05)
 	q += clampf((3000.0 - range_m) / 2000.0, 0.0, 1.0) * 0.2
 	return clampf(q, 0.0, 1.0)
+
+
+## Seconds for something at `p` moving at `v` to be met by a runner at `speed` setting out
+## from the origin now, or -1 if it can't be caught.
+static func intercept_time(p: Vector2, v: Vector2, speed: float) -> float:
+	var a := v.dot(v) - speed * speed
+	var b := 2.0 * p.dot(v)
+	var c := p.dot(p)
+	if absf(a) < 1e-6:
+		return -c / b if b < 0.0 else -1.0
+	var disc := b * b - 4.0 * a * c
+	if disc < 0.0:
+		return -1.0
+	var t := (-b - sqrt(disc)) / (2.0 * a)
+	if t < 0.0:
+		t = (-b + sqrt(disc)) / (2.0 * a)
+	return t if t >= 0.0 else -1.0

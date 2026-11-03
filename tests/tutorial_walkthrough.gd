@@ -1,7 +1,8 @@
 extends SceneTree
 ## Plays the training patrol start to finish through the same host requests players send.
-##   godot --headless --path . -s tests/tutorial_walkthrough.gd [-- <course>]
-## (a Tutorial.COURSES key; the whole boat when left out).
+##   godot --headless --path . -s tests/tutorial_walkthrough.gd [-- <course> [<realism>]]
+## (a Tutorial.COURSES key; the whole boat when left out. Realism: arcade (default) points the
+## bow, standard/realistic use the TDC).
 ## Exits 0 when the debrief says "training", 1 if a step stalls.
 
 const TIMEOUT := 900.0 ## game seconds
@@ -21,7 +22,8 @@ func _initialize() -> void:
 	net.mission = "training"
 	var args := OS.get_cmdline_user_args()
 	net.course = args[0] if not args.is_empty() else "full"
-	print("walkthrough: course %s" % net.course)
+	net.realism = args[1] if args.size() > 1 else "arcade"
+	print("walkthrough: course %s (%s)" % [net.course, net.realism])
 	net.mode = 1 # Net.Mode.HOST
 	net.port = 7090
 	Engine.time_scale = 6.0
@@ -99,6 +101,7 @@ func _act(i: int) -> void:
 				var target: ShipState = _game.tutorial._target
 				var to: Vector2 = target.pos - _sim.world.sub.pos
 				g.rq_order("periscope", "mark", [target.id, rad_to_deg(atan2(to.x, to.y)), to.length()])
+		"aim": pass # the hulk lies dead ahead: the bow is already on it
 		"lower": if _once("a"): g.rq_order("periscope", "raised", false)
 		"tdc": if _once("a"): g.rq_station_enter("tdc")
 		"send": if _once("a"): g.rq_order("tdc", "send", null)

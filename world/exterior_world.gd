@@ -395,7 +395,7 @@ func _sync_torpedoes() -> void:
 	for id: int in ids.slice(0, 8):
 		var tr: Dictionary = _tracks[id]
 		segs.append(Vector4(tr.from.x, tr.from.y, tr.head.x, tr.head.y))
-		life.append(Vector2(0.0 if tr.ended < 0.0 else now - tr.ended, Torpedo.SPEED))
+		life.append(Vector2(0.0 if tr.ended < 0.0 else now - tr.ended, Sim.world.torpedo_speed))
 	var count := segs.size()
 	segs.resize(8)
 	life.resize(8)

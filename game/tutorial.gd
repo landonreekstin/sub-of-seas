@@ -28,12 +28,12 @@ const COURSES := {
 }
 const BLURBS := {
 	"helm": "Steer, ring up speed, and take her down and back up on the planes.",
-	"scope": "Raise the scope, range and mark a target, and give the TDC a firing solution.",
+	"scope": "Raise the scope, range a target, and aim: in Arcade point the bow at its mark; in Standard and Realistic mark it and give the TDC a solution.",
 	"torpedo": "Flood, open the door, fire, and reload a torpedo tube.",
 	"sonar": "Find a contact on the hydrophone, tell a warship by its screws, plot its bearing.",
 	"damage": "After a pattern of depth charges: weld a leak, put out a fire, fix gear, pump, shut doors.",
 	"engine": "Run the diesels to charge the battery, stop them to dive, and keep the air clean.",
-	"full": "Every station in one patrol, 29 steps. Best done together as a crew.",
+	"full": "Every station in one patrol, about 28 steps. Best done together as a crew.",
 }
 const FULL_LENGTH := 29 ## the first 29 steps in the library are the whole-boat course
 
@@ -165,6 +165,9 @@ func _build_steps() -> void:
 			"marker": _station("ballast"), "done": func() -> bool: return sub.call().is_surfaced()},
 		{"id": "diesel", "needs": "engine", "text": "Surfaced. Charge the battery: man the DIESEL CONTROLS (engine room, aft end) and start a diesel: 1. Stop them again before you ever dive.",
 			"marker": _station("engine"), "done": func() -> bool: return sub.call().diesels.any(func(d: float) -> bool: return d > 0.0)},
+		# Arcade's in place of mark, tdc and send (no TDC in Arcade: point the bow).
+		{"id": "aim", "needs": "periscope", "text": "In Arcade torpedoes run straight out of the bow. The red AIM mark over him is where the bow must point (it leads a moving ship); the brass BOW tick is where she points now. Turn her until BOW sits under AIM: it goes green and reads FIRE!",
+			"marker": _station("periscope"), "done": func() -> bool: return Sim.world.arcade_solution().ok},
 		# Steps only the short per-job courses use.
 		{"id": "come_090", "needs": "helm", "text": "Hold D for right rudder and watch the HEADING. Ease back (A) as it nears 090.",
 			"marker": _station("helm"), "done": func() -> bool: return absf(wrapf(sub.call().heading - 90.0, -180.0, 180.0)) < 6.0},
@@ -191,8 +194,20 @@ func _build_steps() -> void:
 	if plan.is_empty(): # the whole boat: the original long checklist, in order
 		for st in list.slice(0, FULL_LENGTH):
 			plan.append([st.id])
+	if game.arcade_aim():
+		var arcade := []
+		for entry: Array in plan:
+			match entry[0]:
+				"mark": arcade.append(["aim", "Captain", "Where do I point her?"] if entry.size() >= 3 and entry[1] != "" else ["aim"])
+				"tdc", "send": pass
+				_: arcade.append(entry)
+		plan = arcade
 	for entry: Array in plan:
 		var st: Dictionary = by_id[entry[0]].duplicate()
+		if game.arcade_aim() and st.id == "fire":
+			st.text = "She's pointed at him and torpedoes run straight out of the bow. FIRE: Space. Then wait for the hit."
+		if game.arcade_aim() and entry.size() >= 3 and str(entry[2]).contains("gyro zero"):
+			entry = [entry[0], entry[1], str(entry[2]).replace(", gyro zero", "")] + entry.slice(3)
 		if entry.size() >= 3:
 			st.who = entry[1]
 			st.say = entry[2]
@@ -219,7 +234,7 @@ func _plan(key: String) -> Array:
 			["raise", "Captain", "Up periscope."],
 			["range", "", ""], ["mark", "", ""],
 			["lower", "Captain", "Down periscope."],
-			["tdc", "Captain", "Good marks. Take the TDC."],
+			["tdc", "Captain", "Good marks. Take the TDC."], # Arcade drops these two (see _build_steps)
 			["send", "Captain", "Send the solution to the torpedo room."]]
 		"torpedo": return [
 			["tube", "Captain", "Torpedo room, make ready tube one."],

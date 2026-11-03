@@ -2,7 +2,9 @@ class_name PeriscopeStation
 extends Station
 ## Attack periscope in the conning tower. Mouse trains it, Z switches power, R raises or
 ## lowers, F takes a stadimeter range on whatever is under the crosshair, M marks it for the
-## TDC (bearing and range).
+## TDC (bearing and range). In Arcade (Blaney) there is no TDC: a red AIM mark sits ahead of
+## each ship in sight, where the bow has to point for a torpedo straight out of it to hit, and a
+## brass BOW tick shows where she points now.
 
 const LOW_FOV := 32.0
 const HIGH_FOV := 8.0
@@ -16,6 +18,7 @@ var _status: Label
 var _bearing_label: Label
 var _range_label: Label
 var _range_timer := 0.0
+var _aim_layer: Control ## Arcade: the AIM marks and the BOW tick
 
 
 func _ready() -> void:
@@ -52,6 +55,8 @@ func _process(delta: float) -> void:
 		_status.text = "BRIDGE (surfaced)" if sub.is_surfaced() else "SCOPE UP — %s POWER" % ("HIGH" if high_power else "LOW")
 	var true_brg := fposmod(sub.heading + bearing, 360.0)
 	_bearing_label.text = "BRG %03d°   REL %s%03d°" % [roundi(true_brg) % 360, "-" if bearing < 0 else "+", absi(roundi(bearing))]
+	if _aim_layer != null:
+		_aim_layer.queue_redraw()
 	_range_timer -= delta
 	if _range_timer <= 0.0:
 		_range_label.text = ""
@@ -76,6 +81,12 @@ func _build_overlay(root: Control) -> void:
 	lens.material = sm
 	root.add_child(lens)
 
+	_aim_layer = Control.new()
+	_aim_layer.set_anchors_preset(Control.PRESET_FULL_RECT)
+	_aim_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_aim_layer.draw.connect(_draw_aim)
+	root.add_child(_aim_layer)
+
 	_bearing_label = UiKit.label("", 22)
 	root.add_child(_bearing_label)
 	_bearing_label.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
@@ -91,7 +102,10 @@ func _build_overlay(root: Control) -> void:
 	var box := UiKit.bottom_panel(root)
 	_status = UiKit.label()
 	box.add_child(_status)
-	box.add_child(UiKit.label("[mouse] train   [Z] power   [R] raise/lower   [F] stadimeter range   [M] mark for the TDC", 14, UiKit.DIM))
+	if Game.instance.arcade_aim():
+		box.add_child(UiKit.label("[mouse] train   [Z] power   [R] raise/lower   [F] range   Turn the boat until the BOW tick is under a red AIM mark, then fire", 14, UiKit.DIM))
+	else:
+		box.add_child(UiKit.label("[mouse] train   [Z] power   [R] raise/lower   [F] stadimeter range   [M] mark for the TDC", 14, UiKit.DIM))
 	box.add_child(UiKit.label(footer(cluster != ""), 14, UiKit.DIM))
 	ext.set_active(true)
 
@@ -169,3 +183,43 @@ func _take_range() -> void:
 	var dist := _stadimeter(best)
 	var aob := wrapf(rad_to_deg(atan2(-(best.pos - sub.pos).x, -(best.pos - sub.pos).y)) - best.heading, -180.0, 180.0)
 	_range_label.text = "RANGE %d m   AoB %s %d°" % [roundi(dist / 50.0) * 50, "STBD" if aob > 0 else "PORT", absi(roundi(aob / 5.0) * 5)]
+
+
+## Screen x of a true bearing in the scope's view, or NAN off the edge.
+func _screen_x(true_brg: float, size: Vector2) -> float:
+	var off := deg_to_rad(wrapf(true_brg - (Sim.world.sub.heading + bearing), -180.0, 180.0))
+	var half_h := tan(deg_to_rad(HIGH_FOV if high_power else LOW_FOV) * 0.5) * size.x / size.y
+	if absf(off) > PI * 0.45 or absf(tan(off)) > half_h:
+		return NAN
+	return size.x * 0.5 + tan(off) / half_h * size.x * 0.5
+
+
+func _draw_aim() -> void:
+	var sub := Sim.world.sub
+	if not Game.instance.arcade_aim() or sub.scope_height() <= 0.0:
+		return
+	var size := _aim_layer.size
+	var cy := size.y * 0.5
+	var font := ThemeDB.fallback_font
+	var bow_x := _screen_x(sub.heading, size)
+	if not is_nan(bow_x):
+		_aim_layer.draw_line(Vector2(bow_x, cy + 34), Vector2(bow_x, cy + 90), UiKit.BRASS, 3.0)
+		_aim_layer.draw_string(font, Vector2(bow_x - 24, cy + 112), "BOW", HORIZONTAL_ALIGNMENT_CENTER, 48, 18, UiKit.BRASS)
+	var sol: Dictionary = Sim.world.arcade_solution()
+	for ship in Sim.world.ships:
+		if ship.is_sinking() or ship.pos.distance_to(sub.pos) > 9000.0:
+			continue
+		var lead := Sim.world.lead_bearing(ship)
+		if is_nan(lead):
+			continue
+		var x := _screen_x(lead, size)
+		if is_nan(x) or absf(x - size.x * 0.5) > size.y * 0.4: # inside the lens only
+			continue
+		var on: bool = sol.ok and int(sol.get("ship", -1)) == ship.id
+		var far := ship.pos.distance_to(sub.pos) > Torpedo.MAX_RANGE
+		var c := UiKit.GOOD if on else (UiKit.DIM if far else Color("#E04A3A"))
+		var r := 9.0
+		var pts := PackedVector2Array([Vector2(x, cy - 40 - r), Vector2(x + r, cy - 40), Vector2(x, cy - 40 + r), Vector2(x - r, cy - 40), Vector2(x, cy - 40 - r)])
+		_aim_layer.draw_polyline(pts, c, 2.5)
+		_aim_layer.draw_line(Vector2(x, cy - 30), Vector2(x, cy - 12), c, 2.0)
+		_aim_layer.draw_string(font, Vector2(x - 40, cy - 56), "FIRE!" if on else ("TOO FAR" if far else "AIM"), HORIZONTAL_ALIGNMENT_CENTER, 80, 18, c)
