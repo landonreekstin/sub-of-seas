@@ -197,7 +197,8 @@ and update "Current style" in the same commit.
   shapes. Pick build (average, wiry, stocky, broad), six skin tones, hair (cropped, crew cut,
   slicked back, side parting, wavy, short back and sides, curly; seven colours), face hair
   (clean-shaven, stubble, full beard, pencil moustache, sideburns, moustache, patrol beard),
-  an extra (glasses, cigarette, scar, pipe, bandage), the rank hats (Dixie cup, watch cap,
+  an extra (glasses, a cigarette long enough to see past a beard, with a filter end and a
+  glowing tip, drooping from the corner of the mouth; scar, pipe, bandage), the rank hats (Dixie cup, watch cap,
   ball cap, officer's and skipper's caps, sized to the head) and a shirt colour, in
   "Your sailor..." on the main menu.
 - **Bot crewmen:** look like any crewman (random build, face and shirt, a navy watch cap),
@@ -295,3 +296,8 @@ and update "Current style" in the same commit.
 | 2026-10-31 | Blaney | Add cameras around the outside of the sub, with a viewing centre: a wall of small screens of every camera, plus pick one to show big. |
 | 2026-10-31 | Blaney | Make a navigation room that shows the whole terrain of the region we're exploring as a topographical map: a raised 3D model on a table (sand table) with our boat as a marker moving on it. |
 | 2026-10-31 | Blaney | Add instruments of all types that all play parts of a sea shanty like Sea of Thieves, so when all the instruments are in it is a complete song; first "The Foggy Dew" (Chieftains, classic Irish melody). A mix of modern and traditional instruments; take one and play it anywhere. |
+| 2026-11-03 | Blaney | The cigarette didn't appear in my mouth: make it clearly visible. |
+| 2026-11-03 | Blaney | Arcade torpedoes twice as fast (about 40 s to a ship 2 km off). *(Planned, not built yet.)* |
+| 2026-11-03 | Blaney | Arcade: no TDC or gyros, just point the bow and fire, with a lead marker on the periscope showing where to point. TDC and gyros saved for realistic. *(Planned, not built yet.)* |
+| 2026-11-03 | Blaney | All the sleeping quarters should not be near the weapons or operation areas. *(Planned, not built yet.)* |
+| 2026-11-03 | Blaney | The sound quality needs massive improvement: use real recorded samples from free-to-use libraries, starting with the band instruments, sound effects and the jukebox. Footsteps even quieter. *(Planned, not built yet.)* |

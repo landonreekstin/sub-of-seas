@@ -669,8 +669,15 @@ func _credit_career() -> String:
 
 func _clean_looks(l: Dictionary) -> Dictionary:
 	var hat: String = l.get("hat", "dixie")
-	return {"hat": hat if Profile.HATS.has(hat) else "dixie", "hue": clampf(float(l.get("hue", -1.0)), -1.0, 1.0),
+	var clean := {"hat": hat if Profile.HATS.has(hat) else "dixie", "hue": clampf(float(l.get("hue", -1.0)), -1.0, 1.0),
 		"rank": clampi(int(l.get("rank", 0)), 0, Profile.RANKS.size() - 1)}
+	# The face too (build, skin, hair, beard, extra): without it a crewman who joins shows up
+	# with the default face, no pipe or cigarette, to everyone including himself.
+	var sizes := {"build": Crewman.BUILDS.size(), "skin": Crewman.SKINS.size(), "hair": Crewman.HAIRS.size(),
+		"hair_col": Crewman.HAIR_COLOURS.size(), "beard": Crewman.BEARDS.size(), "extra": Crewman.EXTRAS.size()}
+	for k: String in sizes:
+		clean[k] = clampi(int(l.get(k, 0)), 0, sizes[k] - 1)
+	return clean
 
 
 ## Host -> one client: you can't join (different build).
