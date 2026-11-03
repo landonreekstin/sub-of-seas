@@ -123,6 +123,8 @@ Added by Blaney after playing. In his words where it matters.
 - [x] clean up the game files, do a quick check for bugs, make sure lando can see all the changes
       *(Every training course, all six patrols on all three boats with bots, and a two-player session run with no script errors; old merged branches removed; leftover debug code checked for; every change is on GitHub in PRs #16 and #18-#26, merged in that order.)*
 - [ ] the footsteps should still be even quieter
+      *(Do it in the sound pass below, with the recorded samples. Not started.)*
+      *(Order left, 2026-11-03: crew training together, then the sleeping quarters, then the sound pass. Arcade torpedoes and aiming are in PR #28, waiting for Blaney to play them.)*
 - [x] the cigarette didnt appear in my mouth, i dont think all my character options saved
       *(The options did save; the cigarette was a tiny dot lost in a beard. Now longer, with a filter end and a glowing tip, sticking out of the corner of the mouth past any beard.)*
 - [x] the pipe in my mouth and the cigarette dont appear when i join into lando's server
@@ -130,7 +132,8 @@ Added by Blaney after playing. In his words where it matters.
 - [x] torpedos take way too long to travel, they should be faster in arcade mode
       *(Twice as fast in Arcade (92 kn), about 40 s to a ship 2 km off. Standard and Realistic keep the Mk 14's 46 kn.)*
 - [ ] there should be a multi-crew tutorial for each section
-      *(Blaney chose: each job's course can be taken by two or more players together, e.g. torpedoes: one on the periscope, one on the tubes; real crewmates give the calls instead of the scripted ones. Not started.)*
+      *(Blaney chose: each job's course can be taken by two or more players together, e.g. torpedoes: one on the periscope, one on the tubes; real crewmates give the calls instead of the scripted ones.. Not started.)*
+      *(Plan from 2026-11-03: the tutorial is one shared step list (`crew.tutorial.step`) that any player can work, so the missing part is the hand-off. Add crew courses that pair jobs that talk to each other (attack team: periscope + torpedoes; control room: helm + dive + sonar; damage party: damage control + engine & air). Each job is held by the player who mans its first station; the HUD tells only that player to act and shows others "waiting on <name> (periscope)". When the caller's job is held by a real player, his own finished step is the call, shown as "<name> (periscope): Fire one!" instead of the scripted voice. Training menu: a "with friends" section. The arcade aim step (`aim`) already exists.)*
 - [ ] the bedroom should not be next to the torpedo room, you shouldnt have to sprint across the sub to get to a place you will often go to
       *(Blaney: "all the sleeping quarters should not be near the weapons or operation areas". Plan: no bunks in the torpedo rooms or next to the control room; one berthing compartment between the crew's mess and the rec room (S-boat: aft of the navigation room). Check portholes, `--spawn` examples, the tutorial's spots and the tests when moving rooms. Not started.)*
 - [ ] one instruments need improvement, the music quality needs massive improvement, the sound quality in this game in general does too
