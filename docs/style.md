@@ -109,6 +109,13 @@ and update "Current style" in the same commit.
   bad air closes the screen in with a dark vignette, passing out is a black screen. The
   ballast board's "Christmas tree" lights are red for flooded tanks or open vents, green dry.
   Broken gear sparks under a red BROKEN sign; gear that needs spare parts reads WRECKED.
+- **Arcade aiming** (Blaney): no TDC or gyros in Arcade. Torpedoes run straight out of the
+  bow (or stern) at twice the Mk 14's speed. Through the periscope each ship in sight has a red
+  diamond marked AIM floating over the horizon, leading a moving ship by where it will be, and
+  a brass tick marked BOW below the horizon shows where the boat points. Turn her until BOW sits
+  under AIM: the mark goes green and reads FIRE!, and the tubes read ON TARGET. Ships out of
+  torpedo range get a grey TOO FAR mark. The TDC cabinet stands dark in Arcade and says how to
+  aim. Standard and Realistic keep the TDC and the real speed.
 - **TDC:** a grey cabinet with a black face: SPEED / COURSE / GYRO in big cream numerals,
   a quality bar under them that runs red → amber → green.
 - **Chart:** cream paper, pale blue-grey 1 km grid, pencil-grey own track and boat, red for
@@ -297,7 +304,7 @@ and update "Current style" in the same commit.
 | 2026-10-31 | Blaney | Make a navigation room that shows the whole terrain of the region we're exploring as a topographical map: a raised 3D model on a table (sand table) with our boat as a marker moving on it. |
 | 2026-10-31 | Blaney | Add instruments of all types that all play parts of a sea shanty like Sea of Thieves, so when all the instruments are in it is a complete song; first "The Foggy Dew" (Chieftains, classic Irish melody). A mix of modern and traditional instruments; take one and play it anywhere. |
 | 2026-11-03 | Blaney | The cigarette didn't appear in my mouth: make it clearly visible. |
-| 2026-11-03 | Blaney | Arcade torpedoes twice as fast (about 40 s to a ship 2 km off). *(Planned, not built yet.)* |
-| 2026-11-03 | Blaney | Arcade: no TDC or gyros, just point the bow and fire, with a lead marker on the periscope showing where to point. TDC and gyros saved for realistic. *(Planned, not built yet.)* |
+| 2026-11-03 | Blaney | Arcade torpedoes twice as fast (about 40 s to a ship 2 km off). |
+| 2026-11-03 | Blaney | Arcade: no TDC or gyros, just point the bow and fire, with a lead marker on the periscope showing where to point. TDC and gyros saved for realistic. (Kept in Standard too, since lando wants existing mechanics kept until tried.) |
 | 2026-11-03 | Blaney | All the sleeping quarters should not be near the weapons or operation areas. *(Planned, not built yet.)* |
 | 2026-11-03 | Blaney | The sound quality needs massive improvement: use real recorded samples from free-to-use libraries, starting with the band instruments, sound effects and the jukebox. Footsteps even quieter. *(Planned, not built yet.)* |

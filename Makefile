@@ -13,3 +13,4 @@ test:
 
 walkthrough:
 	set -e; for c in $(COURSES); do godot --headless --path . -s tests/tutorial_walkthrough.gd -- $$c; done
+	set -e; for c in scope torpedo; do godot --headless --path . -s tests/tutorial_walkthrough.gd -- $$c realistic; done

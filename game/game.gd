@@ -309,6 +309,11 @@ func _initial_crew() -> Dictionary:
 
 func _setup_mission() -> void:
 	if crew.mission == "training":
+		# Training plays at the host's level too, so Arcade teaches pointing the bow and
+		# Standard/Realistic the TDC.
+		Realism.apply(Sim.world, Net.realism)
+		crew.realism = Sim.world.realism
+		crew.tdc.follow = not Realism.uses_tdc(crew.realism)
 		_start_tutorial()
 		tutorial.setup_world()
 		_lay_seabed(true)
@@ -337,6 +342,7 @@ func _setup_mission() -> void:
 	Sim.world.conditions.setup_weather(m.squalls, Sim.world.sub.pos, Sim.world.rng)
 	Realism.apply(Sim.world, Net.realism)
 	crew.realism = Sim.world.realism
+	crew.tdc.follow = not Realism.uses_tdc(crew.realism) # Arcade: the tubes are always ready on the bow
 	for g: Dictionary in m.groups:
 		Formations.spawn(Sim.world, g)
 	if m.sandbox:
@@ -622,6 +628,8 @@ func push_crew() -> void:
 @rpc("authority", "call_local", "reliable")
 func set_crew(state: Dictionary) -> void:
 	crew = state
+	if not multiplayer.is_server() and Sim.world != null and Sim.world.realism != crew.get("realism", "arcade"):
+		Realism.apply(Sim.world, crew.get("realism", "arcade")) # torpedo speed, handling for the client's view
 	if interior == null:
 		_build_boat(crew.sub)
 	_apply_crew()
@@ -835,6 +843,9 @@ func apply_order(station_id: String, key: String, value: Variant, by: int) -> vo
 			elif key == "mark" and value is Array and value.size() == 3:
 				_tdc_mark(int(value[0]), float(value[1]), float(value[2]))
 		"tdc":
+			if arcade_aim():
+				notice.rpc_id(_sender(), "Arcade: no TDC. Point the bow at the periscope's mark and fire.")
+				return
 			var tdc: Dictionary = crew.tdc
 			match key:
 				"speed":
@@ -943,14 +954,21 @@ func _tdc_mark(id: int, bearing: float, range_m: float) -> void:
 
 ## The live TDC solution for the bow tubes (or the stern tubes, fired astern), from crew
 ## state (any peer can call it).
+## Arcade aims by pointing the bow (Blaney); Standard and Realistic use the TDC and gyros.
+func arcade_aim() -> bool:
+	return not Realism.uses_tdc(crew.get("realism", "arcade"))
+
+
 func tdc_solution(stern := false) -> Dictionary:
+	if Sim.world != null and arcade_aim():
+		return Sim.world.arcade_solution(stern)
 	var tdc: Dictionary = crew.get("tdc", {})
 	if Sim.world == null or tdc.get("marks", []).is_empty():
 		return {"ok": false, "reason": "NO MARKS", "est": {"ok": false}}
 	var sub := Sim.world.sub
 	var est := Tdc.estimate(tdc.marks, tdc.speed_adj, tdc.course_adj)
 	var launch := sub.pos + sub.direction() * sub.data.length * (-0.5 if stern else 0.5)
-	var sol := Tdc.solve(est, Sim.world.time, launch, fposmod(sub.heading + (180.0 if stern else 0.0), 360.0))
+	var sol := Tdc.solve(est, Sim.world.time, launch, fposmod(sub.heading + (180.0 if stern else 0.0), 360.0), Sim.world.torpedo_speed)
 	sol.est = est
 	sol.quality = Tdc.quality(tdc.marks, sol.range)
 	return sol
@@ -958,7 +976,7 @@ func tdc_solution(stern := false) -> Dictionary:
 
 ## Host: tubes whose gyros follow the TDC get the new angle as it changes.
 func _tdc_follow() -> void:
-	if not crew.tdc.follow:
+	if not crew.tdc.follow or arcade_aim():
 		return
 	var changed := false
 	for stern in [false, true]:
@@ -978,6 +996,8 @@ func _tube_order(i: int, key: String, value: Variant) -> void:
 	var t: Dictionary = crew.tubes[i]
 	match key:
 		"gyro":
+			if arcade_aim():
+				return
 			t.gyro = clampi(int(value), -90, 90)
 			crew.tdc.follow = false # a hand on the gyro takes it off the TDC
 		"flood":
@@ -993,8 +1013,12 @@ func _tube_order(i: int, key: String, value: Variant) -> void:
 		"fire":
 			if t.loaded and t.flooded and t.door:
 				t.loaded = false
-				Sim.world.fire_torpedo(float(t.gyro), t.get("stern", false))
-				announce.rpc("Tube %d fired — gyro %+d°" % [i + 1, t.gyro])
+				if arcade_aim():
+					Sim.world.fire_torpedo(0.0, t.get("stern", false))
+					announce.rpc("Tube %d fired!" % (i + 1))
+				else:
+					Sim.world.fire_torpedo(float(t.gyro), t.get("stern", false))
+					announce.rpc("Tube %d fired — gyro %+d°" % [i + 1, t.gyro])
 				if Sim.world.rng.randf() < 0.03:
 					Sim.world.hull.break_station("tube_%d" % (i + 1))
 					announce.rpc("Tube %d's firing gear jammed. Wrench!" % (i + 1))

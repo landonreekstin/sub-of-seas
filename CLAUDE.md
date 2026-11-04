@@ -78,7 +78,7 @@ godot --path . -- --join 127.0.0.1  # join straight away
 godot --path . -- --training [course]  # host a training course (the tutorial): helm, scope, torpedo, sonar, damage, engine, full
 godot --path . -- --mission <key>   # host a patrol: convoy, tankers, hunted, carrier, task_force, sandbox
 godot --path . -- --sub s_boat      # the boat to take out: s_boat, gato (default), narwhal
-godot --path . -- --realism realistic  # host: arcade (default), standard, realistic (sim/realism.gd)
+godot --path . -- --realism realistic  # host: arcade (default), standard, realistic (sim/realism.gd); training plays at it too
 ```
 Two-player test on one machine: start one with `--host`, one with `--join 127.0.0.1`.
 Testing aids: `--name <n>`, `--spawn x,y,z` (start the local player there, e.g.
@@ -126,7 +126,7 @@ WASD + mouse, E interact, Space jump, Shift (hold) sprint: 1.75× forward, loude
 Tab next station in a cluster, B post a bot crewman to the empty station you look at (B at a bot stands him down; E at a bot gives orders: T orders/own initiative, plus his station's keys)
 (helm/dive; periscope/TDC in the conning tower; the S-boat's conn: helm, periscope, sonar, TDC).
 Helm: W/S telegraph, A/D rudder. Dive: W/S depth ±5 (Shift ±1), 1–4 presets.
-Periscope: mouse train, Z power, R raise/lower, F stadimeter, M mark for the TDC.
+Periscope: mouse train, Z power, R raise/lower, F stadimeter, M mark for the TDC (Standard/Realistic). In Arcade there is no TDC or gyro: the scope shows a red AIM mark leading each ship and a BOW tick; turn the boat until BOW is under AIM (it goes green, FIRE!) and fire straight out of the tube.
 TDC (conning tower, starboard): W/S target speed ±1 kn, A/D course ±5°, C clear marks, T send to the tubes (gyros follow).
 Chart table (control room, starboard aft): W/S or wheel zoom, LMB pencil mark, RMB rub out. Sonar: M puts the bearing on the chart. Sonar is the listening station: the hydrophone plays the contact it is trained on in your headphones (whales too; hold it there 3 s for the readout). Tubes: L reload, F flood,
 O outer door, A/D gyro, Space fire. A crewmate standing by the tube (off station) makes a reload 1.7× quicker. Sonar: A/D or mouse train, P active ping.
@@ -149,7 +149,7 @@ down at your feet (E picks it up), G puts a tool down. Wrecked gear needs a spar
 ```
 godot --headless --path . --quit-after 120          # script/parse errors
 godot --headless --path . -s tests/run_tests.gd     # unit tests, exit code 1 on failure
-godot --headless --path . -s tests/tutorial_walkthrough.gd [-- <course>]  # plays a training course (whole boat ~1 min); `make walkthrough` plays them all
+godot --headless --path . -s tests/tutorial_walkthrough.gd [-- <course> [realism]]  # plays a training course (whole boat ~1 min) at arcade, or the level given; `make walkthrough` plays them all, and scope/torpedo at realistic
 ```
 Then run it in xvfb and look at screenshots (see `../CLAUDE.md`).
 

@@ -16,6 +16,7 @@ const BILGE_DRAIN := 1.0 / 3600.0 ## battery per second the bilge pump takes (an
 const SHELL_SPEED := 550.0 ## m/s, a deck-gun shell's average speed over its flight
 const GUN_HEARD := 12000.0 ## m: every ship this close hears (and by night sees the flash of) our deck gun
 const GUN_SPREAD := 0.25 ## degrees, one sigma, of a round's line
+const ARCADE_AIM_TOLERANCE := 2.0 ## degrees off the lead the bow may be and still hit (a ship is wide)
 const GUN_RANGE_SPREAD := 0.012 ## and of its range, as a fraction
 const BATTERY_WARNINGS := [0.2, 0.1] ## announce when the charge falls past these
 const BREAKDOWN_TEXT := {
@@ -44,6 +45,7 @@ var lost := "" ## why the boat was lost, once it is
 var dud_chance := 0.05
 var realism := "arcade" ## a Realism key, set by Realism.apply
 var escort_sharpness := 1.0 ## the realism level: escorts pick the boat up this much faster
+var torpedo_speed := Torpedo.SPEED ## m/s; the realism level sets it
 var rng := RandomNumberGenerator.new()
 var _next_id := 1
 var _battery_was := 1.0
@@ -141,6 +143,7 @@ func fire_torpedo(gyro: float, stern := false) -> Torpedo:
 	var out := sub.direction() * sub.data.length * 0.5 * (-1.0 if stern else 1.0)
 	t.pos = sub.pos + out
 	t.heading = fposmod(aim + gyro, 360.0)
+	t.speed = torpedo_speed
 	t.dud = rng.randf() < dud_chance
 	torpedoes.append(t)
 	event.emit("fired", {"id": t.id})
@@ -149,6 +152,40 @@ func fire_torpedo(gyro: float, stern := false) -> Torpedo:
 		if ship.ai != null and ship.pos.distance_to(sub.pos) < ship.data.lookout_range:
 			ship.ai.report(sub.pos, 350.0, rng, 0.5)
 	return t
+
+
+## Arcade aiming: the true bearing to point the bow (or stern) on so a torpedo running
+## straight out of the tube meets `ship`, leading it by its real course and speed. NAN when it
+## can't catch it.
+func lead_bearing(ship: ShipState, stern := false) -> float:
+	var launch := sub.pos + sub.direction() * sub.data.length * (-0.5 if stern else 0.5)
+	var t := Tdc.intercept_time(ship.pos - launch, ship.direction() * ship.speed, torpedo_speed)
+	if t < 0.0:
+		return NAN
+	return ShipState.bearing(launch, ship.pos + ship.direction() * ship.speed * t)
+
+
+## Arcade: the ship the bow (or stern) is pointing at well enough to hit, as a TDC-style
+## solution {ok, gyro 0, range, quality, reason}, so the tubes and bot crew work as they do
+## with the TDC.
+func arcade_solution(stern := false) -> Dictionary:
+	var aim := fposmod(sub.heading + (180.0 if stern else 0.0), 360.0)
+	var best := {"ok": false, "gyro": 0.0, "quality": 0.0, "range": 0.0, "reason": "POINT THE %s AT THE SCOPE'S MARK" % ("STERN" if stern else "BOW")}
+	var best_off := 1e9
+	for ship in ships:
+		var r := ship.pos.distance_to(sub.pos)
+		if ship.is_sinking() or r > Torpedo.MAX_RANGE:
+			continue
+		var lead := lead_bearing(ship, stern)
+		if is_nan(lead):
+			continue
+		var off := absf(wrapf(lead - aim, -180.0, 180.0))
+		if off < best_off:
+			best_off = off
+			best = {"ok": off <= ARCADE_AIM_TOLERANCE, "gyro": 0.0, "range": r, "off": off, "ship": ship.id,
+				"quality": 1.0 if off <= ARCADE_AIM_TOLERANCE else 0.0,
+				"reason": "" if off <= ARCADE_AIM_TOLERANCE else "TURN %d° %s" % [roundi(off), "RIGHT" if wrapf(lead - aim, -180.0, 180.0) > 0.0 else "LEFT"]}
+	return best
 
 
 func step(dt: float, authoritative := true) -> void:
