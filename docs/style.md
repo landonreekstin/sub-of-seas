@@ -237,7 +237,9 @@ and update "Current style" in the same commit.
   there's news. "Band play" sends forty hands to the rec room, eight on the instruments, playing The
   Foggy Dew or along with the record. Enemies are Cold War US ships and submarines. Music: a slow original
   men's choir over low strings and timpani (Blaney: the mood of The Hunt for Red October), the one
-  soundtrack at sea, quiet under everything else.
+  soundtrack at sea, quiet under everything else. **As real as we can get** (Blaney): where a Typhoon
+  choice is between the game's usual look and the real boat, go with the real boat. Still to do: her hull
+  is the WWII boats' tan wood deck, and should be black rubber.
 - **Handing over** (Blaney): J at any station: a bot takes it over and you walk off.
 - **Bot crewmen:** look like any crewman (random build, face and shirt, a navy watch cap),
   standing their station with hands on the gear and a name tag with their job ("Sparks
@@ -363,3 +365,4 @@ and update "Current style" in the same commit.
 | 2026-11-04 | Blaney | The Typhoon is real full size (175 m) with a faster sprint, fights Cold War enemies, and has music and sounds in the mood of The Hunt for Red October. (An original piece: the film's theme is copyrighted. Style conflict with his own "no background music at sea": the Typhoon alone has a soundtrack, at his choice.) |
 | 2026-11-04 | Blaney | The Typhoon can make a decent portion of the crew play whatever song is being played, at the skipper's command. |
 | 2026-11-04 | Blaney | Typhoon damage parties shouldn't walk through walls: send them through the doors. |
+| 2026-11-04 | Blaney | (On the Typhoon's deck: tan wood or black rubber like the real boat?) "Definitely as real as we can get for the typhoon." |

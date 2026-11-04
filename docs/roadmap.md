@@ -155,12 +155,19 @@ Added by Blaney after playing. In his words where it matters.
       *(Done: J at any station hands it to a bot. A PA microphone in the control room: E, type, Enter. It understands depths, courses, speeds, attacks ("sink the ship to the east"), escaping, battle stations, standing down, fixing damage, reports, sonar, objectives; bots man whatever the order needs, a real player at a post is told it's theirs; confused, the crew say so. New orders: `game/crew_command.gd` + `BotCrew._carry_out`.)*
 - [ ] build a typhoon class sub with exact layout details and the ability to spawn in a whole crew of competent sailors. the PA system in the command bay should be able to command the crew effectively. there will be a first mate list that shows everything wrong with the sub at the moment, the sailors should be able to fix any issue given a period of time. a bot can posess this notebook or a player can posess it, the skipper will have a different notebook and it will say other things that are pressing in terms of commands, maybe also a note to check in with the first mate when he has new news. make sure this sub change doesnt lag anything out
       *(Built on PR #35 (draft), checked by script only, nobody has looked at it yet. What's left is listed just below.)*
-- [ ] Typhoon: screenshot every room and look at them (doors, cross passages, Russian signs, notebooks, her outside)
+- [x] Typhoon: screenshot every room and look at them (doors, cross passages, Russian signs, notebooks, her outside)
+      *(Done: `tools/room_tour.gd`, `tools/typhoon_looks.gd`. Found and fixed a dartboard, bunks and a turbine in front of doors and a flickering floor.)*
 - [ ] Typhoon: compare the frame rate with a Gato, with all hands aboard (Blaney: must not lag)
+      *(Typhoon measured: 60 fps in all 19 rooms on his RTX 3060, and it felt fine in play. The Gato isn't measured yet.)*
 - [ ] Typhoon: Blaney plays it, and judges the choir music and sounds by ear (Blaney: Hunt for Red October mood; the film's theme is copyrighted, so it's an original piece)
-- [ ] Typhoon: damage parties walk through walls; send them through the doors
+      *(Played 2026-11-04: "wow this is great". He couldn't hear the choir, so that part is still open.)*
+- [ ] Typhoon: the choir can't be heard: find out why and make it audible (Blaney: "i dont know how to make the choir happen, no music like that that i hear")
+- [ ] Typhoon: as real as we can get (Blaney). First her outside: black rubber hull, not the WWII boats' tan wood deck
+- [x] Typhoon: damage parties walk through walls; send them through the doors
+      *(Done on every boat: along the rooms, through doors and up the ladder; they open a shut door and shut it behind them.)*
 - [ ] Run the whole of `make test` on `blaney/typhoon` (every training course, after the interior rework; results in `docs/notes.md`)
 - [ ] Typhoon: bring `docs/style.md`, `docs/credits.md`, `CLAUDE.md` and the `Makefile` up to date, then mark PR #35 ready
+      *(Docs and Makefile done. PR stays a draft until the two Typhoon items above are done and `make test` is clean.)*
 - [ ] Blaney plays the music change (#32), the PA and bots (#33) and the enemy sub (#34), so Lando can take them out of draft
 - [x] generate an option to start a battle with another enemy sub somewhere near you, your topographical map cannot show the sub, only the map around your sub given the equipment you have, so if sonar is the only way you can see then the map would look different than being to rely on eyesight above water
       *(Done: "Enemy Sub" on the patrol menu, or say "enemy sub" on the PA on any patrol. She hunts by ear and fires pairs of torpedoes; sonar is how you find her, and a torpedo has to run near her depth. In the fight the chart and sand table only show what the boat has seen: clear by eye, dotted grey-blue by sonar, the rest unknown.)*
