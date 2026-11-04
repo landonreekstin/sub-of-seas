@@ -24,7 +24,7 @@ func _ready() -> void:
 	Build.label(self, "JUKEBOX", Vector3(0, 1.32, -0.27), 22, Color("#F2E8CF"))
 	Build.area(self, Vector3(0.7, 1.3, 0.5), Vector3(0, 0.65, 0))
 	_player = AudioStreamPlayer3D.new()
-	_player.bus = "Music"
+	_player.bus = Music.BUS
 	_player.unit_size = 3.0
 	_player.max_distance = 14.0
 	_player.position.y = 0.9

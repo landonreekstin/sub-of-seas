@@ -85,7 +85,7 @@ and update "Current style" in the same commit.
   of shot is a tall thin white splash; a hit is an orange flash and a puff of black smoke on
   her side. Inside: a ladder up to a hatch ring in the deckhead marked DECK GUN; the
   ammunition scuttle is a hatch flush in the deck with brass rounds showing down the hole.
-- **Sprint:** hold Shift running forward: 1.75× walking speed, the view widens a few degrees
+- **Sprint:** hold Shift running forward: 2.1× walking speed (Blaney: a bit faster, for the long walks on the bigger boats), the view widens a few degrees
   and the head bobs, footsteps a little louder and further apart (crewmates hear it). Not while
   crouched; foul air takes it away.
 - **Detail inside the boat:** ring frames over the deckhead and down the shoulders with
@@ -236,11 +236,10 @@ and update "Current style" in the same commit.
 - **Music** (`tools/make_music.py`, played on real recorded instruments in stereo, Blaney; style
   picked by Claude while lando was away, to match the Sea of Thieves direction; change it
   freely): the menu is an original D-minor sea shanty on accordion with oom-pah tuba and
-  stomp-clap; a patrol is a calm,
-  sparse pad with a lonely flute; being hunted (an escort hunting within 6 km, charges in
-  the water) brings in a heartbeat pulse under trembling strings, holding 20 s after; the
-  debrief plays a short accordion fanfare for a completed patrol, a falling minor line for a
-  lost boat.
+  stomp-clap, and the debrief goes back to it. At sea there is no background music (Blaney): the
+  music aboard comes from the band's instruments and the jukebox, which has the calm "Slow watch"
+  (a sparse pad and a lonely flute). While anyone aboard plays an instrument, the jukebox and any
+  other music fall silent within a second, and come back when they stop.
 - **Hydrophones:** the operator hears contacts in the headphones: merchant screws slow and
   heavy, warships fast and light, capital ships a deep four-shaft churn, whales a long moaning
   song, snapping shrimp over a reef, the sea's hiss under it all.
@@ -326,3 +325,5 @@ and update "Current style" in the same commit.
 | 2026-11-03 | Blaney | The sound quality needs massive improvement: use real recorded samples from free-to-use libraries, starting with the band instruments, sound effects and the jukebox. Footsteps even quieter. |
 | 2026-11-03 | Blaney | Footsteps half as loud: your own barely there, a crewmate's just audible when close. |
 | 2026-11-03 | Blaney | The jukebox plays both our own songs on real recorded instruments and a few crackly old records, free ones only. |
+| 2026-11-04 | Blaney | There should not be background music in the game; the only music should be from the instruments. "I like the menu music, and I like the instruments, can we make it so that the other music stops when we play instruments?" (Style conflict with lando's 2026-10-30 "Add music": the menu stays, the patrol and hunted tracks and the debrief stings go.) |
+| 2026-11-04 | Blaney | Make sprinting a bit faster (for the full-size Typhoon). |

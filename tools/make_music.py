@@ -3,8 +3,8 @@
 assets/audio/music_*.ogg (run from the project root).
 
 All original tunes. Menu: a sea shanty on accordion with oom-pah tuba and stomp-clap (Sea of
-Thieves' spirit). Patrol: a calm, sparse pad with a lonely flute. Hunted: a heartbeat pulse
-under trembling strings. Stings for the debrief. Each instrument has its place left to right in
+Thieves' spirit). Patrol: a calm, sparse pad with a lonely flute, now only on the jukebox as
+"Slow watch". Each instrument has its place left to right in
 one reverberant room. Loops are folded so their reverb tails wrap round, and they repeat without
 a seam. Needs numpy and ffmpeg.
 """
@@ -165,53 +165,6 @@ def patrol():
     save("patrol", mix({"pad": (pad, 0.13, -0.2), "low": (low, 0.08, 0.2), "flute": (flute, 0.2, 0.25)}, length, 2.5, 0.4))
 
 
-def hunted():
-    bpm = 88
-    beat = 60 / bpm
-    bars = 8
-    length = int(bars * 4 * beat * SR)
-    size = length + SR * 3
-    heart, timp, basses, strings = (np.zeros(size) for _ in range(4))
-    for i in range(bars):
-        bar = i * 4 * beat
-        for b in (0, 0.45, 2, 2.45):  # lub-dub, twice a bar
-            place(heart, sm.hit("heart", 0.6, 1.0 if b in (0, 2) else 0.6), bar + b * beat)
-        if i % 2 == 1:
-            place(timp, sm.hit("timp", 1.5), bar + 3.5 * beat)
-        for k in range(8):  # a low ostinato, D and E-flat rubbing
-            at, level = sm.human(bar + k * 0.5 * beat, late=0.004)
-            place(basses, sm.note("contrabass", 38 if k % 4 != 3 else 39, beat * 0.35, level, 0.06), at)
-    half = bars * 2 * beat
-    for start, cluster in ((0, (62, 63, 69)), (half, (65, 66, 72))):
-        for midi in cluster:
-            place(strings, sm.note("tremolo_strings", midi, half, 1.0, 0.6, attack=0.6), start)
-    save("hunted", mix({"heart": (heart, 0.2, 0.0), "timp": (timp, 0.1, 0.25), "basses": (basses, 0.12, -0.2),
-                        "strings": (strings, 0.07, 0.2)}, length, 1.5, 0.22))
-
-
-def stings():
-    beat = 0.32
-    size = int(SR * 4)
-    lead, low, drum = (np.zeros(size) for _ in range(3))
-    for i, midi in enumerate((62, 66, 69, 74)):
-        place(lead, sm.note("accordion", midi, beat * (3 if i == 3 else 1), 1.0, 0.12), i * beat)
-    for midi in (50, 57, 62):
-        place(lead, sm.note("accordion", midi, 1.5, 0.5, 0.25), 3 * beat)
-    place(low, sm.note("tuba", 38, 1.5, 1.0, 0.3), 3 * beat)
-    place(drum, sm.hit("kick", 1.0), 3 * beat)
-    save("win", mix({"lead": (lead, 0.2, 0.1), "low": (low, 0.14, 0.0), "drum": (drum, 0.08, 0.0)}, None, 1.5, 0.3))
-    size = int(SR * 5)
-    strings, cellos, drum = (np.zeros(size) for _ in range(3))
-    for i, midi in enumerate((57, 56, 55, 50)):
-        dur = 1.2 if i < 3 else 2.5
-        place(strings, sm.note("string_ensemble_1", midi, dur, 1.0, 0.4, attack=0.15), i * 0.9)
-        place(cellos, sm.note("cello", midi - 12, dur, 1.0, 0.4, attack=0.15), i * 0.9)
-    place(drum, sm.hit("timp", 2.0), 2.7)
-    save("lost", mix({"strings": (strings, 0.14, 0.2), "cellos": (cellos, 0.14, -0.2), "drum": (drum, 0.1, 0.0)}, None, 2.0, 0.35))
-
-
 if __name__ == "__main__":
     shanty()
     patrol()
-    hunted()
-    stings()
