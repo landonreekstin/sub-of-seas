@@ -40,7 +40,7 @@ const ROOMS := [
 ## The doors along the hulls, between neighbours in ROOMS.
 const LINE_DOORS := [[0, 1], [1, 2], [2, 3], [3, 6], [4, 5], [7, 8], [8, 9], [9, 10], [10, 11], [11, 12], [13, 14], [14, 15], [15, 16], [16, 17], [17, 18]]
 ## Cross passages: [centre room, hull room, z] for each side.
-const CROSS := [[2, 7, -50.0], [2, 13, -50.0], [3, 10, -5.0], [3, 16, -5.0], [3, 12, 45.0], [3, 18, 45.0]]
+const CROSS := [[2, 7, -50.0], [2, 13, -50.0], [3, 10, -7.5], [3, 16, -7.5], [3, 12, 45.0], [3, 18, 45.0]]
 
 
 static func lay_out(i: SubInterior) -> void:
@@ -133,12 +133,13 @@ static func _fit(i: SubInterior, c: Dictionary, hatch: Rect2) -> void:
 			i._nav_room(c)
 			i._add_station(AirStation.new().setup("air", "Air panel"), Vector3(1.8, 0, c.z0 + 1.3))
 		"steering":
-			Build.cyl(i._at, 0.9, 3.0, Vector3(0, 1.4, mid), SubInterior.DARK)
+			Build.cyl(i._at, 0.55, 3.0, Vector3(0, 1.4, mid), SubInterior.DARK)
+			Build.hitbox(i._at, Vector3(1.0, 2.6, 1.0), Vector3(0, 1.3, mid))
 			for side in [-1.0, 1.0]:
-				Build.box(i._at, Vector3(0.4, 1.8, 5.0), Vector3(side * 1.5, 0.9, mid), Color("#4E5550"))
+				Build.box(i._at, Vector3(0.4, 1.8, 5.0), Vector3(side * 1.7, 0.9, mid), Color("#4E5550"))
 			i._rack(c.type, c.z0 + 1.3)
 		"berthing", "berthing2":
-			i._berthing(c)
+			i._berthing(c, {"side": -signf(c.x), "z": CROSS[0][2]}) # no bunks across the cross passage's door
 		"battery":
 			i._battery(c)
 		"crew":
@@ -183,6 +184,7 @@ static func _silos(i: SubInterior, c: Dictionary) -> void:
 				continue
 			var x: float = side * 1.28
 			Build.cyl(i._at, 0.62, SubInterior.DECK_HEIGHT, Vector3(x, SubInterior.DECK_HEIGHT * 0.5, z), col)
+			Build.hitbox(i._at, Vector3(1.1, SubInterior.DECK_HEIGHT, 1.1), Vector3(x, SubInterior.DECK_HEIGHT * 0.5, z))
 			var tube_no := k * 2 + (0 if side < 0.0 else 1) + 1
 			var lab := Build.label(i._at, "%d" % tube_no, Vector3(side * 0.64, 1.5, z), 60, Color("#B23A2E"))
 			lab.rotation.y = PI / 2.0 if side < 0.0 else -PI / 2.0
@@ -202,8 +204,9 @@ static func _reactor_room(i: SubInterior, c: Dictionary) -> void:
 
 static func _turbine_room(i: SubInterior, c: Dictionary) -> void:
 	var z0: float = c.z0 + 3.0
-	var z1: float = c.z1 - 8.0
+	var z1: float = c.z1 - 11.0 # clear of the cross passage's door
 	Build.cyl(i._at, 0.85, z1 - z0, Vector3(1.05, 1.0, (z0 + z1) * 0.5), Color("#6E756C"), Vector3.BACK)
+	Build.hitbox(i._at, Vector3(1.6, 2.0, z1 - z0), Vector3(1.05, 1.0, (z0 + z1) * 0.5))
 	for k in 4:
 		Build.cyl(i._at, 0.95, 0.18, Vector3(1.05, 1.0, z0 + 2.0 + k * (z1 - z0 - 4.0) / 3.0), SubInterior.BRASS, Vector3.BACK)
 	i._rack(c.type, c.z0 + 1.3, true)
@@ -299,7 +302,9 @@ static func people_room(i: SubInterior, k: int) -> void:
 		var v := i._sailor(look)
 		i.remove_child(v)
 		root.add_child(v)
-		v.position = Vector3(rng.randf_range(-0.5, 0.5), 0.0, rng.randf_range(c.z0 + 2.0, c.z1 - 2.0))
+		var x_max := 0.0 if String(c.type).begins_with("engine") else 0.5 # clear of the turbine
+		var z_top: float = c.z0 + 4.0 if c.type == "steering" else c.z1 - 2.0 # clear of the rudder ram
+		v.position = Vector3(rng.randf_range(-0.5, x_max), 0.0, rng.randf_range(c.z0 + 2.0, z_top))
 		v.rotation.y = rng.randf() * TAU
 
 

@@ -233,12 +233,15 @@ func _compartment(z0: float, z1: float, title: String, ceiling_hole := Rect2(), 
 	for i in n:
 		var z := z0 + length * (i + 0.5) / n
 		Build.sphere(_at, 0.08, Vector3(0, DECK_HEIGHT - 0.05, z), LIGHT, 3.0)
-	var light := OmniLight3D.new()
-	light.light_color = LIGHT
-	light.light_energy = 1.4
-	light.omni_range = maxf(7.0, length * 0.75)
-	light.position = Vector3(0, DECK_HEIGHT - 0.3, mid)
-	_at.add_child(light)
+	# The Typhoon's long rooms need more than one lamp to reach.
+	var lamps := roundi(length / 14.0) if length > 30.0 else 1
+	for i in lamps:
+		var light := OmniLight3D.new()
+		light.light_color = LIGHT
+		light.light_energy = 1.2 if lamps > 1 else 1.4
+		light.omni_range = 12.0 if lamps > 1 else maxf(7.0, length * 0.75)
+		light.position = Vector3(0, DECK_HEIGHT - 0.3, z0 + length * (i + 0.5) / lamps)
+		_at.add_child(light)
 	# Label3D reads from +Z: the aft-wall sign turns to face forward.
 	Build.label(_at, title, Vector3(0, DECK_HEIGHT - 0.25, z1 - 0.13), 40, Color("#2B2B26")).rotation.y = PI
 	Build.label(_at, title, Vector3(0, DECK_HEIGHT - 0.25, z0 + 0.13), 40, Color("#2B2B26"))
@@ -462,7 +465,7 @@ func _crew(c: Dictionary) -> void:
 
 ## The crew's quarters (Blaney: "all the sleeping quarters should not be near the weapons or
 ## operation areas"): the boat's only bunks, three tiers either side of an aisle, amidships.
-func _berthing(c: Dictionary) -> void:
+func _berthing(c: Dictionary, gap := {}) -> void:
 	var z0: float = c.z0 + 0.7
 	var z1: float = c.z1 - 0.7
 	var bays := maxi(1, roundi((z1 - z0) / 2.1))
@@ -471,6 +474,8 @@ func _berthing(c: Dictionary) -> void:
 	for side in [-1.0, 1.0]:
 		for b in bays:
 			var mid: float = z0 + bay * (b + 0.5)
+			if side == gap.get("side", 0.0) and absf(mid - float(gap.z)) < bay * 0.5: # a door there
+				continue
 			for y in [0.32, 0.96, 1.6]:
 				Build.box(_at, Vector3(0.75, 0.08, bay - 0.1), Vector3(side * 1.6, y, mid), WOOD)
 				Build.box(_at, Vector3(0.7, 0.1, bay - 0.25), Vector3(side * 1.6, y + 0.09, mid), BUNK, false)

@@ -60,9 +60,9 @@ func _process(delta: float) -> bool:
 			elif _game.crew.result != "":
 				print("boat lost in the fight: %s" % _game.crew.result)
 				quit(0)
-			elif int(_t) % 15 == 0 and int(_t) != int(_t - delta):
-				_game.rq_pa("sink the enemy sub") # sonar may need to hear her first
-			elif _t > 500.0:
+			elif _game.bot_crew.plan.is_empty() and int(_t) % 15 == 0 and int(_t) != int(_t - delta):
+				_game.rq_pa("sink the enemy sub") # sonar may need to hear her first; don't restart a chase already on
+			elif _t > 1200.0: # she runs and hides, so a hunt can be long
 				_fail("never sunk: plan %s, range %.0f" % [str(_game.bot_crew.plan), subs[0].pos.distance_to(w.sub.pos)])
 		4:
 			if not _game.crew.get("limited_map", false):
