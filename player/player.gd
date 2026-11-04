@@ -10,7 +10,7 @@ const JUMP := 3.2
 const EYE_HEIGHT := 1.6
 const CROUCH_EYE := 1.05
 const CROUCH_SPEED := 0.5 ## of walking speed
-const SPRINT_SPEED := 1.75 ## of walking speed, running forward
+const SPRINT_SPEED := 2.1 ## of walking speed, running forward
 const SPRINT_FOV := 7.0 ## degrees the view widens at a run
 const REACH := 2.2
 ## Emotes: key -> name, and how long each plays (seconds).

@@ -29,7 +29,6 @@ var hud: Hud
 var pause_menu: PauseMenu
 var bot_crew: BotCrew
 var bot_orders: BotOrders ## open while the local player gives a bot orders
-var _hunted_for := 0.0 ## seconds the hunted music has left to run
 var local_player: Player
 var crew := {}
 var _players: Node3D
@@ -449,7 +448,7 @@ func _process(delta: float) -> void:
 		_serve(delta)
 	if interior == null or crew.is_empty():
 		return # a client still waiting to hear which boat this is
-	_pick_music(delta)
+	_pick_music()
 	if multiplayer.is_server():
 		_host_tick(delta)
 	_show_objectives()
@@ -533,16 +532,24 @@ func _on_peer_disconnected(id: int) -> void:
 	push_crew()
 
 
-## The hunted track while an escort is hunting within 6 km or charges are in the water, and
-## for 20 s after; the calm patrol track otherwise. Every peer decides from its own snapshot.
-func _pick_music(delta: float) -> void:
+## No soundtrack at sea (Blaney); the jukebox and anything else on it fall silent while anyone
+## aboard plays an instrument. Every peer decides from its own players.
+func _pick_music() -> void:
 	if crew.result != "" or Sim.world == null:
 		return
-	var w := Sim.world
-	var hunted := not w.charges.is_empty() or w.ships.any(func(s: ShipState) -> bool:
-		return not s.is_sinking() and s.mode >= ShipAI.Mode.HUNT and s.pos.distance_to(w.sub.pos) < 6000.0)
-	_hunted_for = 20.0 if hunted else maxf(_hunted_for - delta, 0.0)
-	Music.play("hunted" if _hunted_for > 0.0 else "patrol", 1.5 if hunted else 6.0)
+	Music.play(boat_music())
+	Music.hush(band_playing())
+
+
+func boat_music() -> String:
+	return ""
+
+
+func band_playing() -> bool:
+	for p: Player in _players.get_children():
+		if p.playing:
+			return true
+	return false
 
 
 ## Dedicated server: the boat waits while nobody is aboard; a finished patrol (90 s after the
@@ -647,9 +654,8 @@ func _apply_crew() -> void:
 		p.set_looks(look)
 		p.set_tool(crew.tools.get(p.peer_id, ""))
 	if crew.result != "" and not hud.has_debrief():
+		Music.hush(false)
 		Music.play("menu", 4.0)
-		if crew.result in ["complete", "lost"]:
-			Music.sting("win" if crew.result == "complete" else "lost")
 		Sim.running = false
 		hud.show_debrief(crew, _credit_career())
 	if local_player != null:
