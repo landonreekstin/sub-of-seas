@@ -23,7 +23,7 @@ var build := "dev"
 ## --server: a dedicated host with no player of its own (run it headless). The patrol waits
 ## until someone is aboard, and a fresh one starts after each debrief.
 var dedicated := false
-var sub_key := "gato" ## the boat the host takes out (--sub s_boat | gato | narwhal)
+var sub_key := "gato" ## the boat the host takes out (--sub s_boat | gato | narwhal | typhoon)
 var mission := "convoy" ## a MissionData key or "training"; chosen by the host (--mission, --training)
 var realism := "arcade" ## how arcadey or realistic the host's patrol plays (--realism arcade | standard | realistic): a Realism key
 var course := "full" ## which training course (--training <course>): a Tutorial.COURSES key

@@ -10,7 +10,8 @@ var _mission: OptionButton
 var _sub: OptionButton
 var _realism: OptionButton
 var _realism_blurb: Label
-const SUBS: Array[String] = ["s_boat", "gato", "narwhal"]
+var _mission_keys: Array[String] = []
+const SUBS: Array[String] = ["s_boat", "gato", "narwhal", "typhoon"]
 var _briefing: Label
 
 
@@ -45,24 +46,20 @@ func _ready() -> void:
 	_sailor_row(box)
 	box.add_child(UiKit.label("Patrol"))
 	_mission = OptionButton.new()
-	for k in MissionData.KEYS:
-		var m := MissionData.load_key(k)
-		_mission.add_item("%s   %s" % [m.title, "★".repeat(m.difficulty)])
-	var current := MissionData.KEYS.find(Net.mission)
-	_mission.select(maxi(current, 0))
 	_mission.item_selected.connect(func(_i: int) -> void: _show_briefing())
 	box.add_child(_mission)
 	_briefing = UiKit.label("", 15, UiKit.DIM)
 	_briefing.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_briefing.custom_minimum_size = Vector2(420, 70)
 	box.add_child(_briefing)
-	_show_briefing()
 	_sub = OptionButton.new()
 	for k in SUBS:
 		var d: SubClassData = load("res://data/subs/%s.tres" % k)
 		_sub.add_item("%s   (crew %d–%d)" % [d.display_name, d.crew_min, d.crew_max])
 	_sub.select(maxi(SUBS.find(Net.sub_key), 0))
+	_sub.item_selected.connect(func(_i: int) -> void: _fill_missions())
 	box.add_child(_sub)
+	_fill_missions()
 	# Arcade ↔ realism (lando, M9).
 	_realism = OptionButton.new()
 	for k in Realism.KEYS:
@@ -139,13 +136,27 @@ static func swatch(c: Color) -> Texture2D:
 	return ImageTexture.create_from_image(img)
 
 
+## Each boat sails on the patrols of her own era.
+func _fill_missions() -> void:
+	var era: String = (load("res://data/subs/%s.tres" % SUBS[_sub.selected]) as SubClassData).era
+	var was := _mission_keys[_mission.selected] if _mission.selected >= 0 and _mission.selected < _mission_keys.size() else Net.mission
+	_mission_keys.clear()
+	_mission.clear()
+	for k in MissionData.KEYS:
+		var m := MissionData.load_key(k)
+		if m.era == era:
+			_mission_keys.append(k)
+			_mission.add_item("%s   %s" % [m.title, "★".repeat(m.difficulty)])
+	_mission.select(maxi(_mission_keys.find(was), 0))
+	_show_briefing()
+
+
 func _show_briefing() -> void:
-	var m := MissionData.load_key(MissionData.KEYS[_mission.selected])
-	_briefing.text = m.briefing
+	_briefing.text = MissionData.load_key(_mission_keys[_mission.selected]).briefing
 
 
 func _host() -> void:
-	Net.mission = MissionData.KEYS[_mission.selected] # starts on --mission's, if given
+	Net.mission = _mission_keys[_mission.selected] # starts on --mission's, if given
 	Net.sub_key = SUBS[_sub.selected]
 	Net.realism = Realism.KEYS[_realism.selected]
 	_start(Net.Mode.HOST)

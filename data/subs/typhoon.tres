@@ -1,0 +1,36 @@
+[gd_resource type="Resource" script_class="SubClassData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/sub_class_data.gd" id="1_s"]
+
+[resource]
+script = ExtResource("1_s")
+key = "typhoon"
+display_name = "Typhoon-class"
+crew_min = 1
+crew_max = 8
+length = 175.0
+surface_speed_kn = 22.0
+submerged_speed_kn = 27.0
+acceleration = 0.08
+max_turn_rate = 1.3
+max_dive_rate = 0.45
+periscope_depth = 26.0
+test_depth = 400.0
+crush_depth = 500.0
+bow_tubes = 6
+stern_tubes = 0
+torpedo_capacity = 22
+battery_endurance_min = 600.0
+charge_minutes = 8.0
+flood_seconds = 60.0
+co2_canisters = 200
+spare_parts = 20
+gun_name = ""
+gun_rounds = 0
+gun_ready = 0
+gun_damage = 0.0
+gun_range = 0.0
+gun_reload = 3.0
+nuclear = true
+era = "cold_war"
+roles = Array[String](["Captain: the PA and his notebook", "First mate: the list and the damage parties", "Helm and planes", "Torpedoes", "Sonar", "Reactor and air", "Damage control", "Damage control"])

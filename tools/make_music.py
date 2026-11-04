@@ -4,7 +4,7 @@ assets/audio/music_*.ogg (run from the project root).
 
 All original tunes. Menu: a sea shanty on accordion with oom-pah tuba and stomp-clap (Sea of
 Thieves' spirit). Patrol: a calm, sparse pad with a lonely flute, now only on the jukebox as
-"Slow watch". Each instrument has its place left to right in
+"Slow watch". The Typhoon has her own slow men's choir. Each instrument has its place left to right in
 one reverberant room. Loops are folded so their reverb tails wrap round, and they repeat without
 a seam. Needs numpy and ffmpeg.
 """
@@ -165,6 +165,40 @@ def patrol():
     save("patrol", mix({"pad": (pad, 0.13, -0.2), "low": (low, 0.08, 0.2), "flute": (flute, 0.2, 0.25)}, length, 2.5, 0.4))
 
 
+def typhoon():
+    """An original slow Russian-style men's choir over low strings and a timpani tread: our own
+    tune and chords, in the mood of a Cold War submarine, not any film's theme."""
+    bpm = 54
+    beat = 60 / bpm
+    bars = 16
+    length = int(bars * 4 * beat * SR)
+    size = length + SR * 4
+    tenors, basses, low, timp = (np.zeros(size) for _ in range(4))
+    # Chords a bar each, D minor: the basses hold the root and fifth, the tenors sing the line.
+    roots = [38, 38, 34, 36, 38, 41, 36, 33, 38, 38, 34, 41, 43, 34, 33, 38]
+    line = [(62, 2), (65, 1), (64, 1), (62, 3), (60, 1), (58, 2), (62, 2), (60, 4),
+            (62, 2), (64, 1), (65, 1), (69, 3), (67, 1), (64, 2), (60, 2), (61, 4),
+            (62, 2), (65, 1), (64, 1), (62, 3), (60, 1), (58, 2), (65, 2), (65, 4),
+            (67, 2), (65, 1), (62, 1), (58, 3), (60, 1), (61, 2), (64, 2), (62, 4)]
+    for i, root in enumerate(roots):
+        at = i * 4 * beat
+        for midi in (root + 12, root + 19):
+            place(basses, sm.note("choir_aahs", midi, 4 * beat * 0.98, 1.0, 0.8, attack=0.5), at)
+        place(low, sm.note("contrabass", root, 4 * beat * 0.95, 1.0, 0.6, attack=0.3), at)
+        place(timp, sm.hit("timp", 2.5, 1.0 if i % 4 == 0 else 0.55), at)
+        place(timp, sm.hit("timp", 2.0, 0.4), at + 2 * beat)
+    t = 0.0
+    for midi, beats in line:
+        place(tenors, sm.note("choir_aahs", midi, beats * beat * 0.96, 1.0, 0.5, attack=0.25), t)
+        t += beats * beat
+    save("typhoon", mix({"tenors": (tenors, 0.16, 0.1), "basses": (basses, 0.13, -0.1), "low": (low, 0.12, 0.0),
+                         "timp": (timp, 0.1, 0.2)}, length, 3.0, 0.45))
+
+
 if __name__ == "__main__":
+    if sys.argv[1:] == ["typhoon"]:
+        typhoon()
+        sys.exit(0)
     shanty()
     patrol()
+    typhoon()

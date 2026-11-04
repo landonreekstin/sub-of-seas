@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="MissionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/mission_data.gd" id="1_m"]
+
+[resource]
+script = ExtResource("1_m")
+key = "cw_barrier"
+era = "cold_war"
+title = "The GIUK Gap"
+briefing = "The line between Greenland, Iceland and Britain. NATO frigates are sweeping for us. Stay alive for 15 minutes, and sink a frigate if you can."
+difficulty = 3
+start_depth = 60.0
+start_speed = 2
+battery = 1.0
+groups = Array[Dictionary]([{"type": "hunter_killer", "ships": ["knox", "spruance", "knox"], "pos": Vector2(0, 4000), "course": 180.0, "radius": 4500.0}])
+objectives = Array[Dictionary]([{"kind": "survive", "value": 900, "text": "Survive 15 minutes"}, {"kind": "sink_class", "class": "knox", "count": 1, "text": "Sink a frigate (bonus)", "bonus": true}])
+sea_state = 2
+layer_depth = 90.0

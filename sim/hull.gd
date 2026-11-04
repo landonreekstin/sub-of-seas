@@ -35,7 +35,7 @@ var _next_id := 1
 func setup(compartments: Array, door_links: Dictionary, stations := {}) -> HullState:
 	comps.clear()
 	for c: Dictionary in compartments:
-		comps.append({"name": c.name, "z0": c.z0, "z1": c.z1, "water": 0.0})
+		comps.append({"name": c.name, "z0": c.z0, "z1": c.z1, "x": c.get("x", 0.0), "y": c.get("y", 0.0), "water": 0.0})
 	links = door_links.duplicate()
 	for d: String in links:
 		doors_open[d] = true
@@ -48,6 +48,28 @@ func comp_at(z: float) -> int:
 		if z >= comps[i].z0 and z < comps[i].z1:
 			return i
 	return 0 if z < 0.0 else comps.size() - 1
+
+
+## Where a point is, on a boat whose rooms lie side by side and one above another too.
+func comp_at_pos(p: Vector3) -> int:
+	var best := -1
+	var best_d := INF
+	for i in comps.size():
+		var z0: float = comps[i].z0
+		var z1: float = comps[i].z1
+		var d: float = absf(p.x - float(comps[i].x)) + absf(p.y - float(comps[i].y) - 1.0) + maxf(maxf(z0 - p.z, p.z - z1), 0.0) * 2.0
+		if d < best_d:
+			best_d = d
+			best = i
+	return best if best >= 0 else comp_at(p.z)
+
+
+## How far out from the centreline a blast on `side` lands: a twin-hulled boat's main hull.
+func _side_x(side: float) -> float:
+	var out := 0.0
+	for c: Dictionary in comps:
+		out = maxf(out, absf(float(c.x)))
+	return side * out
 
 
 func length(c: int) -> float:
@@ -124,7 +146,7 @@ func add_leak(c: int, size: int, rng: RandomNumberGenerator, side := 0.0) -> Dic
 	var rate: float = LEAK_SIZES[clampi(size, 0, LEAK_SIZES.size() - 1)] * harshness
 	var leak := {
 		"id": _take_id(), "c": c, "rate": rate, "hp": rate * TORCH_SECONDS_PER_RATE,
-		"p": Vector3(side * 1.88, rng.randf_range(0.5, 2.1), _random_z(c, rng)),
+		"p": Vector3(comps[c].x + side * 1.88, comps[c].y + rng.randf_range(0.5, 2.1), _random_z(c, rng)),
 	}
 	leaks.append(leak)
 	return leak
@@ -135,7 +157,7 @@ func add_fire(c: int, rng: RandomNumberGenerator) -> Dictionary:
 		return {}
 	var fire := {
 		"id": _take_id(), "c": c, "size": 0.25,
-		"p": Vector3(rng.randf_range(-1.2, 1.2), 0.0, _random_z(c, rng)),
+		"p": Vector3(comps[c].x + rng.randf_range(-1.2, 1.2), comps[c].y, _random_z(c, rng)),
 	}
 	fires.append(fire)
 	return fire
@@ -149,7 +171,7 @@ func _random_z(c: int, rng: RandomNumberGenerator) -> float:
 ## side `side` (-1 port, 1 starboard). Returns what happened, for announcements.
 func apply_blast(dist: float, at_z: float, side: float, rng: RandomNumberGenerator) -> Array[String]:
 	var out: Array[String] = []
-	var c := comp_at(at_z)
+	var c := comp_at_pos(Vector3(_side_x(side), 0.0, at_z))
 	var leak_count := 0
 	var leak_size := 0
 	var fire_p := 0.0

@@ -349,6 +349,7 @@ func _setup_mission() -> void:
 		Formations.spawn(Sim.world, g)
 	if m.sandbox:
 		sandbox = Sandbox.new()
+		sandbox.cold_war = m.era == "cold_war"
 	crew.objectives = m.objectives.duplicate(true)
 	for o: Dictionary in crew.objectives:
 		o.done = false
@@ -574,10 +575,12 @@ func _pick_music() -> void:
 
 
 func boat_music() -> String:
-	return ""
+	return "typhoon" if sub_class != null and sub_class.key == "typhoon" else ""
 
 
 func band_playing() -> bool:
+	if crew.get("band", false) and TyphoonLayout.band_audible(crew):
+		return true
 	for p: Player in _players.get_children():
 		if p.playing:
 			return true
@@ -854,7 +857,7 @@ func call_enemy_sub(attack: bool) -> String:
 
 
 func enemy_sub_class() -> String:
-	return "i_boat"
+	return "los_angeles" if sub_class.era == "cold_war" else "i_boat"
 
 
 ## From now on the chart and sand table only show what the boat has seen.
@@ -874,9 +877,16 @@ func known_sync(origin: Vector2, grid: PackedByteArray) -> void:
 	known.version += 1
 
 
-## The skipper's word to the band: only a boat with a full crew has one to spare.
-func call_band(_off: bool) -> String:
-	return "We haven't the hands to spare for a band on this boat, Skipper."
+## The skipper's word to the band (Blaney: a good part of a Typhoon's crew plays whatever's on).
+func call_band(off: bool) -> String:
+	if sub_class.key != "typhoon":
+		return "We haven't the hands to spare for a band on this boat, Skipper."
+	crew.band = not off
+	if off:
+		return "Back to your posts, lads."
+	crew.full_crew = true
+	var rec: Array = Jukebox.RECORDS[int(crew.get("jukebox", 0)) % Jukebox.RECORDS.size()]
+	return "Forty hands to the rec room, Skipper. %s." % ("The Foggy Dew" if rec[1] == "" or rec[1] == "foggy_dew" else "Playing along with \"%s\"" % rec[0])
 
 
 ## Any crewman: the jukebox's next record.
@@ -940,6 +950,14 @@ func apply_order(station_id: String, key: String, value: Variant, by: int) -> vo
 					push_crew()
 					return
 				sub.ordered_depth = clampf(float(value), 0.0, 200.0)
+		"first_mate":
+			if key == "party":
+				bot_crew.send_party()
+				announce.rpc("First mate: damage parties, turn to!")
+		"skipper":
+			if key == "read":
+				crew.mate_read = crew.get("mate_news", 0)
+				push_crew()
 		"periscope":
 			if key == "raised":
 				sub.periscope_raised = bool(value)
@@ -1199,7 +1217,7 @@ func rq_place_pump(pos: Vector3) -> void:
 	if not multiplayer.is_server() or crew.tools.get(_sender(), "") != "pump":
 		return
 	var hull := Sim.world.hull
-	hull.pumps.append({"c": hull.comp_at(pos.z), "p": Vector3(pos.x, maxf(pos.y, 0.0), pos.z)})
+	hull.pumps.append({"c": hull.comp_at_pos(pos), "p": Vector3(pos.x, maxf(pos.y, 0.0), pos.z)})
 	crew.tools.erase(_sender())
 	push_crew()
 
@@ -1333,7 +1351,7 @@ func _breathe(delta: float) -> void:
 				wake_at.rpc_id(peer, _best_air_spot())
 				changed = true
 			continue
-		var bad := w.air.badness_in(w.hull.comp_at(p.global_position.z))
+		var bad := w.air.badness_in(w.hull.comp_at_pos(p.global_position))
 		_exposure[peer] = _exposure.get(peer, 0.0) + delta if bad >= 1.0 else 0.0
 		if _exposure[peer] >= PASS_OUT_AFTER:
 			crew.knocked[peer] = KNOCKED_OUT_TIME
@@ -1355,7 +1373,7 @@ func _best_air_spot() -> Vector3:
 			best_score = score
 			best = i
 	var c: Dictionary = w.hull.comps[best]
-	return Vector3(randf_range(-0.5, 0.5), 0.1, (c.z0 + c.z1) * 0.5 + randf_range(-1.0, 1.0))
+	return Vector3(float(c.get("x", 0.0)) + randf_range(-0.5, 0.5), float(c.get("y", 0.0)) + 0.1, (c.z0 + c.z1) * 0.5 + randf_range(-1.0, 1.0))
 
 
 ## Host -> one crewman: you come round here.
@@ -1458,7 +1476,7 @@ func _event_sound(kind: String, data: Dictionary) -> void:
 			if on_sonar:
 				Sfx.play("splash")
 		"own_ping":
-			Sfx.play("sonar_ping")
+			Sfx.play("sonar_ping", 0.0, 0.72 if sub_class.nuclear else 1.0)
 		"gun":
 			var on_gun := local_player != null and local_player.station != null and local_player.station.station_id == "gun"
 			Sfx.play("deck_gun", 0.0 if on_gun else -12.0, randf_range(0.95, 1.05)) # muffled through the hull below

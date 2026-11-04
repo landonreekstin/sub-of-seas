@@ -357,7 +357,7 @@ func _sync_planes() -> void:
 		seen[p.id] = true
 		var node: Node3D = _planes.get(p.id)
 		if node == null:
-			node = ShipModels.plane()
+			node = ShipModels.plane(Sim.world.sub.data.nuclear)
 			add_child(node)
 			_planes[p.id] = node
 		node.position = to_3d(p.pos, p.altitude)

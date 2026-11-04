@@ -36,4 +36,4 @@ func step(dt: float) -> void:
 
 
 func to_snapshot() -> Dictionary:
-	return {"id": id, "p": pos, "h": heading}
+	return {"id": id, "p": pos, "h": heading, "e": enemy}

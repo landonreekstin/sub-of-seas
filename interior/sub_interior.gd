@@ -10,6 +10,7 @@ const HALF_WIDTH := 2.0
 const DECK_HEIGHT := 2.6
 const CT_FLOOR := 2.8
 const SHOULDER_R := 0.75 ## radius of the curved hull between wall and deckhead
+const VIEW_HOPS := 2 ## rooms beyond this one that are drawn, through open doors
 
 const WALL := Color("#9DB59A")
 const FLOOR := Color("#5E6B5C")
@@ -70,6 +71,11 @@ var _motor_sound: AudioStreamPlayer3D
 var _rain_sound: AudioStreamPlayer3D
 var _creak_timer := 5.0
 var _vents_were := false
+var _at: Node3D = self ## what's being built goes on this: the boat, or on a Typhoon its room (TyphoonLayout)
+var _rooms: Array[Node3D] = [] ## Typhoon: each compartment's root, so rooms out of sight can be hidden
+var _room_links: Array = [] ## Typhoon: [door id or "", comp a, comp b]
+var main_ladder: Ladder ## the ladder between decks, for the damage parties
+var _cull_timer := 0.0
 
 
 static func create(data: SubClassData) -> SubInterior:
@@ -77,6 +83,10 @@ static func create(data: SubClassData) -> SubInterior:
 	i.sub_class = data
 	i.name = "Interior"
 	i.has_conning_tower = data.key != "s_boat"
+	if data.key == "typhoon":
+		i.has_conning_tower = false
+		TyphoonLayout.lay_out(i)
+		return i
 	var layout: Array = LAYOUTS.get(data.key, LAYOUTS.gato)
 	# Lay the compartments out so the control room ends at z = 0.
 	var z := 0.0
@@ -115,6 +125,10 @@ func build() -> void:
 	if not stations.is_empty():
 		return
 	_build_environment()
+	if sub_class.key == "typhoon":
+		TyphoonLayout.build(self)
+		_finish_build()
+		return
 	var ct := comp("control")
 	var hatch := Rect2(-0.45, ct.z0 + 3.0, 0.9, 0.9) if has_conning_tower else Rect2()
 	for k in compartments.size():
@@ -150,13 +164,7 @@ func build() -> void:
 		_conning_tower(ct, hatch)
 	for c in compartments:
 		_dressing(c, hatch if c.type == "control" else Rect2())
-	damage = DamageView.new()
-	damage.name = "Damage"
-	damage.interior = self
-	add_child(damage)
-	for l in find_children("*", "OmniLight3D", true, false):
-		_lights.append(l)
-		l.set_meta("energy", l.light_energy)
+	_finish_build()
 	var er := comp("engine")
 	_diesel_sound = Sfx.loop_at(self, "diesel_loop", Vector3(0, 1.0, (er.z0 + er.z1) * 0.5), -80.0, 8.0)
 	var mr := comp("maneuvering") if comp_index("maneuvering") >= 0 else er
@@ -164,6 +172,16 @@ func build() -> void:
 	_rain_sound = Sfx.loop_at(self, "rain_loop", Vector3(0, DECK_HEIGHT, (ct.z0 + ct.z1) * 0.5), -80.0, 30.0)
 	for i in 6:
 		spawn_points.append(Vector3(-0.6 + (i % 3) * 0.6, 0.1, ct.z1 - 2.6 - (i / 3) * 0.7))
+
+
+func _finish_build() -> void:
+	damage = DamageView.new()
+	damage.name = "Damage"
+	damage.interior = self
+	add_child(damage)
+	for l in find_children("*", "OmniLight3D", true, false):
+		_lights.append(l)
+		l.set_meta("energy", l.light_energy)
 
 
 func _build_environment() -> void:
@@ -181,76 +199,93 @@ func _build_environment() -> void:
 
 # --- Shell -----------------------------------------------------------------
 
-func _compartment(z0: float, z1: float, title: String, ceiling_hole := Rect2()) -> void:
+## `gaps` are door openings in the side walls: [side (-1 port, 1 starboard), z of the door].
+func _compartment(z0: float, z1: float, title: String, ceiling_hole := Rect2(), gaps: Array = [], floor_hole := Rect2()) -> void:
 	var length := z1 - z0
 	var mid := (z0 + z1) * 0.5
-	Build.box(self, Vector3(HALF_WIDTH * 2.0 + 0.4, 0.2, length), Vector3(0, -0.1, mid), FLOOR)
+	_slab(-0.1, z0, z1, floor_hole, FLOOR)
 	for side in [-1.0, 1.0]:
-		Build.box(self, Vector3(0.2, DECK_HEIGHT + 0.2, length), Vector3(side * (HALF_WIDTH + 0.1), DECK_HEIGHT * 0.5, mid), WALL)
-		# Curved shoulders and bilges make the box read as a round pressure hull.
-		Build.arc(self, Vector2(side * (HALF_WIDTH - SHOULDER_R), DECK_HEIGHT - SHOULDER_R), SHOULDER_R,
+		var from := z0
+		var pieces: Array = []
+		var here := gaps.filter(func(g: Array) -> bool: return g[0] == side)
+		here.sort_custom(func(a: Array, b: Array) -> bool: return a[1] < b[1])
+		for g: Array in here:
+			pieces.append([from, float(g[1]) - WatertightDoor.WIDTH * 0.5])
+			from = float(g[1]) + WatertightDoor.WIDTH * 0.5
+		pieces.append([from, z1])
+		for piece: Array in pieces:
+			var a: float = piece[0]
+			var b: float = piece[1]
+			Build.box(_at, Vector3(0.2, DECK_HEIGHT + 0.2, b - a), Vector3(side * (HALF_WIDTH + 0.1), DECK_HEIGHT * 0.5, (a + b) * 0.5), WALL)
+			# Curved shoulders and bilges make the box read as a round pressure hull.
+			Build.arc(_at, Vector2(side * (HALF_WIDTH - 0.4), 0.4), 0.4,
+					-PI * 0.5 if side > 0.0 else PI, 0.0 if side > 0.0 else PI * 1.5, 0.12, a, b, FLOOR, 6)
+		for g: Array in here: # the wall over each door
+			Build.box(_at, Vector3(0.2, DECK_HEIGHT - WatertightDoor.HEIGHT + 0.1, WatertightDoor.WIDTH), Vector3(side * (HALF_WIDTH + 0.1), (DECK_HEIGHT + WatertightDoor.HEIGHT) * 0.5, g[1]), WALL)
+		Build.arc(_at, Vector2(side * (HALF_WIDTH - SHOULDER_R), DECK_HEIGHT - SHOULDER_R), SHOULDER_R,
 				0.0 if side > 0.0 else PI * 0.5, PI * 0.5 if side > 0.0 else PI, 0.12, z0, z1, WALL)
-		Build.arc(self, Vector2(side * (HALF_WIDTH - 0.4), 0.4), 0.4,
-				-PI * 0.5 if side > 0.0 else PI, 0.0 if side > 0.0 else PI * 1.5, 0.12, z0, z1, FLOOR, 6)
 		# Pipe runs.
-		Build.cyl(self, 0.05, length, Vector3(side * 1.35, DECK_HEIGHT - 0.12, mid), BRASS, Vector3.BACK)
-		Build.cyl(self, 0.08, length, Vector3(side * 1.1, DECK_HEIGHT - 0.1, mid), PIPE, Vector3.BACK)
+		Build.cyl(_at, 0.05, length, Vector3(side * 1.35, DECK_HEIGHT - 0.12, mid), BRASS, Vector3.BACK)
+		Build.cyl(_at, 0.08, length, Vector3(side * 1.1, DECK_HEIGHT - 0.1, mid), PIPE, Vector3.BACK)
 	_slab(DECK_HEIGHT + 0.1, z0, z1, ceiling_hole, CEILING)
 	# Lights: a warm bulb every few metres.
 	var n := maxi(1, roundi(length / 5.0))
 	for i in n:
 		var z := z0 + length * (i + 0.5) / n
-		Build.sphere(self, 0.08, Vector3(0, DECK_HEIGHT - 0.05, z), LIGHT, 3.0)
-	var light := OmniLight3D.new()
-	light.light_color = LIGHT
-	light.light_energy = 1.4
-	light.omni_range = maxf(7.0, length * 0.75)
-	light.position = Vector3(0, DECK_HEIGHT - 0.3, mid)
-	add_child(light)
+		Build.sphere(_at, 0.08, Vector3(0, DECK_HEIGHT - 0.05, z), LIGHT, 3.0)
+	# The Typhoon's long rooms need more than one lamp to reach.
+	var lamps := roundi(length / 14.0) if length > 30.0 else 1
+	for i in lamps:
+		var light := OmniLight3D.new()
+		light.light_color = LIGHT
+		light.light_energy = 1.2 if lamps > 1 else 1.4
+		light.omni_range = 12.0 if lamps > 1 else maxf(7.0, length * 0.75)
+		light.position = Vector3(0, DECK_HEIGHT - 0.3, z0 + length * (i + 0.5) / lamps)
+		_at.add_child(light)
 	# Label3D reads from +Z: the aft-wall sign turns to face forward.
-	Build.label(self, title, Vector3(0, DECK_HEIGHT - 0.25, z1 - 0.13), 40, Color("#2B2B26")).rotation.y = PI
-	Build.label(self, title, Vector3(0, DECK_HEIGHT - 0.25, z0 + 0.13), 40, Color("#2B2B26"))
+	Build.label(_at, title, Vector3(0, DECK_HEIGHT - 0.25, z1 - 0.13), 40, Color("#2B2B26")).rotation.y = PI
+	Build.label(_at, title, Vector3(0, DECK_HEIGHT - 0.25, z0 + 0.13), 40, Color("#2B2B26"))
 
 
 ## A horizontal slab at height `y` spanning the hull width, with an optional hole.
 func _slab(y: float, z0: float, z1: float, hole: Rect2, color: Color) -> void:
 	var w := HALF_WIDTH * 2.0 + 0.4
 	if hole.size == Vector2.ZERO:
-		Build.box(self, Vector3(w, 0.2, z1 - z0), Vector3(0, y, (z0 + z1) * 0.5), color)
+		Build.box(_at, Vector3(w, 0.2, z1 - z0), Vector3(0, y, (z0 + z1) * 0.5), color)
 		return
 	var hx0 := hole.position.x
 	var hx1 := hole.end.x
 	var hz0 := hole.position.y
 	var hz1 := hole.end.y
-	Build.box(self, Vector3(w, 0.2, hz0 - z0), Vector3(0, y, (z0 + hz0) * 0.5), color)
-	Build.box(self, Vector3(w, 0.2, z1 - hz1), Vector3(0, y, (hz1 + z1) * 0.5), color)
+	Build.box(_at, Vector3(w, 0.2, hz0 - z0), Vector3(0, y, (z0 + hz0) * 0.5), color)
+	Build.box(_at, Vector3(w, 0.2, z1 - hz1), Vector3(0, y, (hz1 + z1) * 0.5), color)
 	var lw := hx0 + w * 0.5
-	Build.box(self, Vector3(lw, 0.2, hz1 - hz0), Vector3(-w * 0.5 + lw * 0.5, y, (hz0 + hz1) * 0.5), color)
+	Build.box(_at, Vector3(lw, 0.2, hz1 - hz0), Vector3(-w * 0.5 + lw * 0.5, y, (hz0 + hz1) * 0.5), color)
 	var rw := w * 0.5 - hx1
-	Build.box(self, Vector3(rw, 0.2, hz1 - hz0), Vector3(hx1 + rw * 0.5, y, (hz0 + hz1) * 0.5), color)
+	Build.box(_at, Vector3(rw, 0.2, hz1 - hz0), Vector3(hx1 + rw * 0.5, y, (hz0 + hz1) * 0.5), color)
 
 
 func _bulkhead(z: float, door_id: String) -> void:
 	var h := DECK_HEIGHT + 0.2
 	if door_id == "":
-		Build.box(self, Vector3(HALF_WIDTH * 2.0, h, 0.2), Vector3(0, h * 0.5 - 0.1, z), WALL)
+		Build.box(_at, Vector3(HALF_WIDTH * 2.0, h, 0.2), Vector3(0, h * 0.5 - 0.1, z), WALL)
 		return
 	var dw := WatertightDoor.WIDTH * 0.5
 	var side_w := HALF_WIDTH - dw
 	for side in [-1.0, 1.0]:
-		Build.box(self, Vector3(side_w, h, 0.2), Vector3(side * (dw + side_w * 0.5), h * 0.5 - 0.1, z), WALL)
+		Build.box(_at, Vector3(side_w, h, 0.2), Vector3(side * (dw + side_w * 0.5), h * 0.5 - 0.1, z), WALL)
 	var top_h := h - WatertightDoor.HEIGHT
-	Build.box(self, Vector3(dw * 2.0, top_h, 0.2), Vector3(0, WatertightDoor.HEIGHT + top_h * 0.5 - 0.1, z), WALL)
+	Build.box(_at, Vector3(dw * 2.0, top_h, 0.2), Vector3(0, WatertightDoor.HEIGHT + top_h * 0.5 - 0.1, z), WALL)
 	var door := WatertightDoor.new().setup(door_id)
 	door.position = Vector3(0, 0, z)
-	add_child(door)
+	_at.add_child(door)
 	doors[door_id] = door
 
 
 func _add_station(s: Station, pos: Vector3, rot_y := 0.0) -> Station:
 	s.position = pos
 	s.rotation.y = rot_y
-	add_child(s)
+	_at.add_child(s)
 	stations[s.station_id] = s
 	return s
 
@@ -261,7 +296,7 @@ func _rack(type: String, z: float, port := false) -> void:
 	rack.position = Vector3(-1.97 if port else 1.97, 1.3, z)
 	if port:
 		rack.rotation.y = PI
-	add_child(rack)
+	_at.add_child(rack)
 	racks[type] = rack.position + Vector3(-0.1 if not port else 0.1, 1.1, 0)
 
 
@@ -279,7 +314,7 @@ func _portholes() -> void:
 		spots.append([Vector3(-HALF_WIDTH + 0.02, 1.6, c.z1 - 1.2), -1.0])
 	for s: Array in spots:
 		var p := Porthole.create(s[0], s[1])
-		add_child(p)
+		_at.add_child(p)
 		portholes.append(p)
 
 
@@ -304,14 +339,14 @@ func _torpedo_room(c: Dictionary, aft: bool) -> void:
 	var rz1: float = c.z1 - (3.0 if aft else 2.5)
 	for side in [-1.0, 1.0]:
 		for y in [0.45, 1.05]:
-			Build.torpedo(self, 0.27, minf(rz1 - rz0, 6.4), Vector3(side * 1.5, y, (rz0 + rz1) * 0.5), aft)
-			Build.box(self, Vector3(0.54, 0.54, rz1 - rz0), Vector3(side * 1.5, y, (rz0 + rz1) * 0.5), DARK).visible = false
+			Build.torpedo(_at, 0.27, minf(rz1 - rz0, 6.4), Vector3(side * 1.5, y, (rz0 + rz1) * 0.5), aft)
+			Build.box(_at, Vector3(0.54, 0.54, rz1 - rz0), Vector3(side * 1.5, y, (rz0 + rz1) * 0.5), DARK).visible = false
 			for k in 3: # the rack's cradle straps
 				var cz := lerpf(rz0 + 0.8, rz1 - 0.8, k / 2.0)
-				Build.arc(self, Vector2(side * 1.5, y), 0.275, PI * 1.05, PI * 1.95, 0.025, cz - 0.04, cz + 0.04, DARK, 8)
+				Build.arc(_at, Vector2(side * 1.5, y), 0.275, PI * 1.05, PI * 1.95, 0.025, cz - 0.04, cz + 0.04, DARK, 8)
 	_rack(c.type, c.z0 + 1.4 if aft else c.z1 - 1.4)
 	# Chain hoist rail down the centre for moving torpedoes.
-	Build.box(self, Vector3(0.12, 0.12, c.z1 - c.z0 - 2.0), Vector3(0, DECK_HEIGHT - 0.2, (c.z0 + c.z1) * 0.5), DARK, false)
+	Build.box(_at, Vector3(0.12, 0.12, c.z1 - c.z0 - 2.0), Vector3(0, DECK_HEIGHT - 0.2, (c.z0 + c.z1) * 0.5), DARK, false)
 
 
 func _battery(c: Dictionary) -> void:
@@ -319,16 +354,16 @@ func _battery(c: Dictionary) -> void:
 	var lz0: float = c.z0 + 0.8
 	var lockers := int(c.z1 - 3.0 - lz0)
 	for k in lockers:
-		Build.box(self, Vector3(0.5, 1.15, 0.92), Vector3(-HALF_WIDTH + 0.3, 0.575, lz0 + k + 0.5), WOOD)
-		Build.box(self, Vector3(0.02, 0.1, 0.03), Vector3(-HALF_WIDTH + 0.56, 0.75, lz0 + k + 0.8), BRASS, false)
-	Build.box(self, Vector3(1.0, 0.8, 2.2), Vector3(1.35, 0.4, (c.z0 + c.z1) * 0.5), WOOD)
-	Build.box(self, Vector3(1.1, 0.04, 2.3), Vector3(1.35, 0.82, (c.z0 + c.z1) * 0.5), Color("#E8DFC4"), false)
+		Build.box(_at, Vector3(0.5, 1.15, 0.92), Vector3(-HALF_WIDTH + 0.3, 0.575, lz0 + k + 0.5), WOOD)
+		Build.box(_at, Vector3(0.02, 0.1, 0.03), Vector3(-HALF_WIDTH + 0.56, 0.75, lz0 + k + 0.8), BRASS, false)
+	Build.box(_at, Vector3(1.0, 0.8, 2.2), Vector3(1.35, 0.4, (c.z0 + c.z1) * 0.5), WOOD)
+	Build.box(_at, Vector3(1.1, 0.04, 2.3), Vector3(1.35, 0.82, (c.z0 + c.z1) * 0.5), Color("#E8DFC4"), false)
 	for z in [c.z0 + 2.0, c.z1 - 2.0]:
-		Build.box(self, Vector3(0.9, 0.03, 0.9), Vector3(0, 0.02, z), DARK, false)
-		Build.box(self, Vector3(0.3, 0.04, 0.05), Vector3(0, 0.05, z), BRASS, false)
-	Build.label(self, "BATTERY WELL", Vector3(0, 0.06, c.z0 + 2.0), 22, Color("#C9A04A")).rotation.x = -PI / 2.0
+		Build.box(_at, Vector3(0.9, 0.03, 0.9), Vector3(0, 0.02, z), DARK, false)
+		Build.box(_at, Vector3(0.3, 0.04, 0.05), Vector3(0, 0.05, z), BRASS, false)
+	Build.label(_at, "BATTERY WELL", Vector3(0, 0.06, c.z0 + 2.0), 22, Color("#C9A04A")).rotation.x = -PI / 2.0
 	_rack(c.type, c.z1 - 1.4)
-	if comp_index("crew") < 0: # no crew's mess (S-boat): the magazine scuttle is aft in officers' country
+	if comp_index("crew") < 0 and sub_class.gun_rounds > 0: # no crew's mess (S-boat): the magazine scuttle is aft in officers' country
 		_add_station(AmmoStation.new().setup("ammo", "Ammunition scuttle"), Vector3(0, 0, c.z0 + 4.0)).set_meta("where", "wardroom")
 
 
@@ -348,22 +383,25 @@ func _control_room(c: Dictionary, hatch: Rect2) -> void:
 	_add_station(NavStation.new().setup("nav", "Chart table"), Vector3(1.4, 0, z1 - 1.6))
 	var mic := PaMic.new() # the PA, on the after bulkhead to port of the door
 	mic.position = Vector3(-1.05, 0, z1 - 0.12)
-	add_child(mic)
+	_at.add_child(mic)
 	if not has_conning_tower:
 		# S-boat: the periscope comes down into the control room and the TDC sits by the helm.
 		_add_station(PeriscopeStation.new().setup("periscope", "Periscope", "conn"), Vector3(0, 0, z0 + 4.6))
 		_add_station(TdcStation.new().setup("tdc", "Torpedo Data Computer", "conn"), Vector3(1.55, 0, z0 + 3.6))
+		_rack(c.type, z0 + 5.4)
+		if sub_class.gun_rounds == 0: # a missile boat carries no gun
+			return
 		# No conning tower: the ladder to the bridge hatch and the gun goes up from here.
 		var gun := GunStation.new().setup("gun", "Deck gun") as GunStation
 		gun.overhead = DECK_HEIGHT
 		_add_station(gun, Vector3(0, 0, z0 + 6.6))
-		_rack(c.type, z0 + 5.4)
 		return
 	_rack(c.type, z0 + 4.4)
 	# Ladder up to the conning tower.
 	var ladder := Ladder.new()
 	ladder.name = "ladder_ct"
-	add_child(ladder)
+	main_ladder = ladder
+	_at.add_child(ladder)
 	var lz := hatch.position.y - 0.02
 	for side in [-0.25, 0.25]:
 		Build.cyl(ladder, 0.03, CT_FLOOR, Vector3(side, CT_FLOOR * 0.5, lz), Color("#8A8F86"))
@@ -393,18 +431,18 @@ func _conning_tower(c: Dictionary, hatch: Rect2) -> void:
 	var mid := (z0 + z1) * 0.5
 	var y := CT_FLOOR + h * 0.5
 	for side in [-1.0, 1.0]:
-		Build.box(self, Vector3(0.2, h, z1 - z0), Vector3(side * hw, y, mid), WALL)
-	Build.box(self, Vector3(hw * 2.0, h, 0.2), Vector3(0, y, z0), WALL)
-	Build.box(self, Vector3(hw * 2.0, h, 0.2), Vector3(0, y, z1), WALL)
-	Build.box(self, Vector3(hw * 2.0, 0.2, z1 - z0), Vector3(0, CT_FLOOR + h + 0.1, mid), CEILING)
+		Build.box(_at, Vector3(0.2, h, z1 - z0), Vector3(side * hw, y, mid), WALL)
+	Build.box(_at, Vector3(hw * 2.0, h, 0.2), Vector3(0, y, z0), WALL)
+	Build.box(_at, Vector3(hw * 2.0, h, 0.2), Vector3(0, y, z1), WALL)
+	Build.box(_at, Vector3(hw * 2.0, 0.2, z1 - z0), Vector3(0, CT_FLOOR + h + 0.1, mid), CEILING)
 	var light := OmniLight3D.new()
 	light.light_color = LIGHT
 	light.light_energy = 1.1
 	light.omni_range = 5.0
 	light.position = Vector3(0, CT_FLOOR + h - 0.3, mid)
-	add_child(light)
-	Build.sphere(self, 0.08, Vector3(0, CT_FLOOR + h - 0.05, mid), LIGHT, 3.0)
-	Build.label(self, "CONNING TOWER", Vector3(0, CT_FLOOR + h - 0.25, z0 + 0.13), 40, Color("#2B2B26"))
+	_at.add_child(light)
+	Build.sphere(_at, 0.08, Vector3(0, CT_FLOOR + h - 0.05, mid), LIGHT, 3.0)
+	Build.label(_at, "CONNING TOWER", Vector3(0, CT_FLOOR + h - 0.25, z0 + 0.13), 40, Color("#2B2B26"))
 	_add_station(PeriscopeStation.new().setup("periscope", "Attack periscope", "attack"), Vector3(0, CT_FLOOR, z1 - 0.9))
 	_gauge_board(Vector3(0.3, CT_FLOOR + 1.7, z0 + 0.12), ["depth", "heading"])
 	_add_station(TdcStation.new().setup("tdc", "Torpedo Data Computer", "attack"), Vector3(hw - 0.45, CT_FLOOR, z0 + 2.2))
@@ -418,15 +456,16 @@ func _crew(c: Dictionary) -> void:
 	# Forward: rack (port); two mess tables to starboard, the urn on the after one; stores aft.
 	_rack(c.type, c.z0 + 1.3, true)
 	for tz: float in [c.z1 - 1.2, c.z0 + 2.2]:
-		Build.box(self, Vector3(0.9, 0.75, 1.8), Vector3(1.3, 0.38, tz), WOOD)
-		Build.box(self, Vector3(1.0, 0.04, 1.9), Vector3(1.3, 0.77, tz), Color("#E8DFC4"), false)
+		Build.box(_at, Vector3(0.9, 0.75, 1.8), Vector3(1.3, 0.38, tz), WOOD)
+		Build.box(_at, Vector3(1.0, 0.04, 1.9), Vector3(1.3, 0.77, tz), Color("#E8DFC4"), false)
 	# The magazine is under the mess: its scuttle to port, opposite the table.
-	_add_station(AmmoStation.new().setup("ammo", "Ammunition scuttle"), Vector3(0, 0, c.z1 - 3.4)).set_meta("where", "crew's mess")
+	if sub_class.gun_rounds > 0:
+		_add_station(AmmoStation.new().setup("ammo", "Ammunition scuttle"), Vector3(0, 0, c.z1 - 3.4)).set_meta("where", "crew's mess")
 
 
 ## The crew's quarters (Blaney: "all the sleeping quarters should not be near the weapons or
 ## operation areas"): the boat's only bunks, three tiers either side of an aisle, amidships.
-func _berthing(c: Dictionary) -> void:
+func _berthing(c: Dictionary, gap := {}) -> void:
 	var z0: float = c.z0 + 0.7
 	var z1: float = c.z1 - 0.7
 	var bays := maxi(1, roundi((z1 - z0) / 2.1))
@@ -435,14 +474,16 @@ func _berthing(c: Dictionary) -> void:
 	for side in [-1.0, 1.0]:
 		for b in bays:
 			var mid: float = z0 + bay * (b + 0.5)
+			if side == gap.get("side", 0.0) and absf(mid - float(gap.z)) < bay * 0.5: # a door there
+				continue
 			for y in [0.32, 0.96, 1.6]:
-				Build.box(self, Vector3(0.75, 0.08, bay - 0.1), Vector3(side * 1.6, y, mid), WOOD)
-				Build.box(self, Vector3(0.7, 0.1, bay - 0.25), Vector3(side * 1.6, y + 0.09, mid), BUNK, false)
-				Build.box(self, Vector3(0.68, 0.05, (bay - 0.25) * 0.6), Vector3(side * 1.6, y + 0.16, mid + bay * 0.15), blanket, false)
-				Build.box(self, Vector3(0.45, 0.09, 0.28), Vector3(side * 1.6, y + 0.18, mid - bay * 0.32), Color("#F2F0E8"), false)
+				Build.box(_at, Vector3(0.75, 0.08, bay - 0.1), Vector3(side * 1.6, y, mid), WOOD)
+				Build.box(_at, Vector3(0.7, 0.1, bay - 0.25), Vector3(side * 1.6, y + 0.09, mid), BUNK, false)
+				Build.box(_at, Vector3(0.68, 0.05, (bay - 0.25) * 0.6), Vector3(side * 1.6, y + 0.16, mid + bay * 0.15), blanket, false)
+				Build.box(_at, Vector3(0.45, 0.09, 0.28), Vector3(side * 1.6, y + 0.18, mid - bay * 0.32), Color("#F2F0E8"), false)
 			# Stanchions between the bays.
-			Build.cyl(self, 0.025, 1.95, Vector3(side * 1.22, 0.97, mid - bay * 0.5), PIPE)
-		Build.cyl(self, 0.025, 1.95, Vector3(side * 1.22, 0.97, z1), PIPE)
+			Build.cyl(_at, 0.025, 1.95, Vector3(side * 1.22, 0.97, mid - bay * 0.5), PIPE)
+		Build.cyl(_at, 0.025, 1.95, Vector3(side * 1.22, 0.97, z1), PIPE)
 
 
 ## The navigation room (Blaney): the sand table of the patrol area in the middle, and the
@@ -453,11 +494,11 @@ func _nav_room(c: Dictionary) -> void:
 	_add_station(CameraStation.new().setup("cameras", "Outside cameras"), Vector3(-HALF_WIDTH + 1.0, 0, mid), PI / 2.0)
 	# A chart locker of wide flat drawers in the starboard after corner, clear of the walkway.
 	var lz: float = c.z1 - 0.75
-	Build.box(self, Vector3(0.55, 1.0, 1.0), Vector3(HALF_WIDTH - 0.4, 0.5, lz), WOOD)
+	Build.box(_at, Vector3(0.55, 1.0, 1.0), Vector3(HALF_WIDTH - 0.4, 0.5, lz), WOOD)
 	for k in 4:
-		Build.box(self, Vector3(0.02, 0.18, 0.85), Vector3(HALF_WIDTH - 0.68, 0.2 + k * 0.22, lz), Color("#5A3E26"), false)
-		Build.box(self, Vector3(0.03, 0.03, 0.16), Vector3(HALF_WIDTH - 0.7, 0.2 + k * 0.22, lz), Color("#C9A04A"), false)
-	var title := Build.label(self, "NAVIGATION", Vector3(HALF_WIDTH - 0.07, 2.0, mid), 40, Color("#2A2E2B"))
+		Build.box(_at, Vector3(0.02, 0.18, 0.85), Vector3(HALF_WIDTH - 0.68, 0.2 + k * 0.22, lz), Color("#5A3E26"), false)
+		Build.box(_at, Vector3(0.03, 0.03, 0.16), Vector3(HALF_WIDTH - 0.7, 0.2 + k * 0.22, lz), Color("#C9A04A"), false)
+	var title := Build.label(_at, "NAVIGATION", Vector3(HALF_WIDTH - 0.07, 2.0, mid), 40, Color("#2A2E2B"))
 	title.rotation.y = -PI / 2.0
 	if comp_index("rec") < 0:
 		_band_rack(Vector3(HALF_WIDTH - 0.03, 1.3, c.z0 + 1.3), false)
@@ -472,14 +513,14 @@ func _rec_room(c: Dictionary) -> void:
 	var jb := Jukebox.new()
 	jb.position = Vector3(-1.45, 0, c.z0 + 0.6)
 	jb.rotation.y = PI
-	add_child(jb)
-	Build.box(self, Vector3(0.9, 0.72, 0.9), Vector3(1.3, 0.36, c.z0 + 1.4), WOOD) # card table
-	Build.box(self, Vector3(1.0, 0.04, 1.0), Vector3(1.3, 0.74, c.z0 + 1.4), Color("#2B6A3A"), false) # baize
+	_at.add_child(jb)
+	Build.box(_at, Vector3(0.9, 0.72, 0.9), Vector3(1.3, 0.36, c.z0 + 1.4), WOOD) # card table
+	Build.box(_at, Vector3(1.0, 0.04, 1.0), Vector3(1.3, 0.74, c.z0 + 1.4), Color("#2B6A3A"), false) # baize
 	for k in 5:
-		var card := Build.box(self, Vector3(0.06, 0.005, 0.09), Vector3(1.15 + k * 0.07, 0.765, c.z0 + 1.35 + (k % 2) * 0.05), Color("#F2F0E8"), false)
+		var card := Build.box(_at, Vector3(0.06, 0.005, 0.09), Vector3(1.15 + k * 0.07, 0.765, c.z0 + 1.35 + (k % 2) * 0.05), Color("#F2F0E8"), false)
 		card.rotation.y = k * 0.3
 	var p := Porthole.create(Vector3(-HALF_WIDTH + 0.02, 1.6, (c.z0 + c.z1) * 0.5), -1.0)
-	add_child(p)
+	_at.add_child(p)
 	portholes.append(p)
 	_band_rack(Vector3(-HALF_WIDTH + 0.03, 1.35, c.z1 - 1.15), true)
 
@@ -490,7 +531,7 @@ func _band_rack(at: Vector3, port: bool) -> void:
 	rack.position = at
 	if port:
 		rack.rotation.y = PI
-	add_child(rack)
+	_at.add_child(rack)
 
 
 func _engine_room(c: Dictionary, controls: bool) -> void:
@@ -500,14 +541,14 @@ func _engine_room(c: Dictionary, controls: bool) -> void:
 	var eng_z1 := z1 - 2.6
 	for side in [-1.0, 1.0]:
 		var x: float = side * 1.3
-		Build.box(self, Vector3(1.1, 1.5, eng_z1 - eng_z0), Vector3(x, 0.75, (eng_z0 + eng_z1) * 0.5), Color("#4E5550"))
+		Build.box(_at, Vector3(1.1, 1.5, eng_z1 - eng_z0), Vector3(x, 0.75, (eng_z0 + eng_z1) * 0.5), Color("#4E5550"))
 		var n := int((eng_z1 - eng_z0) / 1.08)
 		for i in n:
-			var rocker := Build.box(self, Vector3(0.7, 0.25, 0.8), Vector3(x, 1.62, eng_z0 + 0.7 + i * 1.08), Color("#6E756C"), false)
-			Build.cyl(self, 0.05, 0.3, Vector3(x, 1.85, eng_z0 + 0.7 + i * 1.08), BRASS)
+			var rocker := Build.box(_at, Vector3(0.7, 0.25, 0.8), Vector3(x, 1.62, eng_z0 + 0.7 + i * 1.08), Color("#6E756C"), false)
+			Build.cyl(_at, 0.05, 0.3, Vector3(x, 1.85, eng_z0 + 0.7 + i * 1.08), BRASS)
 			rocker.set_meta("y", rocker.position.y)
 			_rockers[0 if side < 0.0 else 1].append(rocker)
-		Build.cyl(self, 0.18, eng_z1 - eng_z0, Vector3(side * 1.55, 2.1, (eng_z0 + eng_z1) * 0.5), Color("#3A3A3A"), Vector3.BACK)
+		Build.cyl(_at, 0.18, eng_z1 - eng_z0, Vector3(side * 1.55, 2.1, (eng_z0 + eng_z1) * 0.5), Color("#3A3A3A"), Vector3.BACK)
 	_rack(c.type, z0 + 1.3, true)
 	if controls:
 		_add_station(EngineStation.new().setup("engine", "Diesel controls"), Vector3(0, 0, z1 - 0.25), -PI / 2.0)
@@ -518,9 +559,9 @@ func _maneuvering(c: Dictionary) -> void:
 	var cz0: float = c.z0 + 1.6
 	var cz1: float = c.z1 - 0.4
 	for side in [-1.0, 1.0]:
-		Build.box(self, Vector3(0.4, 1.8, cz1 - cz0), Vector3(side * 1.75, 0.9, (cz0 + cz1) * 0.5), DARK)
+		Build.box(_at, Vector3(0.4, 1.8, cz1 - cz0), Vector3(side * 1.75, 0.9, (cz0 + cz1) * 0.5), DARK)
 		for i in 4:
-			Build.box(self, Vector3(0.04, 0.12, 0.06), Vector3(side * 1.53, 1.0 + (i % 2) * 0.4, cz0 + 0.4 + i * 0.8), BRASS, false)
+			Build.box(_at, Vector3(0.04, 0.12, 0.06), Vector3(side * 1.53, 1.0 + (i % 2) * 0.4, cz0 + 0.4 + i * 0.8), BRASS, false)
 	_rack(c.type, c.z0 + 0.8)
 
 
@@ -532,7 +573,7 @@ func _air_and_stores() -> void:
 	_add_station(AirStation.new().setup("air", "Air panel"), Vector3(1.8, 0, c.z0 + 1.3))
 	var crate := PartsCrate.new()
 	crate.position = Vector3(-1.35, 0, c.z1 - 1.1)
-	add_child(crate)
+	_at.add_child(crate)
 
 
 ## Detail every compartment shares, so the hull reads as a working boat (lando: art toward
@@ -548,70 +589,70 @@ func _dressing(c: Dictionary, hatch: Rect2) -> void:
 		var z := z0 + (z1 - z0) * i / n
 		if hatch.size != Vector2.ZERO and z > hatch.position.y - 0.15 and z < hatch.end.y + 0.15:
 			continue
-		Build.box(self, Vector3(2.5, 0.07, 0.1), Vector3(0, DECK_HEIGHT - 0.03, z), frame_col, false)
+		Build.box(_at, Vector3(2.5, 0.07, 0.1), Vector3(0, DECK_HEIGHT - 0.03, z), frame_col, false)
 		for side in [-1.0, 1.0]:
 			if _near_porthole(side, z):
 				continue
-			Build.arc(self, Vector2(side * (HALF_WIDTH - SHOULDER_R), DECK_HEIGHT - SHOULDER_R), SHOULDER_R - 0.07,
+			Build.arc(_at, Vector2(side * (HALF_WIDTH - SHOULDER_R), DECK_HEIGHT - SHOULDER_R), SHOULDER_R - 0.07,
 					0.0 if side > 0.0 else PI * 0.5, PI * 0.5 if side > 0.0 else PI, 0.07, z - 0.05, z + 0.05, frame_col)
-			Build.box(self, Vector3(0.07, DECK_HEIGHT - SHOULDER_R - 0.4, 0.1), Vector3(side * (HALF_WIDTH - 0.035), (DECK_HEIGHT - SHOULDER_R + 0.4) * 0.5, z), frame_col, false)
+			Build.box(_at, Vector3(0.07, DECK_HEIGHT - SHOULDER_R - 0.4, 0.1), Vector3(side * (HALF_WIDTH - 0.035), (DECK_HEIGHT - SHOULDER_R + 0.4) * 0.5, z), frame_col, false)
 			# Cable clamps on the frame.
-			Build.box(self, Vector3(0.16, 0.05, 0.05), Vector3(side * 0.62, DECK_HEIGHT - 0.1, z), BRASS, false)
+			Build.box(_at, Vector3(0.16, 0.05, 0.05), Vector3(side * 0.62, DECK_HEIGHT - 0.1, z), BRASS, false)
 		if i % 2 == 0:
-			Build.label(self, "FR %d" % (int(z * 2.0) + 60), Vector3(0.0, DECK_HEIGHT - 0.12, z + 0.051), 18, Color("#2B2B26"))
+			Build.label(_at, "FR %d" % (int(z * 2.0) + 60), Vector3(0.0, DECK_HEIGHT - 0.12, z + 0.051), 18, Color("#2B2B26"))
 	# Cable runs under the deckhead, both sides of the light line.
 	var cables := [Color("#2B2B26"), Color("#7A2E25"), Color("#3E5770")]
 	for side in [-1.0, 1.0]:
 		for k in cables.size():
-			Build.cyl(self, 0.022, z1 - z0 - 0.3, Vector3(side * (0.56 + k * 0.05), DECK_HEIGHT - 0.06, (z0 + z1) * 0.5), cables[k], Vector3.BACK)
+			Build.cyl(_at, 0.022, z1 - z0 - 0.3, Vector3(side * (0.56 + k * 0.05), DECK_HEIGHT - 0.06, (z0 + z1) * 0.5), cables[k], Vector3.BACK)
 	# Handwheel valves on the white pipe runs.
 	var m := maxi(1, int((z1 - z0) / 3.5))
 	for i in m:
 		var z := z0 + (z1 - z0) * (i + 0.5) / m
 		var side := -1.0 if i % 2 == 0 else 1.0
-		Build.cyl(self, 0.1, 0.18, Vector3(side * 1.1, DECK_HEIGHT - 0.1, z), Color("#8A8F86"), Vector3.BACK)
-		Build.cyl(self, 0.015, 0.14, Vector3(side * 1.1, DECK_HEIGHT - 0.22, z), Color("#8A8F86"))
-		Build.wheel(self, 0.09, Vector3(side * 1.1, DECK_HEIGHT - 0.29, z), RED, Vector3.DOWN)
+		Build.cyl(_at, 0.1, 0.18, Vector3(side * 1.1, DECK_HEIGHT - 0.1, z), Color("#8A8F86"), Vector3.BACK)
+		Build.cyl(_at, 0.015, 0.14, Vector3(side * 1.1, DECK_HEIGHT - 0.22, z), Color("#8A8F86"))
+		Build.wheel(_at, 0.09, Vector3(side * 1.1, DECK_HEIGHT - 0.29, z), RED, Vector3.DOWN)
 	# Wire cages round the bulbs.
 	var bulbs := maxi(1, roundi((z1 - z0) / 5.0))
 	for i in bulbs:
 		var z := z0 + (z1 - z0) * (i + 0.5) / bulbs
 		for k in 2:
-			var w := Build.box(self, Vector3(0.22, 0.015, 0.015), Vector3(0, DECK_HEIGHT - 0.1, z), DARK, false)
+			var w := Build.box(_at, Vector3(0.22, 0.015, 0.015), Vector3(0, DECK_HEIGHT - 0.1, z), DARK, false)
 			w.rotation.y = k * PI / 2.0
-		Build.wheel(self, 0.11, Vector3(0, DECK_HEIGHT - 0.07, z), DARK, Vector3.DOWN)
+		Build.wheel(_at, 0.11, Vector3(0, DECK_HEIGHT - 0.07, z), DARK, Vector3.DOWN)
 	# An extinguisher on the after bulkhead by the door, port side.
 	if c != compartments[-1]:
 		var ez := z1 - 0.2
-		Build.cyl(self, 0.09, 0.5, Vector3(-1.3, 0.55, ez), RED)
-		Build.sphere(self, 0.09, Vector3(-1.3, 0.8, ez), RED)
-		Build.cyl(self, 0.03, 0.08, Vector3(-1.3, 0.92, ez), DARK)
-		Build.box(self, Vector3(0.14, 0.03, 0.03), Vector3(-1.25, 0.95, ez), DARK, false)
-		Build.box(self, Vector3(0.24, 0.04, 0.08), Vector3(-1.3, 0.62, ez + 0.06), DARK, false) # strap
+		Build.cyl(_at, 0.09, 0.5, Vector3(-1.3, 0.55, ez), RED)
+		Build.sphere(_at, 0.09, Vector3(-1.3, 0.8, ez), RED)
+		Build.cyl(_at, 0.03, 0.08, Vector3(-1.3, 0.92, ez), DARK)
+		Build.box(_at, Vector3(0.14, 0.03, 0.03), Vector3(-1.25, 0.95, ez), DARK, false)
+		Build.box(_at, Vector3(0.24, 0.04, 0.08), Vector3(-1.3, 0.62, ez + 0.06), DARK, false) # strap
 	match c.type:
 		"crew":
 			# Coffee urn and mugs on the mess table, a menu board.
 			var tz: float = z1 - 1.2
-			Build.cyl(self, 0.13, 0.4, Vector3(1.5, 0.99, tz - 0.6), Color("#8A8F86"))
-			Build.cyl(self, 0.14, 0.03, Vector3(1.5, 1.2, tz - 0.6), DARK)
-			Build.box(self, Vector3(0.06, 0.03, 0.03), Vector3(1.4, 0.9, tz - 0.6), DARK, false)
+			Build.cyl(_at, 0.13, 0.4, Vector3(1.5, 0.99, tz - 0.6), Color("#8A8F86"))
+			Build.cyl(_at, 0.14, 0.03, Vector3(1.5, 1.2, tz - 0.6), DARK)
+			Build.box(_at, Vector3(0.06, 0.03, 0.03), Vector3(1.4, 0.9, tz - 0.6), DARK, false)
 			for k in 4:
-				Build.cyl(self, 0.04, 0.09, Vector3(1.1 + (k % 2) * 0.35, 0.83, tz - 0.2 + (k / 2) * 0.55), Color("#E8DFC4"))
-			Build.box(self, Vector3(0.03, 0.5, 0.7), Vector3(HALF_WIDTH - 0.02, 1.55, tz - 1.4), Color("#2F3A30"), false).rotation.y = 0.0
-			var menu := Build.label(self, "TODAY\nSPAM & BEANS\nCOFFEE", Vector3(HALF_WIDTH - 0.04, 1.55, tz - 1.4), 20, Color("#F2F0E8"))
+				Build.cyl(_at, 0.04, 0.09, Vector3(1.1 + (k % 2) * 0.35, 0.83, tz - 0.2 + (k / 2) * 0.55), Color("#E8DFC4"))
+			Build.box(_at, Vector3(0.03, 0.5, 0.7), Vector3(HALF_WIDTH - 0.02, 1.55, tz - 1.4), Color("#2F3A30"), false).rotation.y = 0.0
+			var menu := Build.label(_at, "СЕГОДНЯ\nБОРЩ И КАША\nЧАЙ" if sub_class.key == "typhoon" else "TODAY\nSPAM & BEANS\nCOFFEE", Vector3(HALF_WIDTH - 0.04, 1.55, tz - 1.4), 20, Color("#F2F0E8"))
 			menu.rotation.y = -PI / 2.0
 		"battery":
 			# Officers' books on a shelf over the wardroom table, a brass clock.
 			var bz: float = (z0 + z1) * 0.5
-			Build.box(self, Vector3(0.22, 0.03, 1.2), Vector3(1.85, 1.25, bz + 0.3), WOOD, false)
+			Build.box(_at, Vector3(0.22, 0.03, 1.2), Vector3(1.85, 1.25, bz + 0.3), WOOD, false)
 			var cols := [Color("#7A2E25"), Color("#3E5770"), Color("#2F4A2E"), Color("#6B5A44"), Color("#7A2E25"), Color("#2B2B26")]
 			for k in cols.size():
-				Build.box(self, Vector3(0.16, 0.22 - (k % 3) * 0.03, 0.06), Vector3(1.86, 1.38 - (k % 3) * 0.015, bz - 0.2 + k * 0.09), cols[k], false)
+				Build.box(_at, Vector3(0.16, 0.22 - (k % 3) * 0.03, 0.06), Vector3(1.86, 1.38 - (k % 3) * 0.015, bz - 0.2 + k * 0.09), cols[k], false)
 		"control":
 			# The boat's clock over the depth board.
-			Build.cyl(self, 0.15, 0.05, Vector3(-1.15, 2.2, z0 + 0.13), BRASS, Vector3.BACK)
-			Build.cyl(self, 0.12, 0.02, Vector3(-1.15, 2.2, z0 + 0.16), Color("#F2E8CF"), Vector3.BACK)
-			var hand := Build.box(self, Vector3(0.015, 0.09, 0.01), Vector3(-1.13, 2.24, z0 + 0.18), DARK, false)
+			Build.cyl(_at, 0.15, 0.05, Vector3(-1.15, 2.2, z0 + 0.13), BRASS, Vector3.BACK)
+			Build.cyl(_at, 0.12, 0.02, Vector3(-1.15, 2.2, z0 + 0.16), Color("#F2E8CF"), Vector3.BACK)
+			var hand := Build.box(_at, Vector3(0.015, 0.09, 0.01), Vector3(-1.13, 2.24, z0 + 0.18), DARK, false)
 			hand.rotation.z = -0.5
 
 
@@ -625,7 +666,7 @@ func _near_porthole(side: float, z: float) -> bool:
 func _gauge_board(pos: Vector3, kinds: Array) -> void:
 	var board := Node3D.new()
 	board.position = pos
-	add_child(board)
+	_at.add_child(board)
 	Build.box(board, Vector3(1.1, 0.25 * kinds.size() + 0.1, 0.04), Vector3.ZERO, Color("#151515"), false)
 	for i in kinds.size():
 		var l := Build.label(board, "", Vector3(0, (kinds.size() - 1) * 0.125 - i * 0.25, 0.03), 44, Color("#F2E8CF"))
@@ -639,7 +680,12 @@ func _gauge_board(pos: Vector3, kinds: Array) -> void:
 func station_compartments() -> Dictionary:
 	var out := {}
 	for sid: String in stations:
-		var z: float = stations[sid].position.z
+		var s: Station = stations[sid]
+		var root: Node3D = s.get_parent() if s.get_parent() is Node3D else self
+		if _rooms.has(root):
+			out[sid] = _rooms.find(root) # a Typhoon's rooms overlap in z
+			continue
+		var z: float = s.position.z
 		for i in compartments.size():
 			if z >= compartments[i].z0 and z < compartments[i].z1:
 				out[sid] = i
@@ -650,7 +696,7 @@ func station_compartments() -> Dictionary:
 func shake_loose(strength: float) -> void:
 	for c in compartments:
 		var p := Build.particles(self, Color(0.45, 0.5, 0.42, 0.8), int(10 + 30 * strength), 1.6, Vector3.DOWN, 0.5, 40.0, Vector3(0, -6, 0), 0.018)
-		p.position = Vector3(0, DECK_HEIGHT - 0.1, (c.z0 + c.z1) * 0.5)
+		p.position = Vector3(c.get("x", 0.0), c.get("y", 0.0) + DECK_HEIGHT - 0.1, (c.z0 + c.z1) * 0.5)
 		p.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
 		p.emission_box_extents = Vector3(HALF_WIDTH - 0.3, 0.05, (c.z1 - c.z0) * 0.5 - 0.3)
 		p.one_shot = true
@@ -683,6 +729,7 @@ func _process(delta: float) -> void:
 			r.position.y = r.get_meta("y") + randf_range(-shake, shake)
 	_sounds(sub, delta)
 	_sync_teams(delta)
+	_cull_rooms(delta)
 	var text := {
 		"depth": "DEPTH   %5.1f m" % sub.depth,
 		"ordered": "ORDERED %5.0f m" % sub.ordered_depth,
@@ -700,6 +747,7 @@ func _process(delta: float) -> void:
 ## the hull creaking deeper down (a lot past test depth), the klaxon when the vents open.
 func _sounds(sub: SubState, delta: float) -> void:
 	if _diesel_sound == null:
+		_typhoon_sounds(sub, delta)
 		return
 	var running := sub.diesels_running()
 	_diesel_sound.volume_db = -80.0 if running == 0 else (-4.0 if running == 2 else -9.0)
@@ -725,12 +773,68 @@ func _sounds(sub: SubState, delta: float) -> void:
 				lerpf(-14.0, 0.0, clampf(deep - 0.4, 0.0, 1.0)), randf_range(0.8, 1.1))
 
 
+## A Typhoon's noises: the turbines' soft whirr aft, a klaxon pitched down, deep slow creaks.
+func _typhoon_sounds(sub: SubState, delta: float) -> void:
+	if _motor_sound == null:
+		return
+	var flank := clampf(absf(sub.speed) / (sub.data.submerged_speed_kn * SubState.KNOT), 0.0, 1.0)
+	_motor_sound.volume_db = linear_to_db(lerpf(0.12, 1.0, flank * flank)) - 10.0
+	_motor_sound.pitch_scale = 0.7 + 0.25 * flank
+	if sub.vents_open and not _vents_were:
+		Sfx.play("klaxon", 0.0, 0.8)
+	_vents_were = sub.vents_open
+	_creak_timer -= delta
+	if _creak_timer <= 0.0:
+		_creak_timer = randf_range(8.0, 18.0)
+		var c: Dictionary = compartments[randi() % compartments.size()]
+		Sfx.play_at(self, "creak_%d" % randi_range(1, 3), Vector3(c.get("x", 0.0), c.get("y", 0.0) + 2.0, randf_range(c.z0, c.z1)), -6.0, randf_range(0.6, 0.8))
+
+
+## Keeps a Typhoon's frame rate up (Blaney: "make sure this sub change doesn't lag anything out"):
+## only the room you're in and what you could see through open doors is drawn.
+func _cull_rooms(delta: float) -> void:
+	if _rooms.is_empty():
+		return
+	_cull_timer -= delta
+	if _cull_timer > 0.0:
+		return
+	_cull_timer = 0.15
+	var me: Player = Game.instance.local_player if Game.instance != null else null
+	if me == null:
+		return
+	var seen := {}
+	if not Deck.is_out(me.global_position):
+		var here := Sim.world.hull.comp_at_pos(me.camera.global_position)
+		seen[here] = true
+		var doors_now: Dictionary = Game.instance.crew.get("doors", {})
+		var edge: Array[int] = [here]
+		for hop in VIEW_HOPS:
+			var next: Array[int] = []
+			for link: Array in _room_links:
+				if link[0] != "" and not doors_now.get(link[0], true):
+					continue
+				for k in 2:
+					var a: int = link[1 + k]
+					var b: int = link[2 - k]
+					if edge.has(a) and not seen.has(b):
+						seen[b] = true
+						next.append(b)
+			edge = next
+	for i in _rooms.size():
+		var show := seen.has(i)
+		if _rooms[i].visible != show:
+			_rooms[i].visible = show
+			if show:
+				TyphoonLayout.people_room(self, i)
+
+
 ## Apply host crew state: doors.
 func apply_crew(crew: Dictionary) -> void:
 	for id: String in crew.doors:
 		if doors.has(id):
 			doors[id].set_open(crew.doors[id])
 	_sync_bots(crew.get("bots", {}))
+	TyphoonLayout.sync_band(self, crew)
 
 
 var _bot_views := {} ## station id -> BotView
@@ -786,6 +890,91 @@ func _sailor(look: Dictionary) -> Node3D:
 	Crewman.build_face(face, look)
 	Player._make_hat(face, look.get("hat", "watch"))
 	return v
+
+
+## The way a damage party walks between two points: along the middle of each room and through
+## its doors and hatches, fewest rooms first. Each leg is {p, door}; door is the id of a door to
+## go through there, or "". Goes through shut doors too: they open them as they get there.
+func route(from: Vector3, to: Vector3) -> Array[Dictionary]:
+	var hull := Sim.world.hull
+	var out: Array[Dictionary] = []
+	var here := hull.comp_at_pos(from)
+	var last := hull.comp_at_pos(to)
+	var up_tower := has_conning_tower and from.y > CT_FLOOR - 0.5
+	if up_tower:
+		_climb(out, true)
+	else:
+		out.append({"p": _on_centre(here, from.z), "door": ""})
+	var came_from := {here: -1}
+	var via := {}
+	var edge: Array[int] = [here]
+	while not edge.is_empty() and not came_from.has(last):
+		var next: Array[int] = []
+		for a: int in edge:
+			for link: Array in _walk_links():
+				for k in 2:
+					if link[1 + k] != a or came_from.has(link[2 - k]):
+						continue
+					var b: int = link[2 - k]
+					came_from[b] = a
+					via[b] = link[0]
+					next.append(b)
+		edge = next
+	var rooms: Array[int] = []
+	var at := last
+	while at != here and came_from.has(at):
+		rooms.push_front(at)
+		at = came_from[at]
+	var was := here
+	for r: int in rooms:
+		var id: String = via[r]
+		if id == "":
+			_climb(out, compartments[r].get("y", 0.0) < compartments[was].get("y", 0.0))
+		else:
+			var dz := (doors[id] as Node3D).global_position.z
+			out.append({"p": _on_centre(was, dz), "door": ""})
+			out.append({"p": _floor_of((doors[id] as Node3D).global_position, was), "door": id})
+			out.append({"p": _on_centre(r, dz), "door": ""})
+		was = r
+	out.append({"p": _on_centre(last, to.z), "door": ""})
+	if has_conning_tower and to.y > CT_FLOOR - 0.5:
+		_climb(out, false)
+	return out
+
+
+## The floor a damage party stands on to reach a point there.
+func floor_at(p: Vector3) -> float:
+	if has_conning_tower and p.y > CT_FLOOR - 0.5:
+		return CT_FLOOR + 0.05
+	return float(compartments[Sim.world.hull.comp_at_pos(p)].get("y", 0.0)) + 0.05
+
+
+func _walk_links() -> Array:
+	if not _room_links.is_empty():
+		return _room_links
+	var out: Array = []
+	for id: String in door_links:
+		out.append([id, door_links[id][0], door_links[id][1]])
+	return out
+
+
+func _on_centre(room: int, z: float) -> Vector3:
+	var c := compartments[room]
+	var z_in: float = clampf(z, float(c.z0) + 0.8, float(c.z1) - 0.8)
+	return Vector3(c.get("x", 0.0), float(c.get("y", 0.0)) + 0.05, z_in)
+
+
+func _floor_of(p: Vector3, room: int) -> Vector3:
+	return Vector3(p.x, float(compartments[room].get("y", 0.0)) + 0.05, p.z)
+
+
+## Up or down the ladder between decks.
+func _climb(out: Array[Dictionary], down: bool) -> void:
+	var path: Array = main_ladder.bottom_path.duplicate()
+	if down:
+		path.reverse()
+	for q: Vector3 in path:
+		out.append({"p": q, "door": ""})
 
 
 func next_in_cluster(current: Station) -> Station:

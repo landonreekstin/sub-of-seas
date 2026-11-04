@@ -4,9 +4,10 @@ extends Resource
 ## crew has to do. Positions in metres (x east, y north) from the boat's starting point.
 
 ## The patrols the host can pick, in menu order (the training patrol is separate).
-const KEYS: Array[String] = ["convoy", "tankers", "hunted", "carrier", "task_force", "sub_duel", "sandbox"]
+const KEYS: Array[String] = ["convoy", "tankers", "hunted", "carrier", "task_force", "sub_duel", "sandbox", "cw_convoy", "cw_barrier", "cw_battlegroup", "cw_duel", "cw_sandbox"]
 
 @export var key := ""
+@export var era := "ww2" ## ww2 | cold_war: the boats it's offered to (SubClassData.era)
 @export var title := ""
 @export_multiline var briefing := ""
 @export var difficulty := 1 ## 1..5, shown in the menu

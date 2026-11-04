@@ -70,6 +70,8 @@ Each milestone ends playable and committed. Tick items as they land.
 ## M8 — Blaney's list (2026-10-29)
 
 Added by Blaney after playing. In his words where it matters.
+
+*Ticked here = Blaney has checked it and it waits on lando: as of 2026-11-04 everything ticked below is in PRs #28-#35, ready for lando to merge. VibeNote shows an item done only once every branch on GitHub has it ticked, so these turn done there when lando merges and the old branches are deleted.*
 - [x] **Pause menu**: Esc brings up a menu (resume, settings, leave to main menu). The boat
       keeps going while it is open when others are aboard; it only truly pauses in single player.
 - [x] **Fix the helm wheel**: it turns on the wrong axis. It should spin around its own
@@ -150,10 +152,30 @@ Added by Blaney after playing. In his words where it matters.
       *(Checked 2026-11-03 against main after PRs #16-#26: ten items on Blaney's notes were already in the game and ticked; only the ones here were open. Clashes to watch: Arcade without the TDC vs lando's "keep all existing mechanics until tried with others" (kept for Standard/Realistic, flag as a style conflict in that PR); the training courses assume the TDC; faster torpedoes shorten how long escorts get to spot a track; moving the bunks touches the portholes and the style guide's compartment descriptions.)*
 - [x] lando says to commit and push sub of seas to a branch as wip so his claude can see what's being done. make sure to do that for both of us in the claude.md
       *(CLAUDE.md "Push work in progress as you go": both of us commit part-done work as `wip(...)` on our branch, push it with a draft PR, and every session starts by looking at the other's unmerged branches.)*
-- [ ] the typhoon class sub should be able to make a decent portion of the crew play whater song is being played at command of the skipper
+- [x] the typhoon class sub should be able to make a decent portion of the crew play whater song is being played at command of the skipper
+      *("Band play" on the PA: forty hands to the rec room, eight on the instruments, playing The Foggy Dew or along with the record; "stop the music" sends them back.)*
 - [x] there should be a way to spawn bots to take over your role if you are currently occupying a position, there should be PA system microphone that you can type into that tells the crew the current objective, it will learn more things you can the crew to do as more things are built into the game, but this is a general crew instruction system that should be automatic once a command is done, if the crew is completely confused then it will say so but it should be a relatively intuitive system. things like "go sink the ship to the east" or "dive to the bottom of the ocean" it will know what you mean and have the crew do what you need
       *(Done: J at any station hands it to a bot. A PA microphone in the control room: E, type, Enter. It understands depths, courses, speeds, attacks ("sink the ship to the east"), escaping, battle stations, standing down, fixing damage, reports, sonar, objectives; bots man whatever the order needs, a real player at a post is told it's theirs; confused, the crew say so. New orders: `game/crew_command.gd` + `BotCrew._carry_out`.)*
-- [ ] build a typhoon class sub with exact layout details and the ability to spawn in a whole crew of competent sailors. the PA system in the command bay should be able to command the crew effectively. there will be a first mate list that shows everything wrong with the sub at the moment, the sailors should be able to fix any issue given a period of time. a bot can posess this notebook or a player can posess it, the skipper will have a different notebook and it will say other things that are pressing in terms of commands, maybe also a note to check in with the first mate when he has new news. make sure this sub change doesnt lag anything out
+- [x] build a typhoon class sub with exact layout details and the ability to spawn in a whole crew of competent sailors. the PA system in the command bay should be able to command the crew effectively. there will be a first mate list that shows everything wrong with the sub at the moment, the sailors should be able to fix any issue given a period of time. a bot can posess this notebook or a player can posess it, the skipper will have a different notebook and it will say other things that are pressing in terms of commands, maybe also a note to check in with the first mate when he has new news. make sure this sub change doesnt lag anything out
+      *(Done, PR #35: five hulls, 19 rooms, all hands on the PA, first mate's and skipper's notebooks, damage parties through the doors, the band, Cold War patrols, a choir. Blaney played it: "wow this is great".)*
+- [x] Typhoon: screenshot every room and look at them (doors, cross passages, Russian signs, notebooks, her outside)
+      *(Done: `tools/room_tour.gd`, `tools/typhoon_looks.gd`. Found and fixed a dartboard, bunks and a turbine in front of doors and a flickering floor.)*
+- [x] Typhoon: compare the frame rate with a Gato, with all hands aboard (Blaney: must not lag)
+      *(Both 60 fps in every room on Blaney's RTX 3060 at 1280x720. Worst room to draw: Typhoon 3.9 ms CPU / 3.6 ms GPU, Gato 1.6 / 2.6, out of 16.7 ms a frame. Script time per frame the same on both (16-19 ms as Godot reports it). `tools/room_tour.gd`.)*
+- [x] Typhoon: Blaney plays it, and judges the choir music and sounds by ear (Blaney: Hunt for Red October mood; the film's theme is copyrighted, so it's an original piece)
+      *(Played 2026-11-04: "wow this is great". He couldn't hear the choir; made louder, and he signed it off.)*
+- [x] Typhoon: the choir can't be heard: find out why and make it audible (Blaney: "i dont know how to make the choir happen, no music like that that i hear")
+      *(It played, at -13 dB, lost under the boat, and stops while the band plays. Now as loud as the menu music. Blaney still to judge it by ear.)*
+- [x] Typhoon: as real as we can get (Blaney). First her outside: black rubber hull, not the WWII boats' tan wood deck
+      *(Done: hull, fin and deck in black rubber.)*
+- [x] Typhoon: damage parties walk through walls; send them through the doors
+      *(Done on every boat: along the rooms, through doors and up the ladder; they open a shut door and shut it behind them.)*
+- [x] Run the whole of `make test` on `blaney/typhoon` (every training course, after the interior rework; results in `docs/notes.md`)
+      *(Clean, 2026-11-04: 563 unit tests, every training course, the enemy sub, the Typhoon, damage parties on all four boats, every door.)*
+- [x] Typhoon: bring `docs/style.md`, `docs/credits.md`, `CLAUDE.md` and the `Makefile` up to date, then mark PR #35 ready
+      *(Done; PR #35 marked ready 2026-11-04.)*
+- [x] Blaney plays the music change (#32), the PA and bots (#33) and the enemy sub (#34), so Lando can take them out of draft
+      *(Played 2026-11-04 with #28 and #30: "the game works". #28-#35 all marked ready; #29 not yet tried by two players together.)*
 - [x] generate an option to start a battle with another enemy sub somewhere near you, your topographical map cannot show the sub, only the map around your sub given the equipment you have, so if sonar is the only way you can see then the map would look different than being to rely on eyesight above water
       *(Done: "Enemy Sub" on the patrol menu, or say "enemy sub" on the PA on any patrol. She hunts by ear and fires pairs of torpedoes; sonar is how you find her, and a torpedo has to run near her depth. In the fight the chart and sand table only show what the boat has seen: clear by eye, dotted grey-blue by sonar, the rest unknown.)*
 - [x] there should not be background music in the game, the only music should be from the instruments

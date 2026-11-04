@@ -1,0 +1,33 @@
+[gd_resource type="Resource" script_class="ShipClassData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/ship_class_data.gd" id="1_s"]
+
+[resource]
+script = ExtResource("1_s")
+key = "ticonderoga"
+display_name = "Ticonderoga-class cruiser"
+kind = "ticonderoga"
+length = 173.0
+beam = 17.0
+max_speed_kn = 32.0
+cruise_speed_kn = 18.0
+max_turn_rate = 4.0
+hp = 3.0
+tonnage = 9600
+zigzag_angle = 25.0
+sink_time = 40.0
+asw = true
+lookout_range = 6000.0
+hydrophone_range = 6000.0
+sonar_range = 5000.0
+ping_interval = 4.0
+depth_charges = 40
+dc_pattern = 6
+depth_error = 8.0
+hunt_speed_kn = 28.0
+role = "capital"
+gun_range = 0.0
+gun_interval = 6.0
+gun_accuracy = 0.3
+gun_blast = 12.0
+search_speed_kn = 16.0

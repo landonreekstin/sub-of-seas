@@ -22,7 +22,7 @@ func _ready() -> void:
 		mesh.size = Vector3(SubInterior.HALF_WIDTH * 2.0, 0.02, c.z1 - c.z0 - 0.2)
 		mi.mesh = mesh
 		mi.material_override = m
-		mi.position = Vector3(0, 0, (c.z0 + c.z1) * 0.5)
+		mi.position = Vector3(c.get("x", 0.0), 0, (c.z0 + c.z1) * 0.5)
 		mi.visible = false
 		add_child(mi)
 		_water.append(mi)
@@ -36,7 +36,7 @@ func _ready() -> void:
 		smat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		smat.cull_mode = BaseMaterial3D.CULL_DISABLED
 		sm.material_override = smat
-		sm.position = Vector3(0, SubInterior.DECK_HEIGHT - 0.5, (c.z0 + c.z1) * 0.5)
+		sm.position = Vector3(c.get("x", 0.0), SubInterior.DECK_HEIGHT - 0.5, (c.z0 + c.z1) * 0.5)
 		sm.visible = false
 		add_child(sm)
 		_smoke.append(sm)
@@ -47,10 +47,11 @@ func _process(delta: float) -> void:
 		return
 	var hull := Sim.world.hull
 	for i in mini(_water.size(), hull.comps.size()):
-		var target: float = hull.comps[i].water * HullState.DECK_HEIGHT
+		var floor_y: float = hull.comps[i].get("y", 0.0)
+		var target: float = floor_y + hull.comps[i].water * HullState.DECK_HEIGHT
 		var w := _water[i]
 		w.position.y = lerpf(w.position.y, target, clampf(delta * 3.0, 0.0, 1.0))
-		w.visible = w.position.y > 0.01
+		w.visible = w.position.y > floor_y + 0.01
 	var air := Sim.world.air
 	for i in mini(_smoke.size(), air.smoke.size()):
 		var s: float = air.smoke[i]
@@ -58,7 +59,7 @@ func _process(delta: float) -> void:
 		sm.visible = s > 0.03
 		# Thickens downward from the deckhead as it builds.
 		sm.scale.y = lerpf(0.4, 2.4, s)
-		sm.position.y = SubInterior.DECK_HEIGHT - 0.5 * sm.scale.y
+		sm.position.y = float(hull.comps[i].get("y", 0.0)) + SubInterior.DECK_HEIGHT - 0.5 * sm.scale.y
 		(sm.material_override as StandardMaterial3D).albedo_color.a = clampf(s * 0.55, 0.0, 0.5)
 	var seen := {}
 	for l: Dictionary in hull.leaks:
@@ -91,8 +92,9 @@ func _spot(kind: String, id: String, p: Vector3, amount: float, seen: Dictionary
 
 
 ## Depth of the water (metres above the deck) at interior z, for slowing players.
-func water_height_at(z: float) -> float:
+func water_height_at(p: Vector3) -> float:
 	if Sim.world == null or Sim.world.hull.comps.is_empty():
 		return 0.0
 	var hull := Sim.world.hull
-	return hull.comps[hull.comp_at(z)].water * HullState.DECK_HEIGHT
+	var c: Dictionary = hull.comps[hull.comp_at_pos(p)]
+	return float(c.get("y", 0.0)) + float(c.water) * HullState.DECK_HEIGHT

@@ -440,6 +440,7 @@ func set_diesel(i: int, on: bool) -> void:
 
 
 func _power_checks() -> void:
+	sub.reactor_down = sub.data.nuclear and hull.is_broken("engine")
 	var on := sub.diesels.any(func(d: float) -> bool: return d > 0.0)
 	if on and hull.is_broken("engine"):
 		sub.diesels.fill(0.0)
@@ -625,6 +626,7 @@ func apply_snapshot(s: Dictionary) -> void:
 		t.id = ts.id
 		t.pos = ts.p
 		t.heading = ts.h
+		t.enemy = ts.get("e", false)
 		torps.append(t)
 	torpedoes = torps
 	var dcs: Array[DepthCharge] = []

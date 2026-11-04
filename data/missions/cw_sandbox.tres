@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="MissionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/mission_data.gd" id="1_m"]
+
+[resource]
+script = ExtResource("1_m")
+key = "cw_sandbox"
+era = "cold_war"
+title = "Open Patrol, 1985"
+briefing = "The open Atlantic: convoys, frigates and battle groups come and go. Hunt as you like, and say enemy sub on the PA for a fight."
+difficulty = 2
+start_depth = 60.0
+start_speed = 2
+battery = 1.0
+groups = Array[Dictionary]([])
+objectives = Array[Dictionary]([])
+sea_state = 2
+layer_depth = 90.0
+sandbox = true

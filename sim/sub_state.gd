@@ -43,6 +43,7 @@ var turn_rate := 0.0 ## deg/s, for interior roll
 var pitch := 0.0 ## degrees, nose up positive, for interior tilt
 var heaviness := 0.0 ## fraction of the hull flooded; set by the world from the hull
 var battery := 1.0 ## charge 0..1
+var reactor_down := false ## nuclear: the reactor controls are broken (host sets it; replicated)
 var diesels: Array[float] = [0.0, 0.0] ## per engine: 0 stopped, 0..1 cranking, 1 running
 var charge_rate := 0.0 ## battery change per second last step, for gauges (+ charging)
 var ballast := 0.0 ## main ballast tanks: 0 blown dry (rides high) .. 1 flooded (can dive)
@@ -67,6 +68,9 @@ func diesels_running() -> int:
 
 ## Diesels drive her on the surface; otherwise the motors run off the battery.
 func max_speed() -> float:
+	if data.nuclear:
+		# A tripped reactor leaves only the emergency motors.
+		return (data.surface_speed_kn if is_surfaced() else data.submerged_speed_kn) * KNOT * (0.2 if reactor_down else 1.0)
 	if is_surfaced() and diesels_running() > 0:
 		return data.surface_speed_kn * DIESEL_SPEED[diesels_running()] * KNOT
 	if battery <= 0.0:
@@ -78,6 +82,8 @@ func max_speed() -> float:
 ## endurance; power rises steeply with speed (^1.5, gentler than real life so a sprint
 ## is costly but possible): flank empties it ~7x faster, in ~4 min on a Gato.
 func battery_drain(spd: float) -> float:
+	if data.nuclear:
+		return 0.0
 	var slow: float = data.submerged_speed_kn * KNOT * TELEGRAPH[1]
 	var load := HOTEL_LOAD + (1.0 - HOTEL_LOAD) * pow(spd / slow, 1.5)
 	return load / (data.battery_endurance_min * 60.0)
@@ -182,7 +188,7 @@ func to_snapshot() -> Dictionary:
 	return {
 		"p": pos, "h": heading, "s": speed, "d": depth, "od": ordered_depth,
 		"tg": telegraph, "r": rudder, "up": periscope_raised, "pi": pitch, "tr": turn_rate, "hv": heaviness,
-		"bt": battery, "dz": diesels, "cr": charge_rate,
+		"bt": battery, "rd": reactor_down, "dz": diesels, "cr": charge_rate,
 		"bl": ballast, "vo": vents_open, "bw": blowing, "air": hp_air,
 	}
 
@@ -200,6 +206,7 @@ func apply_snapshot(s: Dictionary) -> void:
 	turn_rate = s.tr
 	heaviness = s.hv
 	battery = s.bt
+	reactor_down = s.get("rd", false)
 	diesels.assign(s.dz)
 	charge_rate = s.cr
 	ballast = s.bl

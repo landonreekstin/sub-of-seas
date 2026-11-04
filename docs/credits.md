@@ -9,10 +9,12 @@ table below.
 
 | What | Source | Author | Licence |
 |---|---|---|---|
-| Accordion, concertina (tango accordion), fiddle, tin whistle (recorder), overdriven guitar, bass guitar, keytar (warm pad, square lead), tuba, flute, strings, tremolo strings, cello, double bass | FluidR3_GM, per-note renders from [midi-js-soundfonts](https://github.com/gleitz/midi-js-soundfonts) | Frank Wen (the soundfont), Benjamin Gleitzman (the renders) | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/us/): this credit is required |
+| Accordion, concertina (tango accordion), fiddle, tin whistle (recorder), overdriven guitar, bass guitar, keytar (warm pad, square lead), tuba, flute, strings, tremolo strings, cello, double bass, men's choir (choir aahs; the Typhoon's music) | FluidR3_GM, per-note renders from [midi-js-soundfonts](https://github.com/gleitz/midi-js-soundfonts) | Frank Wen (the soundfont), Benjamin Gleitzman (the renders) | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/us/): this credit is required |
 | Bodhrán (frame drum), snare, bass drum, hi-hat, cymbal, claps, timpani | [Versilian Community Sample Library](https://github.com/sgossner/VCSL) | Versilian Studios, Sam Gossner | CC0 |
 
-The tunes are our own, apart from The Foggy Dew, a traditional Irish air in our own arrangement.
+The tunes are our own, apart from The Foggy Dew, a traditional Irish air in our own arrangement. The
+Typhoon's choir is in the mood of The Hunt for Red October (Blaney's choice) but is an original piece,
+not that film's theme, which is under copyright.
 
 ## Jukebox records
 
