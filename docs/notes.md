@@ -4,6 +4,15 @@ Where things stand, in plain English. The newest entry goes at the top. Update i
 Other docs: `roadmap.md` is the to-do list, `style.md` how it looks and feels, `design.md` the
 game's design, `credits.md` where every sound came from.
 
+## 2026-11-04 (evening): the Typhoon is finished, waiting on Blaney's last play
+
+Blaney: focus on a few tasks and finish each, so Lando isn't left waiting on half-done work.
+- Choir: it played, but at -13 dB it was lost under the boat. Now as loud as the menu music. It still stops while the band plays.
+- Hull, fin and deck are black rubber (Blaney: "as real as we can get").
+- Frame rate on his RTX 3060: 60 fps in every room on both boats. Worst room to draw: Typhoon 3.9 ms, Gato 2.6 ms.
+- `make test`: all clean.
+- **Next:** Blaney plays once more and listens for the choir. Then `gh pr ready 35`. After that, his play of #32, #33 and #34, so they can come out of draft too. Nothing new before those.
+
 ## 2026-11-04 (later): Blaney has played the Typhoon, paused here at his word
 
 **Blaney's verdict:** "wow this is great". The floor flicker is gone. He asked to save here and pick it up later; next session, start with "Next" below.

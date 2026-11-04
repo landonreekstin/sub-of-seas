@@ -157,8 +157,8 @@ Added by Blaney after playing. In his words where it matters.
       *(Built on PR #35 (draft), checked by script only, nobody has looked at it yet. What's left is listed just below.)*
 - [x] Typhoon: screenshot every room and look at them (doors, cross passages, Russian signs, notebooks, her outside)
       *(Done: `tools/room_tour.gd`, `tools/typhoon_looks.gd`. Found and fixed a dartboard, bunks and a turbine in front of doors and a flickering floor.)*
-- [ ] Typhoon: compare the frame rate with a Gato, with all hands aboard (Blaney: must not lag)
-      *(Typhoon measured: 60 fps in all 19 rooms on his RTX 3060, and it felt fine in play. The Gato isn't measured yet.)*
+- [x] Typhoon: compare the frame rate with a Gato, with all hands aboard (Blaney: must not lag)
+      *(Both 60 fps in every room on Blaney's RTX 3060 at 1280x720. Worst room to draw: Typhoon 3.9 ms CPU / 3.6 ms GPU, Gato 1.6 / 2.6, out of 16.7 ms a frame. Script time per frame the same on both (16-19 ms as Godot reports it). `tools/room_tour.gd`.)*
 - [ ] Typhoon: Blaney plays it, and judges the choir music and sounds by ear (Blaney: Hunt for Red October mood; the film's theme is copyrighted, so it's an original piece)
       *(Played 2026-11-04: "wow this is great". He couldn't hear the choir, so that part is still open.)*
 - [x] Typhoon: the choir can't be heard: find out why and make it audible (Blaney: "i dont know how to make the choir happen, no music like that that i hear")
@@ -167,7 +167,8 @@ Added by Blaney after playing. In his words where it matters.
       *(Done: hull, fin and deck in black rubber.)*
 - [x] Typhoon: damage parties walk through walls; send them through the doors
       *(Done on every boat: along the rooms, through doors and up the ladder; they open a shut door and shut it behind them.)*
-- [ ] Run the whole of `make test` on `blaney/typhoon` (every training course, after the interior rework; results in `docs/notes.md`)
+- [x] Run the whole of `make test` on `blaney/typhoon` (every training course, after the interior rework; results in `docs/notes.md`)
+      *(Clean, 2026-11-04: 563 unit tests, every training course, the enemy sub, the Typhoon, damage parties on all four boats, every door.)*
 - [ ] Typhoon: bring `docs/style.md`, `docs/credits.md`, `CLAUDE.md` and the `Makefile` up to date, then mark PR #35 ready
       *(Docs and Makefile done. PR stays a draft until the two Typhoon items above are done and `make test` is clean.)*
 - [ ] Blaney plays the music change (#32), the PA and bots (#33) and the enemy sub (#34), so Lando can take them out of draft
