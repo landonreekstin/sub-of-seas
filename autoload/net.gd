@@ -74,7 +74,7 @@ func _ready() -> void:
 				if i + 1 < args.size():
 					mission = args[i + 1]
 					cli_start = Mode.HOST
-			"--training": # host the training patrol: --training [helm|scope|torpedo|sonar|damage|engine|full]
+			"--training": # host the training patrol: --training [helm|scope|torpedo|sonar|damage|engine|full|attack|control|party]
 				mission = "training"
 				cli_start = Mode.HOST
 				if i + 1 < args.size() and not args[i + 1].begins_with("--"):

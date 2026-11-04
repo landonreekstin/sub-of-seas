@@ -85,6 +85,8 @@ func _act(i: int) -> void:
 		_hold("wrench")
 		g.rq_work("wrench", needs, 0.25)
 		return
+	if needs != "" and g.station_occupant(needs) != 1:
+		g.rq_station_enter(needs) # the crew courses hop between jobs; one player does them all here
 	match _game.tutorial.steps[i].id:
 		"helm": if _once("a"): g.rq_station_enter("helm")
 		"ahead": if _once("a"): g.rq_order("helm", "telegraph", 2)

@@ -4,7 +4,7 @@
 #   ./play                         the menu
 #   ./play host [mission] [sub]    host a patrol (missions: convoy tankers hunted carrier task_force sandbox;
 #                                  subs: s_boat gato narwhal)
-#   ./play training [course]       host the training patrol (courses: helm scope torpedo sonar damage engine full)
+#   ./play training [course]       host the training patrol (courses: helm scope torpedo sonar damage engine full; with friends: attack control party)
 #   ./play server [mission] [sub]  a dedicated server: no player of its own, headless; waits for a
 #                                  crew, starts a fresh patrol after each one (e.g. ./play server sandbox)
 #   ./play join [address]          join a host (default 192.168.1.76, lando's gaming-pc over the VPN)

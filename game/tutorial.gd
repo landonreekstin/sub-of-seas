@@ -25,6 +25,7 @@ var course := "full"
 const COURSES := {
 	"helm": "Helm & dive", "scope": "Periscope & TDC", "torpedo": "Torpedoes", "sonar": "Sonar",
 	"damage": "Damage control", "engine": "Engine & air", "full": "Whole boat (long)",
+	"attack": "Attack team", "control": "Control room", "party": "Damage party",
 }
 const BLURBS := {
 	"helm": "Steer, ring up speed, and take her down and back up on the planes.",
@@ -34,6 +35,23 @@ const BLURBS := {
 	"damage": "After a pattern of depth charges: weld a leak, put out a fire, fix gear, pump, shut doors.",
 	"engine": "Run the diesels to charge the battery, stop them to dive, and keep the air clean.",
 	"full": "Every station in one patrol, about 28 steps. Best done together as a crew.",
+	"attack": "Periscope and torpedoes: one finds and aims at the target, the other floods and fires on the call.",
+	"control": "Helm, planes and sonar: sonar finds the escort, the helm and planes get the boat away from it.",
+	"party": "Damage control, engine and air: run the diesels, dive, then patch up the boat after a pattern.",
+}
+## The crew courses (Blaney: taken together, real crewmates giving the calls): which jobs each has.
+const CREW_JOBS := {
+	"attack": ["scope", "torpedo"], "control": ["helm", "dive", "sonar"], "party": ["damage", "engine"],
+}
+## A job belongs to whoever mans one of its stations; one with none goes to a free crewman.
+const JOBS := {
+	"scope": {"name": "periscope", "stations": ["periscope", "tdc"]},
+	"torpedo": {"name": "torpedoes", "stations": ["tube_1"]},
+	"helm": {"name": "helm", "stations": ["helm"]},
+	"dive": {"name": "planes", "stations": ["dive", "ballast"]},
+	"sonar": {"name": "sonar", "stations": ["sonar"]},
+	"damage": {"name": "damage control", "stations": []},
+	"engine": {"name": "engine & air", "stations": ["engine", "air"]},
 }
 const FULL_LENGTH := 29 ## the first 29 steps in the library are the whole-boat course
 
@@ -186,6 +204,8 @@ func _build_steps() -> void:
 			"marker": Callable(), "enter": _drop_pattern, "done": func() -> bool: return _pattern_over},
 		{"id": "diesel_stop", "needs": "engine", "text": "Stop every running diesel: 2. Diesels running when she dives flood the engine room.",
 			"marker": _station("engine"), "done": func() -> bool: return sub.call().diesels.all(func(d: float) -> bool: return d <= 0.0)},
+		{"id": "under", "ok": ["any"], "text": "Diving: the vents are open and she's going down to 30 m. Hold on.",
+			"marker": Callable(), "enter": _dive_to_pattern, "done": func() -> bool: return sub.call().depth >= 25.0},
 	]
 	var by_id := {}
 	for st in list:
@@ -198,7 +218,9 @@ func _build_steps() -> void:
 		var arcade := []
 		for entry: Array in plan:
 			match entry[0]:
-				"mark": arcade.append(["aim", "Captain", "Where do I point her?"] if entry.size() >= 3 and entry[1] != "" else ["aim"])
+				"mark":
+					var aim := ["aim", "Captain", "Where do I point her?"] if entry.size() >= 3 and entry[1] != "" else ["aim", "", ""]
+					arcade.append(aim + ([entry[-1]] if entry[-1] is Dictionary else []))
 				"tdc", "send": pass
 				_: arcade.append(entry)
 		plan = arcade
@@ -211,8 +233,10 @@ func _build_steps() -> void:
 		if entry.size() >= 3:
 			st.who = entry[1]
 			st.say = entry[2]
-		if entry.size() >= 4:
+		if entry.size() >= 4 and entry[3] is Callable:
 			st.enter = entry[3]
+		if entry[-1] is Dictionary:
+			st.merge(entry[-1], true) # job: who works this step; from: whose job gives the call
 		steps.append(st)
 
 
@@ -256,6 +280,40 @@ func _plan(key: String) -> Array:
 			["diesel", "Captain", "Surfaced. Start a diesel and charge the battery."],
 			["diesel_stop", "Bridge", "Aircraft! Clear the bridge, we're diving. Stop the diesels!"],
 			["air", "Chief of the boat", "We're under. CO2's climbing back here: load a fresh canister in the scrubber.", _open_vents]]
+		"attack": return [
+			["scope", "Captain", "Man the periscope. Lookout reports a freighter dead ahead.", {"job": "scope"}],
+			["tube", "Captain", "Torpedo room, man tube one.", {"job": "torpedo"}],
+			["raise", "Captain", "Up periscope.", {"job": "scope"}],
+			["range", "", "", {"job": "scope"}], ["mark", "", "", {"job": "scope"}],
+			["tdc", "Captain", "Good marks. Take the TDC.", {"job": "scope"}],
+			["send", "Captain", "Send the solution to the torpedo room.", {"job": "scope"}],
+			["flood", "Captain", "Flood tube one and open the outer door.", {"job": "torpedo", "from": "scope"}],
+			["fire", "Captain", "Target dead ahead, gyro zero. Fire one!", {"job": "torpedo", "from": "scope"}],
+			["lower", "Captain", "Down periscope.", {"job": "scope"}],
+			["reload", "Captain", "Good hit! Reload tube one.", {"job": "torpedo", "from": "scope"}]]
+		"control": return [
+			["helm", "Captain", "Helmsman, man the helm.", {"job": "helm"}],
+			["dive", "Chief of the boat", "Vents open, she's flooding down. Diving officer, take the planes!", _open_vents, {"job": "dive"}],
+			["sonar", "Captain", "Sonar, man your station. Lookout heard screws to the north.", {"job": "sonar"}],
+			["ahead", "Captain", "All ahead two-thirds.", {"job": "helm"}],
+			["depth", "Captain", "Make your depth periscope depth.", {"job": "dive"}],
+			["classify", "Captain", "Sonar, what is he? Warship or merchant?", {"job": "sonar"}],
+			["plot", "Captain", "Put his bearing on the chart.", {"job": "sonar"}],
+			["come_090", "Captain", "Warship, closing! Right full rudder, come to zero-niner-zero.", {"job": "helm", "from": "sonar"}],
+			["steady", "Captain", "Rudder amidships. Steady as she goes.", {"job": "helm"}],
+			["deep_dive", "Captain", "He's still closing! Take her down to 45 metres.", {"job": "dive", "from": "sonar"}],
+			["back_up", "Captain", "He's lost us. Bring her back to periscope depth.", {"job": "dive", "from": "sonar"}]]
+		"party": return [
+			["diesel", "Captain", "Surfaced. Start a diesel and charge the battery.", {"job": "engine"}],
+			["diesel_stop", "Bridge", "Aircraft! Clear the bridge, we're diving. Stop the diesels!", {"job": "engine"}],
+			["under", "Bridge", "Dive, dive!"],
+			["brace", "Captain", "Depth charges! Brace for it!"],
+			["weld", "Control room", "Leak in the control room!", {"job": "damage"}],
+			["extinguish", "Control room", "Fire! Fire in the control room!", {"job": "damage"}],
+			["air", "Chief of the boat", "That smoke's fouled the air. Load a fresh canister in the scrubber.", {"job": "engine", "from": "damage"}],
+			["wrench", "Helmsman", "The helm's knocked out, she won't answer!", {"job": "engine"}],
+			["pump", "Chief of the boat", "We're taking water. Rig the portable pump!", {"job": "damage", "from": "engine"}],
+			["door", "Captain", "Shut the watertight door forward.", {"job": "damage"}]]
 	return []
 
 
@@ -264,17 +322,23 @@ func _plan(key: String) -> Array:
 func _setup_course() -> void:
 	var sub := Sim.world.sub
 	match course:
-		"scope", "torpedo", "sonar", "damage":
+		"scope", "torpedo", "sonar", "damage", "attack":
 			var depth: float = 30.0 if course == "damage" else sub.data.periscope_depth
 			sub.ballast = 1.0
 			sub.depth = depth
 			sub.ordered_depth = depth
-		"engine":
+		"engine", "party":
 			sub.battery = 0.5
 
 
 func _open_vents() -> void:
 	Sim.world.sub.ballast_order("vent")
+
+
+## Host, the damage party: under to where a pattern can hurt without being deadly.
+func _dive_to_pattern() -> void:
+	_open_vents()
+	Sim.world.sub.ordered_depth = 30.0
 
 
 ## The door in the control room's forward bulkhead.
@@ -361,11 +425,12 @@ func _process(_delta: float) -> void:
 	if i != _called and i < steps.size() and game.crew.result == "":
 		_called = i
 		if steps[i].get("say", "") != "":
-			game.hud.crew_call(steps[i].who, steps[i].say)
+			game.hud.crew_call(_caller(steps[i]), steps[i].say)
 	_update_marker(i)
 	_update_hud(i)
 	if not multiplayer.is_server() or game.crew.result != "" or i >= steps.size():
 		return
+	_update_jobs(i)
 	if i != _entered:
 		_entered = i
 		var enter: Variant = steps[i].get("enter")
@@ -384,7 +449,8 @@ func _script_tick(_i: int) -> void:
 		return
 	var d := _destroyer.pos.distance_to(Sim.world.sub.pos)
 	if not _pattern_dropped:
-		var running_in := step_index() >= step_number("run_in")
+		var run_in := step_number("run_in")
+		var running_in := run_in >= 0 and step_index() >= run_in
 		if running_in and d < 80.0:
 			_drop_pattern() # right overhead
 		elif d > 300.0 or running_in:
@@ -397,6 +463,75 @@ func _script_tick(_i: int) -> void:
 		_ensure_damage()
 		_destroyer.course = fposmod(_destroyer.heading + 20.0, 360.0) # runs on and loses us
 		_destroyer.ordered_speed = 18.0 * SubState.KNOT
+
+
+# --- Crew courses ----------------------------------------------------------
+
+## The player holding a job, 0 if nobody does yet.
+func job_holder(job: String) -> int:
+	return game.crew.tutorial.get("jobs", {}).get(job, 0)
+
+
+## Host: a job goes to whoever is at one of its stations, staying with its holder while nobody
+## else is. A job without stations goes, when its first step comes up, to a crewman with no job.
+func _update_jobs(i: int) -> void:
+	if not CREW_JOBS.has(course):
+		return
+	var jobs: Dictionary = game.crew.tutorial.get("jobs", {})
+	var before := jobs.duplicate()
+	for job: String in CREW_JOBS[course]:
+		var holder: int = jobs.get(job, 0)
+		if not game.crew.names.has(holder):
+			holder = 0
+		var stations: Array = JOBS[job].stations
+		if not stations.any(func(s: String) -> bool: return game.station_occupant(s) == holder):
+			for s: String in stations:
+				if game.station_occupant(s) > 0:
+					holder = game.station_occupant(s)
+					break
+		if stations.is_empty() and holder == 0 and steps[i].get("job", "") == job:
+			holder = _free_crewman(jobs)
+		if holder != 0:
+			jobs[job] = holder
+		else:
+			jobs.erase(job)
+	if jobs != before:
+		game.crew.tutorial.jobs = jobs
+		game.push_crew()
+
+
+func _free_crewman(jobs: Dictionary) -> int:
+	var ids: Array = game.crew.names.keys()
+	ids.sort()
+	for id: int in ids:
+		if not jobs.values().has(id):
+			return id
+	return ids[0] if not ids.is_empty() else 0
+
+
+## Who a step's call comes from: the crewmate holding that job when there is one, and the
+## scripted voice otherwise.
+func _caller(step: Dictionary) -> String:
+	var from: String = step.get("from", "")
+	var holder := job_holder(from) if from != "" else 0
+	if holder != 0 and holder != job_holder(step.get("job", "")):
+		return "%s (%s)" % [game.crew_name(holder), JOBS[from].name]
+	return step.who
+
+
+## This step is someone else's: they hold its job, and this player doesn't.
+func _waiting_on(step: Dictionary) -> int:
+	var holder := job_holder(step.get("job", ""))
+	return holder if holder != 0 and holder != multiplayer.get_unique_id() else 0
+
+
+## What each job's holder is called, for the crew course's panel.
+func _roster() -> String:
+	var parts: PackedStringArray = []
+	for job: String in CREW_JOBS[course]:
+		var holder := job_holder(job)
+		parts.append("%s: %s" % [JOBS[job].name.capitalize(), game.crew_name(holder) if holder != 0 else "open"])
+	return "  ·  ".join(parts)
 
 
 func _advance(i: int) -> void:
@@ -414,7 +549,7 @@ func _advance(i: int) -> void:
 
 func _update_marker(i: int) -> void:
 	_marker.visible = false
-	if i >= steps.size() or game.crew.result != "":
+	if i >= steps.size() or game.crew.result != "" or _waiting_on(steps[i]) != 0:
 		return
 	var m: Variant = steps[i].get("marker")
 	if not (m is Callable) or not (m as Callable).is_valid():
@@ -445,15 +580,28 @@ func _update_hud(i: int) -> void:
 		var h: String = hint.call()
 		if h != "":
 			text += "\n\n" + h
+	if CREW_JOBS.has(course):
+		text = _crew_text(steps[i], text)
 	var title := "TRAINING" if course == "full" else "TRAINING: %s" % COURSES[course].to_upper()
 	game.hud.set_objective("%s  %d / %d" % [title, i + 1, steps.size()], text)
+
+
+## A crew course's panel: whose step this is, then who holds which job.
+func _crew_text(step: Dictionary, text: String) -> String:
+	var job: String = step.get("job", "")
+	var waiting := _waiting_on(step)
+	if waiting != 0:
+		text = "Waiting on %s (%s).\n\nTheir orders: %s" % [game.crew_name(waiting), JOBS[job].name, step.text]
+	elif job != "" and job_holder(job) == 0:
+		text = "Nobody has the %s yet. A crewmate can take it, or do it yourself.\n\n%s" % [JOBS[job].name, text]
+	return "%s\n\n%s" % [text, _roster()]
 
 
 ## "Press Q" when this player is at a station the step doesn't happen at. A step's station is
 ## its "at" (go and man it) or its "needs" (work it); "ok" lists others it's fine to stay at.
 func _leave_hint(step: Dictionary) -> String:
 	var me := game.local_player
-	if me == null or me.station == null:
+	if me == null or me.station == null or _waiting_on(step) != 0:
 		return ""
 	var here := me.station.station_id
 	var ok: Array = step.get("ok", [])

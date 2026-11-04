@@ -171,25 +171,41 @@ func _show_courses() -> void:
 	center.add_child(p)
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 6)
-	box.custom_minimum_size.x = 520
 	p.add_child(box)
 	box.add_child(UiKit.label("TRAINING", 32, UiKit.BRASS))
-	box.add_child(UiKit.label("Pick the job you want to learn. The rest of the crew is played for you.", 15, UiKit.DIM))
-	for key: String in Tutorial.COURSES:
+	var columns := HBoxContainer.new()
+	columns.add_theme_constant_override("separation", 24)
+	box.add_child(columns)
+	var solo: Array = Tutorial.COURSES.keys().filter(func(k: String) -> bool: return not Tutorial.CREW_JOBS.has(k))
+	columns.add_child(_course_column("ON YOUR OWN", "Pick the job you want to learn. The rest of the crew is played for you.", solo))
+	columns.add_child(_course_column("WITH FRIENDS", "Host one of these and have your friends join. Each takes a job by manning its station, and you call the orders to each other. Jobs nobody has, you can do yourself.", Tutorial.CREW_JOBS.keys()))
+	var back := Button.new()
+	back.text = "Back"
+	back.pressed.connect(cover.queue_free)
+	box.add_child(back)
+
+
+func _course_column(title: String, about: String, keys: Array) -> VBoxContainer:
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 6)
+	column.custom_minimum_size.x = 440
+	column.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	column.add_child(UiKit.label(title, 18, UiKit.BRASS))
+	var intro := UiKit.label(about, 15, UiKit.DIM)
+	intro.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	column.add_child(intro)
+	for key: String in keys:
 		var b := Button.new()
 		b.text = Tutorial.COURSES[key]
 		b.alignment = HORIZONTAL_ALIGNMENT_LEFT
 		b.pressed.connect(func() -> void:
 			Net.course = key
 			_training())
-		box.add_child(b)
+		column.add_child(b)
 		var blurb := UiKit.label(Tutorial.BLURBS[key], 14, UiKit.DIM)
 		blurb.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		box.add_child(blurb)
-	var back := Button.new()
-	back.text = "Back"
-	back.pressed.connect(cover.queue_free)
-	box.add_child(back)
+		column.add_child(blurb)
+	return column
 
 
 func _join() -> void:

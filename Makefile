@@ -4,7 +4,7 @@
 play:
 	./play
 
-COURSES := full helm scope torpedo sonar damage engine
+COURSES := full helm scope torpedo sonar damage engine attack control party
 
 # Unit tests (exit 1 on failure), then every training course played by script.
 test:
@@ -13,4 +13,4 @@ test:
 
 walkthrough:
 	set -e; for c in $(COURSES); do godot --headless --path . -s tests/tutorial_walkthrough.gd -- $$c; done
-	set -e; for c in scope torpedo; do godot --headless --path . -s tests/tutorial_walkthrough.gd -- $$c realistic; done
+	set -e; for c in scope torpedo attack; do godot --headless --path . -s tests/tutorial_walkthrough.gd -- $$c realistic; done
