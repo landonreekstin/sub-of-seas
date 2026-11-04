@@ -17,6 +17,7 @@ Look: Peak-like low-poly flat colours now, textures toward Sea of Thieves later.
 - `docs/ships.md` — historical ship data and the game values derived from it
 - `docs/style.md` — look and feel + direction log (read before any visible change)
 - `docs/roadmap.md` — milestones, ticked as they land
+- `docs/notes.md` — where things stand, newest first: read it at the start, update it at every pause
 - `docs/capabilities.md` — what Claude does alone vs what needs lando
 - `docs/credits.md` — every recording in the game and its licence
 
