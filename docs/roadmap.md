@@ -70,6 +70,8 @@ Each milestone ends playable and committed. Tick items as they land.
 ## M8 — Blaney's list (2026-10-29)
 
 Added by Blaney after playing. In his words where it matters.
+
+*Ticked here = Blaney has checked it and it waits on lando: as of 2026-11-04 everything ticked below is in PRs #28-#35, ready for lando to merge. VibeNote shows an item done only once every branch on GitHub has it ticked, so these turn done there when lando merges and the old branches are deleted.*
 - [x] **Pause menu**: Esc brings up a menu (resume, settings, leave to main menu). The boat
       keeps going while it is open when others are aboard; it only truly pauses in single player.
 - [x] **Fix the helm wheel**: it turns on the wrong axis. It should spin around its own
