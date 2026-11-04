@@ -172,7 +172,8 @@ Added by Blaney after playing. In his words where it matters.
       *(Clean, 2026-11-04: 563 unit tests, every training course, the enemy sub, the Typhoon, damage parties on all four boats, every door.)*
 - [x] Typhoon: bring `docs/style.md`, `docs/credits.md`, `CLAUDE.md` and the `Makefile` up to date, then mark PR #35 ready
       *(Done; PR #35 marked ready 2026-11-04.)*
-- [ ] Blaney plays the music change (#32), the PA and bots (#33) and the enemy sub (#34), so Lando can take them out of draft
+- [x] Blaney plays the music change (#32), the PA and bots (#33) and the enemy sub (#34), so Lando can take them out of draft
+      *(Played 2026-11-04 with #28 and #30: "the game works". #28-#35 all marked ready; #29 not yet tried by two players together.)*
 - [x] generate an option to start a battle with another enemy sub somewhere near you, your topographical map cannot show the sub, only the map around your sub given the equipment you have, so if sonar is the only way you can see then the map would look different than being to rely on eyesight above water
       *(Done: "Enemy Sub" on the patrol menu, or say "enemy sub" on the PA on any patrol. She hunts by ear and fires pairs of torpedoes; sonar is how you find her, and a torpedo has to run near her depth. In the fight the chart and sand table only show what the boat has seen: clear by eye, dotted grey-blue by sonar, the rest unknown.)*
 - [x] there should not be background music in the game, the only music should be from the instruments

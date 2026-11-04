@@ -4,6 +4,10 @@ Where things stand, in plain English. The newest entry goes at the top. Update i
 Other docs: `roadmap.md` is the to-do list, `style.md` how it looks and feels, `design.md` the
 game's design, `credits.md` where every sound came from.
 
+## 2026-11-04 (night): everything of Blaney's is ready for Lando
+
+Blaney played the waiting changes on a Gato: "the game works". PRs #28-#35 are all marked ready. They stack in that order, #31 already was. #29 (crew training together) hasn't been tried by two real players yet; the PR says so. Nothing of Blaney's is in progress.
+
 ## 2026-11-04 (evening): the Typhoon is finished; PR #35 ready (Blaney: "yes mark it as done")
 
 Blaney: focus on a few tasks and finish each, so Lando isn't left waiting on half-done work.
