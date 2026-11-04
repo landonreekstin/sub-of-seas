@@ -133,6 +133,8 @@ func test_every_boat_builds_with_all_its_stations() -> bool:
 		runner.check(interior.doors.size() == interior.compartments.size() - 1, "%s: a door in every inner bulkhead" % k)
 		runner.check(interior.station_compartments().size() == interior.stations.size(), "%s: every station is inside a compartment" % k)
 		runner.check(interior.racks.has("control") and interior.spawn_points.size() == 6, "%s: rack and spawn points" % k)
+		var quarters := interior.comp_index("berthing")
+		runner.check(quarters > interior.comp_index("control") + 1 and absf(quarters - interior.comp_index("aft_torpedo")) > 1, "%s: the bunks are away from the weapons and the control room" % k)
 		runner.check(data.roles.size() >= data.crew_max, "%s: a suggested role for every crewman" % k)
 		interior.free()
 	return true

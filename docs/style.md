@@ -130,11 +130,14 @@ and update "Current style" in the same commit.
   raked trunked funnel and big bridge, the carrier's flat deck and starboard island, the
   tanker's long low well deck. A hit tanker (and any ship going down) burns orange under a
   column of black smoke.
-- **Compartments:** each reads at a glance. Officers' country: bunks to port, a wardroom
-  table with a cream cloth, brass-handled battery-well hatches underfoot. Crew's mess: two
-  tiers of bunks both sides and a mess table. Maneuvering: dark switch cubicles with brass
-  handles. Torpedo rooms: olive Mark 14s racked low in cradle straps (grey warhead, tapering
-  tail, four fins, twin brass screws), bunks over them.
+- **Compartments:** each reads at a glance. Wardroom: a locker bank to port, a table with a
+  cream cloth, brass-handled battery-well hatches underfoot. Crew's mess: two mess tables and a
+  coffee urn. Crew's quarters (Blaney: the sleeping quarters away from the weapons and
+  operation areas): the boat's only bunks, three tiers either side of an aisle, blue blankets
+  and white pillows, amidships between the mess and the rec room (S-boat: aft of the
+  navigation room). Maneuvering: dark switch cubicles with brass handles. Torpedo rooms: olive
+  Mark 14s racked low in cradle straps (grey warhead, tapering tail, four fins, twin brass
+  screws), no bunks.
 - **Sea** (lando: do the ocean): five overlapping waves with small ripples bending the light;
   the crests glow turquoise where the light comes through them; lacy cellular foam spreading
   down the faces of the bigger waves and in faint patches on the flats; the sun's glint as hard
@@ -179,8 +182,8 @@ and update "Current style" in the same commit.
   others are aboard and only truly pauses for a host alone. Q leaves a station. Settings
   (lando) has audio, graphics and controls tabs, reachable from the main menu and the pause
   menu, and applies each change as you make it.
-- **Portholes:** round brass rims with eight bolts, in officers' country (over the wardroom
-  table and the bunks) and either side of the mess table. Dark glass until you are close and
+- **Portholes:** round brass rims with eight bolts, in the wardroom (over the table and
+  across from it) and either side of the mess table. Dark glass until you are close and
   looking at one; then it shows the water outside from that spot on the hull, the way you're
   looking through it, with a soft dark edge and a glint.
 - **Sea life** (lando: do the sea life): smooth streamlined bodies, dark back over a pale
@@ -219,8 +222,8 @@ and update "Current style" in the same commit.
   near silent; crewmates see you squat down.
 - **Emotes:** 1 wave, 2 salute, 3 jig, 4 point, 5 cheer. The camera swings out in front, a
   little to one side wherever the hull has room, so you see yourself; moving ends it.
-- **Rec room** (games picked by Claude while lando was away; add more): between the mess and
-  the engine room on the Gato and Narwhal. A dartboard on the starboard wall (real rings and
+- **Rec room** (games picked by Claude while lando was away; add more): between the crew's
+  quarters and the engine room on the Gato and Narwhal. A dartboard on the starboard wall (real rings and
   scoring, a swaying aim, three darts a turn, best turns chalked up and called out to the
   crew), a jukebox with an amber glow that the room hears (the shanty, the slow watch), a
   green-baize card table, a porthole.
@@ -312,5 +315,7 @@ and update "Current style" in the same commit.
 | 2026-11-03 | Blaney | Arcade torpedoes twice as fast (about 40 s to a ship 2 km off). |
 | 2026-11-03 | Blaney | Arcade: no TDC or gyros, just point the bow and fire, with a lead marker on the periscope showing where to point. TDC and gyros saved for realistic. (Kept in Standard too, since lando wants existing mechanics kept until tried.) |
 | 2026-11-03 | Blaney | There should be a multi-crew tutorial for each section: each job's course taken by two or more players together, real crewmates giving the calls instead of the scripted ones. |
-| 2026-11-03 | Blaney | All the sleeping quarters should not be near the weapons or operation areas. *(Planned, not built yet.)* |
+| 2026-11-03 | Blaney | All the sleeping quarters should not be near the weapons or operation areas. |
 | 2026-11-03 | Blaney | The sound quality needs massive improvement: use real recorded samples from free-to-use libraries, starting with the band instruments, sound effects and the jukebox. Footsteps even quieter. *(Planned, not built yet.)* |
+| 2026-11-03 | Blaney | Footsteps half as loud: your own barely there, a crewmate's just audible when close. *(Planned, not built yet.)* |
+| 2026-11-03 | Blaney | The jukebox plays both our own songs on real recorded instruments and a few crackly old records, free ones only. *(Planned, not built yet.)* |

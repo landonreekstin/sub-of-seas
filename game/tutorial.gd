@@ -146,7 +146,7 @@ func _build_steps() -> void:
 			"marker": _station("tdc"), "done": _manned("tdc")},
 		{"id": "send", "needs": "tdc", "text": "The TDC has his course and speed, and the gyro angle to hit him. Send it to the tubes: T. Their gyros now follow it.",
 			"marker": _station("tdc"), "done": func() -> bool: return game.crew.tdc.follow},
-		{"id": "tube", "at": "tube_1", "text": "Go forward through officers' country to the FORWARD TORPEDO ROOM and man TUBE 1, top right.",
+		{"id": "tube", "at": "tube_1", "text": "Go forward through the wardroom to the FORWARD TORPEDO ROOM and man TUBE 1, top right.",
 			"marker": _station("tube_1"), "done": _manned("tube_1")},
 		{"id": "flood", "needs": "tube_1", "text": "Flood the tube (F), then open the outer door (O).",
 			"marker": _station("tube_1"), "done": func() -> bool:
@@ -175,7 +175,7 @@ func _build_steps() -> void:
 		{"id": "door", "text": "Shut a WATERTIGHT DOOR (E on the door). Shut doors stop water, fire and smoke spreading.",
 			"marker": func() -> Vector3: return game.interior.doors[fwd_door()].global_position + Vector3(0, 2.3, 0),
 			"done": func() -> bool: return game.crew.doors.values().has(false)},
-		{"id": "air", "needs": "air", "text": "Down here the crew's breath fouls the air. Go aft to the AIR panel (engine room, starboard) and load a fresh CO2 canister: C.",
+		{"id": "air", "needs": "air", "text": "Down here the crew's breath fouls the air. Go aft to the AIR panel (navigation room, starboard) and load a fresh CO2 canister: C.",
 			"marker": _station("air"), "done": func() -> bool: return Sim.world.air.canister_left > 0.0},
 		{"id": "up", "needs": "dive", "text": "He's lost us. Bring her up: DIVE station, press 1. The planes take her up to decks awash.",
 			"marker": _station("dive"), "done": func() -> bool: return sub.call().depth <= SubState.AWASH_DEPTH + 0.5},

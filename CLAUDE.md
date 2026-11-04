@@ -137,9 +137,9 @@ Out on deck (surfaced): look up at the bridge hatch over the gun's ladder, E cli
 Wrestling (aft casing, the painted ring): two step in to start; 1 push, 2 arm drag, 3 body lock, 4 suplex (needs a lock), 5 brace; drive him off his edge.
 Ballast (control room, port aft): V vents (flood to dive), B blow (to surface), X twice emergency blow.
 Bilge pump (control room, forward bulkhead, port of the door): P start/stop. Drains the wettest compartment 4× a portable pump, off the battery; escorts can hear it.
-Air (engine room, starboard fwd): C fresh CO2 canister, O oxygen bleed.
+Air (navigation room, starboard fwd): C fresh CO2 canister, O oxygen bleed.
 Deck gun (surfaced only; up the bridge-hatch ladder in the conning tower's forward port corner, or aft in the S-boat's control room): mouse train (150° either side of the bow), W/S range ±100 m (Shift ±25), wheel ±50 m, F rangefinder on the ship in the sight, Z telescope, LMB/Space fire. Watch the fall of shot: short is a miss, a little over still hits a tall ship. Diving clears the deck.
-Ammunition scuttle (in the deck of the crew's mess; S-boat: officers' country): hold Space to pass rounds up to the gun's ready-use locker. Firing gives the boat away to every ship within 12 km.
+Ammunition scuttle (in the deck of the crew's mess; S-boat: the wardroom): hold Space to pass rounds up to the gun's ready-use locker. Firing gives the boat away to every ship within 12 km.
 Rec room (Gato, Narwhal: aft of the mess): darts station (mouse aim, LMB/Space throw), E at the jukebox for the next record.
 Voice: hold Caps Lock to talk (proximity: you hear crewmates near you).
 Tools: E at a rack takes one, hold LMB on a leak/fire/broken station to work, LMB with the pump sets it
