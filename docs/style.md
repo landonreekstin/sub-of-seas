@@ -317,3 +317,5 @@ and update "Current style" in the same commit.
 | 2026-11-03 | Blaney | There should be a multi-crew tutorial for each section: each job's course taken by two or more players together, real crewmates giving the calls instead of the scripted ones. |
 | 2026-11-03 | Blaney | All the sleeping quarters should not be near the weapons or operation areas. |
 | 2026-11-03 | Blaney | The sound quality needs massive improvement: use real recorded samples from free-to-use libraries, starting with the band instruments, sound effects and the jukebox. Footsteps even quieter. *(Planned, not built yet.)* |
+| 2026-11-03 | Blaney | Footsteps half as loud: your own barely there, a crewmate's just audible when close. *(Planned, not built yet.)* |
+| 2026-11-03 | Blaney | The jukebox plays both our own songs on real recorded instruments and a few crackly old records, free ones only. *(Planned, not built yet.)* |
