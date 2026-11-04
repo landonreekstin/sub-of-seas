@@ -159,6 +159,7 @@ Added by Blaney after playing. In his words where it matters.
 - [ ] Typhoon: compare the frame rate with a Gato, with all hands aboard (Blaney: must not lag)
 - [ ] Typhoon: Blaney plays it, and judges the choir music and sounds by ear (Blaney: Hunt for Red October mood; the film's theme is copyrighted, so it's an original piece)
 - [ ] Typhoon: damage parties walk through walls; send them through the doors
+- [ ] Run the whole of `make test` on `blaney/typhoon` (every training course, after the interior rework; results in `docs/notes.md`)
 - [ ] Typhoon: bring `docs/style.md`, `docs/credits.md`, `CLAUDE.md` and the `Makefile` up to date, then mark PR #35 ready
 - [ ] Blaney plays the music change (#32), the PA and bots (#33) and the enemy sub (#34), so Lando can take them out of draft
 - [x] generate an option to start a battle with another enemy sub somewhere near you, your topographical map cannot show the sub, only the map around your sub given the equipment you have, so if sonar is the only way you can see then the map would look different than being to rely on eyesight above water

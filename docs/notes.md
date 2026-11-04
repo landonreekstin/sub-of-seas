@@ -17,6 +17,13 @@ game's design, `credits.md` where every sound came from.
 - Known rough edge: damage parties walk in a straight line, through walls.
 - Try it: `./play host cw_convoy typhoon`, E at the PA on the command bay's after bulkhead, type "all hands".
 
+**Test results, 2026-11-04 (headless, by script):**
+- Unit tests, on `blaney/typhoon`: 559 passed, 0 failed.
+- `tests/typhoon_walkthrough.gd`: passed. All hands, the band, parties fixed a leak, a fire and a broken helm, a ship sunk.
+- `tests/duel_walkthrough.gd`: passed on the Gato and the Typhoon.
+- `tests/pa_walkthrough.gd`: passed at Arcade and Realistic, on `blaney/crew-pa`; not rerun since.
+- **Not run:** the training walkthroughs in full (`make walkthrough`). Only the helm and torpedo courses were started, on `blaney/crew-pa`, and neither result was confirmed. The interior was reworked for the Typhoon after that, so run `make test` before anything leaves draft.
+
 **The Typhoon's layout:** public sources give five pressure hulls: two long ones side by side, a
 smaller command hull above them, one for torpedoes forward and one for steering aft, with the
 missile tubes between the main hulls. No exact room-by-room plan is published, so the rooms inside
