@@ -215,10 +215,17 @@ and update "Current style" in the same commit.
   glowing tip, drooping from the corner of the mouth; scar, pipe, bandage), the rank hats (Dixie cup, watch cap,
   ball cap, officer's and skipper's caps, sized to the head) and a shirt colour, in
   "Your sailor..." on the main menu.
+- **Handing over** (Blaney): J at any station: a bot takes it over and you walk off.
 - **Bot crewmen:** look like any crewman (random build, face and shirt, a navy watch cap),
   standing their station with hands on the gear and a name tag with their job ("Sparks
   (planesman)", "— on orders" when following yours). They speak through the same announcements
   as everything else: "Stubby (sonar): contact bearing 270, warship, turns for 20 knots."
+- **PA system** (Blaney): a grey 1MC speaker box with a hanging microphone on the control room's
+  after bulkhead, to port of the door. E opens a typing box; Enter sends. The skipper's words show
+  big for everyone with the bell, the crew's answer on the message line, and the order stays top
+  right under SKIPPER'S ORDERS until it is done. Plain English, and the crew work it out; if they
+  can't: "Say again, Skipper? We didn't follow that one." Anything they do goes through the same
+  stations: bots take up any empty post they need, and a player at that post is told it's theirs.
 - **Bilge pump:** a grey-green panel low on the control room's forward bulkhead with a blue
   ribbed motor, a suction pipe into the bilge, a red switch and a green lamp; it shakes and
   whirrs while it pumps.
@@ -327,3 +334,4 @@ and update "Current style" in the same commit.
 | 2026-11-03 | Blaney | The jukebox plays both our own songs on real recorded instruments and a few crackly old records, free ones only. |
 | 2026-11-04 | Blaney | There should not be background music in the game; the only music should be from the instruments. "I like the menu music, and I like the instruments, can we make it so that the other music stops when we play instruments?" (Style conflict with lando's 2026-10-30 "Add music": the menu stays, the patrol and hunted tracks and the debrief stings go.) |
 | 2026-11-04 | Blaney | Make sprinting a bit faster (for the full-size Typhoon). |
+| 2026-11-04 | Blaney | A way to spawn bots to take over your role if you are occupying a position. A PA microphone you can type into that tells the crew the current objective: a general crew instruction system, automatic once a command is done, that says so if the crew are confused and is relatively intuitive ("go sink the ship to the east", "dive to the bottom of the ocean"); it learns more as more is built. |

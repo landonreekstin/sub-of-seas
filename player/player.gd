@@ -376,6 +376,11 @@ func _unhandled_input(event: InputEvent) -> void:
 	if station != null:
 		if event.is_action_pressed("leave_station"):
 			leave_station()
+		elif event.is_action_pressed("relieve"):
+			# A bot takes over and you walk off.
+			var post := station.station_id
+			leave_station()
+			Game.instance.rq_bot.rpc_id(1, post, "post", null)
 		elif event.is_action_pressed("next_station"):
 			var next := Game.instance.interior.next_in_cluster(station)
 			if next != null:

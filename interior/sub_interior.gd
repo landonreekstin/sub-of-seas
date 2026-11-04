@@ -346,6 +346,9 @@ func _control_room(c: Dictionary, hatch: Rect2) -> void:
 	_add_station(SonarStation.new().setup("sonar", "Sonar", "conn" if not has_conning_tower else ""), Vector3(-1.85, 0, z0 + 4.3))
 	_add_station(BallastStation.new().setup("ballast", "Ballast manifold"), Vector3(-1.85, 0, z1 - 1.8))
 	_add_station(NavStation.new().setup("nav", "Chart table"), Vector3(1.4, 0, z1 - 1.6))
+	var mic := PaMic.new() # the PA, on the after bulkhead to port of the door
+	mic.position = Vector3(-1.05, 0, z1 - 0.12)
+	add_child(mic)
 	if not has_conning_tower:
 		# S-boat: the periscope comes down into the control room and the TDC sits by the helm.
 		_add_station(PeriscopeStation.new().setup("periscope", "Periscope", "conn"), Vector3(0, 0, z0 + 4.6))
@@ -679,6 +682,7 @@ func _process(delta: float) -> void:
 		for r: MeshInstance3D in _rockers[i]:
 			r.position.y = r.get_meta("y") + randf_range(-shake, shake)
 	_sounds(sub, delta)
+	_sync_teams(delta)
 	var text := {
 		"depth": "DEPTH   %5.1f m" % sub.depth,
 		"ordered": "ORDERED %5.0f m" % sub.ordered_depth,
@@ -747,6 +751,41 @@ func _sync_bots(bots: Dictionary) -> void:
 		if not bots.has(sid):
 			_bot_views[sid].queue_free()
 			_bot_views.erase(sid)
+
+
+var _team_views: Array[Node3D] = []
+
+
+## The damage party's men, walking to their jobs (BotCrew), from the hull snapshot.
+func _sync_teams(delta: float) -> void:
+	var teams := Sim.world.hull.teams
+	while _team_views.size() < teams.size():
+		_team_views.append(_sailor({"hat": "watch", "build": _team_views.size() % 4, "skin": _team_views.size() % 6, "hue": 0.58}))
+	while _team_views.size() > teams.size():
+		_team_views.pop_back().queue_free()
+	for i in teams.size():
+		var v := _team_views[i]
+		var to: Vector3 = teams[i].p
+		var off := to - v.position
+		off.y = 0.0
+		if off.length() > 0.05:
+			v.rotation.y = lerp_angle(v.rotation.y, atan2(-off.x, -off.z), minf(delta * 6.0, 1.0))
+		v.position = v.position.lerp(to, minf(delta * 3.0, 1.0))
+
+
+## A plain crewman to stand about the boat: no tag, nothing to talk to.
+func _sailor(look: Dictionary) -> Node3D:
+	var v := Node3D.new()
+	add_child(v)
+	var body := Node3D.new()
+	v.add_child(body)
+	Crewman.build_body(body, look, Color.from_hsv(float(look.get("hue", 0.58)), 0.45, 0.85))
+	var face := Node3D.new()
+	face.position.y = Player.EYE_HEIGHT
+	v.add_child(face)
+	Crewman.build_face(face, look)
+	Player._make_hat(face, look.get("hat", "watch"))
+	return v
 
 
 func next_in_cluster(current: Station) -> Station:

@@ -28,6 +28,7 @@ var needs_parts := {} ## station_id -> seconds of fitting spare parts left (wrec
 var bilge_on := false ## the fixed bilge pump switched on (the host turns it off without power or when broken)
 var bilge_from := -1 ## the compartment it is drawing from this moment, -1 none
 var harshness := 1.0 ## the realism level: leaks run and fires grow this much faster (Realism)
+var teams: Array[Dictionary] = [] ## bot damage-control teams: {p: Vector3, job} (BotCrew runs them)
 var _next_id := 1
 
 
@@ -232,7 +233,7 @@ func is_broken(station_id: String) -> bool:
 func to_snapshot() -> Dictionary:
 	return {
 		"w": comps.map(func(c: Dictionary) -> float: return c.water),
-		"l": leaks, "f": fires, "pu": pumps, "b": broken, "np": needs_parts, "bp": bilge_on, "bf": bilge_from,
+		"l": leaks, "f": fires, "pu": pumps, "b": broken, "np": needs_parts, "bp": bilge_on, "bf": bilge_from, "tm": teams,
 	}
 
 
@@ -246,6 +247,7 @@ func apply_snapshot(s: Dictionary) -> void:
 	needs_parts = s.np
 	bilge_on = s.get("bp", false)
 	bilge_from = s.get("bf", -1)
+	teams.assign(s.get("tm", []))
 
 
 func _take_id() -> int:
