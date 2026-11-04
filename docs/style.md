@@ -239,8 +239,9 @@ and update "Current style" in the same commit.
   men's choir over low strings and timpani (Blaney: the mood of The Hunt for Red October), the one
   soundtrack at sea, as loud as the menu music (at first it sat so far back he never heard it), silent while the band
   plays like all other music. **As real as we can get** (Blaney): where a Typhoon
-  choice is between the game's usual look and the real boat, go with the real boat. Still to do: her hull
-  is the WWII boats' tan wood deck, and should be black rubber.
+  choice is between the game's usual look and the real boat, go with the real boat. Outside she is black
+  rubber all over (her anechoic tiles): hull, fin and a deck a shade lighter, the missile hatches flush
+  in two rows, no wood.
 - **Handing over** (Blaney): J at any station: a bot takes it over and you walk off.
 - **Bot crewmen:** look like any crewman (random build, face and shirt, a navy watch cap),
   standing their station with hands on the gear and a name tag with their job ("Sparks

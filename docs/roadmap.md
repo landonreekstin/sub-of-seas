@@ -161,8 +161,10 @@ Added by Blaney after playing. In his words where it matters.
       *(Typhoon measured: 60 fps in all 19 rooms on his RTX 3060, and it felt fine in play. The Gato isn't measured yet.)*
 - [ ] Typhoon: Blaney plays it, and judges the choir music and sounds by ear (Blaney: Hunt for Red October mood; the film's theme is copyrighted, so it's an original piece)
       *(Played 2026-11-04: "wow this is great". He couldn't hear the choir, so that part is still open.)*
-- [ ] Typhoon: the choir can't be heard: find out why and make it audible (Blaney: "i dont know how to make the choir happen, no music like that that i hear")
-- [ ] Typhoon: as real as we can get (Blaney). First her outside: black rubber hull, not the WWII boats' tan wood deck
+- [x] Typhoon: the choir can't be heard: find out why and make it audible (Blaney: "i dont know how to make the choir happen, no music like that that i hear")
+      *(It played, at -13 dB, lost under the boat, and stops while the band plays. Now as loud as the menu music. Blaney still to judge it by ear.)*
+- [x] Typhoon: as real as we can get (Blaney). First her outside: black rubber hull, not the WWII boats' tan wood deck
+      *(Done: hull, fin and deck in black rubber.)*
 - [x] Typhoon: damage parties walk through walls; send them through the doors
       *(Done on every boat: along the rooms, through doors and up the ladder; they open a shut door and shut it behind them.)*
 - [ ] Run the whole of `make test` on `blaney/typhoon` (every training course, after the interior rework; results in `docs/notes.md`)

@@ -62,6 +62,10 @@ static func hull_deck(t: float, freeboard: float) -> float:
 
 ## Our own boat's measurements, shared by its model and the deck the crew walk on (Deck).
 ## z runs bow (-) to stern (+), y up from the waterline.
+const RUBBER := Color("#1B1D1F") ## a Typhoon's anechoic tiles, sides and fin
+const RUBBER_DECK := Color("#232527") ## and her deck, worn a shade lighter by feet
+
+
 static func own_dims(sub: SubClassData) -> Dictionary:
 	var l := sub.length
 	var d := {"length": l, "beam": clampf(l * 0.088, 6.0, 10.0), "deck": clampf(l * 0.028, 2.2, 3.2),
@@ -81,7 +85,7 @@ static func own_dims(sub: SubClassData) -> Dictionary:
 
 
 static func _hull(root: Node3D, length: float, beam: float, freeboard: float, draft: float, color: Color,
-		raised := []) -> void:
+		raised := [], deck_color := DECK) -> void:
 	var ts: Array[float] = []
 	for i in 49:
 		ts.append(i / 48.0)
@@ -182,7 +186,7 @@ static func _hull(root: Node3D, length: float, beam: float, freeboard: float, dr
 	ds.generate_normals()
 	var dm := MeshInstance3D.new()
 	dm.mesh = ds.commit()
-	dm.material_override = Build.mat(DECK)
+	dm.material_override = Build.mat(deck_color)
 	root.add_child(dm)
 	# A dark rubbing strake along the deck edge, so the sheer line reads from afar.
 	var rs := SurfaceTool.new()
@@ -217,18 +221,21 @@ static func own_boat(sub: SubClassData) -> Node3D:
 	var l: float = d.length
 	var beam: float = d.beam
 	var fb: float = d.deck
-	_hull(root, l, beam, fb, 4.5, Color("#2C3034"))
+	var rubber := sub.key == "typhoon" # a Typhoon is clad all over in black rubber tiles, no wood (Blaney: as real as we can get)
+	var hull_col := RUBBER if rubber else Color("#2C3034")
+	var fin_col := RUBBER if rubber else Color("#33373C")
+	_hull(root, l, beam, fb, 4.5, hull_col, [], RUBBER_DECK if rubber else DECK)
 	var deck_y := fb
 	# The fairwater round the conning tower and bridge, a little forward of amidships.
 	var ct_z: float = d.ct_z
 	var ct_len: float = d.ct_len
 	var ct_h: float = d.ct_h
-	Build.box(root, Vector3(beam * 0.32, ct_h, ct_len), Vector3(0, deck_y + ct_h * 0.5, ct_z), Color("#33373C"))
-	Build.cyl(root, beam * 0.16, ct_h, Vector3(0, deck_y + ct_h * 0.5, ct_z - ct_len * 0.5), Color("#33373C"))
+	Build.box(root, Vector3(beam * 0.32, ct_h, ct_len), Vector3(0, deck_y + ct_h * 0.5, ct_z), fin_col)
+	Build.cyl(root, beam * 0.16, ct_h, Vector3(0, deck_y + ct_h * 0.5, ct_z - ct_len * 0.5), fin_col)
 	Build.box(root, Vector3(beam * 0.34, 0.15, ct_len + 0.6), Vector3(0, deck_y + ct_h, ct_z), BLACK) # bridge rail
 	for z in [ct_z - ct_len * 0.1, ct_z + ct_len * 0.15]:
-		Build.cyl(root, 0.22, 6.5, Vector3(0, deck_y + ct_h + 3.2, z), Color("#33373C"))
-	Build.box(root, Vector3(0.12, 0.9, ct_len * 0.5), Vector3(0, deck_y + ct_h + 6.0, ct_z + 0.5), Color("#33373C"))
+		Build.cyl(root, 0.22, 6.5, Vector3(0, deck_y + ct_h + 3.2, z), fin_col)
+	Build.box(root, Vector3(0.12, 0.9, ct_len * 0.5), Vector3(0, deck_y + ct_h + 6.0, ct_z + 0.5), fin_col)
 	# The gun on the casing forward of the fairwater.
 	var gun := Node3D.new()
 	gun.name = "Gun"
@@ -239,7 +246,7 @@ static func own_boat(sub: SubClassData) -> Node3D:
 		gun.visible = false
 		for k in 10:
 			for side in [-1.0, 1.0]:
-				Build.cyl(root, 1.1, 0.25, Vector3(side * 3.2, deck_y + 0.12, -l * 0.38 + k * l * 0.04), Color("#23272B"))
+				Build.cyl(root, 1.1, 0.25, Vector3(side * 3.2, deck_y + 0.12, -l * 0.38 + k * l * 0.04), Color("#2A2E31"))
 	else:
 		Build.lathe(root, [Vector2(0, 0), Vector2(0.75, 0), Vector2(0.55, 0.25), Vector2(0.4, 0.9), Vector2(0, 0.9)],
 			gun.position, Color("#3A3F44"), Vector3.UP, 16) # pedestal
