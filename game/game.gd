@@ -29,6 +29,7 @@ var hud: Hud
 var pause_menu: PauseMenu
 var bot_crew: BotCrew
 var bot_orders: BotOrders ## open while the local player gives a bot orders
+var pa_panel: PaPanel ## open while the local player has the PA microphone
 var local_player: Player
 var crew := {}
 var _players: Node3D
@@ -484,7 +485,12 @@ func _show_objectives() -> void:
 			"survive":
 				progress = "  (%d:%02d)" % [int(Sim.world.time) / 60, int(Sim.world.time) % 60] if Sim.world != null else ""
 		lines.append("%s  %s%s" % ["✓" if o.get("done", false) else "○", o.text, progress])
-	hud.set_objective(m.title.to_upper() + ("" if crew.get("realism", "arcade") == "arcade" else "  ·  " + Realism.level(crew.realism).title.to_upper()), ("\n".join(lines) + "\n\n" if not lines.is_empty() else "") + crew_roles())
+	hud.set_objective(m.title.to_upper() + ("" if crew.get("realism", "arcade") == "arcade" else "  ·  " + Realism.level(crew.realism).title.to_upper()), ("\n".join(lines) + "\n\n" if not lines.is_empty() else "") + _skipper_orders() + crew_roles())
+
+
+func _skipper_orders() -> String:
+	var o: String = crew.get("orders", "")
+	return "SKIPPER'S ORDERS\n%s\n\n" % o if o != "" else ""
 
 
 ## Suggested jobs for whoever is aboard, in joining order (the host first).
@@ -594,7 +600,7 @@ func leave() -> void:
 
 ## True while the pause menu is up: the local player's hands are off the controls.
 func menu_open() -> bool:
-	return (pause_menu != null and pause_menu.is_open) or bot_orders != null
+	return (pause_menu != null and pause_menu.is_open) or bot_orders != null or pa_panel != null
 
 
 ## The orders panel for the bot at `station_id`.
@@ -604,6 +610,13 @@ func open_bot_orders(station_id: String) -> void:
 	bot_orders = BotOrders.new()
 	bot_orders.station_id = station_id
 	hud.add_child(bot_orders)
+
+
+## The PA microphone's panel.
+func open_pa() -> void:
+	if pa_panel == null:
+		pa_panel = PaPanel.new()
+		hud.add_child(pa_panel)
 
 
 func _quit(reason: String) -> void:
@@ -778,6 +791,29 @@ func rq_door(door_id: String) -> void:
 func rq_bot(station_id: String, key: String, value: Variant) -> void:
 	if multiplayer.is_server():
 		bot_crew.request(station_id, key, value)
+
+
+## Any crewman: a line into the PA. The crew do what it says (BotCrew).
+@rpc("any_peer", "call_local", "reliable")
+func rq_pa(text: String) -> void:
+	if multiplayer.is_server() and crew.get("result", "") == "":
+		bot_crew.skipper_order(text.left(160), crew_name(_sender()))
+
+
+## The skipper's words over the speakers, for everyone.
+@rpc("authority", "call_local", "reliable")
+func pa_call(who: String, text: String) -> void:
+	hud.crew_call(who, text)
+
+
+## "enemy sub" on the PA: built with the enemy submarines. Filled in with them.
+func call_enemy_sub(_attack: bool) -> String:
+	return "No enemy subs out here, Skipper."
+
+
+## The skipper's word to the band: only a boat with a full crew has one to spare.
+func call_band(_off: bool) -> String:
+	return "We haven't the hands to spare for a band on this boat, Skipper."
 
 
 ## Any crewman: the jukebox's next record.
