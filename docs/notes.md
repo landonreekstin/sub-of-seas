@@ -4,7 +4,7 @@ Where things stand, in plain English. The newest entry goes at the top. Update i
 Other docs: `roadmap.md` is the to-do list, `style.md` how it looks and feels, `design.md` the
 game's design, `credits.md` where every sound came from.
 
-## 2026-11-04 (evening): the Typhoon is finished, waiting on Blaney's last play
+## 2026-11-04 (evening): the Typhoon is finished; PR #35 ready (Blaney: "yes mark it as done")
 
 Blaney: focus on a few tasks and finish each, so Lando isn't left waiting on half-done work.
 - Choir: it played, but at -13 dB it was lost under the boat. Now as loud as the menu music. It still stops while the band plays.
