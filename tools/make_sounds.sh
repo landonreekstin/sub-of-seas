@@ -1,5 +1,7 @@
 #!/bin/sh
-# Synthesises every sound effect in assets/audio/ with sox (run from the project root).
+# Synthesises every sound effect in assets/audio/ with sox (run from the project root). Most are
+# then replaced by real recordings: run tools/make_recorded.py after this. Only the sounds no
+# recording fits stay as made here: echo_ranging, motor_loop, hoist_loop, screws_*_loop, shrimp_loop.
 # Loops end in *_loop.wav and are cut to whole cycles so they repeat cleanly.
 set -e
 A=assets/audio
