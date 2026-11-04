@@ -6,7 +6,7 @@ extends Node
 
 const PATH := "res://assets/audio/music_%s.ogg"
 ## Each track's level under the effects: the patrol track sits well back.
-const LEVEL := {"menu": -7.0, "typhoon": -13.0}
+const LEVEL := {"menu": -7.0, "typhoon": -7.0} ## the choir as loud as the menu: at -13 it was lost under the boat (Blaney)
 const BUS := "Soundtrack"
 const HUSHED_DB := -60.0
 const HUSH_RATE := 80.0 ## dB a second, so it clears the air in under a second
