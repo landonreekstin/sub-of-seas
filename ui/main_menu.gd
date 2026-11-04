@@ -187,7 +187,7 @@ func _show_courses() -> void:
 
 func _course_column(title: String, about: String, keys: Array) -> VBoxContainer:
 	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 6)
+	column.add_theme_constant_override("separation", 3)
 	column.custom_minimum_size.x = 440
 	column.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	column.add_child(UiKit.label(title, 18, UiKit.BRASS))

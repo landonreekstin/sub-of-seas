@@ -484,7 +484,7 @@ func _update_jobs(i: int) -> void:
 		if not game.crew.names.has(holder):
 			holder = 0
 		var stations: Array = JOBS[job].stations
-		if not stations.any(func(s: String) -> bool: return game.station_occupant(s) == holder):
+		if holder == 0 or not stations.any(func(s: String) -> bool: return game.station_occupant(s) == holder):
 			for s: String in stations:
 				if game.station_occupant(s) > 0:
 					holder = game.station_occupant(s)

@@ -163,8 +163,8 @@ func crew_call(who: String, text: String, seconds := 9.0) -> void:
 		_call.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
 		_call.grow_horizontal = Control.GROW_DIRECTION_BOTH
 		_call.offset_top = 210
-		_call.offset_left = -460
-		_call.offset_right = 460
+		_call.offset_left = -600 # stops short of the objective panel at the top right
+		_call.offset_right = 220
 	_call.text = "[center][b][color=#%s]%s:[/color][/b] [color=#%s]\"%s\"[/color][/center]" % [
 		UiKit.BRASS.to_html(false), who.to_upper(), UiKit.CREAM.to_html(false), text]
 	_call.modulate.a = 1.0
