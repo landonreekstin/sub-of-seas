@@ -265,6 +265,11 @@ and update "Current style" in the same commit.
   in cream quotes ("CAPTAIN: "Come to course zero-niner-zero.""), with a short bell like an
   order over the boat's speakers. Training opens on a list of jobs to pick from; the long
   whole-boat course stays at the bottom.
+- **Crew training together (Blaney):** Training's menu has two columns, ON YOUR OWN and WITH
+  FRIENDS (Attack team, Control room, Damage party). You take a job by manning its station. The
+  panel top right ends with who has what ("Periscope: Lando · Torpedoes: open"); when the step is
+  someone else's it says "Waiting on Lando (periscope)." and shows their orders. A crewmate's
+  call shows with their name and job in place of the scripted voice.
 - **UI:** typewriter / stencil feel, cream on dark panels, minimal HUD (crosshair, carried
   tool, interaction prompt).
 
@@ -306,5 +311,6 @@ and update "Current style" in the same commit.
 | 2026-11-03 | Blaney | The cigarette didn't appear in my mouth: make it clearly visible. |
 | 2026-11-03 | Blaney | Arcade torpedoes twice as fast (about 40 s to a ship 2 km off). |
 | 2026-11-03 | Blaney | Arcade: no TDC or gyros, just point the bow and fire, with a lead marker on the periscope showing where to point. TDC and gyros saved for realistic. (Kept in Standard too, since lando wants existing mechanics kept until tried.) |
+| 2026-11-03 | Blaney | There should be a multi-crew tutorial for each section: each job's course taken by two or more players together, real crewmates giving the calls instead of the scripted ones. |
 | 2026-11-03 | Blaney | All the sleeping quarters should not be near the weapons or operation areas. *(Planned, not built yet.)* |
 | 2026-11-03 | Blaney | The sound quality needs massive improvement: use real recorded samples from free-to-use libraries, starting with the band instruments, sound effects and the jukebox. Footsteps even quieter. *(Planned, not built yet.)* |
