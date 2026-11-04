@@ -30,6 +30,12 @@ static func build(data: ShipClassData) -> Node3D:
 			_subchaser(root, data)
 		"submarine":
 			_submarine(root, data)
+		"spruance", "knox", "ticonderoga":
+			_modern(root, data)
+		"nimitz":
+			_nimitz(root, data)
+		"roro":
+			_roro(root, data)
 		_:
 			_freighter(root, data)
 	return root
@@ -60,6 +66,12 @@ static func own_dims(sub: SubClassData) -> Dictionary:
 	var l := sub.length
 	var d := {"length": l, "beam": clampf(l * 0.088, 6.0, 10.0), "deck": clampf(l * 0.028, 2.2, 3.2),
 		"ct_z": -l * 0.06, "ct_len": l * 0.16, "ct_h": 4.2}
+	if sub.key == "typhoon": # a very wide flat casing, the fin well aft of the missile tubes
+		d.beam = 23.0
+		d.deck = 5.0
+		d.ct_z = l * 0.12
+		d.ct_len = l * 0.16
+		d.ct_h = 12.0
 	d.gun_z = d.ct_z - d.ct_len * 0.5 - 6.0
 	d.hatch_z = d.ct_z - d.ct_len * 0.5 - 2.6 # the deck hatch, between the gun and the fairwater
 	d.ladder_z = d.ct_z + d.ct_len * 0.5 + 3.0 # rungs up the side from the water, both sides
@@ -223,8 +235,14 @@ static func own_boat(sub: SubClassData) -> Node3D:
 	gun.position = Vector3(0, deck_y, d.gun_z)
 	root.add_child(gun)
 	var bore := 0.06 + sub.gun_damage * 0.12 # bigger guns, fatter barrels
-	Build.lathe(root, [Vector2(0, 0), Vector2(0.75, 0), Vector2(0.55, 0.25), Vector2(0.4, 0.9), Vector2(0, 0.9)],
-		gun.position, Color("#3A3F44"), Vector3.UP, 16) # pedestal
+	if sub.gun_rounds == 0: # a missile boat: the tubes' hatches in two rows instead
+		gun.visible = false
+		for k in 10:
+			for side in [-1.0, 1.0]:
+				Build.cyl(root, 1.1, 0.25, Vector3(side * 3.2, deck_y + 0.12, -l * 0.38 + k * l * 0.04), Color("#23272B"))
+	else:
+		Build.lathe(root, [Vector2(0, 0), Vector2(0.75, 0), Vector2(0.55, 0.25), Vector2(0.4, 0.9), Vector2(0, 0.9)],
+			gun.position, Color("#3A3F44"), Vector3.UP, 16) # pedestal
 	Build.box(gun, Vector3(1.0, 0.6, 1.3), Vector3(0, 1.15, 0.1), Color("#3A3F44"), false) # carriage
 	for side in [-1.0, 1.0]:
 		Build.box(gun, Vector3(0.12, 0.7, 0.9), Vector3(side * 0.55, 1.3, 0.0), Color("#3A3F44"), false) # trunnion cheeks
@@ -247,7 +265,7 @@ static func own_boat(sub: SubClassData) -> Node3D:
 	eye.rotation.x = deg_to_rad(-3.0)
 	gun.add_child(eye)
 	# Ready-use ammunition lockers by the fairwater.
-	for side in [-1.0, 1.0]:
+	for side in ([-1.0, 1.0] if sub.gun_rounds > 0 else []):
 		Build.box(root, Vector3(0.6, 0.7, 1.4), Vector3(side * beam * 0.22, deck_y + 0.35, ct_z - ct_len * 0.5 - 1.5), Color("#3A3F44"))
 	# The deck hatch the crew climb out of, and rungs up the side from the water.
 	var hz: float = d.hatch_z
@@ -283,6 +301,60 @@ static func _tri(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, hint: Vect
 	st.add_vertex(a)
 	st.add_vertex(b)
 	st.add_vertex(c)
+
+
+## A Cold War warship: haze grey, blocky aluminium upperworks, square radars, a flat helicopter
+## deck aft, missile launchers and one small gun forward, no funnel caps or turrets to speak of.
+static func _modern(root: Node3D, d: ShipClassData) -> void:
+	var L := d.length
+	var B := d.beam
+	var grey := Color("#8A9098")
+	var pale := Color("#A4A9AE")
+	_hull(root, L, B, 6.5, 5.5, grey, [[0.0, 0.5, 2.0]])
+	var big := 1.0 if d.kind != "knox" else 0.75
+	_house(root, Vector3(B * 0.7, 9.0 * big, L * 0.17), Vector3(0, 11.0, -L * 0.1), pale)
+	_house(root, Vector3(B * 0.6, 7.0 * big, L * 0.17), Vector3(0, 10.0, L * 0.12), pale)
+	Build.box(root, Vector3(B * 0.35, 4.0, B * 0.35), Vector3(0, 17.0 * big, -L * 0.1), grey, false) # the pyramid mast's base
+	_mast(root, 14.0 * big, Vector3(0, 18.0 * big, -L * 0.1), 0.35)
+	Build.box(root, Vector3(6.0, 2.0, 0.4), Vector3(0, 26.0 * big, -L * 0.1), BLACK, false) # the air-search radar
+	Build.box(root, Vector3(B * 0.3, 3.0, 4.0), Vector3(0, 13.0, L * 0.02), Color("#50555B"), false) # gas turbine uptakes
+	Build.cyl(root, 1.1, 1.8, Vector3(0, 8.5, -L * 0.36), pale) # the gun
+	Build.box(root, Vector3(0.2, 0.2, 4.0), Vector3(0, 8.9, -L * 0.385), BLACK, false)
+	Build.box(root, Vector3(3.6, 1.6, 5.0), Vector3(0, 8.3, -L * 0.28), Color("#6A7076"), false) # the ASROC box
+	Build.box(root, Vector3(B * 0.75, 0.2, L * 0.14), Vector3(0, 6.7, L * 0.41), Color("#50555B"), false) # helicopter deck
+	Build.box(root, Vector3(B * 0.35, 0.05, 0.4), Vector3(0, 6.85, L * 0.41), Color("#E8E4DA"), false)
+	if d.kind == "ticonderoga":
+		for z in [-L * 0.2, L * 0.28]:
+			Build.box(root, Vector3(B * 0.5, 1.0, 7.0), Vector3(0, 7.2, z), Color("#6A7076"), false) # vertical launchers
+		for side in [-1.0, 1.0]:
+			Build.box(root, Vector3(0.2, 4.0, 4.0), Vector3(side * B * 0.36, 13.0, -L * 0.1), Color("#3F444A"), false) # the flat Aegis faces
+
+
+static func _nimitz(root: Node3D, d: ShipClassData) -> void:
+	var L := d.length
+	var B := d.beam
+	var grey := Color("#8A9098")
+	_hull(root, L, B, 16.0, 11.0, grey)
+	Build.box(root, Vector3(B * 1.9, 1.0, L * 0.95), Vector3(B * -0.2, 19.0, 0), Color("#54585D"), false) # the flight deck, out over the side
+	Build.box(root, Vector3(B * 0.28, 16.0, L * 0.09), Vector3(B * 0.6, 27.0, L * 0.06), Color("#A4A9AE"), false) # the island
+	_mast(root, 18.0, Vector3(B * 0.6, 35.0, L * 0.06), 0.5)
+	Build.box(root, Vector3(9.0, 3.0, 0.5), Vector3(B * 0.6, 41.0, L * 0.05), BLACK, false)
+	for k in 6: # parked aircraft
+		var plane_at := Vector3(-B * 0.65 + (k % 2) * 8.0, 20.0, L * (0.2 + k * 0.05))
+		Build.box(root, Vector3(1.6, 1.0, 14.0), plane_at, Color("#6A7076"), false)
+		Build.box(root, Vector3(9.0, 0.3, 3.0), plane_at, Color("#6A7076"), false)
+	for j in 3: # the runway's white lines
+		Build.box(root, Vector3(0.6, 0.05, L * 0.9), Vector3(-B * 0.2 + (j - 1) * 14.0, 19.55, 0), Color("#E8E4DA"), false)
+
+
+static func _roro(root: Node3D, d: ShipClassData) -> void:
+	var L := d.length
+	var B := d.beam
+	_hull(root, L, B, 9.0, 7.0, Color("#3F5165"))
+	Build.box(root, Vector3(B * 0.9, 14.0, L * 0.72), Vector3(0, 16.0, -L * 0.05), Color("#C8C4B8")) # the high slab of the car decks
+	_house(root, Vector3(B * 0.8, 7.0, L * 0.1), Vector3(0, 26.0, -L * 0.28), LIGHT)
+	_funnel(root, 2.2, 9.0, Vector3(0, 23.0, L * 0.28), 0.0, Color("#3F5165"))
+	Build.box(root, Vector3(B * 0.5, 0.4, 16.0), Vector3(0, 10.0, L * 0.47), Color("#54585D"), false) # the stern ramp
 
 
 ## An enemy submarine: a long dark cigar, a conning tower, planes and screws. No wake, no deck.
@@ -533,14 +605,15 @@ static func _subchaser(root: Node3D, d: ShipClassData) -> void:
 
 
 ## A low-wing carrier plane, nose to -Z: green-grey with red roundels.
-static func plane() -> Node3D:
+static func plane(modern := false) -> Node3D:
 	var n := Node3D.new()
-	var green := Color("#5C6A4A")
+	var green := Color("#8A9098") if modern else Color("#5C6A4A")
 	Build.cyl(n, 0.6, 10.0, Vector3.ZERO, green, Vector3.BACK)
 	Build.box(n, Vector3(14.0, 0.25, 2.4), Vector3(0, -0.3, -0.5), green, false)
 	Build.box(n, Vector3(5.0, 0.2, 1.4), Vector3(0, 0.2, 4.4), green, false)
 	Build.box(n, Vector3(0.2, 1.8, 1.4), Vector3(0, 1.0, 4.4), green, false)
 	Build.cyl(n, 0.7, 0.4, Vector3(0, 0, -5.1), Color("#2B2B2B"), Vector3.BACK)
 	for x in [-5.0, 5.0]:
-		Build.cyl(n, 0.6, 0.05, Vector3(x, -0.15, -0.5), Color("#B23A2E"))
+		if not modern:
+			Build.cyl(n, 0.6, 0.05, Vector3(x, -0.15, -0.5), Color("#B23A2E"))
 	return n

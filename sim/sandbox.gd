@@ -20,6 +20,15 @@ const GROUPS := [
 	[17, "hunter_killer", ["subchaser", "subchaser"], [], 0.0],
 ]
 
+const GROUPS_COLD_WAR := [
+	[30, "convoy", ["roro", "roro", "oiler"], ["knox"], 12.0],
+	[20, "convoy", ["oiler", "roro"], ["knox", "spruance"], 14.0],
+	[15, "task_force", ["ticonderoga"], ["spruance", "spruance"], 20.0],
+	[10, "task_force", ["nimitz"], ["ticonderoga", "spruance", "spruance"], 22.0],
+	[20, "hunter_killer", ["knox", "spruance"], [], 0.0],
+]
+
+var cold_war := false
 var _timer := 5.0
 var _groups: Array = [] ## Array of Array[ShipState]
 
@@ -47,12 +56,13 @@ func tick(world: OceanWorld, dt: float) -> void:
 ## A group out of sight on a course that passes within a few km of the boat.
 func spawn_group(world: OceanWorld) -> Array[ShipState]:
 	var rng := world.rng
+	var table: Array = GROUPS_COLD_WAR if cold_war else GROUPS
 	var total := 0
-	for g: Array in GROUPS:
+	for g: Array in table:
 		total += int(g[0])
 	var roll := rng.randi() % total
-	var pick: Array = GROUPS[0]
-	for g: Array in GROUPS:
+	var pick: Array = table[0]
+	for g: Array in table:
 		roll -= int(g[0])
 		if roll < 0:
 			pick = g

@@ -83,3 +83,30 @@ func test_the_limited_map() -> bool:
 	k.sweep(w)
 	runner.check(k.version == v, "nothing new, no redraw")
 	return true
+
+
+func test_the_typhoon_is_laid_out() -> bool:
+	var data: SubClassData = load("res://data/subs/typhoon.tres")
+	var i := SubInterior.create(data)
+	i.build()
+	runner.check(i.compartments.size() == 19, "19 compartments")
+	runner.check(i.compartments[-1].z1 - i.compartments[0].z0 >= 170.0 or i.comp("steering").z1 - i.comp("sonar").z0 == 175.0, "175 m stem to stern")
+	runner.check(i.doors.size() == i.door_links.size(), "a door for every link (%d, %d)" % [i.doors.size(), i.door_links.size()])
+	runner.check(i.station_compartments().size() == i.stations.size(), "every station in a compartment")
+	for sid in ["helm", "dive", "sonar", "ballast", "bilge", "periscope", "tdc", "nav", "engine", "air", "tube_1", "tube_6", "first_mate", "skipper", "sand_table", "cameras", "darts"]:
+		runner.check(i.stations.has(sid), "has %s" % sid)
+	runner.check(not i.stations.has("gun") and not i.stations.has("ammo"), "no deck gun")
+	var hull := HullState.new().setup(i.compartments, i.door_links, i.station_compartments())
+	runner.check(hull.comps[hull.comp_at_pos(Vector3(-6, 0.1, 40))].name == "turbine room, port", "port hull")
+	runner.check(hull.comps[hull.comp_at_pos(Vector3(6, 0.1, 40))].name == "turbine room, starboard", "starboard hull")
+	runner.check(hull.comps[hull.comp_at_pos(Vector3(0, 3.0, -5))].name == "command bay", "up top")
+	runner.check(hull.comps[hull.comp_at_pos(Vector3(0, 0.1, -5))].name == "centre passage", "and under it")
+	var rng := RandomNumberGenerator.new()
+	var leak := hull.add_leak(hull.comp_at_pos(Vector3(6, 0.1, 40)), 1, rng)
+	runner.check(leak.p.x > 3.0, "a starboard leak is in the starboard hull")
+	i.free()
+	var sub := SubState.new(data)
+	sub.depth = 100.0
+	runner.check(is_equal_approx(sub.max_speed(), 27.0 * SubState.KNOT), "27 knots dived, no battery")
+	runner.check(sub.battery_drain(10.0) == 0.0, "and never a flat battery")
+	return true

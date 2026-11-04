@@ -7,6 +7,7 @@ extends Node
 ## Bots live in crew state: crew.bots[station_id] = {id, name, auto, course, speed, depth, ...}
 ## and they occupy their station (crew.stations) under a negative id.
 
+const NAMES_SOVIET := ["Ivanov", "Petrov", "Sidorov", "Volkov", "Kuznetsov", "Sokolov", "Popov", "Lebedev", "Orlov", "Morozov", "Vasiliev", "Borodin"]
 const NAMES := ["Cookie", "Sparks", "Stubby", "Doc", "Mac", "Swede", "Tex", "Lucky", "Moose", "Red", "Chips", "Gunner"]
 const TICK := 0.5
 
@@ -24,7 +25,7 @@ static func job(station_id: String) -> String:
 		return "torpedoman"
 	return {"helm": "helmsman", "dive": "planesman", "ballast": "ballast man", "periscope": "lookout",
 		"tdc": "TDC operator", "sonar": "sonarman", "engine": "motor machinist", "air": "auxiliaryman", "bilge": "pump man", "gun": "gunlayer", "ammo": "ammunition passer",
-		"nav": "navigator", "darts": "darts player"}.get(station_id, "crewman")
+		"nav": "navigator", "darts": "darts player", "first_mate": "first mate", "skipper": "skipper's writer"}.get(station_id, "crewman")
 
 
 # --- Requests (host) -------------------------------------------------------------
@@ -38,7 +39,7 @@ func request(station_id: String, key: String, value: Variant) -> void:
 			var id := int(game.crew.get("next_bot", -1))
 			game.crew.next_bot = id - 1
 			var sub := Sim.world.sub
-			var b := {"id": id, "name": NAMES[(-id - 1) % NAMES.size()], "auto": true,
+			var b := {"id": id, "name": (NAMES_SOVIET if sub.data.nuclear else NAMES)[(-id - 1) % NAMES.size()], "auto": true,
 				"course": sub.heading, "speed": sub.telegraph, "depth": sub.ordered_depth, "fire": false, "t": 0.0,
 				"look": {"build": randi() % 4, "skin": randi() % 6, "hair": randi() % 7, "hair_col": randi() % 7,
 					"beard": randi() % 7, "extra": randi() % 6, "hat": "watch", "hue": Profile.SHIRTS[randi() % Profile.SHIRTS.size()]}}
@@ -93,6 +94,7 @@ func _process(delta: float) -> void:
 	if _timer < TICK:
 		return
 	_timer = 0.0
+	_step_news()
 	_step_party()
 	var bots: Dictionary = game.crew.get("bots", {})
 	if bots.is_empty():
@@ -245,7 +247,7 @@ func _torpedoman(sid: String, b: Dictionary) -> void:
 
 ## Runs the diesels on the surface to charge, stops them before a dive.
 func _engine(b: Dictionary, _hunted: bool) -> void:
-	if not b.auto:
+	if not b.auto or Sim.world.sub.data.nuclear:
 		return
 	var sub := Sim.world.sub
 	var diving := sub.ordered_depth > 0.5 or sub.vents_open
@@ -400,6 +402,9 @@ func _carry_out(o: Dictionary) -> String:
 			for sid: String in _watch_stations():
 				if game.station_occupant(sid) == 0:
 					request(sid, "post", null)
+			if sub.data.key == "typhoon":
+				game.crew.full_crew = true
+				return "All hands, Skipper: 160 men at their posts, damage parties standing by."
 			return "All stations manned, Skipper."
 		"stand_down":
 			plan.clear()
@@ -424,6 +429,7 @@ func _carry_out(o: Dictionary) -> String:
 				request("air", "post", null)
 			return "Keeping the air sweet."
 		"report":
+			game.crew.mate_read = game.crew.get("mate_news", 0)
 			var trouble := problems()
 			return "All in order, Skipper." if trouble.is_empty() else "%s (%d more)" % [trouble[0], trouble.size() - 1] if trouble.size() > 1 else trouble[0]
 		"contacts":
@@ -465,7 +471,7 @@ func _ammo_up() -> String:
 func _watch_stations() -> Array[String]:
 	var out: Array[String] = []
 	for sid: String in game.interior.stations:
-		if sid in ["darts", "sand_table", "cameras", "nav"] or (sid in ["gun", "ammo"] and not Sim.world.sub.is_surfaced()):
+		if sid in ["darts", "sand_table", "cameras", "nav", "skipper"] or (sid in ["gun", "ammo"] and not Sim.world.sub.is_surfaced()):
 			continue
 		out.append(sid)
 	return out
@@ -758,6 +764,72 @@ func _step_party() -> void:
 	if not busy and not game.crew.get("full_crew", false):
 		party_size = 0
 		hull.teams.clear()
+
+
+# --- The notebooks (Typhoon) --------------------------------------------------------
+
+var _known_problems := 0
+
+
+## New trouble is news: the skipper's notebook says to check in with the first mate. On the
+## full crew's boat the damage parties stay turned out, the first mate sends them when a bot has
+## his notebook, and a player with it sends them himself ([F]).
+func _step_news() -> void:
+	var n := problems().size()
+	if n > _known_problems:
+		game.crew.mate_news = int(game.crew.get("mate_news", 0)) + 1
+		game.push_crew()
+		var writer := game.station_occupant("skipper")
+		if writer > 0:
+			game.notice.rpc_id(writer, "Check in with the first mate: he has news.")
+	_known_problems = n
+
+
+## The first mate, a bot: sends the damage parties to whatever's on his list, and reads it out.
+func _first_mate(b: Dictionary, _hunted: bool) -> void:
+	var list := problems()
+	if list.is_empty():
+		b.news = 0
+		return
+	send_party()
+	if list.size() > int(b.get("news", 0)):
+		game.announce.rpc("%s (first mate): %s Damage party's going." % [b.name, list[0]])
+	b.news = list.size()
+
+
+## Sends the damage parties: four on a full crew, two otherwise.
+func send_party() -> void:
+	party_size = maxi(party_size, 4 if game.crew.get("full_crew", false) else 2)
+
+
+## What the skipper should be thinking about, the most pressing first (his notebook).
+func pressing() -> Array[String]:
+	var out: Array[String] = []
+	var w := Sim.world
+	var sub := w.sub
+	var fish := w.torpedoes.filter(func(t: Torpedo) -> bool: return t.enemy)
+	if not fish.is_empty():
+		out.append("TORPEDO IN THE WATER: turn away and go deep. Tell the PA \"get us out of here\".")
+	if sub.reactor_down:
+		out.append("Reactor tripped: emergency motors only until it's repaired.")
+	if w.ships.any(func(s: ShipState) -> bool: return not s.is_sinking() and s.mode >= ShipAI.Mode.HUNT and s.pos.distance_to(sub.pos) < 6000.0):
+		out.append("We're being hunted: go deep and quiet, or sink them.")
+	if w.hull.water_fraction() > 0.08:
+		out.append("Flooding, %d%% of the boat." % roundi(w.hull.water_fraction() * 100.0))
+	if sub.depth > sub.data.test_depth * 0.9:
+		out.append("Near test depth, %d m: she won't take much more." % roundi(sub.depth))
+	var empty: Array[String] = []
+	for sid in ["helm", "dive", "sonar"]:
+		if game.station_occupant(sid) == 0:
+			empty.append(game.interior.stations[sid].display_name.to_lower())
+	if not empty.is_empty():
+		out.append("Nobody on the %s. Say \"all hands\" on the PA." % ", the ".join(empty))
+	if game.crew.get("orders", "") != "":
+		out.append("Your last order is under way: %s" % game.crew.orders)
+	for o: Dictionary in game.crew.get("objectives", []):
+		if not o.get("done", false):
+			out.append("Orders from the fleet: %s." % o.text)
+	return out
 
 
 ## Live jobs by id, "" when it's done: {id, tool, target, p, done}.

@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="MissionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/mission_data.gd" id="1_m"]
+
+[resource]
+script = ExtResource("1_m")
+key = "cw_duel"
+era = "cold_war"
+title = "Red Hunter"
+briefing = "An American attack submarine has found us. It is faster, quieter and it will not let go. It won't show on any chart, and neither will the sea floor until we have seen it. Sink it first."
+difficulty = 4
+start_depth = 60.0
+start_speed = 2
+battery = 1.0
+groups = Array[Dictionary]([{"type": "enemy_sub", "ships": ["los_angeles"], "pos": Vector2(2000, 4500), "course": 200.0, "speed": 8.0}])
+objectives = Array[Dictionary]([{"kind": "sink_class", "class": "los_angeles", "count": 1, "text": "Sink the American submarine"}])
+sea_state = 2
+layer_depth = 90.0
+limited_map = true

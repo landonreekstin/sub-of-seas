@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="MissionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/mission_data.gd" id="1_m"]
+
+[resource]
+script = ExtResource("1_m")
+key = "cw_battlegroup"
+era = "cold_war"
+title = "Carrier Battle Group"
+briefing = "An American carrier and her screen are steaming north. Get through the destroyers and sink the carrier."
+difficulty = 5
+start_depth = 60.0
+start_speed = 2
+battery = 1.0
+groups = Array[Dictionary]([{"type": "task_force", "ships": ["nimitz"], "escorts": ["ticonderoga", "spruance", "spruance"], "pos": Vector2(-1500, 8000), "course": 60.0, "speed": 20.0}])
+objectives = Array[Dictionary]([{"kind": "sink_class", "class": "nimitz", "count": 1, "text": "Sink the carrier"}])
+sea_state = 2
+layer_depth = 90.0

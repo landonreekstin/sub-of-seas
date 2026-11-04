@@ -108,7 +108,7 @@ func _on_sim_event(kind: String, data: Dictionary) -> void:
 			if data.echo:
 				_alert("ECHO-RANGING — he has us!", Vector2(data.x, data.y), now)
 		"splash":
-			_alert("SPLASHES! Depth charges in the water", Vector2(data.x, data.y), now)
+			_alert("SPLASHES! Charges in the water", Vector2(data.x, data.y), now)
 		"own_ping":
 			_echoes = data.echoes
 			_echo_time = now

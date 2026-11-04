@@ -98,7 +98,7 @@ static func _clause(c: String) -> Dictionary:
 		return {"intent": "attack", "target": "", "dir": _direction(c)}
 	if _has(c, ["fire", "torpedo", "torpedoes", "attack", "sink"]):
 		return {"intent": "attack", "target": "", "dir": _direction(c)}
-	if _has(c, ["battle", "stations", "hands", "crew", "man"]) and not _has(c, ["stand", "down"]):
+	if _has(c, ["battle", "stations", "hands", "crew", "man", "spawn"]) and not _has(c, ["stand", "down"]):
 		return {"intent": "man_stations"}
 	if " stand down " in c or " at ease " in c or _has(c, ["dismissed", "dismiss"]):
 		return {"intent": "stand_down"}

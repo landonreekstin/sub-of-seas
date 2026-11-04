@@ -359,7 +359,7 @@ func is_knocked_out() -> bool:
 func breathing() -> Vector2:
 	if Sim.world == null:
 		return Vector2.ZERO
-	var c := Sim.world.hull.comp_at(global_position.z)
+	var c := Sim.world.hull.comp_at_pos(global_position)
 	var smoke: float = Sim.world.air.smoke[c] if c < Sim.world.air.smoke.size() else 0.0
 	return Vector2(Sim.world.air.badness_in(c), smoke)
 
@@ -437,7 +437,7 @@ func _physics_process(delta: float) -> void:
 	# Wading through flood water is slow.
 	var wade := 0.0
 	if Game.instance.interior != null:
-		wade = clampf(Game.instance.interior.damage.water_height_at(position.z) - position.y, 0.0, 1.2) / 1.2
+		wade = clampf(Game.instance.interior.damage.water_height_at(position) - position.y, 0.0, 1.2) / 1.2
 	crouching = Input.is_action_pressed("crouch") and not Game.instance.menu_open() and emote == ""
 	var speed := SPEED * lerpf(1.0, 0.4, wade) * lerpf(1.0, 0.55, breathing().x) # bad air makes your legs heavy
 	if crouching:
@@ -725,6 +725,8 @@ func go_below() -> void:
 	if gun != null:
 		global_position = gun.global_transform * Vector3(0, 0.05, 0.75)
 		rotation.y = gun.global_rotation.y # facing the ladder, as he came down it
+	else:
+		global_position = Game.instance.interior.spawn_points[0] # no gun: back into the control room
 	Sfx.play_at(self, "door_open", Vector3(0, 1.0, 0), -6.0)
 
 

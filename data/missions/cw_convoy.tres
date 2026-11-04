@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="MissionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/mission_data.gd" id="1_m"]
+
+[resource]
+script = ExtResource("1_m")
+key = "cw_convoy"
+era = "cold_war"
+title = "Atlantic Convoy"
+briefing = "North Atlantic, 1985. A NATO reinforcement convoy is crossing to Europe with fast cargo ships and an oiler. Sink 60,000 tons and slip away."
+difficulty = 2
+start_depth = 60.0
+start_speed = 2
+battery = 1.0
+groups = Array[Dictionary]([{"type": "convoy", "ships": ["roro", "roro", "oiler"], "escorts": ["knox", "spruance"], "pos": Vector2(1000, 6000), "course": 90.0, "speed": 14.0}])
+objectives = Array[Dictionary]([{"kind": "tonnage", "value": 60000, "text": "Sink 60,000 tons"}])
+sea_state = 2
+layer_depth = 90.0
