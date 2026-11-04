@@ -1,5 +1,6 @@
 extends Node
-## Sound effects, all synthesised (tools/make_sounds.sh). One-shots play flat or at a point in
+## Sound effects, recordings (tools/make_recorded.py) and a few synthesised ones
+## (tools/make_sounds.sh). One-shots play flat or at a point in
 ## the boat's interior; loops are AudioStreamPlayer3Ds the caller keeps and fades.
 
 const DIR := "res://assets/audio/%s.wav"
@@ -14,7 +15,7 @@ func stream(sound: String) -> AudioStreamWAV:
 		if sound.ends_with("_loop"):
 			s.loop_mode = AudioStreamWAV.LOOP_FORWARD
 			s.loop_begin = 0
-			s.loop_end = s.data.size() / 2 # 16-bit mono samples
+			s.loop_end = int(s.get_length() * s.mix_rate) # in samples; the data is compressed
 		_streams[sound] = s
 	return _streams[sound]
 
@@ -40,13 +41,13 @@ func play(sound: String, volume_db := 0.0, pitch := 1.0) -> void:
 
 
 ## A one-shot from a place inside `parent` (freed when done).
-func play_at(parent: Node3D, sound: String, pos: Vector3, volume_db := 0.0, pitch := 1.0) -> void:
+func play_at(parent: Node3D, sound: String, pos: Vector3, volume_db := 0.0, pitch := 1.0, unit_size := 6.0) -> void:
 	var p := AudioStreamPlayer3D.new()
 	p.bus = "Effects"
 	p.stream = stream(sound)
 	p.volume_db = volume_db
 	p.pitch_scale = pitch
-	p.unit_size = 6.0
+	p.unit_size = unit_size
 	p.position = pos
 	parent.add_child(p)
 	p.finished.connect(p.queue_free)

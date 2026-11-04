@@ -1,11 +1,11 @@
 extends Node
-## The soundtrack (tools/make_music.py) on the Music bus: one looping track at a time,
+## The soundtrack (tools/make_music.py, real recorded instruments) on the Music bus: one looping track at a time,
 ## crossfaded, plus one-shot stings. The menu plays the shanty; a patrol plays the calm track
 ## and switches to the hunted one while escorts are after the boat (Game decides).
 
 const PATH := "res://assets/audio/music_%s.ogg"
 ## Each track's level under the effects: the patrol track sits well back.
-const LEVEL := {"menu": -6.0, "patrol": -12.0, "hunted": -8.0, "win": -4.0, "lost": -4.0}
+const LEVEL := {"menu": -7.0, "patrol": -14.0, "hunted": -8.0, "win": -8.0, "lost": -8.0}
 
 var current := ""
 var _players: Array[AudioStreamPlayer] = []

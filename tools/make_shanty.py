@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Synthesises the crew's band parts into assets/audio/shanty_<instrument>.ogg (run from the
-project root). Needs numpy and ffmpeg.
+"""Plays the crew's band parts on real recorded instruments (tools/samples.py) into
+assets/audio/shanty_<instrument>.ogg (run from the project root). Needs numpy and ffmpeg.
 
 Blaney: instruments of all types that each play their part of a song, so when all of them are
 in it is the whole song, like Sea of Thieves; first "The Foggy Dew" (the traditional Irish air
@@ -18,13 +18,13 @@ import wave
 import numpy as np
 
 sys.path.insert(0, os.path.dirname(__file__))
-import make_music as mm  # noqa: E402  (the shared synth helpers)
+import make_music as mm  # noqa: E402  (the shared mixing helpers)
+import samples as sm  # noqa: E402
 
 SR = mm.SR
 OUT = "assets/audio"
 BPM = 84
 BEAT = 60.0 / BPM
-rng = np.random.default_rng(11)
 
 # The air: (MIDI note, beats). A pickup, then A A B B A, four bars each (81 beats).
 A_BARS = [(64, 1), (64, .5), (66, .5), (67, 1), (69, 1), (71, 1.5), (69, .5), (67, 1), (64, 1), (62, 1), (64, 1), (66, 1), (62, 1)]
@@ -43,10 +43,6 @@ TOTAL = PICKUP + len(BARS) * 4
 LENGTH = int(TOTAL * BEAT * SR)
 
 
-def hz(m):
-    return mm.hz(m)
-
-
 def track():
     return np.zeros(LENGTH + SR * 4)
 
@@ -62,85 +58,19 @@ def melody_notes():
         at += beats
 
 
-def whistle(f, dur):
-    n = int(dur * SR)
-    t = np.arange(n) / SR
-    vib = 0.003 * np.sin(2 * np.pi * 5.8 * t) * np.minimum(1, t / 0.3)
-    ph = 2 * np.pi * f * np.cumsum(1 + vib) / SR
-    breath = rng.normal(0, 1, n) * 0.05 * mm.env(n, 0.01, 0.05)
-    return (np.sin(ph) + 0.12 * np.sin(2 * ph) + breath) * mm.env(n, 0.025, 0.08)
-
-
-def fiddle(f, dur):
-    n = int(dur * SR)
-    t = np.arange(n) / SR
-    vib = 0.006 * np.sin(2 * np.pi * 5.5 * t) * np.clip((t - 0.15) / 0.3, 0, 1)
-    ph = 2 * np.pi * f * np.cumsum(1 + vib) / SR
-    out = sum(np.sin(k * ph) / k ** 1.1 for k in range(1, 12))
-    bow = rng.normal(0, 1, n) * 0.03
-    return (out + bow) * mm.env(n, 0.07, 0.12)
-
-
-def guitar_chord(root, dur):
-    n = int(dur * SR)
-    t = np.arange(n) / SR
-    out = np.zeros(n)
-    for m in (root, root + 7, root + 12):  # a power chord
-        ph = 2 * np.pi * hz(m) * t
-        out += sum(np.sin(k * ph) / k for k in range(1, 8))
-    out = np.tanh(out * 2.5)  # overdrive
-    out = np.convolve(out, np.ones(6) / 6, mode="same")  # take the fizz off
-    return out * mm.env(n, 0.004, 0.06, 0.35, 0.18)
-
-
-def synth(fs, dur):
-    n = int(dur * SR)
-    t = np.arange(n) / SR
-    out = np.zeros(n)
-    for f in fs:
-        for det in (0.995, 1.0, 1.005):
-            ph = 2 * np.pi * f * det * t
-            out += sum(np.sin(k * ph) / k for k in range(1, 7))
-    out = np.convolve(out, np.ones(10) / 10, mode="same")
-    return out / (3 * len(fs)) * mm.env(n, 0.5, 0.6)
-
-
-def kit(kind, dur=0.35):
-    n = int(dur * SR)
-    t = np.arange(n) / SR
-    if kind == "kick":
-        return np.sin(2 * np.pi * (48 + 70 * np.exp(-t * 35)) * t) * np.exp(-t * 14)
-    if kind == "snare":
-        noise = rng.normal(0, 1, n)
-        return (noise * np.exp(-t * 22) * 0.7 + np.sin(2 * np.pi * 190 * t) * np.exp(-t * 30) * 0.5)
-    if kind == "hat":
-        noise = np.diff(rng.normal(0, 1, n), prepend=0)
-        return noise * np.exp(-t * 70) * 0.35
-    if kind == "crash":
-        noise = np.diff(rng.normal(0, 1, int(1.5 * SR)), prepend=0)
-        return noise * np.exp(-np.arange(len(noise)) / SR * 3.0) * 0.35
-    raise ValueError(kind)
-
-
-def bodhran(strong, dur=0.3):
-    n = int(dur * SR)
-    t = np.arange(n) / SR
-    f = 62 if strong else 90
-    skin = rng.normal(0, 1, n) * np.exp(-t * 50) * 0.25
-    return (np.sin(2 * np.pi * (f + 30 * np.exp(-t * 25)) * t) * np.exp(-t * (9 if strong else 16)) + skin) * (1.0 if strong else 0.55)
-
-
-def part_whistle():
+def part_whistle():  # recorder is the nearest thing to a tin whistle in the library
     x = track()
     for note, at, dur in melody_notes():
-        mm.place(x, whistle(hz(note + 12), dur * 0.95), at)
+        at, level = sm.human(at, late=0.005, spread=0.06)
+        mm.place(x, sm.note("recorder", note + 12, dur * 0.95, level, 0.05), at)
     return x
 
 
 def part_fiddle():
     x = track()
     for note, at, dur in melody_notes():
-        mm.place(x, fiddle(hz(note), dur * 0.98), at)
+        at, level = sm.human(at, late=0.008, spread=0.08)
+        mm.place(x, sm.note("fiddle", note, dur * 0.98, level, 0.12), at)
     return x
 
 
@@ -148,8 +78,9 @@ def part_concertina():
     x = track()
     for i, c in enumerate(BARS):
         for half in (0, 2):
-            for m in CHORDS[c]:
-                mm.place(x, mm.accordion(hz(m + 12), BEAT * 1.9), bar_start(i) + half * BEAT)
+            for k, m in enumerate(CHORDS[c]):
+                at, level = sm.human(bar_start(i) + half * BEAT, late=0.004, spread=0.05)
+                mm.place(x, sm.note("tango_accordion", m + 12, BEAT * 1.8, level, 0.1), at + k * 0.005)
     return x
 
 
@@ -157,8 +88,10 @@ def part_bodhran():
     x = track()
     for i in range(len(BARS)):
         for k in range(8):  # eighth notes, the stick going down and up, the beat leaned on
-            mm.place(x, bodhran(k in (0, 4), 0.3), bar_start(i) + k * 0.5 * BEAT)
-    mm.place(x, bodhran(False), 0)  # the pickup
+            at, level = sm.human(bar_start(i) + k * 0.5 * BEAT, late=0.005)
+            kind = "bodhran" if k in (0, 4) else "bodhran_soft"
+            mm.place(x, sm.hit(kind, 0.6, level * (1.0 if k in (0, 4) else 0.6)), at)
+    mm.place(x, sm.hit("bodhran_soft", 0.6, 0.6), 0)  # the pickup
     return x
 
 
@@ -166,8 +99,10 @@ def part_guitar():
     x = track()
     for i, c in enumerate(BARS):
         root = CHORDS[c][0] - 12
-        for at, dur in ((0, 1.4), (1.5, 0.9), (2.5, 0.5), (3, 1.0)):
-            mm.place(x, guitar_chord(root, dur * BEAT), bar_start(i) + at * BEAT)
+        for beat, dur in ((0, 1.4), (1.5, 0.9), (2.5, 0.5), (3, 1.0)):
+            for k, m in enumerate((root, root + 7, root + 12)):  # a power chord, strummed down
+                at, level = sm.human(bar_start(i) + beat * BEAT, late=0.003, spread=0.05)
+                mm.place(x, sm.note("overdriven_guitar", m, dur * BEAT, level, 0.06), at + k * 0.006)
     return x
 
 
@@ -176,9 +111,10 @@ def part_bass():
     for i, c in enumerate(BARS):
         root = CHORDS[c][0] - 12
         nxt = CHORDS[BARS[(i + 1) % len(BARS)]][0] - 12
-        for at, m in ((0, root), (2, root + 7), (3, root if nxt == root else nxt + (1 if nxt < root else -1))):
-            mm.place(x, mm.bass(hz(m), BEAT * 0.95) * 1.4, bar_start(i) + at * BEAT)
-    mm.place(x, mm.bass(hz(47), BEAT * 0.9) * 1.4, 0)  # B up to the E
+        for beat, m in ((0, root), (2, root + 7), (3, root if nxt == root else nxt + (1 if nxt < root else -1))):
+            at, level = sm.human(bar_start(i) + beat * BEAT, late=0.004)
+            mm.place(x, sm.note("electric_bass_finger", m, BEAT * 0.95, level, 0.06), at)
+    mm.place(x, sm.note("electric_bass_finger", 47, BEAT * 0.9, 1.0, 0.06), 0)  # B up to the E
     return x
 
 
@@ -187,26 +123,27 @@ def part_drums():
     for i in range(len(BARS)):
         b = bar_start(i)
         if i % 4 == 0:
-            mm.place(x, kit("crash"), b)
+            mm.place(x, sm.hit("crash", 2.5, 0.5), b)
         for at in (0, 2, 2.5):
-            mm.place(x, kit("kick"), b + at * BEAT)
+            t, level = sm.human(b + at * BEAT, late=0.004)
+            mm.place(x, sm.hit("kick", 0.6, level), t)
         for at in (1, 3):
-            mm.place(x, kit("snare"), b + at * BEAT)
+            t, level = sm.human(b + at * BEAT, late=0.004)
+            mm.place(x, sm.hit("snare", 0.5, level * 0.8), t)
         for k in range(8):
-            mm.place(x, kit("hat") * (1.0 if k % 2 == 0 else 0.6), b + k * 0.5 * BEAT)
+            t, level = sm.human(b + k * 0.5 * BEAT, late=0.004)
+            mm.place(x, sm.hit("hat", 0.15, level * (0.35 if k % 2 == 0 else 0.2)), t)
     return x
 
 
 def part_synth():
     x = track()
     for i, c in enumerate(BARS):
-        tones = [hz(m + 12) for m in CHORDS[c]]
-        mm.place(x, synth(tones, BEAT * 4.2) * 1.2, bar_start(i))
+        for m in CHORDS[c]:
+            mm.place(x, sm.note("pad_2_warm", m + 12, BEAT * 4, 0.6, 0.5, attack=0.4), bar_start(i))
         for k in range(8):  # a soft arpeggio over the pad
             m = CHORDS[c][[0, 1, 2, 1][k % 4]] + 24
-            n = int(BEAT * 0.45 * SR)
-            t = np.arange(n) / SR
-            mm.place(x, np.sign(np.sin(2 * np.pi * hz(m) * t)) * 0.12 * np.exp(-t * 8), bar_start(i) + k * 0.5 * BEAT)
+            mm.place(x, sm.note("lead_1_square", m, BEAT * 0.4, 0.12, 0.08), bar_start(i) + k * 0.5 * BEAT)
     return x
 
 
@@ -240,12 +177,11 @@ if __name__ == "__main__":
     stems = {}
     for name, (fn, level, wet) in PARTS.items():
         x = fn()
-        x = x / max(1e-6, np.sqrt(np.mean(x ** 2))) * 0.1 * level  # each part to its level by loudness
+        x = x / max(1e-6, np.sqrt(np.mean(x[np.abs(x) > 0] ** 2))) * 0.1 * level  # each part to its level by loudness
         stems[name] = mm.fold(mm.reverb(x, 1.3, wet), LENGTH)
     full = sum(stems.values())
     scale = 0.16 / np.sqrt(np.mean(full ** 2))  # the band by loudness, the drum hits soft-limited
     for name, x in stems.items():
         write(name, np.tanh(x * scale * 1.5) * 0.95)  # alone a part plays a little louder
         print(name, f"{LENGTH / SR:.1f} s")
-    if len(sys.argv) > 1:  # the whole band together, to listen to: make_shanty.py preview.ogg
-        write("full", np.tanh(full * scale) * 0.95, sys.argv[1])
+    write("full", np.tanh(full * scale) * 0.95, os.path.join(OUT, "music_foggy_dew.ogg"))  # the jukebox's copy

@@ -3,7 +3,11 @@ extends Node3D
 ## The rec room's jukebox. E puts the next record on (or switches it off); everyone in the
 ## room hears it. The record playing is crew state, so all agree.
 
-const RECORDS := [["Off", ""], ["The shanty", "menu"], ["Slow watch", "patrol"]]
+const RECORDS := [
+	["Off", ""], ["The shanty", "menu"], ["Slow watch", "patrol"], ["The Foggy Dew", "foggy_dew"],
+	["Anchors Aweigh, 1920", "record_anchors_1920"], ["Anchors Aweigh, 1929", "record_anchors_1929"],
+	["Over There, 1917", "record_over_there"],
+]
 
 var _player: AudioStreamPlayer3D
 var _playing := -1

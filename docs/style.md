@@ -73,7 +73,9 @@ and update "Current style" in the same commit.
   part runs on the same clock, so each joins in time and with all eight it's the whole song.
   First song: "The Foggy Dew", the traditional air, our own arrangement in E minor at 84 bpm:
   whistle (octave up) and fiddle on the tune, concertina chords, bodhrán eighths, overdriven
-  power chords, a walking bass, a rock kit, a soft synth pad and arpeggio.
+  power chords, a walking bass, a rock kit, a soft synth pad and arpeggio. All real recorded
+  instruments now (the whistle is a recorder, the nearest in the library), played a touch off the
+  beat like people, not machines.
 - **Deck gun** (lando: deck gun crewed from inside, up the conning-tower hatch, ammunition
   passed up): our boat on the surface seen from the gunlayer's seat, a black hull with a teak
   deck, the fairwater and periscope shears behind, the gun's dark barrel in the lower right of
@@ -153,11 +155,13 @@ and update "Current style" in the same commit.
   the crewman's own colour) with an open collar and sleeves to the elbow, belt and buckle,
   straight navy dungarees, black work boots; arms and legs swing as they walk, hands reach
   forward onto the gear at a station.
-- **Sound:** synthesised, not sampled (`tools/make_sounds.sh`): clean 1.5 kHz sonar ping,
-  harsh metallic echo-ranging when they find us, booms that roll, groaning creaks that come
+- **Sound** (Blaney: real recorded samples from free-to-use libraries; every source in
+  `docs/credits.md`, `tools/make_recorded.py`): real recordings wherever one suits, a real WWII
+  US Navy dive klaxon among them, each kept at the level of the synthesised sound it replaced so
+  the mix stays as tuned. Our own sonar ping, harsh metallic echo-ranging when they find us, booms that roll, groaning creaks that come
   more often deeper, an "ah-OO-gah" klaxon on opening the vents, alarm bell on a close one,
-  diesel chug, a soft airy motor whirr from aft (barely there slow, louder flat out, never a
-  low droning hum), hissing leaks, crackling fires. **Everything makes a sound** (lando): every
+  a recorded marine diesel, a soft airy motor whirr from aft (still synthesised: barely there
+  slow, louder flat out, never a low droning hum), hissing leaks, crackling fires. **Everything makes a sound** (lando): every
   control, station and action, and anything new gets one when it is made. Controls sound from
   where they are, for the whole crew, whoever worked them: a two-note telegraph ding on each
   speed order, gear clicks while the helm and planes wheels spin over (they turn to the order,
@@ -165,9 +169,9 @@ and update "Current style" in the same commit.
   hiss while blowing, a hydraulic whine as the periscope moves, a gurgling rush flooding a tube,
   a deep clang for doors and outer doors, a chain rattle for a reload, a diesel turning over and
   catching, pencil on the chart, footsteps that are very basic and subtle (a short,
-  soft, muffled shuffle: no clank or plate ring, no low thud; Blaney found the first version
-  sounded like knocking on his door and the second annoying and clanky; your own steps are
-  quieter than a crewmate's), a clang per ladder rung, a clink
+  soft, muffled shuffle cut from recorded steps on carpet: no clank or plate ring, no low thud;
+  Blaney found the first version sounded like knocking on his door and the second annoying and
+  clanky; half as loud again now: your own barely there, a crewmate's just audible when close), a clang per ladder rung, a clink
   picking up or putting down a tool.
 - **Handling** (Blaney): livelier than the real boat but still heavy and submarine-like, not a
   rocket ship. Speed changes are twice as quick, turns 1.6× and dives 1.5× (a Gato: 0 to 9 kn
@@ -225,11 +229,14 @@ and update "Current style" in the same commit.
 - **Rec room** (games picked by Claude while lando was away; add more): between the crew's
   quarters and the engine room on the Gato and Narwhal. A dartboard on the starboard wall (real rings and
   scoring, a swaying aim, three darts a turn, best turns chalked up and called out to the
-  crew), a jukebox with an amber glow that the room hears (the shanty, the slow watch), a
+  crew), a jukebox with an amber glow that the room hears (Blaney: both our own songs and crackly old
+  records: the shanty, the slow watch, The Foggy Dew by the whole band; Anchors Aweigh by the
+  Naval Academy Band in 1920 and the Navy Band in 1929, Over There by Billy Murray in 1917), a
   green-baize card table, a porthole.
-- **Music** (synthesised, `tools/make_music.py`; style picked by Claude while lando was away,
-  to match the Sea of Thieves direction; change it freely): the menu is an original D-minor
-  sea shanty on a two-reed accordion with oom-pah bass and stomp-clap; a patrol is a calm,
+- **Music** (`tools/make_music.py`, played on real recorded instruments in stereo, Blaney; style
+  picked by Claude while lando was away, to match the Sea of Thieves direction; change it
+  freely): the menu is an original D-minor sea shanty on accordion with oom-pah tuba and
+  stomp-clap; a patrol is a calm,
   sparse pad with a lonely flute; being hunted (an escort hunting within 6 km, charges in
   the water) brings in a heartbeat pulse under trembling strings, holding 20 s after; the
   debrief plays a short accordion fanfare for a completed patrol, a falling minor line for a
@@ -316,6 +323,6 @@ and update "Current style" in the same commit.
 | 2026-11-03 | Blaney | Arcade: no TDC or gyros, just point the bow and fire, with a lead marker on the periscope showing where to point. TDC and gyros saved for realistic. (Kept in Standard too, since lando wants existing mechanics kept until tried.) |
 | 2026-11-03 | Blaney | There should be a multi-crew tutorial for each section: each job's course taken by two or more players together, real crewmates giving the calls instead of the scripted ones. |
 | 2026-11-03 | Blaney | All the sleeping quarters should not be near the weapons or operation areas. |
-| 2026-11-03 | Blaney | The sound quality needs massive improvement: use real recorded samples from free-to-use libraries, starting with the band instruments, sound effects and the jukebox. Footsteps even quieter. *(Planned, not built yet.)* |
-| 2026-11-03 | Blaney | Footsteps half as loud: your own barely there, a crewmate's just audible when close. *(Planned, not built yet.)* |
-| 2026-11-03 | Blaney | The jukebox plays both our own songs on real recorded instruments and a few crackly old records, free ones only. *(Planned, not built yet.)* |
+| 2026-11-03 | Blaney | The sound quality needs massive improvement: use real recorded samples from free-to-use libraries, starting with the band instruments, sound effects and the jukebox. Footsteps even quieter. |
+| 2026-11-03 | Blaney | Footsteps half as loud: your own barely there, a crewmate's just audible when close. |
+| 2026-11-03 | Blaney | The jukebox plays both our own songs on real recorded instruments and a few crackly old records, free ones only. |
