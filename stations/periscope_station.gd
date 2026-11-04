@@ -139,6 +139,8 @@ func _on_the_wire() -> ShipState:
 	var best: ShipState = null
 	var best_off := 2.5 if not high_power else 1.0
 	for ship in Sim.world.ships:
+		if ship.submerged():
+			continue
 		var to := ship.pos - sub.pos
 		var brg := rad_to_deg(atan2(to.x, to.y))
 		var off := absf(wrapf(brg - true_brg, -180.0, 180.0))
@@ -207,7 +209,7 @@ func _draw_aim() -> void:
 		_aim_layer.draw_string(font, Vector2(bow_x - 24, cy + 112), "BOW", HORIZONTAL_ALIGNMENT_CENTER, 48, 18, UiKit.BRASS)
 	var sol: Dictionary = Sim.world.arcade_solution()
 	for ship in Sim.world.ships:
-		if ship.is_sinking() or ship.pos.distance_to(sub.pos) > 9000.0:
+		if ship.is_sinking() or ship.submerged() or ship.pos.distance_to(sub.pos) > 9000.0:
 			continue
 		var lead := Sim.world.lead_bearing(ship)
 		if is_nan(lead):

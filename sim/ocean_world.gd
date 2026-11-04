@@ -8,6 +8,7 @@ extends RefCounted
 ## Only emitted by authoritative steps.
 signal event(kind: String, data: Dictionary)
 
+const SUB_HIT_DEPTH := 30.0 ## m a torpedo can be off a submarine's depth and still hit her, in Arcade
 const SHIP_DIR := "res://data/ships/%s.tres"
 const TRACK_SIGHT := 1500.0 ## by day in a moderate sea, how far a lookout sees a torpedo track
 const TRACK_SPOT_RATE := 0.6 ## per second, close by
@@ -67,7 +68,9 @@ func add_ship(ship_class: ShipClassData, pos: Vector2, course: float, speed_kn: 
 	ship.speed = speed_kn * SubState.KNOT
 	ship.ordered_speed = ship.speed
 	ships.append(ship)
-	if ship_class.asw:
+	if ship_class.role == "sub":
+		EnemySubAI.new(ship)
+	elif ship_class.asw:
 		ShipAI.new(ship)
 	return ship
 
@@ -145,12 +148,28 @@ func fire_torpedo(gyro: float, stern := false) -> Torpedo:
 	t.heading = fposmod(aim + gyro, 360.0)
 	t.speed = torpedo_speed
 	t.dud = rng.randf() < dud_chance
+	t.depth = sub.depth
 	torpedoes.append(t)
 	event.emit("fired", {"id": t.id})
 	# Lookouts may spot the wake and trace it back.
 	for ship in ships:
 		if ship.ai != null and ship.pos.distance_to(sub.pos) < ship.data.lookout_range:
 			ship.ai.report(sub.pos, 350.0, rng, 0.5)
+	return t
+
+
+## An enemy sub's torpedo, run straight on `aim` at its own depth, a little slower than ours.
+func fire_enemy_torpedo(from: ShipState, aim: float) -> Torpedo:
+	var t := Torpedo.new()
+	t.id = _take_id()
+	t.pos = from.pos + from.direction() * from.data.length * 0.5
+	t.heading = fposmod(aim, 360.0)
+	t.speed = torpedo_speed * 0.8
+	t.enemy = true
+	t.depth = sub.depth # they've heard what depth we're at
+	t.dud = rng.randf() < dud_chance
+	torpedoes.append(t)
+	event.emit("enemy_torpedo", {"b": ShipState.bearing(sub.pos, t.pos)})
 	return t
 
 
@@ -285,7 +304,7 @@ func _think(ship: ShipState, dt: float) -> void:
 ## the very torpedo they saw would be too harsh for the arcade game.
 func _spot_tracks(dt: float) -> void:
 	for t in torpedoes:
-		if t.spotted or t.run < TRACK_MIN_RUN:
+		if t.enemy or t.spotted or t.run < TRACK_MIN_RUN:
 			continue
 		for ship in ships:
 			if ship.ai == null or ship.is_sinking() or ship.passive:
@@ -533,9 +552,14 @@ func _check_lost() -> void:
 
 
 func _check_hits(t: Torpedo) -> void:
+	if t.enemy:
+		_check_hit_on_us(t)
+		return
 	for ship in ships:
 		if ship.is_sinking() or ship.distance_to_hull(t.pos) > ship.data.beam * 0.5 + 1.0:
 			continue
+		if ship.data.role == "sub" and absf(ship.depth - t.depth) > SUB_HIT_DEPTH * (1.0 if realism == "arcade" else 0.5):
+			continue # it passes over or under her
 		t.alive = false
 		ship.alert()
 		var info := {"ship": ship.id, "x": t.pos.x, "y": t.pos.y, "name": ship.data.display_name}
@@ -545,6 +569,23 @@ func _check_hits(t: Torpedo) -> void:
 		event.emit("hit", info)
 		damage_ship(ship, 1.0, info)
 		return
+
+
+## An enemy torpedo that meets us goes off like the closest of depth charges.
+func _check_hit_on_us(t: Torpedo) -> void:
+	var half := sub.direction() * sub.data.length * 0.5
+	var near := Geometry2D.get_closest_point_to_segment(t.pos, sub.pos - half, sub.pos + half)
+	if near.distance_to(t.pos) > 6.0 or absf(sub.depth - t.depth) > SUB_HIT_DEPTH * 0.6:
+		return
+	t.alive = false
+	if t.dud:
+		event.emit("dud_on_us", {"x": t.pos.x, "y": t.pos.y})
+		return
+	var along := clampf((t.pos - sub.pos).dot(sub.direction()) / sub.data.length, -0.5, 0.5)
+	var side := signf((t.pos - sub.pos).dot(Vector2(sub.direction().y, -sub.direction().x)))
+	var dist := DepthCharge.HEAVY * 0.4
+	var dmg := hull.apply_blast(dist, lerpf(hull.comps[-1].z1, hull.comps[0].z0, along + 0.5), side if side != 0.0 else 1.0, rng) if not hull.comps.is_empty() else []
+	event.emit("blast", {"x": t.pos.x, "y": t.pos.y, "d": sub.depth, "dist": dist, "dmg": dmg})
 
 
 func to_snapshot() -> Dictionary:

@@ -243,10 +243,10 @@ func _sync_ships() -> void:
 			add_child(node)
 			_ships[ship.id] = node
 		var hit := ship.hp < ship.data.hp
-		if hit and not node.has_node("Burning") and (ship.data.burns or ship.is_sinking()):
+		if hit and not node.has_node("Burning") and not ship.submerged() and (ship.data.burns or ship.is_sinking()):
 			_set_burning(node, ship.data)
 		var bob := sin(Sim.world.time * 0.7 + ship.id) * 0.3
-		node.position = to_3d(ship.pos, bob - ship.sink * 30.0)
+		node.position = to_3d(ship.pos, bob - ship.sink * 30.0 - ship.depth)
 		node.rotation = Vector3(ship.sink * 0.35, -deg_to_rad(ship.heading), ship.sink * 0.5 + sin(Sim.world.time * 0.5 + ship.id) * 0.02)
 	for id: int in _ships.keys():
 		if not seen.has(id):
@@ -258,7 +258,7 @@ func _sync_ships() -> void:
 func _feed_wakes() -> void:
 	var data := PackedVector4Array()
 	var lens := PackedFloat32Array()
-	var near := Sim.world.ships.duplicate()
+	var near := Sim.world.ships.filter(func(s: ShipState) -> bool: return not s.submerged())
 	var here := Sim.world.sub.pos
 	near.sort_custom(func(a: ShipState, b: ShipState) -> bool: return a.pos.distance_squared_to(here) < b.pos.distance_squared_to(here))
 	for ship: ShipState in near.slice(0, 16):

@@ -4,7 +4,7 @@ extends Resource
 ## crew has to do. Positions in metres (x east, y north) from the boat's starting point.
 
 ## The patrols the host can pick, in menu order (the training patrol is separate).
-const KEYS: Array[String] = ["convoy", "tankers", "hunted", "carrier", "task_force", "sandbox"]
+const KEYS: Array[String] = ["convoy", "tankers", "hunted", "carrier", "task_force", "sub_duel", "sandbox"]
 
 @export var key := ""
 @export var title := ""
@@ -18,6 +18,7 @@ const KEYS: Array[String] = ["convoy", "tankers", "hunted", "carrier", "task_for
 @export var night := false
 @export var sea_state := 1 ## 0 calm, 1 moderate, 2 rough
 @export var layer_depth := 0.0 ## thermocline depth in metres, 0 = none
+@export var limited_map := false ## the chart and sand table only show what the boat has seen (ChartKnown)
 @export var squalls := -1 ## rain squalls kept about the patrol; -1 = by sea state (calm 1, moderate 2, rough 3), 0 = clear
 ## Each: {type: convoy | task_force | hunter_killer, ships: [class keys], escorts: [class keys],
 ## pos: Vector2, course, speed (kn), radius (hunter_killer)}.

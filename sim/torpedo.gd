@@ -12,6 +12,8 @@ var speed := SPEED ## m/s, from the realism level
 var run := 0.0 ## metres travelled
 var dud := false ## rolled at launch; a dud hits but does not explode
 var alive := true
+var enemy := false ## fired at us by an enemy sub
+var depth := 0.0 ## the depth it runs at: the firing boat's
 var spotted := false ## a lookout has seen its bubble track (once is enough)
 
 

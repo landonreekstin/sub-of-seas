@@ -29,6 +29,8 @@ var hud: Hud
 var pause_menu: PauseMenu
 var bot_crew: BotCrew
 var bot_orders: BotOrders ## open while the local player gives a bot orders
+var known := ChartKnown.new() ## what we've seen of the map, while crew.limited_map (an enemy-sub fight)
+var _known_timer := 0.0
 var pa_panel: PaPanel ## open while the local player has the PA microphone
 var local_player: Player
 var crew := {}
@@ -351,6 +353,8 @@ func _setup_mission() -> void:
 	for o: Dictionary in crew.objectives:
 		o.done = false
 	_lay_seabed()
+	if m.limited_map:
+		_limit_map.call_deferred()
 	for i in Sim.world.rng.randi_range(2, 3):
 		Sim.world.add_whale(Sim.world.rng.randf_range(1500.0, 6000.0))
 	if Net.debug_reef:
@@ -450,6 +454,7 @@ func _process(delta: float) -> void:
 	if interior == null or crew.is_empty():
 		return # a client still waiting to hear which boat this is
 	_pick_music()
+	_sweep_known(delta)
 	if multiplayer.is_server():
 		_host_tick(delta)
 	_show_objectives()
@@ -517,6 +522,8 @@ func _spawn_data(id: int) -> Array:
 
 
 func _on_peer_connected(id: int) -> void:
+	if crew.get("limited_map", false):
+		known_sync.rpc_id(id, known.origin, known.grid)
 	if not multiplayer.is_server():
 		return
 	print("%speer %d connected" % ["server: " if Net.dedicated else "", id])
@@ -536,6 +543,25 @@ func _on_peer_disconnected(id: int) -> void:
 	crew.tools.erase(id)
 	_clear_stations_of(id)
 	push_crew()
+
+
+## Every peer keeps the limited map up from the same replicated state; the host ends it (not on
+## the fight-only patrol) once the enemy sub is gone.
+func _sweep_known(delta: float) -> void:
+	if not crew.get("limited_map", false) or Sim.world == null:
+		return
+	_known_timer -= delta
+	if _known_timer > 0.0:
+		return
+	_known_timer = 1.0
+	if known.grid.is_empty():
+		known.start(Sim.world.sub.pos)
+	known.sweep(Sim.world)
+	if multiplayer.is_server() and not MissionData.load_key(crew.mission).limited_map \
+			and not Sim.world.ships.any(func(s: ShipState) -> bool: return s.data.role == "sub" and not s.is_sinking()):
+		crew.limited_map = false
+		announce.rpc("Enemy sub's gone. The whole chart's back on the table.")
+		push_crew()
 
 
 ## No soundtrack at sea (Blaney); the jukebox and anything else on it fall silent while anyone
@@ -806,9 +832,46 @@ func pa_call(who: String, text: String) -> void:
 	hud.crew_call(who, text)
 
 
-## "enemy sub" on the PA: built with the enemy submarines. Filled in with them.
-func call_enemy_sub(_attack: bool) -> String:
-	return "No enemy subs out here, Skipper."
+## "enemy sub" on the PA (Blaney): starts a fight with one somewhere close, or goes after the one
+## we have. The map goes dark for as long as it lasts.
+func call_enemy_sub(attack: bool) -> String:
+	var w := Sim.world
+	var live: Array = w.ships.filter(func(s: ShipState) -> bool: return s.data.role == "sub" and not s.is_sinking())
+	if not live.is_empty():
+		if attack and bot_crew.find_target("sub", {}) != null:
+			return bot_crew._carry_out({"intent": "attack", "target": "sub", "dir": {}})
+		return "There's one out there already, Skipper. Listen for it."
+	var at := w.sub.pos
+	for i in 40:
+		at = w.sub.pos + Vector2.from_angle(w.rng.randf() * TAU) * w.rng.randf_range(3000.0, 5500.0)
+		if w.seabed.floor_depth(at) > 90.0:
+			break
+	Formations.enemy_sub(w, at, ShipState.bearing(at, w.sub.pos), 4.0, enemy_sub_class())
+	if not crew.objectives.is_empty(): # the open patrol has none: one here would end it
+		crew.objectives.append({"kind": "sink_class", "class": enemy_sub_class(), "count": 1, "text": "Sink the enemy sub (bonus)", "bonus": true, "done": false})
+	_limit_map()
+	return "Enemy sub reported close by, Skipper. Rig for quiet: from here on the chart's only what we can see."
+
+
+func enemy_sub_class() -> String:
+	return "i_boat"
+
+
+## From now on the chart and sand table only show what the boat has seen.
+func _limit_map() -> void:
+	crew.limited_map = true
+	known.start(Sim.world.sub.pos)
+	known.sweep(Sim.world)
+	known_sync.rpc(known.origin, known.grid)
+	push_crew()
+
+
+## Host -> everyone: the host's picture of the map, on starting a fight or on joining one.
+@rpc("authority", "call_remote", "reliable")
+func known_sync(origin: Vector2, grid: PackedByteArray) -> void:
+	known.origin = origin
+	known.grid = grid
+	known.version += 1
 
 
 ## The skipper's word to the band: only a boat with a full crew has one to spare.
@@ -1416,6 +1479,13 @@ func _event_sound(kind: String, data: Dictionary) -> void:
 
 func _on_sim_event(kind: String, data: Dictionary) -> void:
 	_event_sound(kind, data)
+	if kind == "own_ping" and crew.get("limited_map", false):
+		known.reveal(Sim.world.sub.pos, ChartKnown.PING_RANGE, ChartKnown.SONAR)
+	if kind == "enemy_torpedo" and multiplayer.is_server():
+		announce.rpc("Sonar: TORPEDO IN THE WATER, bearing %03d!" % (roundi(float(data.b)) % 360))
+		alarm.rpc()
+	if kind == "dud_on_us":
+		announce.rpc("Something hit the hull... and didn't go off!") if multiplayer.is_server() else null
 	if kind == "hit" or kind == "beached":
 		exterior.explosion(Vector2(data.x, data.y))
 	elif kind == "grounded" and local_player != null:

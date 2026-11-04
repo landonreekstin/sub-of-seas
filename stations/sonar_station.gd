@@ -52,6 +52,8 @@ static func loudness(ship: ShipState, sub: SubState) -> float:
 	if d > HEAR_RANGE:
 		return 0.0
 	var screws := 0.25 + 0.75 * ship.speed / (ship.data.max_speed_kn * SubState.KNOT)
+	if ship.data.role == "sub":
+		screws *= 0.6 # a submarine runs quiet: only her own hydrophones' worth
 	var own := absf(sub.speed) / (sub.data.submerged_speed_kn * SubState.KNOT)
 	return clampf(screws * (1.0 - d / HEAR_RANGE) * 1.6 - own * 0.35, 0.0, 1.0)
 
@@ -84,6 +86,8 @@ static func classify(ship: ShipState) -> String:
 	var kn := ship.speed / SubState.KNOT
 	var turns := "turns for about %d knots" % (roundi(kn / 2.0) * 2)
 	match ship.data.role:
+		"sub":
+			return "faint, steady screws — SUBMARINE, %s, running about %d m" % [turns, roundi(ship.depth / 10.0) * 10]
 		"capital":
 			return "big heavy screws, four shafts — CAPITAL SHIP, %s" % turns
 		"chaser":

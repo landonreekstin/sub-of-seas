@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="ShipClassData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/ship_class_data.gd" id="1_s"]
+
+[resource]
+script = ExtResource("1_s")
+key = "i_boat"
+display_name = "I-class submarine"
+kind = "submarine"
+length = 108.0
+beam = 9.0
+max_speed_kn = 8.0
+cruise_speed_kn = 4.0
+max_turn_rate = 2.5
+hp = 1.0
+tonnage = 2200
+zigzag_angle = 0.0
+sink_time = 45.0
+role = "sub"
+hydrophone_range = 6000.0
+lookout_range = 3000.0
+hunt_speed_kn = 7.0
+search_speed_kn = 4.0

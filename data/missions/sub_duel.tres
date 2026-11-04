@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="MissionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/mission_data.gd" id="1_m"]
+
+[resource]
+script = ExtResource("1_m")
+key = "sub_duel"
+title = "Enemy Sub"
+briefing = "An enemy submarine is somewhere close, hunting us as we hunt it. It won't show on any chart, and neither will the sea floor until we've seen it: only what we can see from the surface or the scope, or sound out with sonar. Find it by ear and sink it."
+difficulty = 3
+start_depth = 45.0
+start_speed = 1
+battery = 0.9
+groups = Array[Dictionary]([{"type": "enemy_sub", "ships": ["i_boat"], "pos": Vector2(1500, 4000), "course": 200.0, "speed": 4.0}])
+objectives = Array[Dictionary]([{"kind": "sink_class", "class": "i_boat", "count": 1, "text": "Sink the enemy submarine"}])
+sea_state = 1
+layer_depth = 60.0
+limited_map = true
