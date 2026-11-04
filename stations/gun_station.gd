@@ -181,6 +181,8 @@ func _rangefinder() -> void:
 	var best: ShipState = null
 	var best_off := 1.5 if zoom else 3.0
 	for ship in Sim.world.ships:
+		if ship.submerged():
+			continue
 		var to := ship.pos - sub.pos
 		var off := absf(wrapf(rad_to_deg(atan2(to.x, to.y)) - true_brg, -180.0, 180.0))
 		if off < best_off and to.length() < sub.data.gun_range * 1.5 and not ship.is_sinking():

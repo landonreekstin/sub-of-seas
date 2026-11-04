@@ -14,6 +14,12 @@ const LAND := Color("#C9B27A")
 const SHOAL := Color("#8FBCD0") ## under 12 m: reefs, keep off
 const SHALLOW := Color("#B9D3D8") ## under 100 m: room to bottom out
 const DARK_RED := Color("#7A2A22")
+const UNSEEN := Color("#BDB59C") ## the limited map (ChartKnown): nothing known here
+const UNSEEN_HATCH := Color("#ADA58C")
+const SONAR_LAND := Color("#3E5770") ## sonar-only: a hard echo, no colours, in dots
+const SONAR_SHOAL := Color("#6D8C9E")
+const SONAR_DEEP := Color("#A8B8B8")
+const LIMITED_REDRAW := 3000 ## ms between redraws as more of it comes in
 const LAND_SAMPLES := 180 ## across the chart, for the land and shoal picture
 
 var half_width := 5000.0 ## metres from the boat to the left/right edge
@@ -21,6 +27,8 @@ var font: Font
 var _land_tex: ImageTexture
 var _land_rect := Rect2() ## world rect (x east, y north) the land picture covers
 var _land_key := ""
+var _known_drawn := -1
+var _known_at := 0
 
 
 func _ready() -> void:
@@ -80,6 +88,8 @@ func _draw() -> void:
 		draw_arc(c, 10.0, 0.0, TAU, 20, PENCIL, 2.0)
 		draw_string(font, c + Vector2(12, -8), str(i + 1), HORIZONTAL_ALIGNMENT_LEFT, -1, 16, PENCIL)
 	_draw_boat()
+	if crew.get("limited_map", false):
+		draw_string(font, Vector2(12, size.y - 32), "ONLY WHAT WE'VE SEEN.  Clear: by eye.  Dotted: by sonar (P pings further).  Shaded: unknown.", HORIZONTAL_ALIGNMENT_LEFT, -1, 15, PENCIL)
 	draw_string(font, Vector2(12, size.y - 12), "%d km across   north up" % roundi(half_width * 2.0 / 1000.0),
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 16, PENCIL)
 
@@ -88,11 +98,16 @@ func _draw() -> void:
 ## chart, redrawn when the zoom or seabed changes or the boat moves a fair way.
 func _draw_land() -> void:
 	var seabed := Sim.world.seabed
-	if seabed.features.is_empty() or size.x < 1.0 or size.y < 1.0:
+	var known: ChartKnown = Game.instance.known if Game.instance.crew.get("limited_map", false) else null
+	if (seabed.features.is_empty() and known == null) or size.x < 1.0 or size.y < 1.0:
 		return
 	var span := Vector2(half_width, half_width * size.y / maxf(size.x, 1.0)) * 1.3
 	var here := Sim.world.sub.pos
-	var key := "%d/%d/%d" % [seabed.version, roundi(half_width), roundi(size.y)]
+	var key := "%d/%d/%d/%s" % [seabed.version, roundi(half_width), roundi(size.y), known != null]
+	if known != null and known.version != _known_drawn and Time.get_ticks_msec() - _known_at > LIMITED_REDRAW:
+		_known_drawn = known.version
+		_known_at = Time.get_ticks_msec()
+		_land_key = ""
 	var moved := _land_tex == null or not _land_rect.grow(-half_width * 0.15).has_point(here)
 	if key != _land_key or moved or _land_tex == null:
 		_land_key = key
@@ -105,17 +120,31 @@ func _draw_land() -> void:
 				var p := Vector2(_land_rect.position.x + (i + 0.5) / w * _land_rect.size.x,
 					_land_rect.end.y - (j + 0.5) / h * _land_rect.size.y)
 				var d := seabed.floor_depth(p)
-				img.set_pixel(i, j, LAND if d < 0.0 else (SHOAL if d < 12.0 else (SHALLOW if d < 100.0 else Color(SHALLOW, 0.0))))
+				var clear := LAND if d < 0.0 else (SHOAL if d < 12.0 else (SHALLOW if d < 100.0 else Color(SHALLOW, 0.0)))
+				img.set_pixel(i, j, clear if known == null else _limited_pixel(known.at(p), d, i, j, clear))
 		_land_tex = ImageTexture.create_from_image(img)
 	var tl := to_chart(Vector2(_land_rect.position.x, _land_rect.end.y))
 	var br := to_chart(Vector2(_land_rect.end.x, _land_rect.position.y))
 	draw_texture_rect(_land_tex, Rect2(tl, br - tl), false)
 
 
+## By eye it's a proper chart; by sonar, dots of hard grey-blue with no colours; else nothing.
+static func _limited_pixel(seen: int, depth: float, i: int, j: int, clear: Color) -> Color:
+	if seen & ChartKnown.SIGHT:
+		return clear
+	if seen & ChartKnown.SONAR:
+		if (i + j) % 2 == 1:
+			return Color(SONAR_DEEP, 0.0)
+		return SONAR_LAND if depth < 12.0 else (SONAR_SHOAL if depth < 100.0 else SONAR_DEEP)
+	return UNSEEN_HATCH if (i + j) % 6 == 0 else UNSEEN
+
+
 ## The least depth over each seamount and shelf, as a chart sounding.
 func _draw_soundings() -> void:
 	for f: Dictionary in Sim.world.seabed.features:
 		if f.kind == "island":
+			continue
+		if Game.instance.crew.get("limited_map", false) and Game.instance.known.at(Vector2(f.x, f.y)) == 0:
 			continue
 		var c := to_chart(Vector2(f.x, f.y))
 		if Rect2(Vector2.ZERO, size).has_point(c):

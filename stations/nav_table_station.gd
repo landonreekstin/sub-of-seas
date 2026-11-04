@@ -12,12 +12,16 @@ const TOP := 0.92 ## m, the table's sea level above the deck
 const GRID := 96 ## cells a side
 const LAND_SCALE := 0.22 ## m of model for the highest peak
 const DEEP_SCALE := 0.12 ## m of model for the deep ocean floor
+const UNSEEN := Color("#2B2720") ## the limited map (ChartKnown): flat dark sand, nothing moulded yet
+const REBUILD_MS := 8000
 
 var _relief: MeshInstance3D
 var _boat: Node3D
 var _built_version := -1
 var _area := Rect2() ## the sim area the model shows (x east, y north, m)
 var _scale_label: Label3D
+var _known_built := -1
+var _known_at := 0
 
 
 func _ready() -> void:
@@ -69,8 +73,12 @@ func _process(_delta: float) -> void:
 	var sub := Sim.world.sub
 	var seabed := Sim.world.seabed
 	var inside := _area.grow(-_area.size.x * 0.06).has_point(sub.pos)
-	if seabed.version != _built_version or not inside:
-		_build(seabed, sub.pos)
+	var known: ChartKnown = Game.instance.known if Game.instance.crew.get("limited_map", false) else null
+	var stale := (known != null and known.version != _known_built and Time.get_ticks_msec() - _known_at > REBUILD_MS and _someone_near()) or (known == null) != (_known_built == -1)
+	if seabed.version != _built_version or not inside or stale:
+		_known_built = known.version if known != null else -1
+		_known_at = Time.get_ticks_msec()
+		_build(seabed, sub.pos, known)
 	var at := _to_table(sub.pos)
 	_boat.position = Vector3(at.x, TOP + 0.012, at.y)
 	_boat.rotation.y = -deg_to_rad(sub.heading)
@@ -92,20 +100,29 @@ func _bounds(seabed: Seabed, boat: Vector2) -> Rect2:
 	return Rect2(r.get_center() - Vector2(side, side) * 0.5, Vector2(side, side))
 
 
-func _build(seabed: Seabed, boat: Vector2) -> void:
+func _someone_near() -> bool:
+	var me := Game.instance.local_player
+	return me != null and me.global_position.distance_to(global_position) < 9.0
+
+
+func _build(seabed: Seabed, boat: Vector2, known: ChartKnown = null) -> void:
 	_built_version = seabed.version
 	_area = _bounds(seabed, boat)
-	_scale_label.text = "the patrol area, %d km across" % roundi(_area.size.x / 1000.0)
+	_scale_label.text = "%s, %d km across" % ["what we've seen of it" if known != null else "the patrol area", roundi(_area.size.x / 1000.0)]
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var cell := SIZE / GRID
 	var h := []
+	var seen := []
 	for j in GRID + 1:
 		var row := []
+		var seen_row := []
 		for i in GRID + 1:
 			var p := _area.position + Vector2(i, GRID - j) * (_area.size.x / GRID)
 			row.append(seabed.floor_depth(p))
+			seen_row.append(known.at(p) if known != null else ChartKnown.SIGHT)
 		h.append(row)
+		seen.append(seen_row)
 	for j in GRID:
 		for i in GRID:
 			var quad := [Vector2i(i, j), Vector2i(i + 1, j), Vector2i(i + 1, j + 1), Vector2i(i, j + 1)]
@@ -113,8 +130,9 @@ func _build(seabed: Seabed, boat: Vector2) -> void:
 				for k: int in tri:
 					var q: Vector2i = quad[k]
 					var d: float = h[q.y][q.x]
-					st.set_color(_colour(d))
-					st.add_vertex(Vector3(-SIZE * 0.5 + q.x * cell, _height(d), -SIZE * 0.5 + q.y * cell))
+					var s: int = seen[q.y][q.x]
+					st.set_color(_colour(d) if s & ChartKnown.SIGHT else (_sonar_colour(d) if s else UNSEEN))
+					st.add_vertex(Vector3(-SIZE * 0.5 + q.x * cell, _height(d) if s else -0.004, -SIZE * 0.5 + q.y * cell))
 	st.generate_normals()
 	_relief.mesh = st.commit()
 
@@ -124,6 +142,11 @@ static func _height(depth: float) -> float:
 	if depth < 0.0:
 		return minf(-depth, 300.0) / 300.0 * LAND_SCALE
 	return -sqrt(minf(depth, Seabed.BASE) / Seabed.BASE) * DEEP_SCALE - 0.004
+
+
+## Sonar only: the shape of it, grey-blue, no colours. Eyes see the rest (Blaney).
+static func _sonar_colour(depth: float) -> Color:
+	return Color("#3E5770").lerp(Color("#8FA6AE"), clampf(sqrt(maxf(depth, 0.0) / Seabed.BASE), 0.0, 1.0))
 
 
 static func _colour(depth: float) -> Color:
@@ -140,5 +163,8 @@ static func _colour(depth: float) -> Color:
 
 func _build_overlay(root: Control) -> void:
 	var box := UiKit.bottom_panel(root)
-	box.add_child(UiKit.label("SAND TABLE — the whole patrol area. Brass boat: us. Green: land; pale: reefs and shallows; dark: deep water.", 18))
+	if Game.instance.crew.get("limited_map", false):
+		box.add_child(UiKit.label("SAND TABLE — only what we've seen. Coloured: by eye. Grey-blue: by sonar. Dark and flat: unknown.", 18))
+	else:
+		box.add_child(UiKit.label("SAND TABLE — the whole patrol area. Brass boat: us. Green: land; pale: reefs and shallows; dark: deep water.", 18))
 	box.add_child(UiKit.label("[Q] step back", 16, UiKit.DIM))

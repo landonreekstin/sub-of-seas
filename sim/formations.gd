@@ -26,6 +26,8 @@ static func spawn(world: OceanWorld, g: Dictionary) -> Array[ShipState]:
 			return task_force(world, pos, course, speed, ships, escorts)
 		"hunter_killer":
 			return hunter_killer(world, pos, course, ships, g.get("radius", 3000.0))
+		"enemy_sub":
+			return [enemy_sub(world, pos, course, speed, ships[0])] as Array[ShipState]
 		_:
 			return convoy(world, pos, course, speed, ships, escorts)
 
@@ -96,3 +98,11 @@ static func hunter_killer(world: OceanWorld, pos: Vector2, course: float, hunter
 			s.ai.sweep = legs
 		out.append(s)
 	return out
+
+
+## A lone submarine, dived, keeping off the bottom.
+static func enemy_sub(world: OceanWorld, pos: Vector2, course: float, speed: float, key: String) -> ShipState:
+	var ship := world.add_ship(ship_class(key), pos, course, speed)
+	ship.depth = clampf(world.seabed.floor_depth(pos) - 15.0, 15.0, 45.0)
+	(ship.ai as EnemySubAI).set_depth(ship.depth)
+	return ship

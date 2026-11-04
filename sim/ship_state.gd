@@ -17,6 +17,7 @@ var awareness := 0.0 ## 0..1, how sure it is that a sub is near (see Detection)
 var ai: ShipAI = null ## host only, for anti-submarine ships
 var mode := 0 ## ShipAI.Mode, replicated so stations can show it
 var passive := false ## scripted (training): no lookouts, no zig-zag, holds course and speed
+var depth := 0.0 ## metres under the water: only a submarine has any
 var gun_timer := 0.0 ## host: seconds to its next salvo at a surfaced sub
 var launch_timer := 0.0 ## host: seconds before it can launch another plane
 var leader: ShipState = null ## host: in formation, keeps station on this ship until alerted
@@ -34,6 +35,11 @@ func _init(ship_class: ShipClassData) -> void:
 
 func is_sinking() -> bool:
 	return hp <= 0.0
+
+
+## Under the water: no eye or scope finds it, and it leaves no wake.
+func submerged() -> bool:
+	return depth > 5.0
 
 
 func direction() -> Vector2:
@@ -96,7 +102,7 @@ func alert() -> void:
 func to_snapshot() -> Dictionary:
 	return {
 		"id": id, "k": data.key, "p": pos, "h": heading, "c": course,
-		"s": speed, "os": ordered_speed, "hp": hp, "sk": sink, "m": mode,
+		"s": speed, "os": ordered_speed, "hp": hp, "sk": sink, "m": mode, "d": depth,
 	}
 
 
@@ -109,6 +115,7 @@ func apply_snapshot(s: Dictionary) -> void:
 	hp = s.hp
 	sink = s.sk
 	mode = s.m
+	depth = s.get("d", 0.0)
 
 
 static func bearing(from: Vector2, to: Vector2) -> float:

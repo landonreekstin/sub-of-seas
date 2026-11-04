@@ -177,6 +177,8 @@ func _sonar(b: Dictionary, _hunted: bool) -> void:
 	heard.sort_custom(func(x: Dictionary, y: Dictionary) -> bool: return x.loud > y.loud)
 	var top: Dictionary = heard[0]
 	var what: String = "biological, a whale" if top.c is Whale else SonarStation.classify(top.c).get_slice(" — ", 1).to_lower()
+	if top.c is ShipState and top.c.data.role == "sub":
+		game.alarm.rpc() # the one sonar report worth waking people for
 	game.announce.rpc("%s (sonar): contact bearing %03d, %s." % [b.name, roundi(top.b) % 360, what])
 	_order("sonar", b, "plot", float(top.b))
 
@@ -201,7 +203,7 @@ func _periscope(b: Dictionary, hunted: bool) -> void:
 	var best: ShipState = _plan_target()
 	if best == null:
 		for s in Sim.world.ships:
-			if not s.is_sinking() and s.pos.distance_to(sub.pos) < 8000.0 and (best == null or s.pos.distance_to(sub.pos) < best.pos.distance_to(sub.pos)):
+			if not s.is_sinking() and not s.submerged() and s.pos.distance_to(sub.pos) < 8000.0 and (best == null or s.pos.distance_to(sub.pos) < best.pos.distance_to(sub.pos)):
 				best = s
 	if best != null:
 		var r := best.pos.distance_to(sub.pos) * randf_range(0.97, 1.03)
@@ -303,7 +305,7 @@ func _gun_target() -> ShipState:
 	for s in Sim.world.ships:
 		var d := s.pos.distance_to(sub.pos)
 		var rel := wrapf(ShipState.bearing(sub.pos, s.pos) - sub.heading, -180.0, 180.0)
-		if s.is_sinking() or s.passive or d > sub.data.gun_range * 0.85 or absf(rel) > GunStation.ARC:
+		if s.is_sinking() or s.passive or s.submerged() or d > sub.data.gun_range * 0.85 or absf(rel) > GunStation.ARC:
 			continue
 		if best == null or d < best.pos.distance_to(sub.pos):
 			best = s
@@ -540,8 +542,10 @@ func _order_attack(o: Dictionary) -> String:
 func begin_attack(target: ShipState) -> void:
 	plan = {"kind": "attack", "id": target.id, "next": 0.0, "last": _last_fire, "fish": 0}
 	var hands: Array[String] = ["helm", "dive", "ballast"]
-	if not game.arcade_aim():
+	if not game.arcade_aim() and target.data.role != "sub":
 		hands.append_array(["periscope", "tdc"] as Array[String])
+	if target.data.role == "sub":
+		hands.append("sonar")
 	var tubes := 0
 	for i in game.crew.tubes.size():
 		if not game.crew.tubes[i].get("stern", false) and tubes < 3:
@@ -617,9 +621,9 @@ func _step_plan() -> void:
 	if bots.has("helm"):
 		bots.helm.course = course
 		bots.helm.speed = 4 if r > 4000.0 else (3 if r > 2000.0 else 2)
-	if bots.has("dive") and target.data.role != "sub":
-		bots.dive.depth = sub.data.periscope_depth
-	if not game.arcade_aim():
+	if bots.has("dive"):
+		bots.dive.depth = target.depth if target.data.role == "sub" else sub.data.periscope_depth
+	if not game.arcade_aim() and target.data.role != "sub": # a sub is hunted by ear: down the bearing at any level
 		if bots.has("periscope"):
 			bots.periscope.auto = true
 			bots.periscope.mark = float(bots.periscope.t) >= 10.0

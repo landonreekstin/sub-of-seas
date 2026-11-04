@@ -28,6 +28,8 @@ static func build(data: ShipClassData) -> Node3D:
 			_kaibokan(root, data)
 		"subchaser":
 			_subchaser(root, data)
+		"submarine":
+			_submarine(root, data)
 		_:
 			_freighter(root, data)
 	return root
@@ -281,6 +283,18 @@ static func _tri(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, hint: Vect
 	st.add_vertex(a)
 	st.add_vertex(b)
 	st.add_vertex(c)
+
+
+## An enemy submarine: a long dark cigar, a conning tower, planes and screws. No wake, no deck.
+static func _submarine(root: Node3D, d: ShipClassData) -> void:
+	var col := Color("#26292D")
+	var hull := Build.sphere(root, 1.0, Vector3.ZERO, col, 0.0)
+	hull.scale = Vector3(d.beam * 0.5, d.beam * 0.5, d.length * 0.5)
+	Build.box(root, Vector3(d.beam * 0.3, d.beam * 0.55, d.length * 0.13), Vector3(0, d.beam * 0.68, -d.length * 0.08), col)
+	for side in [-1.0, 1.0]:
+		Build.box(root, Vector3(d.beam * 0.5, 0.2, 2.6), Vector3(side * d.beam * 0.6, 0, -d.length * 0.34), col)
+		Build.box(root, Vector3(d.beam * 0.45, 0.2, 2.4), Vector3(side * d.beam * 0.42, 0, d.length * 0.44), col)
+	Build.box(root, Vector3(0.25, d.beam * 0.6, 3.2), Vector3(0, 0, d.length * 0.46), col)
 
 
 static func _freighter(root: Node3D, d: ShipClassData) -> void:

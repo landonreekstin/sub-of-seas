@@ -215,6 +215,13 @@ and update "Current style" in the same commit.
   glowing tip, drooping from the corner of the mouth; scar, pipe, bandage), the rank hats (Dixie cup, watch cap,
   ball cap, officer's and skipper's caps, sized to the head) and a shirt colour, in
   "Your sailor..." on the main menu.
+- **Enemy sub** (Blaney): a long dark cigar under the water with a conning tower, seen only through a
+  porthole or camera if it comes close; never on a chart. Sonar hears "faint, steady screws —
+  SUBMARINE" and roughly its depth; its torpedoes bring the alarm and "TORPEDO IN THE WATER". In the
+  fight the chart and sand table show only what we've seen: by eye (surfaced or scope up) the usual
+  chart colours; by sonar (the patch under us, further with a ping) grey-blue dots on the chart and
+  grey-blue relief on the table; the rest shaded paper and flat dark sand. Starts as a patrol on the
+  menu, or "enemy sub" on the PA on any patrol, when the whole map comes back once she's gone.
 - **Handing over** (Blaney): J at any station: a bot takes it over and you walk off.
 - **Bot crewmen:** look like any crewman (random build, face and shirt, a navy watch cap),
   standing their station with hands on the gear and a name tag with their job ("Sparks
@@ -335,3 +342,4 @@ and update "Current style" in the same commit.
 | 2026-11-04 | Blaney | There should not be background music in the game; the only music should be from the instruments. "I like the menu music, and I like the instruments, can we make it so that the other music stops when we play instruments?" (Style conflict with lando's 2026-10-30 "Add music": the menu stays, the patrol and hunted tracks and the debrief stings go.) |
 | 2026-11-04 | Blaney | Make sprinting a bit faster (for the full-size Typhoon). |
 | 2026-11-04 | Blaney | A way to spawn bots to take over your role if you are occupying a position. A PA microphone you can type into that tells the crew the current objective: a general crew instruction system, automatic once a command is done, that says so if the crew are confused and is relatively intuitive ("go sink the ship to the east", "dive to the bottom of the ocean"); it learns more as more is built. |
+| 2026-11-04 | Blaney | An option to start a battle with another enemy sub near you. Your map cannot show the sub, only the map around your sub given the equipment you have: with only sonar the map looks different than relying on eyesight above water. It starts from the menu or on the PA with the keyword "enemy sub"; the limited map is only for these fights. |
