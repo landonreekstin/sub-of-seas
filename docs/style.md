@@ -222,6 +222,22 @@ and update "Current style" in the same commit.
   chart colours; by sonar (the patch under us, further with a ping) grey-blue dots on the chart and
   grey-blue relief on the table; the rest shaded paper and flat dark sand. Starts as a patrol on the
   menu, or "enemy sub" on the PA on any patrol, when the whole map comes back once she's gone.
+- **Typhoon** (Blaney: exact layout, a whole crew of competent sailors; lando: the most realistic
+  boat of the nuclear era): real full size, 175 m, so the walks are long and the sprint is faster.
+  Five pressure hulls: two long main hulls side by side, a command hull above them, a torpedo hull
+  forward and a steering hull aft, with two rows of ten pale grey-green missile tubes, numbered in red,
+  either side of an aisle between the main hulls. Nineteen rooms, each signed over its doors in Russian
+  with English under it. No exact plan is published, so the rooms within the hulls are our best fit.
+  Reactor rooms have olive shielding with yellow ☢ signs either side of a narrow aisle. The long rooms
+  have a lamp every 14 m or so. Short cross passages with watertight doors join the hulls. Sailors have Russian
+  names and navy watch caps. "All hands" on the PA fills the boat: three men in each room you can see,
+  stations manned, damage parties who walk through the doors and up the ladder, opening a shut door and
+  shutting it behind them. Two notebooks on stands in the command bay: the first mate's list of
+  everything wrong, and the skipper's of what's pressing, with "CHECK IN WITH THE FIRST MATE" when
+  there's news. "Band play" sends forty hands to the rec room, eight on the instruments, playing The
+  Foggy Dew or along with the record. Enemies are Cold War US ships and submarines. Music: a slow original
+  men's choir over low strings and timpani (Blaney: the mood of The Hunt for Red October), the one
+  soundtrack at sea, quiet under everything else.
 - **Handing over** (Blaney): J at any station: a bot takes it over and you walk off.
 - **Bot crewmen:** look like any crewman (random build, face and shirt, a navy watch cap),
   standing their station with hands on the gear and a name tag with their job ("Sparks
@@ -343,3 +359,7 @@ and update "Current style" in the same commit.
 | 2026-11-04 | Blaney | Make sprinting a bit faster (for the full-size Typhoon). |
 | 2026-11-04 | Blaney | A way to spawn bots to take over your role if you are occupying a position. A PA microphone you can type into that tells the crew the current objective: a general crew instruction system, automatic once a command is done, that says so if the crew are confused and is relatively intuitive ("go sink the ship to the east", "dive to the bottom of the ocean"); it learns more as more is built. |
 | 2026-11-04 | Blaney | An option to start a battle with another enemy sub near you. Your map cannot show the sub, only the map around your sub given the equipment you have: with only sonar the map looks different than relying on eyesight above water. It starts from the menu or on the PA with the keyword "enemy sub"; the limited map is only for these fights. |
+| 2026-11-04 | Blaney | Build a Typhoon-class sub with exact layout details and a whole crew of competent sailors you can spawn in. The PA in the command bay commands them. A first mate's list shows everything wrong with the sub, and sailors can fix any issue given time; a bot or a player can possess the notebook. The skipper's notebook says what's pressing, with a note to check in with the first mate when there's news. "Make sure this sub change doesn't lag anything out." |
+| 2026-11-04 | Blaney | The Typhoon is real full size (175 m) with a faster sprint, fights Cold War enemies, and has music and sounds in the mood of The Hunt for Red October. (An original piece: the film's theme is copyrighted. Style conflict with his own "no background music at sea": the Typhoon alone has a soundtrack, at his choice.) |
+| 2026-11-04 | Blaney | The Typhoon can make a decent portion of the crew play whatever song is being played, at the skipper's command. |
+| 2026-11-04 | Blaney | Typhoon damage parties shouldn't walk through walls: send them through the doors. |

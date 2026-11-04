@@ -639,7 +639,7 @@ func _dressing(c: Dictionary, hatch: Rect2) -> void:
 			for k in 4:
 				Build.cyl(_at, 0.04, 0.09, Vector3(1.1 + (k % 2) * 0.35, 0.83, tz - 0.2 + (k / 2) * 0.55), Color("#E8DFC4"))
 			Build.box(_at, Vector3(0.03, 0.5, 0.7), Vector3(HALF_WIDTH - 0.02, 1.55, tz - 1.4), Color("#2F3A30"), false).rotation.y = 0.0
-			var menu := Build.label(_at, "TODAY\nSPAM & BEANS\nCOFFEE", Vector3(HALF_WIDTH - 0.04, 1.55, tz - 1.4), 20, Color("#F2F0E8"))
+			var menu := Build.label(_at, "СЕГОДНЯ\nБОРЩ И КАША\nЧАЙ" if sub_class.key == "typhoon" else "TODAY\nSPAM & BEANS\nCOFFEE", Vector3(HALF_WIDTH - 0.04, 1.55, tz - 1.4), 20, Color("#F2F0E8"))
 			menu.rotation.y = -PI / 2.0
 		"battery":
 			# Officers' books on a shelf over the wardroom table, a brass clock.
