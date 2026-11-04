@@ -9,7 +9,7 @@ extends RefCounted
 ## (SubInterior._cull_rooms), which is what keeps a boat this size from lagging.
 
 const HULL_X := 6.0
-const UPPER_Y := SubInterior.CT_FLOOR
+const UPPER_Y := 2.86 ## the command hull's floor, clear above the passage's ceiling (2.8): level with it, they flicker
 const HATCH_Z := -11.0 ## the ladder from the passage up into the command hull
 const SAILORS_PER_ROOM := 3
 const SOVIET_SHIRT := Color("#27354F")
@@ -273,7 +273,7 @@ static func _cross_passages(i: SubInterior) -> void:
 		var w := WatertightDoor.WIDTH
 		# It belongs to the hull room, so it's hidden and shown with it.
 		var root: Node3D = i._rooms[cr[0]]
-		Build.box(root, Vector3(run, 0.2, w + 0.3), Vector3(mid, -0.1, z), SubInterior.FLOOR)
+		Build.box(root, Vector3(run, 0.2, w + 0.3), Vector3(mid, -0.103, z), SubInterior.FLOOR) # a hair below the rooms' floors, which it meets
 		Build.box(root, Vector3(run, 0.2, w + 0.3), Vector3(mid, WatertightDoor.HEIGHT + 0.1, z), SubInterior.CEILING)
 		for dz in [-1.0, 1.0]:
 			Build.box(root, Vector3(run, h, 0.15), Vector3(mid, h * 0.5, z + dz * (w * 0.5 + 0.08)), SubInterior.WALL)

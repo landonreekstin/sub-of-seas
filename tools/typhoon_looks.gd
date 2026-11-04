@@ -24,12 +24,14 @@ const LOOKS := [
 var _game: Node
 var _out := ""
 var _i := -30
-var _band := false
+var _only := ""
 
 
 func _initialize() -> void:
 	var args := OS.get_cmdline_user_args()
 	_out = args[0]
+	if args.size() > 1: # just the looks with this in their name
+		_only = args[1]
 	var net: Node = root.get_node("Net")
 	net.mission = "cw_convoy"
 	net.sub_key = "typhoon"
@@ -53,11 +55,12 @@ func _process(_delta: float) -> bool:
 		_game.rq_pa("band play")
 	if _i < 0:
 		return false
+	var looks := LOOKS.filter(func(l: Array) -> bool: return _only in str(l[0]))
 	var n := _i / 25
-	if n >= LOOKS.size():
+	if n >= looks.size():
 		quit(0)
 		return true
-	var look: Array = LOOKS[n]
+	var look: Array = looks[n]
 	var me: Node3D = _game.local_player
 	me.global_position = Vector3(look[1], look[2], look[3])
 	me.velocity = Vector3.ZERO
