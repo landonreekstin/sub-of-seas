@@ -74,6 +74,7 @@ var _vents_were := false
 var _at: Node3D = self ## what's being built goes on this: the boat, or on a Typhoon its room (TyphoonLayout)
 var _rooms: Array[Node3D] = [] ## Typhoon: each compartment's root, so rooms out of sight can be hidden
 var _room_links: Array = [] ## Typhoon: [door id or "", comp a, comp b]
+var main_ladder: Ladder ## the ladder between decks, for the damage parties
 var _cull_timer := 0.0
 
 
@@ -396,6 +397,7 @@ func _control_room(c: Dictionary, hatch: Rect2) -> void:
 	# Ladder up to the conning tower.
 	var ladder := Ladder.new()
 	ladder.name = "ladder_ct"
+	main_ladder = ladder
 	_at.add_child(ladder)
 	var lz := hatch.position.y - 0.02
 	for side in [-0.25, 0.25]:
@@ -883,6 +885,91 @@ func _sailor(look: Dictionary) -> Node3D:
 	Crewman.build_face(face, look)
 	Player._make_hat(face, look.get("hat", "watch"))
 	return v
+
+
+## The way a damage party walks between two points: along the middle of each room and through
+## its doors and hatches, fewest rooms first. Each leg is {p, door}; door is the id of a door to
+## go through there, or "". Goes through shut doors too: they open them as they get there.
+func route(from: Vector3, to: Vector3) -> Array[Dictionary]:
+	var hull := Sim.world.hull
+	var out: Array[Dictionary] = []
+	var here := hull.comp_at_pos(from)
+	var last := hull.comp_at_pos(to)
+	var up_tower := has_conning_tower and from.y > CT_FLOOR - 0.5
+	if up_tower:
+		_climb(out, true)
+	else:
+		out.append({"p": _on_centre(here, from.z), "door": ""})
+	var came_from := {here: -1}
+	var via := {}
+	var edge: Array[int] = [here]
+	while not edge.is_empty() and not came_from.has(last):
+		var next: Array[int] = []
+		for a: int in edge:
+			for link: Array in _walk_links():
+				for k in 2:
+					if link[1 + k] != a or came_from.has(link[2 - k]):
+						continue
+					var b: int = link[2 - k]
+					came_from[b] = a
+					via[b] = link[0]
+					next.append(b)
+		edge = next
+	var rooms: Array[int] = []
+	var at := last
+	while at != here and came_from.has(at):
+		rooms.push_front(at)
+		at = came_from[at]
+	var was := here
+	for r: int in rooms:
+		var id: String = via[r]
+		if id == "":
+			_climb(out, compartments[r].get("y", 0.0) < compartments[was].get("y", 0.0))
+		else:
+			var dz := (doors[id] as Node3D).global_position.z
+			out.append({"p": _on_centre(was, dz), "door": ""})
+			out.append({"p": _floor_of((doors[id] as Node3D).global_position, was), "door": id})
+			out.append({"p": _on_centre(r, dz), "door": ""})
+		was = r
+	out.append({"p": _on_centre(last, to.z), "door": ""})
+	if has_conning_tower and to.y > CT_FLOOR - 0.5:
+		_climb(out, false)
+	return out
+
+
+## The floor a damage party stands on to reach a point there.
+func floor_at(p: Vector3) -> float:
+	if has_conning_tower and p.y > CT_FLOOR - 0.5:
+		return CT_FLOOR + 0.05
+	return float(compartments[Sim.world.hull.comp_at_pos(p)].get("y", 0.0)) + 0.05
+
+
+func _walk_links() -> Array:
+	if not _room_links.is_empty():
+		return _room_links
+	var out: Array = []
+	for id: String in door_links:
+		out.append([id, door_links[id][0], door_links[id][1]])
+	return out
+
+
+func _on_centre(room: int, z: float) -> Vector3:
+	var c := compartments[room]
+	var z_in: float = clampf(z, float(c.z0) + 0.8, float(c.z1) - 0.8)
+	return Vector3(c.get("x", 0.0), float(c.get("y", 0.0)) + 0.05, z_in)
+
+
+func _floor_of(p: Vector3, room: int) -> Vector3:
+	return Vector3(p.x, float(compartments[room].get("y", 0.0)) + 0.05, p.z)
+
+
+## Up or down the ladder between decks.
+func _climb(out: Array[Dictionary], down: bool) -> void:
+	var path: Array = main_ladder.bottom_path.duplicate()
+	if down:
+		path.reverse()
+	for q: Vector3 in path:
+		out.append({"p": q, "door": ""})
 
 
 func next_in_cluster(current: Station) -> Station:

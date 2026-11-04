@@ -735,13 +735,15 @@ func _step_party() -> void:
 		hull.teams.append({"p": game.interior.spawn_points[0], "job": ""})
 	if party_size == 0:
 		hull.teams.clear()
+		_team_ways.clear()
 		return
 	var taken := {}
 	for t: Dictionary in hull.teams:
 		if t.job != "":
 			taken[t.job] = true
 	var busy := false
-	for t: Dictionary in hull.teams:
+	for n in hull.teams.size():
+		var t: Dictionary = hull.teams[n]
 		var job := _job_at(t.job)
 		if job.is_empty():
 			job = _next_job(taken)
@@ -752,10 +754,8 @@ func _step_party() -> void:
 			continue
 		busy = true
 		var there: Vector3 = job.p
-		there.y = 0.05
-		var p: Vector3 = t.p
-		if p.distance_to(there) > 1.4:
-			t.p = p.move_toward(there, TEAM_WALK * TICK)
+		there.y = game.interior.floor_at(there)
+		if _walk_team(n, there):
 			continue
 		if hull.work(job.tool, job.target, TICK * TEAM_WORK):
 			game.announce.rpc(job.done)
@@ -764,6 +764,44 @@ func _step_party() -> void:
 	if not busy and not game.crew.get("full_crew", false):
 		party_size = 0
 		hull.teams.clear()
+		_team_ways.clear()
+
+
+var _team_ways := {} ## team's index -> {job, legs, shut}: the host's route; not sent to the crew
+
+
+## One tick along the team's route through the doors. False once they're at the job.
+func _walk_team(n: int, there: Vector3) -> bool:
+	var t: Dictionary = Sim.world.hull.teams[n]
+	var way: Dictionary = _team_ways.get(n, {})
+	if way.get("job", "") != t.job:
+		way = {"job": t.job, "legs": game.interior.route(t.p, there), "shut": way.get("shut", "")}
+		_team_ways[n] = way
+	var p: Vector3 = t.p
+	var left := TEAM_WALK * TICK
+	var legs: Array = way.legs
+	while left > 0.0 and not legs.is_empty():
+		var door: String = legs[0].door
+		if door != "" and not game.crew.doors.get(door, true):
+			game.rq_door(door) # open up, and they'll shut it behind them
+			way.shut = door
+		var to: Vector3 = legs[0].p
+		var d := p.distance_to(to)
+		p = p.move_toward(to, left)
+		left -= d
+		if left >= 0.0:
+			legs.pop_front()
+	t.p = p
+	if way.shut != "" and p.distance_to(game.interior.doors[way.shut].global_position) > 1.6:
+		if game.crew.doors.get(way.shut, false):
+			game.rq_door(way.shut)
+		way.shut = ""
+	if not legs.is_empty():
+		return true
+	if p.distance_to(there) > 1.4:
+		t.p = p.move_toward(there, TEAM_WALK * TICK)
+		return true
+	return false
 
 
 # --- The notebooks (Typhoon) --------------------------------------------------------

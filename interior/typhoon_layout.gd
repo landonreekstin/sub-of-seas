@@ -215,6 +215,7 @@ static func _turbine_room(i: SubInterior, c: Dictionary) -> void:
 static func _ladder(i: SubInterior, hatch: Rect2) -> void:
 	var ladder := Ladder.new()
 	ladder.name = "ladder_command"
+	i.main_ladder = ladder
 	i._at.add_child(ladder)
 	var lz := hatch.position.y - 0.02
 	var top := UPPER_Y
@@ -317,6 +318,8 @@ static func sync_band(i: SubInterior, crew: Dictionary) -> void:
 	if i.sub_class.key != "typhoon":
 		return
 	var want: bool = crew.get("band", false)
+	if not is_instance_valid(_band):
+		_band = null
 	if want and _band == null:
 		_band = BandCrew.new()
 		_band.interior = i
