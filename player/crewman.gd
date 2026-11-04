@@ -182,8 +182,15 @@ static func _extra(face: Node3D, kind: int, skin: Color) -> void:
 				Build.box(face, Vector3(0.004, 0.004, 0.1), Vector3(side * 0.05, 0.018, -0.06), Color("#2A2620"), false)
 			Build.box(face, Vector3(0.02, 0.004, 0.004), Vector3(0, 0.016, -0.107), Color("#2A2620"), false)
 		"Cigarette":
-			Build.cyl(face, 0.004, 0.05, Vector3(0.018, -0.06, -0.12), Color("#EDE8DC"), Vector3.BACK)
-			Build.sphere(face, 0.005, Vector3(0.018, -0.06, -0.146), Color("#E2683A"), 1.5)
+			# From the corner of the mouth, out past any beard and drooping a little, so it reads
+			# from across a compartment: white paper, a tan filter end, a glowing tip.
+			var cig := Node3D.new()
+			cig.position = Vector3(0.022, -0.06, -0.095)
+			cig.rotation = Vector3(-0.18, -0.25, 0.0)
+			face.add_child(cig)
+			Build.cyl(cig, 0.0065, 0.022, Vector3(0, 0, -0.011), Color("#C89A5A"), Vector3.BACK)
+			Build.cyl(cig, 0.0065, 0.058, Vector3(0, 0, -0.051), Color("#F2EEE4"), Vector3.BACK)
+			Build.sphere(cig, 0.0068, Vector3(0, 0, -0.081), Color("#FF7A3A"), 2.5)
 		"Scar":
 			var s := Build.box(face, Vector3(0.006, 0.05, 0.006), Vector3(0.045, -0.012, -0.1), skin.lerp(Color("#B06058"), 0.5), false)
 			s.rotation.z = 0.35

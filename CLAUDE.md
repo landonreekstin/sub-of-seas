@@ -173,8 +173,7 @@ to every session in every clone.
 
 1. `git fetch origin`. Read `git log --oneline HEAD..origin/main` to see what the other
    person pushed since last time.
-2. `gh pr list --repo landonreekstin/sub-of-seas` shows what is open, drafts included (the
-   drafts are what the other person is in the middle of). Read the comments and
+2. `gh pr list --repo landonreekstin/sub-of-seas` shows what is open. Read the comments and
    reviews on the open `blaney/` PRs (`gh pr view <n> --comments`).
    - In **Blaney's** sessions: lando's comments come first. Make the changes he asks for
      on that PR's branch, push, and reply on the PR (`gh pr comment`) saying what changed.
@@ -182,6 +181,28 @@ to every session in every clone.
 3. Start from an up-to-date `main`. On `main`, run `git merge --ff-only origin/main`. On a
    branch, run `git rebase origin/main`, then `git push --force-with-lease` if the branch
    is already on GitHub. Never pull other people's work in any other way.
+4. See what the other person has **in progress**: `git branch -r --no-merged origin/main`
+   and `git log --oneline origin/main..origin/<branch>` for each (`wip(...)` commits are
+   unfinished work), plus draft PRs in `gh pr list`. Before starting something, check it
+   isn't already being built there; if it touches the same code, say so and build on it
+   rather than alongside it.
+
+### For both: push work in progress as you go
+
+lando: "commit and push to a branch as wip so his Claude can see what's being done". It
+applies to **both** of us, in every session:
+- Never sit on uncommitted work. Whenever a piece of work is part-done (at the latest at
+  each natural pause, before a long test run, and when the session ends or is paused),
+  commit it on its branch as `wip(<scope>): <what so far>` (for example
+  `wip(sonar): waterfall draws, no scrolling yet`) and push. `wip` commits never go on
+  `main`: lando's work in progress goes on a `feat/`/`fix/`/`tweak/` branch, Blaney's on its
+  `blaney/` branch.
+- A branch with `wip` commits gets a **draft** PR right away (`gh pr create --draft`), whose
+  description says what's done and what's still to do. Mark it ready
+  (`gh pr ready <n>`) once the work is finished and verified (below); never merge a draft.
+- `wip` commits are the one exception to "verify before you commit": they may be
+  unfinished, but they must still parse (`godot --headless --path . --quit-after 120`), so
+  the other person can check the branch out and run it.
 
 ### Blaney's changes: always a `blaney/` branch and a PR
 
@@ -232,23 +253,6 @@ where they live.
   quietly overrule either of you.
 - In a PR, a separate **"Look and feel"** heading lists the directions it added.
 
-### For both: commit and push work in progress often
-
-So each of us can see what the other is in the middle of, and neither builds the same
-thing twice:
-- Work on a branch (`blaney/`, `feat/`, `fix/`, `tweak/`). Commit and **push early and
-  often, even half-done**: at least after every working session, and whenever a piece of
-  it holds together. Don't sit on unpushed local work.
-- As soon as the branch has its first push, open a **draft** PR
-  (`gh pr create --base main --draft`) saying in a line or two what you're building. That way
-  it shows up in the other person's `gh pr list` at the start of their session. Mark it
-  ready (`gh pr ready <n>`) once it has passed "verify before you commit" below.
-- WIP commits use the type `wip` (`wip(sonar): waterfall draws, no scrolling yet`). They
-  may be broken or untested. They go only on branches, never on `main`.
-- Before starting something new, check the open PRs and drafts for work that overlaps it.
-  If something does, say so and build on that branch (or talk to the other person) instead
-  of starting a parallel one.
-
 ### For both: verify before you commit
 
 **Never commit to `main`, or mark a PR ready or merge it, with a change you haven't seen
@@ -258,8 +262,8 @@ working.** (WIP commits on a branch are fine, see above.) Passing tests is not e
   the picture. For anything you control or feel, the person you are working for plays it.
   For anything networked, run a host and a client (`--host` / `--join 127.0.0.1`, see "Run").
 - Commit messages are `type(scope): description`, in lowercase with no period at the end.
-  The types are `feat`, `fix`, `tweak`, `art`, `docs`, `test` and `chore` (plus `wip` on
-  branches), for example
+  The types are `feat`, `fix`, `tweak`, `art`, `docs`, `test`, `chore` and `wip` (work in
+  progress, see above), for example
   `feat(sonar): add a waterfall display`. **Do not add Co-Authored-By or AI attribution
   lines.**
 - Keep this file and `docs/style.md` current. They are how the other person's sessions find
