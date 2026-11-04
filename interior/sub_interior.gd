@@ -26,26 +26,27 @@ const BUNK := Color("#D8D2C0")
 const LAYOUTS := {
 	"s_boat": [
 		{"type": "fwd_torpedo", "length": 11.0}, {"type": "battery", "length": 8.0},
-		{"type": "control", "length": 9.0}, {"type": "nav", "length": 5.0}, {"type": "engine", "length": 13.0},
+		{"type": "control", "length": 9.0}, {"type": "nav", "length": 5.0}, {"type": "berthing", "length": 6.0},
+		{"type": "engine", "length": 13.0},
 	],
 	"gato": [
 		{"type": "fwd_torpedo", "length": 14.0}, {"type": "battery", "length": 8.0},
 		{"type": "control", "length": 8.0}, {"type": "nav", "length": 6.0}, {"type": "crew", "length": 8.0},
-		{"type": "rec", "length": 6.0},
+		{"type": "berthing", "length": 6.0}, {"type": "rec", "length": 6.0},
 		{"type": "engine", "length": 14.0}, {"type": "maneuvering", "length": 6.0},
 		{"type": "aft_torpedo", "length": 10.0},
 	],
 	"narwhal": [
 		{"type": "fwd_torpedo", "length": 16.0}, {"type": "battery", "length": 9.0},
 		{"type": "control", "length": 9.0}, {"type": "nav", "length": 6.0}, {"type": "crew", "length": 9.0},
-		{"type": "rec", "length": 6.0},
+		{"type": "berthing", "length": 7.0}, {"type": "rec", "length": 6.0},
 		{"type": "engine", "length": 12.0}, {"type": "engine2", "length": 12.0},
 		{"type": "maneuvering", "length": 7.0}, {"type": "aft_torpedo", "length": 12.0},
 	],
 }
 const TITLES := {
-	"fwd_torpedo": "forward torpedo room", "battery": "officers' country / battery",
-	"control": "control room", "nav": "navigation room", "crew": "crew's mess / stores", "rec": "rec room", "engine": "engine room",
+	"fwd_torpedo": "forward torpedo room", "battery": "wardroom / battery",
+	"control": "control room", "nav": "navigation room", "crew": "crew's mess / stores", "berthing": "crew's quarters", "rec": "rec room", "engine": "engine room",
 	"engine2": "after engine room", "maneuvering": "maneuvering room", "aft_torpedo": "after torpedo room",
 }
 
@@ -133,6 +134,8 @@ func build() -> void:
 				_control_room(c, hatch)
 			"crew":
 				_crew(c)
+			"berthing":
+				_berthing(c)
 			"rec":
 				_rec_room(c)
 			"nav":
@@ -262,21 +265,14 @@ func _rack(type: String, z: float, port := false) -> void:
 	racks[type] = rack.position + Vector3(-0.1 if not port else 0.1, 1.1, 0)
 
 
-func _bunks(z0: float, z1: float, sides := [-1.0, 1.0]) -> void:
-	for side: float in sides:
-		for y in [0.5, 1.3]:
-			Build.box(self, Vector3(0.75, 0.08, z1 - z0), Vector3(side * 1.55, y, (z0 + z1) * 0.5), WOOD)
-			Build.box(self, Vector3(0.7, 0.12, z1 - z0 - 0.2), Vector3(side * 1.55, y + 0.1, (z0 + z1) * 0.5), BUNK, false)
-
-
-## Portholes: over the wardroom table and the officers' bunks, and either side of the mess
-## table (lando, Blaney: windows to look out of).
+## Portholes: over the wardroom table and across from it, and either side of the mess table
+## (lando, Blaney: windows to look out of).
 func _portholes() -> void:
 	var spots: Array = []
 	if comp_index("battery") >= 0:
 		var b := comp("battery")
 		spots.append([Vector3(HALF_WIDTH - 0.02, 1.6, (b.z0 + b.z1) * 0.5), 1.0])
-		spots.append([Vector3(-HALF_WIDTH + 0.02, 1.85, (b.z0 + b.z1) * 0.5 - 1.0), -1.0])
+		spots.append([Vector3(-HALF_WIDTH + 0.02, 1.6, (b.z0 + b.z1) * 0.5 - 1.0), -1.0])
 	if comp_index("crew") >= 0:
 		var c := comp("crew")
 		spots.append([Vector3(HALF_WIDTH - 0.02, 1.6, c.z1 - 1.2), 1.0])
@@ -303,7 +299,7 @@ func _torpedo_room(c: Dictionary, aft: bool) -> void:
 			x = -x
 		var y := 1.95 - (i / 2) * 0.7
 		_add_station(tube, Vector3(x, y, wall_z), PI if aft else 0.0)
-	# Reload torpedoes on racks along both sides, bunks above them.
+	# Reload torpedoes on racks along both sides.
 	var rz0: float = c.z0 + (2.5 if aft else 3.0)
 	var rz1: float = c.z1 - (3.0 if aft else 2.5)
 	for side in [-1.0, 1.0]:
@@ -313,16 +309,18 @@ func _torpedo_room(c: Dictionary, aft: bool) -> void:
 			for k in 3: # the rack's cradle straps
 				var cz := lerpf(rz0 + 0.8, rz1 - 0.8, k / 2.0)
 				Build.arc(self, Vector2(side * 1.5, y), 0.275, PI * 1.05, PI * 1.95, 0.025, cz - 0.04, cz + 0.04, DARK, 8)
-		Build.box(self, Vector3(0.75, 0.08, rz1 - rz0), Vector3(side * 1.55, 1.75, (rz0 + rz1) * 0.5), WOOD)
-		Build.box(self, Vector3(0.7, 0.12, rz1 - rz0 - 0.2), Vector3(side * 1.55, 1.85, (rz0 + rz1) * 0.5), BUNK, false)
 	_rack(c.type, c.z0 + 1.4 if aft else c.z1 - 1.4)
 	# Chain hoist rail down the centre for moving torpedoes.
 	Build.box(self, Vector3(0.12, 0.12, c.z1 - c.z0 - 2.0), Vector3(0, DECK_HEIGHT - 0.2, (c.z0 + c.z1) * 0.5), DARK, false)
 
 
 func _battery(c: Dictionary) -> void:
-	# Officers' staterooms to port, wardroom table to starboard, battery well hatches underfoot.
-	_bunks(c.z0 + 0.8, c.z1 - 3.0, [-1.0])
+	# A locker bank to port, wardroom table to starboard, battery well hatches underfoot.
+	var lz0: float = c.z0 + 0.8
+	var lockers := int(c.z1 - 3.0 - lz0)
+	for k in lockers:
+		Build.box(self, Vector3(0.5, 1.15, 0.92), Vector3(-HALF_WIDTH + 0.3, 0.575, lz0 + k + 0.5), WOOD)
+		Build.box(self, Vector3(0.02, 0.1, 0.03), Vector3(-HALF_WIDTH + 0.56, 0.75, lz0 + k + 0.8), BRASS, false)
 	Build.box(self, Vector3(1.0, 0.8, 2.2), Vector3(1.35, 0.4, (c.z0 + c.z1) * 0.5), WOOD)
 	Build.box(self, Vector3(1.1, 0.04, 2.3), Vector3(1.35, 0.82, (c.z0 + c.z1) * 0.5), Color("#E8DFC4"), false)
 	for z in [c.z0 + 2.0, c.z1 - 2.0]:
@@ -331,7 +329,7 @@ func _battery(c: Dictionary) -> void:
 	Build.label(self, "BATTERY WELL", Vector3(0, 0.06, c.z0 + 2.0), 22, Color("#C9A04A")).rotation.x = -PI / 2.0
 	_rack(c.type, c.z1 - 1.4)
 	if comp_index("crew") < 0: # no crew's mess (S-boat): the magazine scuttle is aft in officers' country
-		_add_station(AmmoStation.new().setup("ammo", "Ammunition scuttle"), Vector3(0, 0, c.z0 + 4.0)).set_meta("where", "officers' country")
+		_add_station(AmmoStation.new().setup("ammo", "Ammunition scuttle"), Vector3(0, 0, c.z0 + 4.0)).set_meta("where", "wardroom")
 
 
 func _control_room(c: Dictionary, hatch: Rect2) -> void:
@@ -414,13 +412,34 @@ func _conning_tower(c: Dictionary, hatch: Rect2) -> void:
 
 
 func _crew(c: Dictionary) -> void:
-	# Forward: air panel (starboard) and rack (port); bunks amidships; mess table and stores aft.
+	# Forward: rack (port); two mess tables to starboard, the urn on the after one; stores aft.
 	_rack(c.type, c.z0 + 1.3, true)
-	_bunks(c.z0 + 2.5, c.z1 - 2.5)
-	Build.box(self, Vector3(0.9, 0.75, 1.8), Vector3(1.3, 0.38, c.z1 - 1.2), WOOD)
-	Build.box(self, Vector3(1.0, 0.04, 1.9), Vector3(1.3, 0.77, c.z1 - 1.2), Color("#E8DFC4"), false)
+	for tz: float in [c.z1 - 1.2, c.z0 + 2.2]:
+		Build.box(self, Vector3(0.9, 0.75, 1.8), Vector3(1.3, 0.38, tz), WOOD)
+		Build.box(self, Vector3(1.0, 0.04, 1.9), Vector3(1.3, 0.77, tz), Color("#E8DFC4"), false)
 	# The magazine is under the mess: its scuttle to port, opposite the table.
 	_add_station(AmmoStation.new().setup("ammo", "Ammunition scuttle"), Vector3(0, 0, c.z1 - 3.4)).set_meta("where", "crew's mess")
+
+
+## The crew's quarters (Blaney: "all the sleeping quarters should not be near the weapons or
+## operation areas"): the boat's only bunks, three tiers either side of an aisle, amidships.
+func _berthing(c: Dictionary) -> void:
+	var z0: float = c.z0 + 0.7
+	var z1: float = c.z1 - 0.7
+	var bays := maxi(1, roundi((z1 - z0) / 2.1))
+	var bay: float = (z1 - z0) / bays
+	var blanket := Color("#3E5770")
+	for side in [-1.0, 1.0]:
+		for b in bays:
+			var mid: float = z0 + bay * (b + 0.5)
+			for y in [0.32, 0.96, 1.6]:
+				Build.box(self, Vector3(0.75, 0.08, bay - 0.1), Vector3(side * 1.6, y, mid), WOOD)
+				Build.box(self, Vector3(0.7, 0.1, bay - 0.25), Vector3(side * 1.6, y + 0.09, mid), BUNK, false)
+				Build.box(self, Vector3(0.68, 0.05, (bay - 0.25) * 0.6), Vector3(side * 1.6, y + 0.16, mid + bay * 0.15), blanket, false)
+				Build.box(self, Vector3(0.45, 0.09, 0.28), Vector3(side * 1.6, y + 0.18, mid - bay * 0.32), Color("#F2F0E8"), false)
+			# Stanchions between the bays.
+			Build.cyl(self, 0.025, 1.95, Vector3(side * 1.22, 0.97, mid - bay * 0.5), PIPE)
+		Build.cyl(self, 0.025, 1.95, Vector3(side * 1.22, 0.97, z1), PIPE)
 
 
 ## The navigation room (Blaney): the sand table of the patrol area in the middle, and the
