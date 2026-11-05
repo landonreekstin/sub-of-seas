@@ -182,6 +182,9 @@ Added by Blaney after playing. In his words where it matters.
       *(Done: nothing plays at sea but the band and the jukebox; the menu keeps its shanty (Blaney likes it), and the jukebox goes quiet while anyone plays an instrument. Sprint is a bit faster too: 2.1× walking.)*
 - [x] disregard anything from this list already sent off to landon
       *(Checked 2026-11-04: everything else on the list was already ticked and on GitHub, so only the Typhoon, the PA and bots, the enemy sub and the music were done.)*
+- [ ] lets add more detail to the typhoon and gato class subs. for the typhoon i want you to look at screenshots from scenes in Hunt For The Red October which is a submarine movie
+- [ ] add a realistic control scheme and positionings for the typhoon bridge
+- [ ] add a command "all hands on deck" that completely fills the sub with people controlling everything that needs to be done for the current objective
 
 ## M9 — Lando's list (2026-10-30)
 Added by lando. Direction: **more arcadey, not strict realism**. Every existing mechanic
