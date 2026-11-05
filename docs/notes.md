@@ -4,6 +4,15 @@ Where things stand, in plain English. The newest entry goes at the top. Update i
 Other docs: `roadmap.md` is the to-do list, `style.md` how it looks and feels, `design.md` the
 game's design, `credits.md` where every sound came from.
 
+## 2026-11-05 (later): the other boats overhauled, natural bot poses (branch `blaney/subs-overhaul`, on #37)
+
+Built and looked at (xvfb): every WWII boat (S-boat included) gets the Typhoon's pipe density in
+WWII colours, the Christmas tree board, HP air manifold and phones (`_wwii_control_gear`, `_tree`);
+bots stand at `Station.bot_spot()` on the deck (`mounted` for tubes) with `bot_arms` / `bot_lean`
+per station (`tools/bot_poses.gd -- <sub> <abs dir>` pictures each); all hands no longer turns
+the Typhoon red. Tests all pass. Blaney played the Gato: "it works send it off". Ticked, PR ready.
+**Next:** nothing of Blaney's in progress.
+
 ## 2026-11-05: filling the Typhoon (branch `blaney/typhoon-fill`, on top of #36)
 
 Blaney played #36: "very good"; five items ticked, #36 ready, usage collected. New: "the sub is

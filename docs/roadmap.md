@@ -194,6 +194,8 @@ Added by Blaney after playing. In his words where it matters.
       *(Done: the Typhoon's skipper's chair, H: a blue hologram of the sea floor, contacts and torpedoes for everyone.)*
 - [x] fill up the typhoon, it's empty: more pipes, and make it accurate to a real typhoon that's in service
       *(Done, PR #37: pipe banks, cabinets, reactor and turbine pipework, missile tube fittings, the real boat's sauna, pool, gym and aviary.)*
+- [x] lets overhault the other sub types now as well, make sure that in all the sub types the characters are in natural positions when they go to their stations, dont make all hands on deck change the vibe to stressful (its only to full places)
+      *(Done, PR #38: every WWII boat packed like the Typhoon, the Christmas tree board and HP air manifold; bots stand naturally at every station; all hands keeps the lights as they were.)*
 
 ## M9 — Lando's list (2026-10-30)
 Added by lando. Direction: **more arcadey, not strict realism**. Every existing mechanic

@@ -18,6 +18,14 @@ func _ready() -> void:
 	_lamp = Build.sphere(self, 0.05, Vector3(0.24, 0.22, 0.75), Color.RED, 2.0)
 	Build.hitbox(self, Vector3(0.65, 0.65, 0.8), Vector3(0, 0, 0.4))
 	set_view(Vector3(0, 0.15, 2.3), Vector3(0, 0, 0.6))
+	bot_arms = Vector2(0.2, 0.95) # a hand on the breech lever
+	mounted = position.y
+
+
+## Torpedomen stand one behind another down the tube's side of the room, top tube's man in front.
+func bot_spot() -> Vector3:
+	var row := roundi((1.95 - mounted) / 0.7)
+	return Vector3(0, 1.6 - mounted, 0.95 + row * 0.6)
 
 
 func _tube() -> Dictionary:

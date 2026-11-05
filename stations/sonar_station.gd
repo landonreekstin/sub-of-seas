@@ -41,6 +41,7 @@ func _ready() -> void:
 	l.rotation.y = PI / 2.0
 	Build.hitbox(self, Vector3(0.6, 1.9, 1.0), Vector3(0.05, 0.95, 0))
 	set_view(Vector3(0.85, 1.6, 0), Vector3(0, 1.3, 0))
+	bot_arms = Vector2(0.4, 0.95) # one hand on the training wheel
 	Sim.event.connect(_on_sim_event)
 
 

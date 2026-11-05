@@ -44,6 +44,7 @@ func _ready() -> void:
 	add_child(hatch)
 	Build.area(hatch, Vector3(0.9, 0.25, 0.9), Vector3.ZERO)
 	set_view(Vector3(0, 1.6, 0.8), Vector3(0, overhead, -0.1))
+	bot_arms = Vector2(1.2, 1.2)
 
 
 func get_prompt(player: Player) -> String:

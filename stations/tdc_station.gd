@@ -27,6 +27,7 @@ func _ready() -> void:
 		Build.cyl(self, 0.04, 0.05, Vector3(-0.17, 0.75, -0.45 + i * 0.18), UiKit.BRASS, Vector3.LEFT)
 	Build.hitbox(self, Vector3(0.6, 1.6, 1.3), Vector3(0.0, 0.8, 0))
 	set_view(Vector3(-1.05, 1.5, 0), Vector3(0.1, 1.2, 0))
+	bot_arms = Vector2(0.75, 0.95)
 
 
 func _process(_delta: float) -> void:

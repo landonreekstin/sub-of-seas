@@ -42,6 +42,7 @@ func _ready() -> void:
 	# Nothing on the floor to bump into: walk up and press E at the board itself.
 	Build.area(self, Vector3(0.9, 0.9, 0.06), Vector3(0, 1.73, -OCHE + 0.03)) # thin, so the eye is never inside it
 	set_view(Vector3(0, 1.72, -1.1), Vector3(0, 1.73, -OCHE)) # nearer than the oche, so the board reads
+	bot_arms = Vector2(0.1, 2.0) # a dart up by his ear
 
 
 func _process(delta: float) -> void:

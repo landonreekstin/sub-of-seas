@@ -18,6 +18,8 @@ func _ready() -> void:
 	Build.label(self, "ПОМОЩНИК" if kind == "first_mate" else "КОМАНДИР", Vector3(0, 0.8, 0.21), 22, UiKit.BRASS)
 	Build.hitbox(self, Vector3(0.6, 1.15, 0.5), Vector3(0, 0.55, 0))
 	set_view(Vector3(0, 1.75, 0.55), Vector3(0, 1.0, 0))
+	bot_arms = Vector2(0.7, 0.7)
+	bot_lean = 0.15 # reading
 
 
 func _build_overlay(root: Control) -> void:

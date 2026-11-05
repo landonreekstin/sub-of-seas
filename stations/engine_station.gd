@@ -33,6 +33,7 @@ func _ready() -> void:
 		_levers.append(lever)
 	Build.hitbox(self, Vector3(0.6, 1.8, 1.8), Vector3(-0.1, 0.9, 0))
 	set_view(Vector3(-1.35, 1.6, 0), Vector3(0.1, 1.3, 0))
+	bot_arms = Vector2(0.2, 1.0)
 
 
 func _process(_delta: float) -> void:

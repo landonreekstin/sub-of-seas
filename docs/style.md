@@ -273,12 +273,23 @@ and update "Current style" in the same commit.
   and thrown 6 m out of the sea, slammed back down with a great splash, rocking to rest. Inside,
   everyone is shaken twice (the leap and the slam), the lights flicker, "CRASH SURFACE! Hold on!".
   A normal blow comes up gently.
-- **All hands on deck** (Blaney, any boat): every post manned, three more men standing in each
+- **All hands on deck** (Blaney, any boat; it only fills places, the lights and mood stay as they were): every post manned, three more men standing in each
   room, see-through so they never block the way (Blaney), damage parties on standby, and the crew
   work the patrol's objective by themselves until "stand down".
-- **Packed walls on the Gato and Narwhal** (Blaney: like the real one): the same pipe runs (white,
-  grey-green, red, blue), valves, gauges, stencilled boxes (FRESH WATER, HP AIR, HYDRAULIC, FIRE
-  MAIN) and cable looms between the stations.
+- **Packed walls on every WWII boat, the S-boat too** (Blaney: like the real one; then "overhaul
+  the other sub types as well"): the Typhoon's density in WWII colours: four pipe runs (white,
+  grey-green, red, blue) and a second bank of four (grey, brass, olive, white) on each shoulder, a
+  deckhead bundle clamped every 1.6 m, two bilge runs, wall gear every 0.6-0.9 m: valves, gauges,
+  stencilled boxes (FRESH WATER, HP AIR, HYDRAULIC, FIRE MAIN), pipe drops, cable looms. In the
+  control room the real boat's "Christmas tree" (HULL OPENINGS: rows of lamps on the forward
+  bulkhead, starboard of the door, two red while the diesels breathe on the surface, a straight
+  green board dived), the HP air manifold's six wheels on the after bulkhead and phone handsets.
+- **Bot crewmen stand naturally** (Blaney: natural positions at every station): feet on the deck
+  at a spot each station gives, held the way the job asks: hands on the wheel or yoke, both up on
+  the periscope handles, leaning over the chart and the sand table, one hand on the sonar wheel,
+  watching the camera screens hands down, a dart up by his ear, a round held up at the scuttle,
+  sitting on the arm rests in the skipper's chair. Torpedomen stand one behind another down their
+  tubes' side of the room. Name tags half the size they were.
 - **Handing over** (Blaney): J at any station: a bot takes it over and you walk off.
 - **Bot crewmen:** look like any crewman (random build, face and shirt, a navy watch cap),
   standing their station with hands on the gear and a name tag with their job ("Sparks
@@ -412,3 +423,4 @@ and update "Current style" in the same commit.
 | 2026-11-05 | Blaney | Add emergency breaching. (Then: a crash surface, the bow leaping out and slamming down.) |
 | 2026-11-05 | Blaney | A control panel where the skipper sees a 3D view of what is happening in the water from all the information the sub has, in front of him when he takes a position on the bridge; everyone sees the hologram when he toggles it on. (Then: Typhoon only, blue glow.) |
 | 2026-11-05 | Blaney | (After playing the bay, hologram, all hands and crash surface: "very good".) The Typhoon is empty: fill it up, more pipes, and make it accurate to a real Typhoon that's in service. |
+| 2026-11-05 | Blaney | Overhaul the other sub types as well; in all the sub types the characters should be in natural positions at their stations; all hands on deck mustn't change the vibe to stressful, it's only to fill places. (Undoes his own red light at all hands.) |
