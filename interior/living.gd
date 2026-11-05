@@ -204,7 +204,7 @@ static func sleeper(i: SubInterior, pos: Vector3, bay: float, n: int) -> void:
 	face.position.y = Player.EYE_HEIGHT
 	v.add_child(face)
 	Crewman.build_face(face, look)
-	Build.box(i._at, Vector3(0.66, 0.06, bay * 0.6), pos + Vector3(0, 0.38, bay * 0.12), Color("#3E5770"), false)
+	Build.box(i._at, Vector3(0.66, 0.06, bay * 0.6), pos + Vector3(0, 0.2, bay * 0.12), Color("#3E5770"), false)
 
 
 ## Lived-in touches on one bunk at `pos` (the pan's centre) against the wall on `side`.
