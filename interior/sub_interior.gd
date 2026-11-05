@@ -129,7 +129,9 @@ func build() -> void:
 		return
 	_build_environment()
 	if sub_class.key == "typhoon":
+		Build.recolor = TYPHOON_PAINT
 		TyphoonLayout.build(self)
+		Build.recolor = {}
 		_finish_build()
 		return
 	var ct := comp("control")
@@ -167,6 +169,8 @@ func build() -> void:
 		_conning_tower(ct, hatch)
 	for c in compartments:
 		_dressing(c, hatch if c.type == "control" else Rect2())
+		if sub_class.key != "s_boat":
+			_clutter(c, [])
 	_finish_build()
 	var er := comp("engine")
 	_diesel_sound = Sfx.loop_at(self, "diesel_loop", Vector3(0, 1.0, (er.z0 + er.z1) * 0.5), -80.0, 8.0)
@@ -658,6 +662,71 @@ func _dressing(c: Dictionary, hatch: Rect2) -> void:
 			Build.cyl(_at, 0.12, 0.02, Vector3(-1.15, 2.2, z0 + 0.16), Color("#F2E8CF"), Vector3.BACK)
 			var hand := Build.box(_at, Vector3(0.015, 0.09, 0.01), Vector3(-1.13, 2.24, z0 + 0.18), DARK, false)
 			hand.rotation.z = -0.5
+
+
+## The Typhoon's paint as in The Hunt for Red October: cold blue-grey steel, not WWII green.
+const TYPHOON_PAINT := {"9db59aff": Color("#8E9BA6"), "b5c4b0ff": Color("#A9B3BB"), "8fa88cff": Color("#7D8A95"), "5e6b5cff": Color("#4E555C")}
+## Rooms whose walls are taken up by their own gear: only the pipe runs there.
+const BUSY_WALLS := ["fwd_torpedo", "aft_torpedo", "berthing", "berthing2", "missile", "reactor", "reactor2", "engine", "engine2", "rec", "sonar", "radio", "sauna", "sickbay"]
+
+
+## Packed like the real boats (Blaney: Gato like WWII photos; the Typhoon like the film): pipe runs
+## in four colours high on both walls and one along the bilge, and between the stations on the
+## walls handwheel valves, gauges, junction boxes with stencils, pipe drops and cable looms.
+## `gaps`: z of doors in the side walls, kept clear.
+func _clutter(c: Dictionary, gaps: Array) -> void:
+	var z0: float = c.z0
+	var z1: float = c.z1
+	var mid := (z0 + z1) * 0.5
+	var red := sub_class.key == "typhoon"
+	var runs: Array = [Color("#8A8F86"), Color("#3E5770"), Color("#C9A04A"), RED] if red else [PIPE, Color("#6E7F6A"), RED, Color("#3E5770")]
+	var stencil := ["ВОДА", "ВОЗДУХ ВД", "ГИДРАВЛИКА", "ПОЖАРНЫЙ"] if red else ["FRESH WATER", "HP AIR", "HYDRAULIC", "FIRE MAIN"]
+	for side in [-1.0, 1.0]:
+		for k in runs.size():
+			var y := 1.92 + k * 0.09
+			var x: float = side * (HALF_WIDTH - 0.1 - k * 0.04 - (y - 1.85) * 0.35)
+			Build.cyl(_at, 0.028 if k % 2 == 0 else 0.022, z1 - z0 - 0.3, Vector3(x, y, mid), runs[k], Vector3.BACK)
+		Build.cyl(_at, 0.035, z1 - z0 - 0.3, Vector3(side * 1.78, 0.28, mid), Color("#5A5E56"), Vector3.BACK)
+	if c.type in BUSY_WALLS:
+		return
+	var rng := RandomNumberGenerator.new()
+	rng.seed = int(z0 * 13.0) + 7
+	var taken: Array = [] # [side, z] of the stations and racks on the walls
+	for st: Station in stations.values():
+		if st.get_parent() == _at and absf(st.position.x) > 1.0:
+			taken.append([signf(st.position.x), st.position.z])
+	for side in [-1.0, 1.0]:
+		var z := z0 + 0.9
+		var n := 0
+		while z < z1 - 0.9:
+			var clear := not _near_porthole(side, z) and not gaps.any(func(g: float) -> bool: return absf(g - z) < 1.0) \
+				and not taken.any(func(t: Array) -> bool: return t[0] == side and absf(t[1] - z) < 1.1)
+			if clear:
+				var x: float = side * (HALF_WIDTH - 0.06)
+				match n % 5:
+					0: # a handwheel valve on a stub off the pipe run
+						Build.cyl(_at, 0.02, 0.45, Vector3(x, 1.68, z), runs[n % runs.size()])
+						Build.cyl(_at, 0.045, 0.1, Vector3(x - side * 0.05, 1.5, z), Color("#8A8F86"), Vector3.RIGHT)
+						Build.wheel(_at, 0.1, Vector3(x - side * 0.12, 1.5, z), RED if rng.randf() < 0.6 else Color("#3E5770"), Vector3.LEFT if side > 0.0 else Vector3.RIGHT)
+					1: # a pair of gauges
+						for dz in [-0.13, 0.13]:
+							Build.cyl(_at, 0.075, 0.04, Vector3(x - side * 0.02, 1.55, z + dz), BRASS, Vector3.RIGHT)
+							Build.cyl(_at, 0.064, 0.02, Vector3(x - side * 0.045, 1.55, z + dz), Color("#F2E8CF"), Vector3.RIGHT)
+							Build.box(_at, Vector3(0.01, 0.05, 0.008), Vector3(x - side * 0.06, 1.56, z + dz), DARK, false).rotation.x = rng.randf_range(-1.2, 1.2)
+					2: # a junction box with its stencil
+						Build.box(_at, Vector3(0.12, 0.34, 0.28), Vector3(x - side * 0.03, 1.45, z), Color("#5A6048") if not red else Color("#6B747C"), false)
+						var lab := Build.label(_at, stencil[rng.randi() % stencil.size()], Vector3(x - side * 0.095, 1.67, z), 14, Color("#E8E0C8"))
+						lab.rotation.y = -PI / 2.0 if side > 0.0 else PI / 2.0
+					3: # a pipe dropping from the run to the deck, with a flange
+						Build.cyl(_at, 0.03, 1.85, Vector3(x, 0.93, z), runs[(n + 1) % runs.size()])
+						Build.cyl(_at, 0.05, 0.04, Vector3(x, 1.1, z), Color("#8A8F86"))
+					4: # a cable loom down the wall to a switch box
+						for k in 3:
+							Build.cyl(_at, 0.012, 0.8, Vector3(x - side * 0.01, 1.6, z - 0.04 + k * 0.04), [Color("#2B2B26"), Color("#7A2E25"), Color("#3E5770")][k])
+						Build.box(_at, Vector3(0.1, 0.2, 0.18), Vector3(x - side * 0.02, 1.15, z), DARK, false)
+						Build.sphere(_at, 0.018, Vector3(x - side * 0.075, 1.2, z), UiKit.GOOD if rng.randf() < 0.5 else Color("#E8B04A"), 2.0)
+				n += 1
+			z += rng.randf_range(0.9, 1.4)
 
 
 func _near_porthole(side: float, z: float) -> bool:

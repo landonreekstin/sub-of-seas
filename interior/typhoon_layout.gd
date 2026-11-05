@@ -84,6 +84,11 @@ static func build(i: SubInterior) -> void:
 		var c: Dictionary = i.compartments[k]
 		if c.z1 - c.z0 < 50.0: # the long rooms are dressed by their own gear
 			i._dressing(c, hatch if c.type == "passage" else Rect2())
+		var doors_in_walls: Array = []
+		for cr: Array in CROSS:
+			if cr[0] == k or cr[1] == k:
+				doors_in_walls.append(float(cr[2]))
+		i._clutter(c, doors_in_walls)
 	i._at = i
 	_cross_passages(i)
 	var ct: Dictionary = i.comp("control")

@@ -31,7 +31,11 @@ WWII photos; the all-hands crowd see-through, never blocking.
   or "crash surface" on the PA) bringing her up through the surface at 1.5 m/s or more: bow up to
   28°, thrown up to 6 m, slammed down, rocks to rest over 7 s; the "breach" event shakes everyone
   twice, flickers the lights, splashes. Outside, `ExteriorWorld._place_own` pitches and lifts her.
-- [next] look at a breach from the outside cameras, then the detail pass (Typhoon, Gato), style log, make test, Blaney plays.
+- [built, looked at] **detail pass** (`SubInterior._clutter`, Gato, Narwhal and Typhoon; not the
+  S-boat): four coloured pipe runs high on each wall and a bilge run; between stations valves,
+  gauges, stencilled junction boxes, pipe drops, cable looms. Typhoon painted blue-grey like the
+  film (`TYPHOON_PAINT` through `Build.recolor`).
+- [next] style log + CLAUDE.md, `make test`, Blaney plays (breach not seen from outside yet) (Typhoon, Gato), style log, make test, Blaney plays.
 - **Earlier stop.** Next was: open the screenshots already taken in
   `screenshots/bay/calm/` and `screenshots/bay/full/` (`tools/typhoon_looks.gd -- <dir> bay [calm]`),
   fix what looks wrong, run `make test` (unit tests passed after all hands; walkthroughs not rerun
