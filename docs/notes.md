@@ -10,7 +10,8 @@ Blaney played #36: "very good"; five items ticked, #36 ready, usage collected. N
 empty, more pipes, accurate to a real Typhoon in service". Built and looked at (xvfb): more pipe banks,
 denser wall gear, passage cabinets, reactor and turbine pipework, missile tube fittings, pool, gym,
 sauna, aviary (`TyphoonLayout._leisure`, `_cabinets`). Door walk, party, Typhoon walkthrough and
-unit tests pass. **Next:** Blaney plays it, then tick and mark the PR ready.
+unit tests pass. Blaney had it on his screen and asked to send it to Lando: ticked, #37 ready.
+**Next:** nothing of Blaney's in progress. Ask him later if any room still feels empty.
 
 ## 2026-11-04 (late night): three new items, branch `blaney/typhoon-bridge`, draft PR #36
 
