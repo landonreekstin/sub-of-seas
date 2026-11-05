@@ -825,7 +825,7 @@ func _cull_rooms(delta: float) -> void:
 		if _rooms[i].visible != show:
 			_rooms[i].visible = show
 			if show:
-				TyphoonLayout.people_room(self, i)
+				people_room(i)
 
 
 ## Apply host crew state: doors.
@@ -834,7 +834,68 @@ func apply_crew(crew: Dictionary) -> void:
 		if doors.has(id):
 			doors[id].set_open(crew.doors[id])
 	_sync_bots(crew.get("bots", {}))
+	_sync_crowd(crew)
 	TyphoonLayout.sync_band(self, crew)
+
+
+const SAILORS_PER_ROOM := 3
+var _crowd: Array[Node3D] = []
+var _crowded := false
+var _peopled := {} ## compartment index -> true once its sailors stand there
+
+
+## "All hands" (crew.full_crew): sailors standing about every room, see-through so they never
+## block the way (Blaney). On a Typhoon only rooms in sight get theirs (people_room as each is shown):
+## 160 men wouldn't run.
+func _sync_crowd(crew: Dictionary) -> void:
+	var want: bool = crew.get("full_crew", false)
+	if want == _crowded:
+		return
+	_crowded = want
+	if not want:
+		for v in _crowd:
+			v.queue_free()
+		_crowd.clear()
+		_peopled.clear()
+		return
+	for k in compartments.size():
+		if _rooms.is_empty() or _rooms[k].visible:
+			people_room(k)
+
+
+## Sailors for one compartment, the first time it's seen with the full crew aboard: in the
+## aisle, clear of the stations, turned every which way.
+func people_room(k: int) -> void:
+	if not _crowded:
+		return
+	var root: Node3D = _rooms[k] if not _rooms.is_empty() else self
+	if _peopled.has(k):
+		return
+	_peopled[k] = true
+	var c: Dictionary = compartments[k]
+	var rng := RandomNumberGenerator.new()
+	rng.seed = k * 97 + 3
+	var origin := Vector3(float(c.get("x", 0.0)), float(c.get("y", 0.0)), 0.0) if root == self else Vector3.ZERO
+	var x_max := 0.0 if String(c.type).begins_with("engine") and sub_class.key == "typhoon" else 0.5 # clear of the turbine
+	var z0: float = c.z0 + 1.5
+	var z1: float = c.z0 + 4.0 if c.type == "steering" else c.z1 - 1.5 # clear of the rudder ram
+	var placed := 0
+	for n in SAILORS_PER_ROOM * 6:
+		if placed >= SAILORS_PER_ROOM:
+			break
+		var p := origin + Vector3(rng.randf_range(-0.5, x_max), 0.0, rng.randf_range(z0, z1))
+		var gp := root.global_transform * (p - origin) if root != self else p
+		if stations.values().any(func(st: Station) -> bool: return Vector2(st.global_position.x - gp.x, st.global_position.z - gp.z).length() < 1.1):
+			continue
+		var look := {"build": rng.randi() % 4, "skin": rng.randi() % 3, "hair": rng.randi() % 7, "hair_col": rng.randi() % 7,
+			"beard": rng.randi() % 3, "hat": "watch", "hue": 0.62}
+		var v := _sailor(look)
+		remove_child(v)
+		root.add_child(v)
+		v.position = p
+		v.rotation.y = rng.randf() * TAU
+		_crowd.append(v)
+		placed += 1
 
 
 var _bot_views := {} ## station id -> BotView

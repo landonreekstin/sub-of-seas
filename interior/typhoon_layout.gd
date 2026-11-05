@@ -11,7 +11,6 @@ extends RefCounted
 const HULL_X := 6.0
 const UPPER_Y := 2.86 ## the command hull's floor, clear above the passage's ceiling (2.8): level with it, they flicker
 const HATCH_Z := -11.0 ## the ladder from the passage up into the command hull
-const SAILORS_PER_ROOM := 3
 const SOVIET_SHIRT := Color("#27354F")
 const BAND_ROOM := "rec"
 
@@ -282,30 +281,6 @@ static func _cross_passages(i: SubInterior) -> void:
 		door.rotation.y = PI / 2.0
 		root.add_child(door)
 		i.doors["x%d" % (j + LINE_DOORS.size())] = door
-
-
-## Sailors for a room, the first time it's seen with the full crew aboard. Only rooms in sight
-## have them at all: 160 men wouldn't run; three in each room you can see do.
-static func people_room(i: SubInterior, k: int) -> void:
-	if Game.instance == null or not Game.instance.crew.get("full_crew", false):
-		return
-	var root := i._rooms[k]
-	if root.has_meta("peopled"):
-		return
-	root.set_meta("peopled", true)
-	var c: Dictionary = i.compartments[k]
-	var rng := RandomNumberGenerator.new()
-	rng.seed = k * 97 + 3
-	for n in SAILORS_PER_ROOM:
-		var look := {"build": rng.randi() % 4, "skin": rng.randi() % 3, "hair": rng.randi() % 7, "hair_col": rng.randi() % 7,
-			"beard": rng.randi() % 3, "hat": "watch", "hue": 0.62}
-		var v := i._sailor(look)
-		i.remove_child(v)
-		root.add_child(v)
-		var x_max := 0.0 if String(c.type).begins_with("engine") else 0.5 # clear of the turbine
-		var z_top: float = c.z0 + 4.0 if c.type == "steering" else c.z1 - 2.0 # clear of the rudder ram
-		v.position = Vector3(rng.randf_range(-0.5, x_max), 0.0, rng.randf_range(c.z0 + 2.0, z_top))
-		v.rotation.y = rng.randf() * TAU
 
 
 ## The band: true when the crew's instruments, not a record, are what's playing.

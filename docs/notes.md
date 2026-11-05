@@ -4,6 +4,21 @@ Where things stand, in plain English. The newest entry goes at the top. Update i
 Other docs: `roadmap.md` is the to-do list, `style.md` how it looks and feels, `design.md` the
 game's design, `credits.md` where every sound came from.
 
+## 2026-11-04 (late night): three new items, branch `blaney/typhoon-bridge`, draft PR #36
+
+Blaney may cut a session off at any point: commit, push and update this after every step.
+His calls (asked once at the start): Typhoon lit like the film (cold blue-white, deep red at battle
+stations / all hands); command bay with two seats side by side at aircraft yokes (helmsman,
+planesman), skipper behind at the periscope; Gato packed with pipes, valves, gauges and cables like
+WWII photos; the all-hands crowd see-through, never blocking.
+- [built, tests pass] **All hands on deck** (any boat): every post manned, 3 sailors standing in each
+  room (`SubInterior._sync_crowd`), damage parties on standby, and the crew work the objective
+  themselves (`BotCrew.all_hands`, `_work_objective`): sink the nearest ship it wants, then the next;
+  on a "survive" patrol, go deep and quiet while hunted. "Stand down" sends them all off.
+  `tests/all_hands_walkthrough.gd` passes on Gato, S-boat, Typhoon.
+- [next] Typhoon command bay: two yoke seats, the film's lights.
+- [then] Typhoon detail (Red October), Gato detail. Then screenshots, `make test`, Blaney plays.
+
 ## 2026-11-04 (night): everything of Blaney's is ready for Lando
 
 Blaney played the waiting changes on a Gato: "the game works". PRs #28-#35 are all marked ready. They stack in that order, #31 already was. #29 (crew training together) hasn't been tried by two real players yet; the PR says so. Nothing of Blaney's is in progress.
