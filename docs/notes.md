@@ -4,6 +4,20 @@ Where things stand, in plain English. The newest entry goes at the top. Update i
 Other docs: `roadmap.md` is the to-do list, `style.md` how it looks and feels, `design.md` the
 game's design, `credits.md` where every sound came from.
 
+## 2026-11-05 (evening): lived-in boats (branch `blaney/lived-in`)
+
+Blaney: "even more filled up, control room easy to move around, more pipes, accurate kitchen and
+living areas, lived in". His calls: lived in but tidy; family photos and 1940s pin-ups (fully
+dressed); a busy galley with steam, sizzle and a cook; all four boats.
+- [built, parses] `interior/living.gd` (`Living`): galley on the mess's port side (S-boat: aft in
+  the battery room) with range, pots steaming, a frying pan (`galley_loop`, cut from the rain
+  recording), tins on fiddled shelves, sink, the cook stirring; benches and laid places in mess
+  and wardroom; photos, pin-ups, curtains, sea bags, shoes, towels and two sleepers per crew's
+  quarters; fold-down bunks over the reload torpedoes; vent trunk along every deckhead; control
+  room corner risers and overhead manifolds; gauge needles tremble (more with diesels on).
+  `tools/look_at.gd` pictures chosen spots.
+- [next] look at the pictures, tests, Blaney plays it.
+
 ## 2026-11-05 (later): the other boats overhauled, natural bot poses (branch `blaney/subs-overhaul`, on #37)
 
 Built and looked at (xvfb): every WWII boat (S-boat included) gets the Typhoon's pipe density in

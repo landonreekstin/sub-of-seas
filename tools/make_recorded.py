@@ -103,6 +103,7 @@ SOUNDS = {
     "tool": {"src": 835169, "start": 0.55, "len": 0.45, "fade": 0.12, "rms": -22.6},
     "sea_loop": {"src": 504641, "start": 8.0, "len": 8.0, "loop": 1.0, "hp": 60, "lp": 2500, "rms": -32.9},
     "rain_loop": {"src": 521773, "start": 76.0, "len": 6.0, "loop": 0.6, "rms": -25.3},
+    "galley_loop": {"src": 521773, "start": 30.0, "len": 5.0, "loop": 0.5, "hp": 1800, "rms": -26.0},  # rain on tin, high only: a pan frying
     "whale_loop": {"src": 171945, "start": 0.0, "len": 15.0, "loop": 1.0, "rms": -17.6},
     "sonar_ping": {"src": 12677, "start": 0.0, "len": 1.9, "fade": 0.4, "rms": -8.4},
     "deck_gun": {"src": 187767, "start": 0.15, "len": 3.0, "fade": 1.2, "rms": -12.5},
