@@ -65,6 +65,8 @@ func _ready() -> void:
 	_scale_label = Build.label(self, "", Vector3(0, TOP + 0.1, SIZE * 0.5 + 0.1), 18, UiKit.CREAM)
 	_scale_label.rotation.x = -PI / 2.0
 	set_view(Vector3(0, TOP + 1.05, SIZE * 0.62), Vector3(0, TOP, -0.05))
+	bot_arms = Vector2(0.45, 0.5)
+	bot_lean = 0.25 # looking down on the sand table
 
 
 func _process(_delta: float) -> void:

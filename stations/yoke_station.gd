@@ -56,6 +56,7 @@ func _ready() -> void:
 		Build.sphere(_lever, 0.03, Vector3(0, 0.19, 0), Color("#1E1E1E"))
 	Build.hitbox(self, Vector3(0.95, 1.4, 1.35), Vector3(0, 0.7, -0.15))
 	set_view(Vector3(0, 1.18, 0.22), Vector3(0, 0.92, -0.85))
+	bot_arms = Vector2(1.1, 1.1) # on the yoke
 
 
 func _process(delta: float) -> void:

@@ -30,6 +30,7 @@ func _ready() -> void:
 	Build.cyl(self, 0.12, 0.9, Vector3(0.05, 0.45, 0.33), Color("#3A6EA5")) # oxygen flask
 	Build.hitbox(self, Vector3(0.6, 1.6, 1.5), Vector3(-0.1, 0.9, 0))
 	set_view(Vector3(-1.2, 1.55, 0), Vector3(0.1, 1.3, 0))
+	bot_arms = Vector2(0.2, 0.95)
 
 
 func _process(delta: float) -> void:

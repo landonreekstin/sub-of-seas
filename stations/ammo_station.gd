@@ -30,6 +30,7 @@ func _ready() -> void:
 	l.rotation.x = -PI / 2.0
 	Build.area(self, Vector3(0.8, 0.5, 0.8), Vector3(0, 0.25, 0))
 	set_view(Vector3(0, 1.5, 0.9), Vector3(0, 0, 0))
+	bot_arms = Vector2(1.6, 1.6) # passing a round up
 
 
 func _process(delta: float) -> void:

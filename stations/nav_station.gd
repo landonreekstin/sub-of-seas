@@ -19,6 +19,8 @@ func _ready() -> void:
 	l.rotation.y = -PI / 2.0
 	Build.hitbox(self, Vector3(1.0, 1.0, 1.4), Vector3(0, 0.5, 0))
 	set_view(Vector3(-0.9, 1.75, 0), Vector3(0.05, 0.9, 0))
+	bot_arms = Vector2(0.55, 0.7)
+	bot_lean = 0.3 # over the chart
 
 
 func _build_overlay(root: Control) -> void:

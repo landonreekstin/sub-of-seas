@@ -26,6 +26,7 @@ func _ready() -> void:
 	l.rotation.y = PI / 2.0
 	Build.hitbox(self, Vector3(0.6, 2.2, 1.6), Vector3(0.1, 1.1, 0))
 	set_view(Vector3(0.95, 1.6, 0), Vector3(0, 1.35, 0))
+	bot_arms = Vector2(0.8, 0.8)
 
 
 func _process(delta: float) -> void:

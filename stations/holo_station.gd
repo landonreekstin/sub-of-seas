@@ -59,6 +59,7 @@ func _ready() -> void:
 	_own = _box(Vector3(0.025, 0.02, 0.09), BRIGHT)
 	_holo.visible = false
 	set_view(Vector3(0, 1.22, 0.05), Vector3(0.35, 1.2, -1.6))
+	bot_arms = Vector2(0.35, 0.35) # on the arm rests
 
 
 func _mat(c: Color) -> StandardMaterial3D:

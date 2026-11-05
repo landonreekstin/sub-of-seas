@@ -45,6 +45,7 @@ func _ready() -> void:
 	Build.label(self, "OUTSIDE CAMERAS", Vector3(0, 0.95, -0.34), 20, UiKit.BRASS).rotation.x = -0.6
 	Build.hitbox(self, Vector3(1.8, 1.0, 0.5), Vector3(0, 0.5, -0.6))
 	set_view(Vector3(0, 1.62, 0.5), Vector3(0, 1.75, -0.86))
+	bot_arms = Vector2(0.12, 0.6) # watching the screens, a hand on the console
 	var world: World3D = Game.instance.exterior.viewport.find_world_3d()
 	for i in CAMS.size():
 		var v := _viewport(SMALL, world)

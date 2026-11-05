@@ -169,8 +169,8 @@ func build() -> void:
 		_conning_tower(ct, hatch)
 	for c in compartments:
 		_dressing(c, hatch if c.type == "control" else Rect2())
-		if sub_class.key != "s_boat":
-			_clutter(c, [])
+		_clutter(c, [])
+	_wwii_control_gear(ct)
 	_finish_build()
 	var er := comp("engine")
 	_diesel_sound = Sfx.loop_at(self, "diesel_loop", Vector3(0, 1.0, (er.z0 + er.z1) * 0.5), -80.0, 8.0)
@@ -687,17 +687,18 @@ func _clutter(c: Dictionary, gaps: Array) -> void:
 			var x: float = side * (HALF_WIDTH - 0.1 - k * 0.04 - (y - 1.85) * 0.35)
 			Build.cyl(_at, 0.028 if k % 2 == 0 else 0.022, z1 - z0 - 0.3, Vector3(x, y, mid), runs[k], Vector3.BACK)
 		Build.cyl(_at, 0.035, z1 - z0 - 0.3, Vector3(side * 1.78, 0.28, mid), Color("#5A5E56"), Vector3.BACK)
-		if red: # the Typhoon (Blaney: fill her up, more pipes): a second bank up on the shoulder, a bilge pair
+		if true: # every boat (Blaney: fill her up, more pipes; then the other boats as well): a second bank up on the shoulder, a bilge pair
 			for k in 4:
 				var y2 := 2.22 + k * 0.08
 				var r2 := SHOULDER_R - 0.06
 				var x2: float = side * (HALF_WIDTH - SHOULDER_R + sqrt(maxf(r2 * r2 - pow(y2 - (DECK_HEIGHT - SHOULDER_R), 2.0), 0.0)))
-				Build.cyl(_at, 0.035 if k % 2 == 0 else 0.026, z1 - z0 - 0.3, Vector3(x2, y2, mid), [Color("#6E7F6A"), Color("#C9A04A"), Color("#8A8F86"), Color("#3E5770")][k], Vector3.BACK)
+				var bank: Array = [Color("#6E7F6A"), Color("#C9A04A"), Color("#8A8F86"), Color("#3E5770")] if red else [Color("#8A8F86"), BRASS, Color("#5A6048"), PIPE]
+				Build.cyl(_at, 0.035 if k % 2 == 0 else 0.026, z1 - z0 - 0.3, Vector3(x2, y2, mid), bank[k], Vector3.BACK)
 			Build.cyl(_at, 0.05, z1 - z0 - 0.3, Vector3(side * 1.62, 0.42, mid), Color("#3E5770"), Vector3.BACK)
-	if red: # a bundle along the deckhead each side of the lamps, clamped at every frame
+	if true: # a bundle along the deckhead each side of the lamps, clamped at every frame
 		for k in 3:
 			for side in [-1.0, 1.0]:
-				Build.cyl(_at, 0.04 - k * 0.008, z1 - z0 - 0.3, Vector3(side * (0.28 + k * 0.1), DECK_HEIGHT - 0.04, mid), [Color("#8A8F86"), RED, Color("#E8E0C8")][k], Vector3.BACK)
+				Build.cyl(_at, 0.04 - k * 0.008, z1 - z0 - 0.3, Vector3(side * (0.28 + k * 0.1), DECK_HEIGHT - 0.04, mid), [Color("#8A8F86"), RED, Color("#E8E0C8")][k] if red else [PIPE, Color("#2B2B26"), Color("#7A2E25")][k], Vector3.BACK)
 		var f := z0 + 0.8
 		while f < z1 - 0.5:
 			Build.box(_at, Vector3(0.9, 0.04, 0.05), Vector3(0, DECK_HEIGHT - 0.04, f), DARK, false)
@@ -744,7 +745,53 @@ func _clutter(c: Dictionary, gaps: Array) -> void:
 						Build.box(_at, Vector3(0.1, 0.2, 0.18), Vector3(x - side * 0.02, 1.15, z), DARK, false)
 						Build.sphere(_at, 0.018, Vector3(x - side * 0.075, 1.2, z), UiKit.GOOD if rng.randf() < 0.5 else Color("#E8B04A"), 2.0)
 				n += 1
-			z += rng.randf_range(0.55, 0.85) if red else rng.randf_range(0.9, 1.4)
+			z += rng.randf_range(0.55, 0.85)
+
+
+## The WWII control room's real gear: the "Christmas tree" (the hull-opening board, a green or
+## red lamp for every hatch, vent and valve: all green, she can dive), the high-pressure air
+## manifold's row of valve wheels, and the 1MC phone handsets on their hooks.
+func _wwii_control_gear(c: Dictionary) -> void:
+	_at = self
+	var z0: float = c.z0
+	var z1: float = c.z1
+	var board := Node3D.new()
+	board.position = Vector3(1.2, 1.05, z0 + 0.13)
+	add_child(board)
+	Build.box(board, Vector3(0.8, 0.55, 0.05), Vector3.ZERO, Color("#1E1E1E"), false)
+	Build.label(board, "HULL OPENINGS", Vector3(0, 0.22, 0.03), 14, Color("#E8E0C8"))
+	_tree_lamps.clear()
+	for row in 4:
+		for col in 8:
+			var lamp := Build.sphere(board, 0.018, Vector3(-0.32 + col * 0.09, 0.12 - row * 0.1, 0.03), UiKit.GOOD, 2.0)
+			_tree_lamps.append(lamp)
+	var man := Node3D.new() # HP air manifold on the after bulkhead, starboard of the door
+	man.position = Vector3(1.15, 1.55, z1 - 0.14)
+	add_child(man)
+	Build.cyl(man, 0.04, 0.9, Vector3.ZERO, BRASS, Vector3.RIGHT)
+	for k in 6:
+		Build.cyl(man, 0.015, 0.12, Vector3(-0.38 + k * 0.15, 0, -0.06), Color("#8A8F86"), Vector3.BACK)
+		Build.wheel(man, 0.055, Vector3(-0.38 + k * 0.15, 0, -0.13), RED if k < 3 else Color("#3E5770"), Vector3.FORWARD)
+	Build.label(man, "H.P. AIR", Vector3(0, 0.14, -0.02), 14, Color("#2B2B26")).rotation.y = PI
+	for k in 2: # phone handsets on the port wall
+		var z := z0 + 3.2 + k * 0.25
+		Build.box(self, Vector3(0.06, 0.2, 0.12), Vector3(-1.93, 1.55, z), Color("#2B2B26"), false)
+		Build.box(self, Vector3(0.05, 0.06, 0.06), Vector3(-1.89, 1.68, z), Color("#1E1E1E"), false)
+
+
+var _tree_lamps: Array[MeshInstance3D] = []
+var _tree_red := -1
+
+
+## The board: the main induction and hull ventilation lamps go red while the diesels breathe
+## on the surface; dived, a straight board, all green.
+func _tree(sub: SubState) -> void:
+	var red := 2 if sub.is_surfaced() and sub.diesels_running() > 0 else 0
+	if red == _tree_red or _tree_lamps.is_empty():
+		return
+	_tree_red = red
+	for k in _tree_lamps.size():
+		_tree_lamps[k].material_override = Build.mat(RED if k < red else UiKit.GOOD, 2.0)
 
 
 ## A Typhoon room's own big gear standing against that wall there (TyphoonLayout._fit).
@@ -827,7 +874,7 @@ func _process(delta: float) -> void:
 	# Rig for red: at night, submerged, the boat runs on red light so eyes stay dark-adapted.
 	var red := Sim.world.conditions.night and not sub.is_surfaced()
 	var typhoon := sub_class.key == "typhoon"
-	var battle: bool = typhoon and Game.instance != null and Game.instance.crew.get("full_crew", false) # all hands: rig for red, as in the film
+	var battle := false # all hands only fills the boat; it doesn't change her mood (Blaney)
 	var base := TYPHOON_LIGHT if typhoon else LIGHT
 	for l in _lights:
 		var on := _flicker == 0.0 or randf() > _flicker * 0.7
@@ -840,6 +887,7 @@ func _process(delta: float) -> void:
 		for r: MeshInstance3D in _rockers[i]:
 			r.position.y = r.get_meta("y") + randf_range(-shake, shake)
 	_sounds(sub, delta)
+	_tree(sub)
 	_sync_teams(delta)
 	_cull_rooms(delta)
 	var text := {

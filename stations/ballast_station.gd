@@ -36,6 +36,7 @@ func _ready() -> void:
 	Build.box(self, Vector3(0.06, 0.14, 0.14), Vector3(0.1, 1.05, 0.8), Color("#B23A2E"), false) # emergency
 	Build.hitbox(self, Vector3(0.6, 1.6, 2.0), Vector3(0.1, 1.1, 0))
 	set_view(Vector3(1.4, 1.6, 0.05), Vector3(0, 1.4, 0.05))
+	bot_arms = Vector2(0.95, 1.1)
 
 
 func _process(delta: float) -> void:

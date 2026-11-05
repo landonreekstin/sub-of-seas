@@ -14,6 +14,15 @@ var _sparks: CPUParticles3D
 var _broken_label: Label3D
 var _heard := {} ## key -> [last value seen, when it last sounded], for sound_on_change
 var _loops := {} ## key -> AudioStreamPlayer3D, for sound_while
+## How a bot crewman holds himself here (BotView; Blaney: natural positions at every station).
+var bot_arms := Vector2(0.9, 0.9) ## left, right: radians forward from hanging at his sides
+var bot_lean := 0.0 ## radians forward from the hips
+var mounted := 0.0 ## how high this station hangs above the deck (a torpedo tube's breech)
+
+
+## Where a bot stands, local to the station: under the player's eye unless a station says otherwise.
+func bot_spot() -> Vector3:
+	return view.origin
 
 
 func setup(id: String, title: String, cluster_name := "") -> Station:

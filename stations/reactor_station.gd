@@ -17,6 +17,7 @@ func _ready() -> void:
 		Build.sphere(self, 0.06, Vector3(-0.02, 1.15, z), UiKit.GOOD, 1.5)
 	Build.hitbox(self, Vector3(0.6, 1.9, 1.8), Vector3(0.05, 0.95, 0))
 	set_view(Vector3(-1.1, 1.6, 0), Vector3(0.1, 1.4, 0))
+	bot_arms = Vector2(0.85, 0.85)
 
 
 func _power() -> int:

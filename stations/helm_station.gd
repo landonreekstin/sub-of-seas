@@ -20,6 +20,7 @@ func _ready() -> void:
 	Build.cyl(self, 0.2, 0.06, Vector3(0.12, 1.15, 0.65), Color("#E8E0C8"), Vector3.RIGHT)
 	Build.hitbox(self, Vector3(0.6, 1.6, 1.4), Vector3(0.1, 0.8, 0.3))
 	set_view(Vector3(-0.85, 1.6, 0.25), Vector3(0.1, 1.15, 0.25))
+	bot_arms = Vector2(1.05, 1.05)
 
 
 func _process(delta: float) -> void:

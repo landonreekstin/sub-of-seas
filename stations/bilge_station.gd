@@ -29,6 +29,13 @@ func _ready() -> void:
 	Build.box(self, Vector3(0.06, 0.16, 0.08), Vector3(-0.0, 0.62, 0.32), Color("#B23A2E"), false) # the switch
 	Build.hitbox(self, Vector3(0.6, 1.1, 1.0), Vector3(-0.1, 0.55, 0))
 	set_view(Vector3(-1.2, 1.35, 0), Vector3(0.1, 0.65, 0))
+	bot_arms = Vector2(0.55, 0.7)
+	bot_lean = 0.3 # at the low panel
+
+
+## Close in at the pump, clear of the planesman beside him.
+func bot_spot() -> Vector3:
+	return Vector3(-0.6, 1.35, 0)
 
 
 func _process(_delta: float) -> void:

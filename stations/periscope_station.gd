@@ -31,6 +31,7 @@ func _ready() -> void:
 	Build.box(_eyepiece, Vector3(0.5, 0.06, 0.06), Vector3(0, -0.2, 0.05), Color("#C9A04A"), false) # handles
 	Build.hitbox(self, Vector3(0.7, 2.0, 0.7), Vector3(0, 1.0, 0))
 	set_view(Vector3(0, 1.6, 0.45), Vector3(0, 1.55, 0))
+	bot_arms = Vector2(1.55, 1.55) # both hands on the training handles
 
 
 func _process(delta: float) -> void:
