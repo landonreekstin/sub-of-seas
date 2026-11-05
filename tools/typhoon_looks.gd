@@ -1,6 +1,7 @@
 extends SceneTree
 ## Close-ups of what the room tour can't see on a Typhoon: signs, cross passages, notebooks, band.
-##   godot --path . -s tools/typhoon_looks.gd -- <out dir>
+##   godot --path . -s tools/typhoon_looks.gd -- <out dir> [<only looks with this in the name> [calm]]
+## (calm: no "all hands" or band, so her lights stay blue-white)
 
 ## name, x, y, z, yaw (0 forward, PI aft, PI/2 port, -PI/2 starboard), pitch
 const LOOKS := [
@@ -18,6 +19,9 @@ const LOOKS := [
 	["sign_radio", 6.0, 0.1, -9.0, 0.0, 0.25],
 	["notebooks", 0.0, 2.9, -3.5, 0.0, -0.2],
 	["pa_mic", 0.0, 2.9, -2.0, PI, 0.0],
+	["bay_fwd", 0.0, 2.9, -6.5, 0.0, -0.15],
+	["bay_yokes", 0.3, 2.9, -10.6, 0.0, -0.45],
+	["bay_aft", 0.0, 2.9, -13.0, PI, -0.05],
 	["band_room", -6.0, 0.1, -1.0, 0.0, 0.0],
 ]
 
@@ -25,6 +29,7 @@ var _game: Node
 var _out := ""
 var _i := -30
 var _only := ""
+var _calm := false
 
 
 func _initialize() -> void:
@@ -32,6 +37,7 @@ func _initialize() -> void:
 	_out = args[0]
 	if args.size() > 1: # just the looks with this in their name
 		_only = args[1]
+	_calm = args.size() > 2 and args[2] == "calm"
 	var net: Node = root.get_node("Net")
 	net.mission = "cw_convoy"
 	net.sub_key = "typhoon"
@@ -49,9 +55,9 @@ func _process(_delta: float) -> bool:
 	if _game.interior == null or _game.local_player == null:
 		return false
 	_i += 1
-	if _i == -15:
+	if _i == -15 and not _calm:
 		_game.rq_pa("all hands")
-	if _i == -2:
+	if _i == -2 and not _calm:
 		_game.rq_pa("band play")
 	if _i < 0:
 		return false

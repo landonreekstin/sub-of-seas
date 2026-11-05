@@ -125,7 +125,7 @@ static func _fit(i: SubInterior, c: Dictionary, hatch: Rect2) -> void:
 			crate.position = Vector3(-1.35, 0, 30.0)
 			i._at.add_child(crate)
 		"control":
-			i._control_room(c, Rect2())
+			_command_bay(i, c)
 			_notebooks(i, c)
 			_bridge_ladder(i, c)
 		"nav":
@@ -248,6 +248,61 @@ static func _bridge_ladder(i: SubInterior, c: Dictionary) -> void:
 	hatch.position = Vector3(1.3, SubInterior.DECK_HEIGHT - 0.06, z - 0.1)
 	i._at.add_child(hatch)
 	Build.area(hatch, Vector3(0.8, 0.4, 0.8), Vector3.ZERO)
+
+
+## The central post as in The Hunt for Red October (Blaney: a realistic layout): helmsman and
+## planesman side by side at yokes facing the bow under a bank of gauges, the skipper's chair
+## and the periscope stand behind them, sonar to port and fire control to starboard.
+static func _command_bay(i: SubInterior, c: Dictionary) -> void:
+	var z0: float = c.z0
+	var z1: float = c.z1
+	var steel := Color("#4A5560")
+	Build.box(i._at, Vector3(2.5, 1.9, 0.4), Vector3(0, 0.95, z0 + 0.25), steel) # the gauge bank
+	for k in 6:
+		var x := -1.0 + k * 0.4
+		Build.cyl(i._at, 0.1, 0.03, Vector3(x, 1.25, z0 + 0.46), Color("#151515"), Vector3.BACK)
+		Build.cyl(i._at, 0.11, 0.02, Vector3(x, 1.25, z0 + 0.455), SubInterior.BRASS, Vector3.BACK)
+		Build.sphere(i._at, 0.02, Vector3(x, 0.95, z0 + 0.46), [UiKit.GOOD, Color("#E8B04A"), Color("#B23A2E")][k % 3], 2.0)
+	i._gauge_board(Vector3(-0.6, 1.68, z0 + 0.47), ["depth", "ordered"])
+	i._gauge_board(Vector3(0.6, 1.68, z0 + 0.47), ["speed", "heading"])
+	var plane := YokeStation.new().setup("dive", "Planesman's yoke", "helm_dive") as YokeStation
+	plane.role = "dive"
+	i._add_station(plane, Vector3(-0.6, 0, z0 + 1.65))
+	var helm := YokeStation.new().setup("helm", "Helmsman's yoke", "helm_dive") as YokeStation
+	helm.role = "helm"
+	i._add_station(helm, Vector3(0.6, 0, z0 + 1.65))
+	i._add_station(BilgeStation.new().setup("bilge", "Bilge pump"), Vector3(-1.62, 0, z0 + 0.3), PI / 2.0)
+	# The periscope stand: a low dais with a brass rail, the attack scope beside the search scope.
+	var pz: float = z0 + 5.4
+	Build.cyl(i._at, 1.05, 0.1, Vector3(0, 0.05, pz), Color("#2E3A44"), Vector3.UP)
+	for k in 9:
+		var a := lerpf(-1.2, 1.2, k / 8.0) # posts round the forward arc, open aft
+		Build.cyl(i._at, 0.025, 0.95, Vector3(sin(a), 0.47, pz - cos(a)), SubInterior.BRASS)
+		if k > 0: # the rail along the post tops
+			var b := lerpf(-1.2, 1.2, (k - 0.5) / 8.0)
+			Build.box(i._at, Vector3(0.31, 0.05, 0.05), Vector3(sin(b), 0.95, pz - cos(b)), SubInterior.BRASS, false).rotation.y = -b
+	i._add_station(PeriscopeStation.new().setup("periscope", "Periscope", ""), Vector3(0, 0, pz))
+	Build.cyl(i._at, 0.09, SubInterior.DECK_HEIGHT, Vector3(0.55, SubInterior.DECK_HEIGHT * 0.5, pz + 0.5), Color("#6E756C"))
+	# The skipper's chair, raised, to port of the stand where he can see both yokes.
+	var cz: float = z0 + 4.6
+	Build.cyl(i._at, 0.08, 0.5, Vector3(-1.15, 0.25, cz), Color("#1E1E1E"))
+	Build.box(i._at, Vector3(0.55, 0.1, 0.55), Vector3(-1.15, 0.55, cz), Color("#5A3A2E"))
+	Build.box(i._at, Vector3(0.55, 0.7, 0.1), Vector3(-1.15, 0.95, cz + 0.27), Color("#5A3A2E"))
+	for side in [-1.0, 1.0]:
+		Build.box(i._at, Vector3(0.08, 0.08, 0.45), Vector3(-1.15 + side * 0.28, 0.78, cz), Color("#1E1E1E"), false)
+	i._add_station(SonarStation.new().setup("sonar", "Sonar", ""), Vector3(-1.85, 0, z0 + 7.4))
+	i._add_station(TdcStation.new().setup("tdc", "Fire control", ""), Vector3(1.55, 0, z0 + 4.6))
+	i._add_station(BallastStation.new().setup("ballast", "Ballast manifold"), Vector3(-1.85, 0, z1 - 1.8))
+	i._add_station(NavStation.new().setup("nav", "Chart table"), Vector3(1.4, 0, z1 - 1.6))
+	var mic := PaMic.new() # the PA, on the after bulkhead to port of the door
+	mic.position = Vector3(-1.05, 0, z1 - 0.12)
+	i._at.add_child(mic)
+	i._rack(c.type, z0 + 9.6)
+	# Cable trays and pipe runs along the deckhead, the length of the bay.
+	for x in [-1.25, -1.05, 1.05, 1.25]:
+		Build.cyl(i._at, 0.04, z1 - z0 - 0.4, Vector3(x, 2.3, (z0 + z1) * 0.5), Color("#8A8F86") if absf(x) > 1.1 else Color("#B23A2E"), Vector3.BACK)
+	for x in [-0.7, 0.7]:
+		Build.box(i._at, Vector3(0.3, 0.05, z1 - z0 - 0.4), Vector3(x, 2.42, (z0 + z1) * 0.5), Color("#3A3F38"), false)
 
 
 static func _notebooks(i: SubInterior, c: Dictionary) -> void:

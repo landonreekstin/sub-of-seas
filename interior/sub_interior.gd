@@ -76,6 +76,9 @@ var _rooms: Array[Node3D] = [] ## Typhoon: each compartment's root, so rooms out
 var _room_links: Array = [] ## Typhoon: [door id or "", comp a, comp b]
 var main_ladder: Ladder ## the ladder between decks, for the damage parties
 var _cull_timer := 0.0
+var _env: Environment
+const TYPHOON_LIGHT := Color("#D6E6FF") ## the Typhoon's cold blue-white strip lights, as in the film
+const BATTLE_RED := Color("#FF3A2A")
 
 
 static func create(data: SubClassData) -> SubInterior:
@@ -186,6 +189,7 @@ func _finish_build() -> void:
 
 func _build_environment() -> void:
 	var env := Environment.new()
+	_env = env
 	env.background_mode = Environment.BG_COLOR
 	env.background_color = Color("#0A0C0A")
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
@@ -719,10 +723,15 @@ func _process(delta: float) -> void:
 	_flicker = maxf(0.0, _flicker - delta * 0.8)
 	# Rig for red: at night, submerged, the boat runs on red light so eyes stay dark-adapted.
 	var red := Sim.world.conditions.night and not sub.is_surfaced()
+	var typhoon := sub_class.key == "typhoon"
+	var battle: bool = typhoon and Game.instance != null and Game.instance.crew.get("full_crew", false) # all hands: rig for red, as in the film
+	var base := TYPHOON_LIGHT if typhoon else LIGHT
 	for l in _lights:
 		var on := _flicker == 0.0 or randf() > _flicker * 0.7
-		l.light_energy = l.get_meta("energy") * power * (1.0 if on else 0.08) * (0.8 if red else 1.0)
-		l.light_color = Color("#FF4A35") if red else LIGHT
+		l.light_energy = l.get_meta("energy") * power * (1.0 if on else 0.08) * (0.8 if red or battle else 1.0)
+		l.light_color = BATTLE_RED if battle else (Color("#FF4A35") if red else base)
+	if typhoon and _env != null:
+		_env.ambient_light_color = Color("#5A2E2A") if battle or red else Color("#5E6E80")
 	for i in _rockers.size():
 		var shake := 0.012 if sub.diesels[i] >= 1.0 else (0.006 if sub.diesels[i] > 0.0 else 0.0)
 		for r: MeshInstance3D in _rockers[i]:

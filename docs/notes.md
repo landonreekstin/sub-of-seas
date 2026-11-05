@@ -16,8 +16,18 @@ WWII photos; the all-hands crowd see-through, never blocking.
   themselves (`BotCrew.all_hands`, `_work_objective`): sink the nearest ship it wants, then the next;
   on a "survive" patrol, go deep and quiet while hunted. "Stand down" sends them all off.
   `tests/all_hands_walkthrough.gd` passes on Gato, S-boat, Typhoon.
-- [next] Typhoon command bay: two yoke seats, the film's lights.
-- [then] Typhoon detail (Red October), Gato detail. Then screenshots, `make test`, Blaney plays.
+- [built, parses, NOT looked at yet] **Typhoon command bay** (`TyphoonLayout._command_bay`,
+  `stations/yoke_station.gd`): helmsman (starboard) and planesman (port) seated at yokes facing the
+  bow under a gauge bank; planesman holds W to push down / S to pull up, helmsman A/D or mouse
+  rudder, C centre, W/S engine order; periscope dais with brass rail behind them, skipper's chair
+  to port, sonar port, fire control (TDC) starboard, cable trays overhead. **Lights:** Typhoon
+  blue-white, deep red while all hands (`full_crew`) is on (`SubInterior._process`).
+- **Stopped here (Blaney asked).** Next: open the screenshots already taken in
+  `screenshots/bay/calm/` and `screenshots/bay/full/` (`tools/typhoon_looks.gd -- <dir> bay [calm]`),
+  fix what looks wrong, run `make test` (unit tests passed after all hands; walkthroughs not rerun
+  since the bay changed), then Typhoon detail (Red October), Gato detail (packed pipes, valves,
+  gauges, cables), log his four calls in `docs/style.md`, update CLAUDE.md controls, Blaney plays,
+  tick the three items, PR #36 ready, then `vibenote --collect-usage`.
 
 ## 2026-11-04 (night): everything of Blaney's is ready for Lando
 
