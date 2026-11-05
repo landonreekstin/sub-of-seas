@@ -56,6 +56,7 @@ var compartments: Array[Dictionary] = [] ## {name, type, z0, z1}, as the hull mo
 var door_links := {} ## door_id -> [comp_a, comp_b]
 var stations := {} ## station_id -> Station, in build order
 var doors := {} ## door_id -> WatertightDoor
+var _muffle_timer := 0.0
 var racks := {} ## compartment type -> damage control rack position (global)
 var spawn_points: Array[Vector3] = []
 var has_conning_tower := true
@@ -963,6 +964,7 @@ func _process(delta: float) -> void:
 		_needles[k].rotation.x = float(_needles[k].get_meta("a")) + sin(t * (5.0 + k % 7)) * hum
 	_sync_teams(delta)
 	_cull_rooms(delta)
+	_muffle(delta)
 	var text := {
 		"depth": "DEPTH   %5.1f m" % sub.depth,
 		"ordered": "ORDERED %5.0f m" % sub.ordered_depth,
@@ -1059,6 +1061,39 @@ func _cull_rooms(delta: float) -> void:
 			_rooms[i].visible = show
 			if show:
 				people_room(i)
+
+
+## Shut watertight doors keep the noise in (Blaney): a sound from a room behind one comes through
+## dull (Sfx.MUFFLED's low-pass) and capped quieter, and quieter again for each more door.
+func _muffle(delta: float) -> void:
+	_muffle_timer -= delta
+	if _muffle_timer > 0.0:
+		return
+	_muffle_timer = 0.2
+	var me: Player = Game.instance.local_player if Game.instance != null else null
+	var shut := {} # room -> closed doors between it and us
+	if me != null and not Deck.is_out(me.global_position):
+		var doors_now: Dictionary = Game.instance.crew.get("doors", {})
+		shut[Sim.world.hull.comp_at_pos(me.camera.global_position)] = 0
+		var edge: Array = shut.keys()
+		while not edge.is_empty(): # closed doors cost one, open ones and hatches nothing
+			var next: Array = []
+			for link: Array in _walk_links():
+				var cost := 0 if link[0] == "" or doors_now.get(link[0], true) else 1
+				for k in 2:
+					var a: int = link[1 + k]
+					var b: int = link[2 - k]
+					if edge.has(a) and int(shut.get(b, 99)) > int(shut[a]) + cost:
+						shut[b] = int(shut[a]) + cost
+						next.append(b)
+			edge = next
+	for n: Node in get_tree().get_nodes_in_group(Sfx.GROUP):
+		var p := n as AudioStreamPlayer3D
+		var doors_between := 0
+		if not shut.is_empty() and not Deck.is_out(p.global_position):
+			doors_between = int(shut.get(Sim.world.hull.comp_at_pos(p.global_position), 0))
+		p.bus = Sfx.MUFFLED if doors_between > 0 else &"Effects"
+		p.max_db = 3.0 if doors_between == 0 else -12.0 - 8.0 * (doors_between - 1)
 
 
 ## Apply host crew state: doors.

@@ -188,6 +188,9 @@ and update "Current style" in the same commit.
   Blaney found the first version sounded like knocking on his door and the second annoying and
   clanky; half as loud again now: your own barely there, a crewmate's just audible when close), a clang per ladder rung, a clink
   picking up or putting down a tool.
+  **Shut doors keep the noise in** (Blaney): a sound from beyond a shut watertight door comes
+  through dull (low-passed) and much quieter, quieter again for each more door; open doors and
+  hatches let it straight through. Crew voices are not muffled.
 - **Handling** (Blaney): livelier than the real boat but still heavy and submarine-like, not a
   rocket ship. Speed changes are twice as quick, turns 1.6× and dives 1.5× (a Gato: 0 to 9 kn
   in about 15 s, a full circle in about 75 s, periscope depth to 45 m in about 28 s).
@@ -440,3 +443,4 @@ and update "Current style" in the same commit.
 | 2026-11-05 | Blaney | (After playing the bay, hologram, all hands and crash surface: "very good".) The Typhoon is empty: fill it up, more pipes, and make it accurate to a real Typhoon that's in service. |
 | 2026-11-05 | Blaney | Overhaul the other sub types as well; in all the sub types the characters should be in natural positions at their stations; all hands on deck mustn't change the vibe to stressful, it's only to fill places. (Undoes his own red light at all hands.) |
 | 2026-11-05 | Blaney | Even more filled up: the control room easy to move around, but more pipes and stuff so the subs feel full and working underway; accurate kitchen and living areas; the sub should look lived in. (Asked: lived in but tidy, not cluttered; both family photos and 1940s pin-ups; a busy galley with steam, a sizzling pan and a cook; all four boats, the Typhoon too.) |
+| 2026-11-05 | Blaney | (After playing the lived-in Gato: "the gato feels good".) Doors should insulate noise, like the engine. |
