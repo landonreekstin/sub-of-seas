@@ -4,6 +4,14 @@ Where things stand, in plain English. The newest entry goes at the top. Update i
 Other docs: `roadmap.md` is the to-do list, `style.md` how it looks and feels, `design.md` the
 game's design, `credits.md` where every sound came from.
 
+## 2026-11-05: filling the Typhoon (branch `blaney/typhoon-fill`, on top of #36)
+
+Blaney played #36: "very good"; five items ticked, #36 ready, usage collected. New: "the sub is
+empty, more pipes, accurate to a real Typhoon in service". Built and looked at (xvfb): more pipe banks,
+denser wall gear, passage cabinets, reactor and turbine pipework, missile tube fittings, pool, gym,
+sauna, aviary (`TyphoonLayout._leisure`, `_cabinets`). Door walk, party, Typhoon walkthrough and
+unit tests pass. **Next:** Blaney plays it, then tick and mark the PR ready.
+
 ## 2026-11-04 (late night): three new items, branch `blaney/typhoon-bridge`, draft PR #36
 
 Blaney may cut a session off at any point: commit, push and update this after every step.

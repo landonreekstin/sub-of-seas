@@ -687,7 +687,22 @@ func _clutter(c: Dictionary, gaps: Array) -> void:
 			var x: float = side * (HALF_WIDTH - 0.1 - k * 0.04 - (y - 1.85) * 0.35)
 			Build.cyl(_at, 0.028 if k % 2 == 0 else 0.022, z1 - z0 - 0.3, Vector3(x, y, mid), runs[k], Vector3.BACK)
 		Build.cyl(_at, 0.035, z1 - z0 - 0.3, Vector3(side * 1.78, 0.28, mid), Color("#5A5E56"), Vector3.BACK)
-	if c.type in BUSY_WALLS:
+		if red: # the Typhoon (Blaney: fill her up, more pipes): a second bank up on the shoulder, a bilge pair
+			for k in 4:
+				var y2 := 2.22 + k * 0.08
+				var r2 := SHOULDER_R - 0.06
+				var x2: float = side * (HALF_WIDTH - SHOULDER_R + sqrt(maxf(r2 * r2 - pow(y2 - (DECK_HEIGHT - SHOULDER_R), 2.0), 0.0)))
+				Build.cyl(_at, 0.035 if k % 2 == 0 else 0.026, z1 - z0 - 0.3, Vector3(x2, y2, mid), [Color("#6E7F6A"), Color("#C9A04A"), Color("#8A8F86"), Color("#3E5770")][k], Vector3.BACK)
+			Build.cyl(_at, 0.05, z1 - z0 - 0.3, Vector3(side * 1.62, 0.42, mid), Color("#3E5770"), Vector3.BACK)
+	if red: # a bundle along the deckhead each side of the lamps, clamped at every frame
+		for k in 3:
+			for side in [-1.0, 1.0]:
+				Build.cyl(_at, 0.04 - k * 0.008, z1 - z0 - 0.3, Vector3(side * (0.28 + k * 0.1), DECK_HEIGHT - 0.04, mid), [Color("#8A8F86"), RED, Color("#E8E0C8")][k], Vector3.BACK)
+		var f := z0 + 0.8
+		while f < z1 - 0.5:
+			Build.box(_at, Vector3(0.9, 0.04, 0.05), Vector3(0, DECK_HEIGHT - 0.04, f), DARK, false)
+			f += 1.6
+	if c.type in BUSY_WALLS and not (red and c.type in ["missile", "engine", "engine2", "sonar", "radio"]):
 		return
 	var rng := RandomNumberGenerator.new()
 	rng.seed = int(z0 * 13.0) + 7
@@ -695,12 +710,15 @@ func _clutter(c: Dictionary, gaps: Array) -> void:
 	for st: Station in stations.values():
 		if st.get_parent() == _at and absf(st.position.x) > 1.0:
 			taken.append([signf(st.position.x), st.position.z])
+	for z: float in c.get("keep_clear", []): # big gear against both walls (a sauna, consoles)
+		taken.append([-1.0, z])
+		taken.append([1.0, z])
 	for side in [-1.0, 1.0]:
 		var z := z0 + 0.9
 		var n := 0
 		while z < z1 - 0.9:
 			var clear := not _near_porthole(side, z) and not gaps.any(func(g: float) -> bool: return absf(g - z) < 1.0) \
-				and not taken.any(func(t: Array) -> bool: return t[0] == side and absf(t[1] - z) < 1.1)
+				and not taken.any(func(t: Array) -> bool: return t[0] == side and absf(t[1] - z) < 1.1) and not _gear_against(c, side, z)
 			if clear:
 				var x: float = side * (HALF_WIDTH - 0.06)
 				match n % 5:
@@ -726,7 +744,23 @@ func _clutter(c: Dictionary, gaps: Array) -> void:
 						Build.box(_at, Vector3(0.1, 0.2, 0.18), Vector3(x - side * 0.02, 1.15, z), DARK, false)
 						Build.sphere(_at, 0.018, Vector3(x - side * 0.075, 1.2, z), UiKit.GOOD if rng.randf() < 0.5 else Color("#E8B04A"), 2.0)
 				n += 1
-			z += rng.randf_range(0.9, 1.4)
+			z += rng.randf_range(0.55, 0.85) if red else rng.randf_range(0.9, 1.4)
+
+
+## A Typhoon room's own big gear standing against that wall there (TyphoonLayout._fit).
+func _gear_against(c: Dictionary, side: float, z: float) -> bool:
+	match c.type:
+		"radio":
+			return side > 0.0 and z < c.z0 + 9.2
+		"sonar":
+			return z < c.z0 + 5.8
+		"engine", "engine2":
+			return side > 0.0 and z > c.z0 + 2.5 and z < c.z1 - 10.5
+		"missile":
+			for k in 10:
+				if absf(z - lerpf(c.z0 + 6.0, c.z1 - 6.0, k / 9.0)) < 0.9:
+					return true
+	return false
 
 
 func _near_porthole(side: float, z: float) -> bool:

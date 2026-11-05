@@ -13,6 +13,7 @@ const UPPER_Y := 2.86 ## the command hull's floor, clear above the passage's cei
 const HATCH_Z := -11.0 ## the ladder from the passage up into the command hull
 const SOVIET_SHIRT := Color("#27354F")
 const BAND_ROOM := "rec"
+const RED_PIPE := Color("#B23A2E")
 
 ## type, name, x, y, z0, z1 and its sign in Russian.
 const ROOMS := [
@@ -31,7 +32,7 @@ const ROOMS := [
 	["engine", "turbine room, port", -HULL_X, 0.0, 26.0, 54.0, "ТУРБИНА №1"],
 	["berthing2", "crew's quarters, starboard", HULL_X, 0.0, -60.0, -40.0, "КУБРИК"],
 	["sickbay", "sick bay", HULL_X, 0.0, -40.0, -26.0, "ЛАЗАРЕТ"],
-	["sauna", "gym and sauna", HULL_X, 0.0, -26.0, -12.0, "САУНА"],
+	["sauna", "gym, sauna and pool", HULL_X, 0.0, -26.0, -12.0, "САУНА И БАССЕЙН"],
 	["radio", "radio room", HULL_X, 0.0, -12.0, 2.0, "РАДИОРУБКА"],
 	["reactor2", "reactor, starboard", HULL_X, 0.0, 2.0, 26.0, "РЕАКТОР №2"],
 	["engine2", "turbine room, starboard", HULL_X, 0.0, 26.0, 54.0, "ТУРБИНА №2"],
@@ -129,6 +130,7 @@ static func _fit(i: SubInterior, c: Dictionary, hatch: Rect2) -> void:
 			var crate := PartsCrate.new()
 			crate.position = Vector3(-1.35, 0, 30.0)
 			i._at.add_child(crate)
+			_cabinets(i, c)
 		"control":
 			_command_bay(i, c)
 			_notebooks(i, c)
@@ -156,10 +158,7 @@ static func _fit(i: SubInterior, c: Dictionary, hatch: Rect2) -> void:
 			Build.box(i._at, Vector3(0.1, 0.5, 0.5), Vector3(-1.95, 1.7, mid), Color("#B23A2E"), false)
 			i._rack(c.type, c.z1 - 1.4)
 		"sauna":
-			Build.box(i._at, Vector3(1.4, 2.2, 4.0), Vector3(1.25, 1.1, c.z0 + 3.0), Color("#8A6238"))
-			for z in [c.z1 - 3.0, c.z1 - 5.5]:
-				Build.box(i._at, Vector3(0.7, 0.5, 1.8), Vector3(-1.4, 0.25, z), SubInterior.DARK) # weight benches
-			i._rack(c.type, c.z1 - 1.4)
+			_leisure(i, c)
 		"radio":
 			for z in [c.z0 + 2.0, c.z0 + 4.0, c.z0 + 6.0, c.z0 + 8.0]:
 				Build.box(i._at, Vector3(0.6, 1.9, 1.7), Vector3(1.6, 0.95, z), Color("#4A5248"))
@@ -189,10 +188,75 @@ static func _silos(i: SubInterior, c: Dictionary) -> void:
 			var x: float = side * 1.28
 			Build.cyl(i._at, 0.62, SubInterior.DECK_HEIGHT, Vector3(x, SubInterior.DECK_HEIGHT * 0.5, z), col)
 			Build.hitbox(i._at, Vector3(1.1, SubInterior.DECK_HEIGHT, 1.1), Vector3(x, SubInterior.DECK_HEIGHT * 0.5, z))
+			Build.cyl(i._at, 0.66, 0.08, Vector3(x, 0.4, z), Color("#6E7F78"))
+			Build.cyl(i._at, 0.66, 0.08, Vector3(x, 2.2, z), Color("#6E7F78"))
+			var face: float = side * 0.62
+			Build.wheel(i._at, 0.12, Vector3(face, 1.05, z), Color("#B23A2E"), Vector3.RIGHT if side < 0.0 else Vector3.LEFT)
+			Build.box(i._at, Vector3(0.05, 0.3, 0.22), Vector3(face, 0.7, z + 0.3), Color("#3A4340"), false)
+			Build.sphere(i._at, 0.02, Vector3(face - side * 0.03, 0.78, z + 0.3), UiKit.GOOD, 2.0)
+			Build.cyl(i._at, 0.02, 2.0, Vector3(face, 1.6, z - 0.35), Color("#2B2B26"))
 			var tube_no := k * 2 + (0 if side < 0.0 else 1) + 1
 			var lab := Build.label(i._at, "%d" % tube_no, Vector3(side * 0.64, 1.5, z), 60, Color("#B23A2E"))
 			lab.rotation.y = PI / 2.0 if side < 0.0 else -PI / 2.0
 	i._rack(c.type, c.z1 - 2.0)
+
+
+## Grey equipment cabinets down the centre passage, clear of its doors, ladder, rack and crate.
+static func _cabinets(i: SubInterior, c: Dictionary) -> void:
+	var clear := [-7.5, 45.0, HATCH_Z, 30.0, c.z0 + 4.0]
+	var z: float = c.z0 + 2.0
+	var k := 0
+	while z < c.z1 - 2.0:
+		var side := -1.0 if k % 2 == 0 else 1.0
+		if not clear.any(func(q: float) -> bool: return absf(q - z) < 1.8):
+			var x: float = side * 1.68
+			Build.box(i._at, Vector3(0.45, 1.5, 0.9), Vector3(x, 0.75, z), Color("#6B747C"))
+			Build.box(i._at, Vector3(0.02, 0.5, 0.6), Vector3(x - side * 0.235, 1.05, z), Color("#0C1418"), false)
+			for n in 3:
+				Build.sphere(i._at, 0.018, Vector3(x - side * 0.235, 0.6, z - 0.2 + n * 0.2), [UiKit.GOOD, Color("#E8B04A"), Color("#B23A2E")][n], 2.0)
+			Build.box(i._at, Vector3(0.02, 0.05, 0.3), Vector3(x - side * 0.235, 1.4, z), Color("#E8E0C8"), false)
+		z += 2.6
+		k += 1
+
+
+## The real boat's comforts (public sources): a pine sauna, a small swimming pool, a gym, sun lamps
+## and an aviary of songbirds, for months under the ice.
+static func _leisure(i: SubInterior, c: Dictionary) -> void:
+	var pine := Color("#8A6238")
+	Build.box(i._at, Vector3(1.4, 2.2, 4.0), Vector3(1.25, 1.1, c.z0 + 3.0), pine) # the sauna
+	Build.box(i._at, Vector3(0.05, 1.9, 0.7), Vector3(0.53, 0.95, c.z0 + 4.2), Color("#6B4A2A"), false) # its door
+	Build.sphere(i._at, 0.03, Vector3(0.5, 1.0, c.z0 + 3.95), SubInterior.BRASS)
+	# The pool: a tiled tank, blue water, a chrome ladder, a life ring on the wall.
+	var pz: float = c.z0 + 7.0
+	var tile := Color("#D8E4E8")
+	for side in [-1.0, 1.0]:
+		Build.box(i._at, Vector3(1.3, 0.6, 0.12), Vector3(-1.2, 0.3, pz + side * 2.0), tile)
+	Build.box(i._at, Vector3(0.12, 0.6, 4.1), Vector3(-0.6, 0.3, pz), tile)
+	Build.box(i._at, Vector3(1.2, 0.02, 3.9), Vector3(-1.25, 0.5, pz), Color("#2E8FB8"), false)
+	Build.box(i._at, Vector3(1.2, 0.03, 3.9), Vector3(-1.25, 0.47, pz), Color("#1D5F80"), false)
+	for k in 2:
+		Build.cyl(i._at, 0.015, 0.7, Vector3(-0.6, 0.85, pz - 0.15 + k * 0.3), Color("#C8CCCC"))
+	Build.wheel(i._at, 0.2, Vector3(-1.93, 1.4, pz), Color("#E2512E"), Vector3.RIGHT)
+	Build.label(i._at, "БАССЕЙН\nPOOL", Vector3(-1.94, 1.85, pz), 20, Color("#2B2B26")).rotation.y = PI / 2.0
+	# The gym, starboard after the sauna: benches, a rack of weights, a rowing machine.
+	for z in [c.z0 + 6.2, c.z0 + 8.4]:
+		Build.box(i._at, Vector3(0.6, 0.45, 1.6), Vector3(1.35, 0.23, z), SubInterior.DARK)
+		Build.cyl(i._at, 0.02, 1.2, Vector3(1.35, 0.95, z), Color("#8A8F86"), Vector3.RIGHT)
+		for side in [-1.0, 1.0]:
+			Build.cyl(i._at, 0.16, 0.05, Vector3(1.35 + side * 0.5, 0.95, z), Color("#1E1E1E"), Vector3.RIGHT)
+	Build.box(i._at, Vector3(0.5, 0.3, 1.5), Vector3(1.4, 0.15, c.z0 + 10.4), Color("#4A5560"))
+	# The aviary: a brass-wire cage of songbirds on the after bulkhead, a sun lamp over the pool.
+	var cz: float = c.z1 - 0.5
+	Build.box(i._at, Vector3(1.1, 0.06, 0.5), Vector3(-0.9, 1.0, cz), Color("#6B5A44"))
+	for k in 6:
+		Build.cyl(i._at, 0.008, 0.8, Vector3(-1.4 + k * 0.2, 1.43, cz), SubInterior.BRASS)
+	Build.box(i._at, Vector3(1.1, 0.04, 0.5), Vector3(-0.9, 1.85, cz), SubInterior.BRASS, false)
+	for k in 3:
+		Build.sphere(i._at, 0.045, Vector3(-1.2 + k * 0.3, 1.2 + (k % 2) * 0.25, cz), [Color("#E8C84A"), Color("#4FA8D8"), Color("#E8E0C8")][k])
+	Build.label(i._at, "КАНАРЕЙКИ", Vector3(-0.9, 2.0, cz - 0.27), 18, Color("#2B2B26")).rotation.y = PI
+	Build.box(i._at, Vector3(0.8, 0.06, 0.3), Vector3(-1.2, SubInterior.DECK_HEIGHT - 0.2, pz), Color("#2E3A44"), false)
+	Build.box(i._at, Vector3(0.7, 0.02, 0.2), Vector3(-1.2, SubInterior.DECK_HEIGHT - 0.24, pz), Color("#F2E0A8"), false)
+	i._rack(c.type, c.z1 - 1.4)
 
 
 static func _reactor_room(i: SubInterior, c: Dictionary) -> void:
@@ -204,11 +268,39 @@ static func _reactor_room(i: SubInterior, c: Dictionary) -> void:
 		Build.label(i._at, "☢", Vector3(1.38, 1.6, z), 90, Color("#E8B04A")).rotation.y = -PI / 2.0
 		Build.label(i._at, "☢", Vector3(-1.38, 1.6, z), 90, Color("#E8B04A")).rotation.y = PI / 2.0
 	Build.sphere(i._at, 0.08, Vector3(0, 2.3, mid), Color("#E8B04A"), 2.0)
+	# Steam and primary-coolant lines over the shields, valves and gauges on their faces.
+	for side in [-1.0, 1.0]:
+		for k in 3:
+			Build.cyl(i._at, 0.11 - k * 0.025, 16.0, Vector3(side * (1.75 - k * 0.22), 2.62 + k * 0.04, mid), [Color("#B8B4A8"), Color("#C9A04A"), RED_PIPE][k], Vector3.BACK)
+		var z: float = mid - 7.0
+		var n := 0
+		while z < mid + 7.5:
+			var x: float = side * 1.39
+			if n % 3 == 0:
+				Build.wheel(i._at, 0.13, Vector3(x, 1.25, z), Color("#B23A2E"), Vector3.LEFT if side > 0.0 else Vector3.RIGHT)
+			elif n % 3 == 1:
+				for dy in [0.0, 0.3]:
+					Build.cyl(i._at, 0.07, 0.03, Vector3(x, 1.0 + dy, z), SubInterior.BRASS, Vector3.RIGHT)
+			else:
+				Build.cyl(i._at, 0.03, 2.4, Vector3(x - side * 0.02, 1.2, z), Color("#8A8F86"))
+			z += 1.1
+			n += 1
 
 
 static func _turbine_room(i: SubInterior, c: Dictionary) -> void:
 	var z0: float = c.z0 + 3.0
 	var z1: float = c.z1 - 11.0 # clear of the cross passage's door
+	# Steam down from the reactor into the turbine, the condenser under it, gauge boards.
+	for k in 4:
+		var z := z0 + 1.5 + k * (z1 - z0 - 3.0) / 3.0
+		Build.cyl(i._at, 0.12, 0.9, Vector3(1.05, 2.2, z), Color("#B8B4A8"))
+		Build.cyl(i._at, 0.17, 0.08, Vector3(1.05, 1.82, z), SubInterior.BRASS)
+	Build.cyl(i._at, 0.14, z1 - z0, Vector3(1.05, 2.55, (z0 + z1) * 0.5), Color("#B8B4A8"), Vector3.BACK)
+	Build.box(i._at, Vector3(1.2, 0.18, z1 - z0 - 2.0), Vector3(1.05, 0.09, (z0 + z1) * 0.5), Color("#4E555C"), false)
+	for z in [c.z1 - 6.5, c.z1 - 2.6]: # clear of the cross passage at z1 - 9
+		Build.box(i._at, Vector3(0.25, 1.3, 1.6), Vector3(1.75, 1.25, z), Color("#5A6048"))
+		for k in 4:
+			Build.cyl(i._at, 0.07, 0.03, Vector3(1.61, 1.5 - (k / 2) * 0.35, z - 0.3 + (k % 2) * 0.6), SubInterior.BRASS, Vector3.RIGHT)
 	Build.cyl(i._at, 0.85, z1 - z0, Vector3(1.05, 1.0, (z0 + z1) * 0.5), Color("#6E756C"), Vector3.BACK)
 	Build.hitbox(i._at, Vector3(1.6, 2.0, z1 - z0), Vector3(1.05, 1.0, (z0 + z1) * 0.5))
 	for k in 4:
