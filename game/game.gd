@@ -114,6 +114,8 @@ func _ready() -> void:
 			_debug_win.call_deferred()
 		if Net.debug_torpedo:
 			_debug_torpedo.call_deferred()
+		if Net.debug_breach:
+			_debug_breach.call_deferred()
 		for sid in Net.start_bots:
 			bot_crew.request.call_deferred(sid, "post", null)
 		if Net.debug_air:
@@ -432,6 +434,12 @@ func _debug_torpedo() -> void:
 	await get_tree().create_timer(3.0).timeout
 	for gyro in [-6.0, 0.0, 6.0]:
 		Sim.world.fire_torpedo(gyro)
+
+
+## Testing aid (--test-breach): an emergency blow 3 s in; with --depth 80 she crash-surfaces.
+func _debug_breach() -> void:
+	await get_tree().create_timer(3.0).timeout
+	Sim.world.sub.ballast_order("emergency")
 
 
 ## Testing aid (--test-win): every ship goes down 4 s in, as if torpedoed.
