@@ -18,6 +18,8 @@ static func create(station: Station, bot: Dictionary) -> BotView:
 	fwd.y = 0.0
 	v.position = Vector3(view.origin.x, station.global_position.y, view.origin.z) - fwd.normalized() * 0.1
 	v.rotation.y = atan2(-fwd.x, -fwd.z)
+	if station.get("seated") == true: # in the chair, his legs under the console
+		v.position.y -= 0.42
 	v.refresh(bot)
 	return v
 

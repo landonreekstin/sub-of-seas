@@ -185,6 +185,8 @@ Added by Blaney after playing. In his words where it matters.
 - [ ] lets add more detail to the typhoon and gato class subs. for the typhoon i want you to look at screenshots from scenes in Hunt For The Red October which is a submarine movie
 - [ ] add a realistic control scheme and positionings for the typhoon bridge
 - [ ] add a command "all hands on deck" that completely fills the sub with people controlling everything that needs to be done for the current objective
+- [ ] add emergency breaching
+- [ ] add a more in depth control panel so the skipper can have a 3D view of what is happening in the water based on all the information the sub is providing him, when he takes a certain position in the bridge then he is able to see in front of him (along with other connected players in the lobby, everyone should see this hologram if the skipper toggles it on)
 
 ## M9 — Lando's list (2026-10-30)
 Added by lando. Direction: **more arcadey, not strict realism**. Every existing mechanic

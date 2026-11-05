@@ -12,6 +12,7 @@ const DIVE_RATE := 4.0 ## m a second the ordered depth moves with the yoke right
 const MOUSE_STEP := 70.0 ## px of mouse movement for one step of rudder
 
 var role := "helm"
+var seated := true ## a bot here sits in the chair (BotView)
 var _yoke: Node3D
 var _lever: Node3D
 var _screen: Label3D
