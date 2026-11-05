@@ -158,7 +158,10 @@ func _dive(b: Dictionary, hunted: bool) -> void:
 ## Floods the tanks to dive and blows them to surface, as the ordered depth needs.
 func _ballast(b: Dictionary, _hunted: bool) -> void:
 	var sub := Sim.world.sub
-	if b.get("vent", false) or (b.auto and sub.ordered_depth > SubState.AWASH_DEPTH and sub.ballast < 0.99 and not sub.vents_open):
+	if b.get("emergency", false):
+		b.emergency = false
+		_order("ballast", b, "emergency")
+	elif b.get("vent", false) or (b.auto and sub.ordered_depth > SubState.AWASH_DEPTH and sub.ballast < 0.99 and not sub.vents_open):
 		b.vent = false
 		_order("ballast", b, "vent")
 	elif b.get("blow", false) or (b.auto and sub.ordered_depth <= 0.5 and sub.ballast > 0.0 and sub.blowing == 0 and not sub.is_surfaced()):
@@ -493,6 +496,16 @@ func _order_depth(o: Dictionary) -> String:
 		"surface":
 			to = 0.0
 			say = "Surfacing."
+		"crash": # an emergency blow: from any depth she'll breach (SubState.breach)
+			_hand("dive", func(b: Dictionary) -> void: b.depth = 0.0)
+			if game.station_occupant("ballast") == 0:
+				request("ballast", "post", null)
+			var bb: Dictionary = game.crew.get("bots", {}).get("ballast", {})
+			if not bb.is_empty():
+				bb.emergency = true
+			elif game.station_occupant("ballast") > 0:
+				game.notice.rpc_id(game.station_occupant("ballast"), "Skipper: emergency blow! X twice on the ballast.")
+			return "Emergency blow! Crash surface, hold on!"
 		"periscope":
 			to = sub.data.periscope_depth
 			say = "Periscope depth."

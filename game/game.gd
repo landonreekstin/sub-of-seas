@@ -1510,6 +1510,20 @@ func _on_sim_event(kind: String, data: Dictionary) -> void:
 		announce.rpc("Something hit the hull... and didn't go off!") if multiplayer.is_server() else null
 	if kind == "hit" or kind == "beached":
 		exterior.explosion(Vector2(data.x, data.y))
+	elif kind == "breach": # crash surface: the bow leaps out and slams down, everyone thrown about
+		var p: float = data.p
+		exterior.water_column(Vector2(data.x, data.y), 14.0 * p)
+		Sfx.play("splash", 0.0, 0.7)
+		if local_player != null:
+			local_player.add_trauma(p)
+			get_tree().create_timer(2.0).timeout.connect(func() -> void:
+				if is_instance_valid(local_player):
+					local_player.add_trauma(p) # the slam
+					Sfx.play("splash", 2.0, 0.55))
+		interior.shake_loose(p)
+		interior.flicker(p * 0.8)
+		if multiplayer.is_server():
+			announce.rpc("Control: CRASH SURFACE! Hold on!")
 	elif kind == "grounded" and local_player != null:
 		local_player.add_trauma(0.8 if data.hard else 0.3)
 	elif kind == "shell":

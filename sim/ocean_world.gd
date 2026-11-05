@@ -213,6 +213,10 @@ func step(dt: float, authoritative := true) -> void:
 	Detection.sharpness = escort_sharpness
 	var before := sub.pos
 	sub.step(dt)
+	if sub.breached:
+		sub.breached = false
+		if authoritative:
+			event.emit("breach", {"p": sub.breach_power, "x": sub.pos.x, "y": sub.pos.y})
 	conditions.step(dt, sub.pos, rng if authoritative else null)
 	_check_ground(before, dt, authoritative)
 	for ship in ships:

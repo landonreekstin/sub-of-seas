@@ -274,6 +274,32 @@ func test_emergency_blow_saves_a_flooding_boat() -> bool:
 	return true
 
 
+func test_crash_surface_from_deep() -> bool:
+	var w := _submerged_world()
+	w.sub.ordered_depth = 80.0
+	w.sub.depth = 80.0
+	w.sub.ballast_order("emergency")
+	var events: Array[String] = []
+	w.event.connect(func(k: String, _d: Dictionary) -> void: events.append(k))
+	var most := 0.0
+	var least := 0.0
+	for i in 600:
+		w.step(0.1)
+		most = maxf(most, w.sub.pitch)
+		least = minf(least, w.sub.pitch)
+	runner.check(events.has("breach"), "an emergency blow from 80 m breaches: %s" % str(events))
+	runner.check(most > 14.0 and least < -2.0, "bow leaps up and slams down: %.1f / %.1f" % [most, least])
+	runner.check(absf(w.sub.pitch) < 2.0 and w.sub.breach == 0.0, "and settles: %.1f" % w.sub.pitch)
+	var calm := _submerged_world()
+	calm.sub.ballast_order("blow")
+	var calm_events: Array[String] = [] # an array: a lambda can't change a plain local
+	calm.event.connect(func(k: String, _d: Dictionary) -> void: calm_events.append(k))
+	for i in 600:
+		calm.step(0.1)
+	runner.check(not calm_events.has("breach"), "a normal blow comes up without breaching")
+	return true
+
+
 func test_no_air_no_blow() -> bool:
 	var w := _submerged_world()
 	w.sub.hp_air = 0.0

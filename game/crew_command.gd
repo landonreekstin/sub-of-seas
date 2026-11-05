@@ -123,6 +123,8 @@ static func _clause(c: String) -> Dictionary:
 
 
 static func _depth(c: String) -> Dictionary:
+	if _has(c, ["surface", "emerge", "breach"]) and _has(c, ["crash", "emergency", "breach"]):
+		return {"intent": "depth", "to": "crash"}
 	if _has(c, ["surface", "emerge"]):
 		return {"intent": "depth", "to": "surface"}
 	if _has(c, ["periscope", "scope"]):

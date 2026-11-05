@@ -27,7 +27,11 @@ WWII photos; the all-hands crowd see-through, never blocking.
 - [built, looked at] bots sit at the yokes; **hologram** (`stations/holo_station.gd`, the skipper's
   chair to port of the scope; H toggles `crew.holo`, everyone sees it): heading-up, sea floor grid,
   ships heard or seen, torpedoes (theirs red). Screenshot `tools/typhoon_looks.gd -- <dir> bay calm`.
-- [next] crash surface, then the detail pass (Typhoon, Gato), style log, make test, Blaney plays.
+- [built, unit-tested, not seen] **crash surface** (`SubState.breach`): an emergency blow (X twice,
+  or "crash surface" on the PA) bringing her up through the surface at 1.5 m/s or more: bow up to
+  28°, thrown up to 6 m, slammed down, rocks to rest over 7 s; the "breach" event shakes everyone
+  twice, flickers the lights, splashes. Outside, `ExteriorWorld._place_own` pitches and lifts her.
+- [next] look at a breach from the outside cameras, then the detail pass (Typhoon, Gato), style log, make test, Blaney plays.
 - **Earlier stop.** Next was: open the screenshots already taken in
   `screenshots/bay/calm/` and `screenshots/bay/full/` (`tools/typhoon_looks.gd -- <dir> bay [calm]`),
   fix what looks wrong, run `make test` (unit tests passed after all hands; walkthroughs not rerun
