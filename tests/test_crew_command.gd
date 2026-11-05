@@ -55,10 +55,10 @@ func test_targets() -> bool:
 
 
 func test_the_rest() -> bool:
-	var expect := {"get us out of here": "evade", "run silent": "evade", "battle stations": "man_stations", "all hands to stations": "man_stations",
+	var expect := {"get us out of here": "evade", "run silent": "evade", "battle stations": "man_stations", "all hands to stations": "all_hands", "all hands on deck": "all_hands", "All hands on deck!": "all_hands", "man the stations": "man_stations",
 		"stand down": "stand_down", "fix the damage": "fix", "put out the fire": "fix", "what's wrong": "report", "status report": "report",
 		"whats our objective": "objective", "what can sonar hear": "contacts", "reload the tubes": "reload", "open fire": "gun",
-		"enemy sub": "enemy_sub", "find me an enemy sub": "enemy_sub", "band play the song": "band", "belay that": "cancel"}
+		"enemy sub": "enemy_sub", "find me an enemy sub": "enemy_sub", "band play the song": "band", "belay that": "cancel", "crash surface": "depth", "emergency surface!": "depth"}
 	for text: String in expect:
 		runner.check(_one(text).intent == expect[text], "\"%s\" means %s (got %s)" % [text, expect[text], _one(text).intent])
 	return true

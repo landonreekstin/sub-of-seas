@@ -71,6 +71,8 @@ static func _direction(c: String) -> Dictionary:
 
 
 static func _clause(c: String) -> Dictionary:
+	if " all hands " in c and not _has(c, ["stand", "down"]): # "all hands on deck": fill the boat and work the objective
+		return {"intent": "all_hands"}
 	if " slow down " in c:
 		return {"intent": "speed", "telegraph": 1}
 	if _has(c, ["evade", "escape", "flee", "run", "hide", "silent"]) or " get away " in c or " lose them " in c or " out of here " in c:
@@ -121,6 +123,8 @@ static func _clause(c: String) -> Dictionary:
 
 
 static func _depth(c: String) -> Dictionary:
+	if _has(c, ["surface", "emerge", "breach"]) and _has(c, ["crash", "emergency", "breach"]):
+		return {"intent": "depth", "to": "crash"}
 	if _has(c, ["surface", "emerge"]):
 		return {"intent": "depth", "to": "surface"}
 	if _has(c, ["periscope", "scope"]):

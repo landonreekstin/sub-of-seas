@@ -41,6 +41,14 @@ var rudder := 0 ## -3 (full left) .. 3 (full right), index into RUDDER_DEGREES
 var periscope_raised := false
 var turn_rate := 0.0 ## deg/s, for interior roll
 var pitch := 0.0 ## degrees, nose up positive, for interior tilt
+## Crash surface (Blaney: emergency breaching): an emergency blow from depth brings her up so fast
+## that her bow leaps out of the sea and slams back down. `breach` counts its seconds down.
+const BREACH_TIME := 7.0
+const BREACH_RATE := 1.5 ## m/s coming up through the surface to breach
+var breach := 0.0
+var breach_power := 0.0 ## 0.5..1, from how fast she came up
+var breached := false ## set the moment she breaks out; the world turns it into an event
+var crash := false ## an emergency blow is on; cleared once she's up or the vents open
 var heaviness := 0.0 ## fraction of the hull flooded; set by the world from the hull
 var battery := 1.0 ## charge 0..1
 var reactor_down := false ## nuclear: the reactor controls are broken (host sets it; replicated)
@@ -133,7 +141,33 @@ func step(dt: float) -> void:
 	var hold := 0.15 + 0.5 * flow + (1.0 - ballast) * 3.0
 	depth += maxf(0.0, (heaviness - 0.05) * 6.0 - hold) * dt
 	var sink_rate := (depth - before) / dt if dt > 0.0 else 0.0
-	pitch = lerpf(pitch, clampf(-sink_rate * 9.0, -8.0, 8.0), clampf(dt * 0.8, 0.0, 1.0))
+	if crash and breach <= 0.0 and before > AWASH_DEPTH + 2.0 and depth <= AWASH_DEPTH + 2.0 and -sink_rate >= BREACH_RATE:
+		breach = BREACH_TIME
+		breach_power = clampf(-sink_rate / 2.5, 0.5, 1.0)
+		breached = true
+		crash = false
+	if breach > 0.0:
+		breach = maxf(0.0, breach - dt)
+		pitch = breach_pitch()
+	else:
+		pitch = lerpf(pitch, clampf(-sink_rate * 9.0, -8.0, 8.0), clampf(dt * 0.8, 0.0, 1.0))
+
+
+## Her bow angle through a crash surface: up hard as she leaps, slammed down, rocking to rest.
+func breach_pitch() -> float:
+	var t := BREACH_TIME - breach
+	var p := breach_power
+	if t < 1.4:
+		return 28.0 * p * smoothstep(0.0, 1.4, t)
+	if t < 2.3:
+		return lerpf(28.0 * p, -7.0 * p, smoothstep(1.4, 2.3, t))
+	return -7.0 * p * exp(-(t - 2.3)) * cos((t - 2.3) * 2.6)
+
+
+## How far she's thrown up out of the water through a crash surface, in metres.
+func breach_lift() -> float:
+	var t := BREACH_TIME - breach
+	return 6.0 * breach_power * sin(PI * t / 2.3) if breach > 0.0 and t < 2.3 else 0.0
 
 
 func _step_power(dt: float) -> void:
@@ -172,6 +206,7 @@ func ballast_order(key: String) -> void:
 		"vent":
 			vents_open = true
 			blowing = 0
+			crash = false
 		"shut":
 			vents_open = false
 		"blow":
@@ -180,6 +215,7 @@ func ballast_order(key: String) -> void:
 		"emergency":
 			vents_open = false
 			blowing = 2 if hp_air > 0.0 else 0
+			crash = blowing == 2
 		"stop":
 			blowing = 0
 
@@ -187,7 +223,7 @@ func ballast_order(key: String) -> void:
 func to_snapshot() -> Dictionary:
 	return {
 		"p": pos, "h": heading, "s": speed, "d": depth, "od": ordered_depth,
-		"tg": telegraph, "r": rudder, "up": periscope_raised, "pi": pitch, "tr": turn_rate, "hv": heaviness,
+		"tg": telegraph, "r": rudder, "up": periscope_raised, "pi": pitch, "br": breach, "bp": breach_power, "tr": turn_rate, "hv": heaviness,
 		"bt": battery, "rd": reactor_down, "dz": diesels, "cr": charge_rate,
 		"bl": ballast, "vo": vents_open, "bw": blowing, "air": hp_air,
 	}
@@ -203,6 +239,8 @@ func apply_snapshot(s: Dictionary) -> void:
 	rudder = s.r
 	periscope_raised = s.up
 	pitch = s.pi
+	breach = float(s.get("br", 0.0))
+	breach_power = float(s.get("bp", 0.0))
 	turn_rate = s.tr
 	heaviness = s.hv
 	battery = s.bt

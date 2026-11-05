@@ -11,7 +11,6 @@ extends RefCounted
 const HULL_X := 6.0
 const UPPER_Y := 2.86 ## the command hull's floor, clear above the passage's ceiling (2.8): level with it, they flicker
 const HATCH_Z := -11.0 ## the ladder from the passage up into the command hull
-const SAILORS_PER_ROOM := 3
 const SOVIET_SHIRT := Color("#27354F")
 const BAND_ROOM := "rec"
 
@@ -85,6 +84,11 @@ static func build(i: SubInterior) -> void:
 		var c: Dictionary = i.compartments[k]
 		if c.z1 - c.z0 < 50.0: # the long rooms are dressed by their own gear
 			i._dressing(c, hatch if c.type == "passage" else Rect2())
+		var doors_in_walls: Array = []
+		for cr: Array in CROSS:
+			if cr[0] == k or cr[1] == k:
+				doors_in_walls.append(float(cr[2]))
+		i._clutter(c, doors_in_walls)
 	i._at = i
 	_cross_passages(i)
 	var ct: Dictionary = i.comp("control")
@@ -126,7 +130,7 @@ static func _fit(i: SubInterior, c: Dictionary, hatch: Rect2) -> void:
 			crate.position = Vector3(-1.35, 0, 30.0)
 			i._at.add_child(crate)
 		"control":
-			i._control_room(c, Rect2())
+			_command_bay(i, c)
 			_notebooks(i, c)
 			_bridge_ladder(i, c)
 		"nav":
@@ -251,6 +255,56 @@ static func _bridge_ladder(i: SubInterior, c: Dictionary) -> void:
 	Build.area(hatch, Vector3(0.8, 0.4, 0.8), Vector3.ZERO)
 
 
+## The central post as in The Hunt for Red October (Blaney: a realistic layout): helmsman and
+## planesman side by side at yokes facing the bow under a bank of gauges, the skipper's chair
+## and the periscope stand behind them, sonar to port and fire control to starboard.
+static func _command_bay(i: SubInterior, c: Dictionary) -> void:
+	var z0: float = c.z0
+	var z1: float = c.z1
+	var steel := Color("#4A5560")
+	Build.box(i._at, Vector3(2.5, 1.9, 0.4), Vector3(0, 0.95, z0 + 0.25), steel) # the gauge bank
+	for k in 6:
+		var x := -1.0 + k * 0.4
+		Build.cyl(i._at, 0.1, 0.03, Vector3(x, 1.25, z0 + 0.46), Color("#151515"), Vector3.BACK)
+		Build.cyl(i._at, 0.11, 0.02, Vector3(x, 1.25, z0 + 0.455), SubInterior.BRASS, Vector3.BACK)
+		Build.sphere(i._at, 0.02, Vector3(x, 0.95, z0 + 0.46), [UiKit.GOOD, Color("#E8B04A"), Color("#B23A2E")][k % 3], 2.0)
+	i._gauge_board(Vector3(-0.6, 1.68, z0 + 0.47), ["depth", "ordered"])
+	i._gauge_board(Vector3(0.6, 1.68, z0 + 0.47), ["speed", "heading"])
+	var plane := YokeStation.new().setup("dive", "Planesman's yoke", "helm_dive") as YokeStation
+	plane.role = "dive"
+	i._add_station(plane, Vector3(-0.6, 0, z0 + 1.65))
+	var helm := YokeStation.new().setup("helm", "Helmsman's yoke", "helm_dive") as YokeStation
+	helm.role = "helm"
+	i._add_station(helm, Vector3(0.6, 0, z0 + 1.65))
+	i._add_station(BilgeStation.new().setup("bilge", "Bilge pump"), Vector3(-1.62, 0, z0 + 0.3), PI / 2.0)
+	# The periscope stand: a low dais with a brass rail, the attack scope beside the search scope.
+	var pz: float = z0 + 5.4
+	Build.cyl(i._at, 1.05, 0.1, Vector3(0, 0.05, pz), Color("#2E3A44"), Vector3.UP)
+	for k in 9:
+		var a := lerpf(-1.2, 1.2, k / 8.0) # posts round the forward arc, open aft
+		Build.cyl(i._at, 0.025, 0.95, Vector3(sin(a), 0.47, pz - cos(a)), SubInterior.BRASS)
+		if k > 0: # the rail along the post tops
+			var b := lerpf(-1.2, 1.2, (k - 0.5) / 8.0)
+			Build.box(i._at, Vector3(0.31, 0.05, 0.05), Vector3(sin(b), 0.95, pz - cos(b)), SubInterior.BRASS, false).rotation.y = -b
+	i._add_station(PeriscopeStation.new().setup("periscope", "Periscope", ""), Vector3(0, 0, pz))
+	Build.cyl(i._at, 0.09, SubInterior.DECK_HEIGHT, Vector3(0.55, SubInterior.DECK_HEIGHT * 0.5, pz + 0.5), Color("#6E756C"))
+	# The skipper's chair, to port of the stand where he can see both yokes; the hologram hangs before it.
+	i._add_station(HoloStation.new().setup("holo", "Skipper's chair"), Vector3(-1.15, 0, z0 + 4.6))
+	i._add_station(SonarStation.new().setup("sonar", "Sonar", ""), Vector3(-1.85, 0, z0 + 7.4))
+	i._add_station(TdcStation.new().setup("tdc", "Fire control", ""), Vector3(1.55, 0, z0 + 4.6))
+	i._add_station(BallastStation.new().setup("ballast", "Ballast manifold"), Vector3(-1.85, 0, z1 - 1.8))
+	i._add_station(NavStation.new().setup("nav", "Chart table"), Vector3(1.4, 0, z1 - 1.6))
+	var mic := PaMic.new() # the PA, on the after bulkhead to port of the door
+	mic.position = Vector3(-1.05, 0, z1 - 0.12)
+	i._at.add_child(mic)
+	i._rack(c.type, z0 + 9.6)
+	# Cable trays and pipe runs along the deckhead, the length of the bay.
+	for x in [-1.25, -1.05, 1.05, 1.25]:
+		Build.cyl(i._at, 0.04, z1 - z0 - 0.4, Vector3(x, 2.3, (z0 + z1) * 0.5), Color("#8A8F86") if absf(x) > 1.1 else Color("#B23A2E"), Vector3.BACK)
+	for x in [-0.7, 0.7]:
+		Build.box(i._at, Vector3(0.3, 0.05, z1 - z0 - 0.4), Vector3(x, 2.42, (z0 + z1) * 0.5), Color("#3A3F38"), false)
+
+
 static func _notebooks(i: SubInterior, c: Dictionary) -> void:
 	var mate := NotebookStation.new().setup("first_mate", "First mate's list") as NotebookStation
 	mate.kind = "first_mate"
@@ -282,30 +336,6 @@ static func _cross_passages(i: SubInterior) -> void:
 		door.rotation.y = PI / 2.0
 		root.add_child(door)
 		i.doors["x%d" % (j + LINE_DOORS.size())] = door
-
-
-## Sailors for a room, the first time it's seen with the full crew aboard. Only rooms in sight
-## have them at all: 160 men wouldn't run; three in each room you can see do.
-static func people_room(i: SubInterior, k: int) -> void:
-	if Game.instance == null or not Game.instance.crew.get("full_crew", false):
-		return
-	var root := i._rooms[k]
-	if root.has_meta("peopled"):
-		return
-	root.set_meta("peopled", true)
-	var c: Dictionary = i.compartments[k]
-	var rng := RandomNumberGenerator.new()
-	rng.seed = k * 97 + 3
-	for n in SAILORS_PER_ROOM:
-		var look := {"build": rng.randi() % 4, "skin": rng.randi() % 3, "hair": rng.randi() % 7, "hair_col": rng.randi() % 7,
-			"beard": rng.randi() % 3, "hat": "watch", "hue": 0.62}
-		var v := i._sailor(look)
-		i.remove_child(v)
-		root.add_child(v)
-		var x_max := 0.0 if String(c.type).begins_with("engine") else 0.5 # clear of the turbine
-		var z_top: float = c.z0 + 4.0 if c.type == "steering" else c.z1 - 2.0 # clear of the rudder ram
-		v.position = Vector3(rng.randf_range(-0.5, x_max), 0.0, rng.randf_range(c.z0 + 2.0, z_top))
-		v.rotation.y = rng.randf() * TAU
 
 
 ## The band: true when the crew's instruments, not a record, are what's playing.

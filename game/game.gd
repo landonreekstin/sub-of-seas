@@ -114,6 +114,8 @@ func _ready() -> void:
 			_debug_win.call_deferred()
 		if Net.debug_torpedo:
 			_debug_torpedo.call_deferred()
+		if Net.debug_breach:
+			_debug_breach.call_deferred()
 		for sid in Net.start_bots:
 			bot_crew.request.call_deferred(sid, "post", null)
 		if Net.debug_air:
@@ -432,6 +434,12 @@ func _debug_torpedo() -> void:
 	await get_tree().create_timer(3.0).timeout
 	for gyro in [-6.0, 0.0, 6.0]:
 		Sim.world.fire_torpedo(gyro)
+
+
+## Testing aid (--test-breach): an emergency blow 3 s in; with --depth 80 she crash-surfaces.
+func _debug_breach() -> void:
+	await get_tree().create_timer(3.0).timeout
+	Sim.world.sub.ballast_order("emergency")
 
 
 ## Testing aid (--test-win): every ship goes down 4 s in, as if torpedoed.
@@ -954,6 +962,10 @@ func apply_order(station_id: String, key: String, value: Variant, by: int) -> vo
 			if key == "party":
 				bot_crew.send_party()
 				announce.rpc("First mate: damage parties, turn to!")
+		"holo":
+			crew.holo = not crew.get("holo", false)
+			announce.rpc("Skipper: %s" % ("hologram on." if crew.holo else "hologram off."))
+			push_crew()
 		"skipper":
 			if key == "read":
 				crew.mate_read = crew.get("mate_news", 0)
@@ -1506,6 +1518,20 @@ func _on_sim_event(kind: String, data: Dictionary) -> void:
 		announce.rpc("Something hit the hull... and didn't go off!") if multiplayer.is_server() else null
 	if kind == "hit" or kind == "beached":
 		exterior.explosion(Vector2(data.x, data.y))
+	elif kind == "breach": # crash surface: the bow leaps out and slams down, everyone thrown about
+		var p: float = data.p
+		exterior.water_column(Vector2(data.x, data.y), 14.0 * p)
+		Sfx.play("splash", 0.0, 0.7)
+		if local_player != null:
+			local_player.add_trauma(p)
+			get_tree().create_timer(2.0).timeout.connect(func() -> void:
+				if is_instance_valid(local_player):
+					local_player.add_trauma(p) # the slam
+					Sfx.play("splash", 2.0, 0.55))
+		interior.shake_loose(p)
+		interior.flicker(p * 0.8)
+		if multiplayer.is_server():
+			announce.rpc("Control: CRASH SURFACE! Hold on!")
 	elif kind == "grounded" and local_player != null:
 		local_player.add_trauma(0.8 if data.hard else 0.3)
 	elif kind == "shell":

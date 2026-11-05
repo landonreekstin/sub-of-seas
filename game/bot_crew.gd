@@ -10,6 +10,7 @@ extends Node
 const NAMES_SOVIET := ["Ivanov", "Petrov", "Sidorov", "Volkov", "Kuznetsov", "Sokolov", "Popov", "Lebedev", "Orlov", "Morozov", "Vasiliev", "Borodin"]
 const NAMES := ["Cookie", "Sparks", "Stubby", "Doc", "Mac", "Swede", "Tex", "Lucky", "Moose", "Red", "Chips", "Gunner"]
 const TICK := 0.5
+const FULL_CREW := {"s_boat": 42, "gato": 80, "narwhal": 88, "typhoon": 160} ## a full complement, for "all hands"
 
 var game: Game
 var _timer := 0.0
@@ -25,7 +26,7 @@ static func job(station_id: String) -> String:
 		return "torpedoman"
 	return {"helm": "helmsman", "dive": "planesman", "ballast": "ballast man", "periscope": "lookout",
 		"tdc": "TDC operator", "sonar": "sonarman", "engine": "motor machinist", "air": "auxiliaryman", "bilge": "pump man", "gun": "gunlayer", "ammo": "ammunition passer",
-		"nav": "navigator", "darts": "darts player", "first_mate": "first mate", "skipper": "skipper's writer"}.get(station_id, "crewman")
+		"nav": "navigator", "darts": "darts player", "first_mate": "first mate", "skipper": "skipper's writer", "holo": "officer of the watch"}.get(station_id, "crewman")
 
 
 # --- Requests (host) -------------------------------------------------------------
@@ -157,7 +158,10 @@ func _dive(b: Dictionary, hunted: bool) -> void:
 ## Floods the tanks to dive and blows them to surface, as the ordered depth needs.
 func _ballast(b: Dictionary, _hunted: bool) -> void:
 	var sub := Sim.world.sub
-	if b.get("vent", false) or (b.auto and sub.ordered_depth > SubState.AWASH_DEPTH and sub.ballast < 0.99 and not sub.vents_open):
+	if b.get("emergency", false):
+		b.emergency = false
+		_order("ballast", b, "emergency")
+	elif b.get("vent", false) or (b.auto and sub.ordered_depth > SubState.AWASH_DEPTH and sub.ballast < 0.99 and not sub.vents_open):
 		b.vent = false
 		_order("ballast", b, "vent")
 	elif b.get("blow", false) or (b.auto and sub.ordered_depth <= 0.5 and sub.ballast > 0.0 and sub.blowing == 0 and not sub.is_surfaced()):
@@ -406,8 +410,12 @@ func _carry_out(o: Dictionary) -> String:
 				game.crew.full_crew = true
 				return "All hands, Skipper: 160 men at their posts, damage parties standing by."
 			return "All stations manned, Skipper."
+		"all_hands":
+			return all_hands()
 		"stand_down":
 			plan.clear()
+			game.crew.full_crew = false
+			party_size = 0
 			game.crew.orders = ""
 			for sid: String in game.crew.get("bots", {}).keys():
 				request(sid, "dismiss", null)
@@ -471,7 +479,7 @@ func _ammo_up() -> String:
 func _watch_stations() -> Array[String]:
 	var out: Array[String] = []
 	for sid: String in game.interior.stations:
-		if sid in ["darts", "sand_table", "cameras", "nav", "skipper"] or (sid in ["gun", "ammo"] and not Sim.world.sub.is_surfaced()):
+		if sid in ["darts", "sand_table", "cameras", "nav", "skipper", "holo"] or (sid in ["gun", "ammo"] and not Sim.world.sub.is_surfaced()):
 			continue
 		out.append(sid)
 	return out
@@ -488,6 +496,16 @@ func _order_depth(o: Dictionary) -> String:
 		"surface":
 			to = 0.0
 			say = "Surfacing."
+		"crash": # an emergency blow: from any depth she'll breach (SubState.breach)
+			_hand("dive", func(b: Dictionary) -> void: b.depth = 0.0)
+			if game.station_occupant("ballast") == 0:
+				request("ballast", "post", null)
+			var bb: Dictionary = game.crew.get("bots", {}).get("ballast", {})
+			if not bb.is_empty():
+				bb.emergency = true
+			elif game.station_occupant("ballast") > 0:
+				game.notice.rpc_id(game.station_occupant("ballast"), "Skipper: emergency blow! X twice on the ballast.")
+			return "Emergency blow! Crash surface, hold on!"
 		"periscope":
 			to = sub.data.periscope_depth
 			say = "Periscope depth."
@@ -606,17 +624,26 @@ func _plan_target() -> ShipState:
 
 ## Steers the attack: the bow on to the lead, then a spread of three, then again until she goes.
 func _step_plan() -> void:
+	if plan.get("kind", "") == "objective":
+		_work_objective()
+		return
 	if plan.get("kind", "") != "attack":
 		return
 	var target := _plan_target()
 	var bots: Dictionary = game.crew.get("bots", {})
+	var working: bool = plan.get("objective", false)
+	if working and _survive_open() and Sim.world.time < _hunted_until: # hunted: lose them first
+		target = null
 	if target == null:
 		plan.clear()
-		game.crew.orders = ""
 		for sid: String in bots:
 			bots[sid].ready = false
 			bots[sid].fire = false if sid.begins_with("tube_") else bots[sid].get("fire", false)
-		game.announce.rpc("Crew: She's going down, Skipper. What next?")
+		if working:
+			plan = {"kind": "objective"}
+		else:
+			game.crew.orders = ""
+			game.announce.rpc("Crew: She's going down, Skipper. What next?")
 		game.push_crew()
 		return
 	var w := Sim.world
@@ -646,6 +673,70 @@ func _step_plan() -> void:
 			bots[sid].auto = false
 			bots[sid].ready = in_reach
 			bots[sid].fire = on_target
+
+
+## "All hands on deck" (Blaney): every post manned, the boat filled with men, damage parties
+## standing by, and the crew carry out the patrol's objective by themselves until told otherwise.
+func all_hands() -> String:
+	for sid: String in _watch_stations():
+		if game.station_occupant(sid) == 0:
+			request(sid, "post", null)
+	game.crew.full_crew = true
+	party_size = maxi(party_size, 4)
+	plan = {"kind": "objective"}
+	game.crew.orders = "All hands: " + _objective_report().trim_prefix("Our orders: ")
+	return "All hands, Skipper: %d men aboard, every post manned, damage parties standing by. We'll see to the orders." % FULL_CREW.get(Sim.world.sub.data.key, 80)
+
+
+func _survive_open() -> bool:
+	return game.crew.get("objectives", []).any(func(o: Dictionary) -> bool: return o.kind == "survive" and not o.get("done", false))
+
+
+## The objective's next step: lose whoever's hunting us on a "survive" patrol, else close on and
+## sink the nearest ship it wants (any ship on the open patrol), then the next.
+func _work_objective() -> void:
+	var w := Sim.world
+	var sub := w.sub
+	var objectives: Array = game.crew.get("objectives", [])
+	if _survive_open() and w.time < _hunted_until:
+		if not plan.get("evading", false):
+			var reply := _order_evade()
+			plan = {"kind": "objective", "evading": true}
+			game.announce.rpc("Crew: They're on to us. " + reply)
+		return
+	var target: ShipState = null
+	for main in [true, false]: # the main objectives first, then the bonus ones
+		for o: Dictionary in objectives:
+			if o.get("done", false) or o.kind == "survive" or o.get("bonus", false) == main:
+				continue
+			for s: ShipState in game._targets(o):
+				if target == null or s.pos.distance_to(sub.pos) < target.pos.distance_to(sub.pos):
+					target = s
+		if target != null:
+			break
+	if target == null and objectives.is_empty():
+		target = find_target("", {})
+	if target == null:
+		if plan.get("evading", false) or plan.get("closing", -1) != -1:
+			plan = {"kind": "objective"}
+		return
+	var r := target.pos.distance_to(sub.pos)
+	if r > Torpedo.MAX_RANGE * 2.0: # too far to shoot: close on her at full speed
+		var bots: Dictionary = game.crew.get("bots", {})
+		if bots.has("helm"):
+			bots.helm.auto = false
+			bots.helm.course = ShipState.bearing(sub.pos, target.pos)
+			bots.helm.speed = 4
+		if bots.has("dive"):
+			bots.dive.auto = false
+			bots.dive.depth = sub.data.periscope_depth
+		if plan.get("closing", -1) != target.id:
+			plan = {"kind": "objective", "closing": target.id}
+			game.announce.rpc("Crew: %s bearing %03d, %.0f km. Closing at full speed." % [target.data.display_name, roundi(ShipState.bearing(sub.pos, target.pos)) % 360, r / 1000.0])
+		return
+	begin_attack(target)
+	plan.objective = true
+	game.announce.rpc("Crew: Going after the %s, bearing %03d, %.1f km." % [target.data.display_name.to_lower(), roundi(ShipState.bearing(sub.pos, target.pos)) % 360, r / 1000.0])
 
 
 ## Away from whoever's after us: deep under the layer, slow and quiet.

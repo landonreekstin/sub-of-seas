@@ -4,6 +4,52 @@ Where things stand, in plain English. The newest entry goes at the top. Update i
 Other docs: `roadmap.md` is the to-do list, `style.md` how it looks and feels, `design.md` the
 game's design, `credits.md` where every sound came from.
 
+## 2026-11-04 (late night): three new items, branch `blaney/typhoon-bridge`, draft PR #36
+
+Blaney may cut a session off at any point: commit, push and update this after every step.
+His calls (asked once at the start): Typhoon lit like the film (cold blue-white, deep red at battle
+stations / all hands); command bay with two seats side by side at aircraft yokes (helmsman,
+planesman), skipper behind at the periscope; Gato packed with pipes, valves, gauges and cables like
+WWII photos; the all-hands crowd see-through, never blocking.
+- [built, tests pass] **All hands on deck** (any boat): every post manned, 3 sailors standing in each
+  room (`SubInterior._sync_crowd`), damage parties on standby, and the crew work the objective
+  themselves (`BotCrew.all_hands`, `_work_objective`): sink the nearest ship it wants, then the next;
+  on a "survive" patrol, go deep and quiet while hunted. "Stand down" sends them all off.
+  `tests/all_hands_walkthrough.gd` passes on Gato, S-boat, Typhoon.
+- [built, parses, NOT looked at yet] **Typhoon command bay** (`TyphoonLayout._command_bay`,
+  `stations/yoke_station.gd`): helmsman (starboard) and planesman (port) seated at yokes facing the
+  bow under a gauge bank; planesman holds W to push down / S to pull up, helmsman A/D or mouse
+  rudder, C centre, W/S engine order; periscope dais with brass rail behind them, skipper's chair
+  to port, sonar port, fire control (TDC) starboard, cable trays overhead. **Lights:** Typhoon
+  blue-white, deep red while all hands (`full_crew`) is on (`SubInterior._process`).
+- 2026-11-05: two more items, his calls: **emergency breaching = crash surface** (an emergency blow
+  so hard the bow leaps out and slams down); **hologram: Typhoon only, blue glow**.
+- [built, looked at] bots sit at the yokes; **hologram** (`stations/holo_station.gd`, the skipper's
+  chair to port of the scope; H toggles `crew.holo`, everyone sees it): heading-up, sea floor grid,
+  ships heard or seen, torpedoes (theirs red). Screenshot `tools/typhoon_looks.gd -- <dir> bay calm`.
+- [built, unit-tested, not seen] **crash surface** (`SubState.breach`): an emergency blow (X twice,
+  or "crash surface" on the PA) bringing her up through the surface at 1.5 m/s or more: bow up to
+  28°, thrown up to 6 m, slammed down, rocks to rest over 7 s; the "breach" event shakes everyone
+  twice, flickers the lights, splashes. Outside, `ExteriorWorld._place_own` pitches and lifts her.
+- [built, looked at] **detail pass** (`SubInterior._clutter`, Gato, Narwhal and Typhoon; not the
+  S-boat): four coloured pipe runs high on each wall and a bilge run; between stations valves,
+  gauges, stencilled junction boxes, pipe drops, cable looms. Typhoon painted blue-grey like the
+  film (`TYPHOON_PAINT` through `Build.recolor`).
+- [done] style log + CLAUDE.md. `make test`: unit tests (575) and the first training courses
+  passed; the damage course stalled once while xvfb screenshots ran alongside, and passed rerun
+  alone. The rest rerun one by one. Breach not seen in xvfb (its clock crawls): Blaney watches it.
+- [next] Blaney plays: Typhoon command bay, hologram, "all hands on deck", crash surface
+  (`--depth 80 --test-breach`), Gato walls. Then tick the five items, `gh pr ready 36`,
+  `vibenote --collect-usage`.
+- An accidental `git stash pop` brought back the old pause-menu stash; it was put back as
+  `stash@{0}` (nothing new in it). Never `git stash` with nothing to stash. (Typhoon, Gato), style log, make test, Blaney plays.
+- **Earlier stop.** Next was: open the screenshots already taken in
+  `screenshots/bay/calm/` and `screenshots/bay/full/` (`tools/typhoon_looks.gd -- <dir> bay [calm]`),
+  fix what looks wrong, run `make test` (unit tests passed after all hands; walkthroughs not rerun
+  since the bay changed), then Typhoon detail (Red October), Gato detail (packed pipes, valves,
+  gauges, cables), log his four calls in `docs/style.md`, update CLAUDE.md controls, Blaney plays,
+  tick the three items, PR #36 ready, then `vibenote --collect-usage`.
+
 ## 2026-11-04 (night): everything of Blaney's is ready for Lando
 
 Blaney played the waiting changes on a Gato: "the game works". PRs #28-#35 are all marked ready. They stack in that order, #31 already was. #29 (crew training together) hasn't been tried by two real players yet; the PR says so. Nothing of Blaney's is in progress.

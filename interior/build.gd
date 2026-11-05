@@ -44,14 +44,22 @@ const TOON_SHADER := preload("res://world/toon.gdshader")
 ## The painted toon material (world/toon.gdshader) for an opaque palette colour; glowing
 ## and see-through colours keep a plain material.
 ## `surface` picks a detail map by name ("cloth") instead of by colour.
+## Colours swapped while a boat is built (the Typhoon's blue-grey steel for the WWII boats' green):
+## original html -> Color. The detail map still follows the original colour.
+static var recolor := {}
+
+
 static func mat(color: Color, emission := 0.0, surface := "") -> Material:
-	var key := "%s/%s/%s" % [color.to_html(), emission, surface]
+	var orig := color
+	if recolor.has(color.to_html()):
+		color = recolor[color.to_html()]
+	var key := "%s/%s/%s/%s" % [color.to_html(), orig.to_html(), emission, surface]
 	if not _materials.has(key) and emission == 0.0 and color.a >= 1.0:
 		var t := ShaderMaterial.new()
 		t.shader = TOON_SHADER
 		t.set_shader_parameter("albedo", color)
-		t.set_shader_parameter("roughness", SHINY.get(color.to_html(false), 0.75))
-		var dt: Array = DETAIL.get(color.to_html(false), DEFAULT_DETAIL)
+		t.set_shader_parameter("roughness", SHINY.get(orig.to_html(false), 0.75))
+		var dt: Array = DETAIL.get(orig.to_html(false), DEFAULT_DETAIL)
 		var paint := 1.0 if dt[1] < 4.0 else 0.6
 		if surface != "":
 			dt = [surface, SURFACES[surface][0]]
