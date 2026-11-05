@@ -954,6 +954,10 @@ func apply_order(station_id: String, key: String, value: Variant, by: int) -> vo
 			if key == "party":
 				bot_crew.send_party()
 				announce.rpc("First mate: damage parties, turn to!")
+		"holo":
+			crew.holo = not crew.get("holo", false)
+			announce.rpc("Skipper: %s" % ("hologram on." if crew.holo else "hologram off."))
+			push_crew()
 		"skipper":
 			if key == "read":
 				crew.mate_read = crew.get("mate_news", 0)

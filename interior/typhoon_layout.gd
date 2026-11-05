@@ -283,13 +283,8 @@ static func _command_bay(i: SubInterior, c: Dictionary) -> void:
 			Build.box(i._at, Vector3(0.31, 0.05, 0.05), Vector3(sin(b), 0.95, pz - cos(b)), SubInterior.BRASS, false).rotation.y = -b
 	i._add_station(PeriscopeStation.new().setup("periscope", "Periscope", ""), Vector3(0, 0, pz))
 	Build.cyl(i._at, 0.09, SubInterior.DECK_HEIGHT, Vector3(0.55, SubInterior.DECK_HEIGHT * 0.5, pz + 0.5), Color("#6E756C"))
-	# The skipper's chair, raised, to port of the stand where he can see both yokes.
-	var cz: float = z0 + 4.6
-	Build.cyl(i._at, 0.08, 0.5, Vector3(-1.15, 0.25, cz), Color("#1E1E1E"))
-	Build.box(i._at, Vector3(0.55, 0.1, 0.55), Vector3(-1.15, 0.55, cz), Color("#5A3A2E"))
-	Build.box(i._at, Vector3(0.55, 0.7, 0.1), Vector3(-1.15, 0.95, cz + 0.27), Color("#5A3A2E"))
-	for side in [-1.0, 1.0]:
-		Build.box(i._at, Vector3(0.08, 0.08, 0.45), Vector3(-1.15 + side * 0.28, 0.78, cz), Color("#1E1E1E"), false)
+	# The skipper's chair, to port of the stand where he can see both yokes; the hologram hangs before it.
+	i._add_station(HoloStation.new().setup("holo", "Skipper's chair"), Vector3(-1.15, 0, z0 + 4.6))
 	i._add_station(SonarStation.new().setup("sonar", "Sonar", ""), Vector3(-1.85, 0, z0 + 7.4))
 	i._add_station(TdcStation.new().setup("tdc", "Fire control", ""), Vector3(1.55, 0, z0 + 4.6))
 	i._add_station(BallastStation.new().setup("ballast", "Ballast manifold"), Vector3(-1.85, 0, z1 - 1.8))

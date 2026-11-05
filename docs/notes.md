@@ -22,7 +22,13 @@ WWII photos; the all-hands crowd see-through, never blocking.
   rudder, C centre, W/S engine order; periscope dais with brass rail behind them, skipper's chair
   to port, sonar port, fire control (TDC) starboard, cable trays overhead. **Lights:** Typhoon
   blue-white, deep red while all hands (`full_crew`) is on (`SubInterior._process`).
-- **Stopped here (Blaney asked).** Next: open the screenshots already taken in
+- 2026-11-05: two more items, his calls: **emergency breaching = crash surface** (an emergency blow
+  so hard the bow leaps out and slams down); **hologram: Typhoon only, blue glow**.
+- [built, looked at] bots sit at the yokes; **hologram** (`stations/holo_station.gd`, the skipper's
+  chair to port of the scope; H toggles `crew.holo`, everyone sees it): heading-up, sea floor grid,
+  ships heard or seen, torpedoes (theirs red). Screenshot `tools/typhoon_looks.gd -- <dir> bay calm`.
+- [next] crash surface, then the detail pass (Typhoon, Gato), style log, make test, Blaney plays.
+- **Earlier stop.** Next was: open the screenshots already taken in
   `screenshots/bay/calm/` and `screenshots/bay/full/` (`tools/typhoon_looks.gd -- <dir> bay [calm]`),
   fix what looks wrong, run `make test` (unit tests passed after all hands; walkthroughs not rerun
   since the bay changed), then Typhoon detail (Red October), Gato detail (packed pipes, valves,

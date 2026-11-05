@@ -22,6 +22,7 @@ const LOOKS := [
 	["bay_fwd", 0.0, 2.9, -6.5, 0.0, -0.15],
 	["bay_yokes", 0.3, 2.9, -10.6, 0.0, -0.45],
 	["bay_aft", 0.0, 2.9, -13.0, PI, -0.05],
+	["bay_holo", -0.9, 2.9, -8.4, 0.0, -0.3],
 	["band_room", -6.0, 0.1, -1.0, 0.0, 0.0],
 ]
 
@@ -55,6 +56,9 @@ func _process(_delta: float) -> bool:
 	if _game.interior == null or _game.local_player == null:
 		return false
 	_i += 1
+	if _i == -20:
+		_game.crew.holo = true # the skipper's hologram on, for its look
+		_game.push_crew()
 	if _i == -15 and not _calm:
 		_game.rq_pa("all hands")
 	if _i == -2 and not _calm:

@@ -26,7 +26,7 @@ static func job(station_id: String) -> String:
 		return "torpedoman"
 	return {"helm": "helmsman", "dive": "planesman", "ballast": "ballast man", "periscope": "lookout",
 		"tdc": "TDC operator", "sonar": "sonarman", "engine": "motor machinist", "air": "auxiliaryman", "bilge": "pump man", "gun": "gunlayer", "ammo": "ammunition passer",
-		"nav": "navigator", "darts": "darts player", "first_mate": "first mate", "skipper": "skipper's writer"}.get(station_id, "crewman")
+		"nav": "navigator", "darts": "darts player", "first_mate": "first mate", "skipper": "skipper's writer", "holo": "officer of the watch"}.get(station_id, "crewman")
 
 
 # --- Requests (host) -------------------------------------------------------------
@@ -476,7 +476,7 @@ func _ammo_up() -> String:
 func _watch_stations() -> Array[String]:
 	var out: Array[String] = []
 	for sid: String in game.interior.stations:
-		if sid in ["darts", "sand_table", "cameras", "nav", "skipper"] or (sid in ["gun", "ammo"] and not Sim.world.sub.is_surfaced()):
+		if sid in ["darts", "sand_table", "cameras", "nav", "skipper", "holo"] or (sid in ["gun", "ammo"] and not Sim.world.sub.is_surfaced()):
 			continue
 		out.append(sid)
 	return out
