@@ -182,11 +182,17 @@ Added by Blaney after playing. In his words where it matters.
       *(Done: nothing plays at sea but the band and the jukebox; the menu keeps its shanty (Blaney likes it), and the jukebox goes quiet while anyone plays an instrument. Sprint is a bit faster too: 2.1× walking.)*
 - [x] disregard anything from this list already sent off to landon
       *(Checked 2026-11-04: everything else on the list was already ticked and on GitHub, so only the Typhoon, the PA and bots, the enemy sub and the music were done.)*
-- [ ] lets add more detail to the typhoon and gato class subs. for the typhoon i want you to look at screenshots from scenes in Hunt For The Red October which is a submarine movie
-- [ ] add a realistic control scheme and positionings for the typhoon bridge
-- [ ] add a command "all hands on deck" that completely fills the sub with people controlling everything that needs to be done for the current objective
-- [ ] add emergency breaching
-- [ ] add a more in depth control panel so the skipper can have a 3D view of what is happening in the water based on all the information the sub is providing him, when he takes a certain position in the bridge then he is able to see in front of him (along with other connected players in the lobby, everyone should see this hologram if the skipper toggles it on)
+- [x] lets add more detail to the typhoon and gato class subs. for the typhoon i want you to look at screenshots from scenes in Hunt For The Red October which is a submarine movie
+      *(Done: walls packed with coloured pipe runs, valves, gauges, stencilled boxes and cable looms on the Gato, Narwhal and Typhoon; the Typhoon in the film's blue-grey steel, blue-white lights, red at all hands.)*
+- [x] add a realistic control scheme and positionings for the typhoon bridge
+      *(Done: helmsman and planesman side by side at yokes facing the bow, the periscope dais and the skipper's chair behind.)*
+- [x] add a command "all hands on deck" that completely fills the sub with people controlling everything that needs to be done for the current objective
+      *(Done: any boat; every post manned, three more men in each room, see-through, and the crew work the objective until "stand down".)*
+- [x] add emergency breaching
+      *(Done: a crash surface. An emergency blow from depth, or "crash surface" on the PA, and her bow leaps out and slams down.)*
+- [x] add a more in depth control panel so the skipper can have a 3D view of what is happening in the water based on all the information the sub is providing him, when he takes a certain position in the bridge then he is able to see in front of him (along with other connected players in the lobby, everyone should see this hologram if the skipper toggles it on)
+      *(Done: the Typhoon's skipper's chair, H: a blue hologram of the sea floor, contacts and torpedoes for everyone.)*
+- [ ] fill up the typhoon, it's empty: more pipes, and make it accurate to a real typhoon that's in service
 
 ## M9 — Lando's list (2026-10-30)
 Added by lando. Direction: **more arcadey, not strict realism**. Every existing mechanic

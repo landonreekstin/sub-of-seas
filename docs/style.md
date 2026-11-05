@@ -402,3 +402,4 @@ and update "Current style" in the same commit.
 | 2026-11-04 | Blaney | A command "all hands on deck" that completely fills the sub with people controlling everything needed for the current objective. (Then: the crowd see-through, never blocking.) |
 | 2026-11-05 | Blaney | Add emergency breaching. (Then: a crash surface, the bow leaping out and slamming down.) |
 | 2026-11-05 | Blaney | A control panel where the skipper sees a 3D view of what is happening in the water from all the information the sub has, in front of him when he takes a position on the bridge; everyone sees the hologram when he toggles it on. (Then: Typhoon only, blue glow.) |
+| 2026-11-05 | Blaney | (After playing the bay, hologram, all hands and crash surface: "very good".) The Typhoon is empty: fill it up, more pipes, and make it accurate to a real Typhoon that's in service. |
