@@ -244,7 +244,16 @@ and update "Current style" in the same commit.
   in two rows, no wood. **Inside, as in The Hunt for Red October** (Blaney): cold blue-grey steel
   (walls `#8E9BA6`, deckhead `#A9B3BB`, dark grey deck), cold blue-white lights, and the whole boat
   rigged for deep red while all hands are called. Walls packed with pipe runs (grey, blue, yellow,
-  red), valves, gauges, Russian-stencilled junction boxes and cable looms.
+  red), valves, gauges, Russian-stencilled junction boxes and cable looms. **Filled like a real
+  boat in service** (Blaney: "the sub is empty", more pipes; modelled on *Dmitry Donskoy*, the last
+  in service, retired 2023): a second bank of four pipes on each shoulder, a bundle along the
+  deckhead clamped every 1.6 m, two bilge runs, wall gear every 0.6-0.9 m; grey equipment cabinets
+  with screens and lamps down the centre passage; steam and coolant lines over the reactor shields
+  with valves and gauges on their faces; steam pipes down into the turbines, a condenser under, gauge
+  boards; each missile tube banded top and bottom with a red hatch wheel, a lamp box and a cable.
+  Her real comforts in the gym, sauna and pool room: the pine sauna, a small tiled pool with blue
+  water, a ladder and a life ring, weight benches and a rowing machine, a sun lamp, and an aviary of
+  songbirds (КАНАРЕЙКИ) on the after bulkhead.
 - **Typhoon command bay** (Blaney: a realistic layout, as in the film): the helmsman (starboard)
   and the planesman (port) sit side by side facing the bow, each at a black aircraft-style yoke on
   a blue-grey console with a green readout in Russian, under a bank of gauges. Planesman: hold W to

@@ -192,7 +192,8 @@ Added by Blaney after playing. In his words where it matters.
       *(Done: a crash surface. An emergency blow from depth, or "crash surface" on the PA, and her bow leaps out and slams down.)*
 - [x] add a more in depth control panel so the skipper can have a 3D view of what is happening in the water based on all the information the sub is providing him, when he takes a certain position in the bridge then he is able to see in front of him (along with other connected players in the lobby, everyone should see this hologram if the skipper toggles it on)
       *(Done: the Typhoon's skipper's chair, H: a blue hologram of the sea floor, contacts and torpedoes for everyone.)*
-- [ ] fill up the typhoon, it's empty: more pipes, and make it accurate to a real typhoon that's in service
+- [x] fill up the typhoon, it's empty: more pipes, and make it accurate to a real typhoon that's in service
+      *(Done, PR #37: pipe banks, cabinets, reactor and turbine pipework, missile tube fittings, the real boat's sauna, pool, gym and aviary.)*
 
 ## M9 — Lando's list (2026-10-30)
 Added by lando. Direction: **more arcadey, not strict realism**. Every existing mechanic
