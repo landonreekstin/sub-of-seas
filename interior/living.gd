@@ -215,7 +215,8 @@ static func bunk_touches(i: SubInterior, pos: Vector3, side: float, bay: float, 
 		picture(i, Vector3(side * (w - 0.03), pos.y + 0.42, pos.z + (n % 2 - 0.5) * 0.4), -side * PI / 2.0, ["family", "pinup", "family", "letter"][n % 4], n)
 	if n % 3 == 0: # a curtain drawn part way along the aisle side, on its rod
 		Build.cyl(i._at, 0.008, bay - 0.2, Vector3(side * 1.24, pos.y + 0.58, pos.z), STEEL, Vector3.BACK)
-		Build.box(i._at, Vector3(0.015, 0.5, bay * 0.38), Vector3(side * 1.24, pos.y + 0.33, pos.z + bay * 0.28), Color("#6B6A4A"), false)
+		for f in 4: # gathered in folds
+			Build.box(i._at, Vector3(0.015, 0.46, bay * 0.1), Vector3(side * (1.24 + (f % 2) * 0.03), pos.y + 0.35, pos.z + bay * (0.12 + f * 0.09)), Color("#CFC6A8").darkened((f % 2) * 0.12), false)
 	if n % 4 == 1: # his sea bag at the foot
 		Build.cyl(i._at, 0.11, 0.42, Vector3(side * 1.6, pos.y + 0.24, pos.z + bay * 0.36), CREAM, Vector3.RIGHT)
 	elif n % 4 == 3: # a book or a magazine

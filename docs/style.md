@@ -93,6 +93,21 @@ and update "Current style" in the same commit.
   valves on the white pipe runs, wire cages round the bulbs, a red extinguisher by each
   after door; a coffee urn, mugs and a menu board in the mess, books over the wardroom table,
   a brass clock in the control room.
+- **Lived in, but tidy** (Blaney): a galley in every boat (the Gato's and Narwhal's on the
+  mess's port side, the S-boat's aft in the battery room, the Typhoon's in her mess): black iron
+  range with pots steaming and a pan frying you can hear, a hood over it, maple work counter with
+  loaves, a steel sink, rows of tins on shelves behind fiddle rails, ladles on a rail, and the
+  cook in whites and a toque stirring. Mess and wardroom tables laid (plates, knives and forks,
+  mugs, salt, pepper, ketchup, bread), cushioned benches, a cribbage board, photos and letters
+  pinned over the table, the cool room and freezer hatches in the deck. Bunks: family photos,
+  painted 1940s pin-ups (fully dressed; Soviet film posters on the Typhoon), letters, curtains
+  drawn part way, sea bags, books, shoes under the bottom bunk, a towel on a stanchion, and two
+  off-watch men asleep in each crew's quarters. Fold-down bunks over the reload torpedoes. Things
+  are stowed, not strewn.
+- **Full and working, the walkway clear** (Blaney): a ventilation trunk with grilles along every
+  deckhead; in the control room pipe risers up all four corners and valve manifolds overhead
+  either side of the walkway, their handwheels on reach rods; gauge needles tremble as she runs,
+  more with the diesels going.
 - **Planned for Phase 2:** Hand-painted feel via procedural textures
   (riveted steel, brass, painted pipes, chipped paint, rust streaks, wood decking), toon-ish
   shading with soft rim light, stylised ocean with foam and big readable waves.
@@ -424,3 +439,4 @@ and update "Current style" in the same commit.
 | 2026-11-05 | Blaney | A control panel where the skipper sees a 3D view of what is happening in the water from all the information the sub has, in front of him when he takes a position on the bridge; everyone sees the hologram when he toggles it on. (Then: Typhoon only, blue glow.) |
 | 2026-11-05 | Blaney | (After playing the bay, hologram, all hands and crash surface: "very good".) The Typhoon is empty: fill it up, more pipes, and make it accurate to a real Typhoon that's in service. |
 | 2026-11-05 | Blaney | Overhaul the other sub types as well; in all the sub types the characters should be in natural positions at their stations; all hands on deck mustn't change the vibe to stressful, it's only to fill places. (Undoes his own red light at all hands.) |
+| 2026-11-05 | Blaney | Even more filled up: the control room easy to move around, but more pipes and stuff so the subs feel full and working underway; accurate kitchen and living areas; the sub should look lived in. (Asked: lived in but tidy, not cluttered; both family photos and 1940s pin-ups; a busy galley with steam, a sizzling pan and a cook; all four boats, the Typhoon too.) |

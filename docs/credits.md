@@ -53,6 +53,7 @@ All from Wikimedia Commons, marked public domain there.
 | vent_rush, blow_loop | [Air (or steam) pressure release](https://freesound.org/s/457294/) | brunoboselli | CC0 |
 | sea_loop | [Underwater Ambience](https://freesound.org/s/504641/) | Fission9 | CC0 |
 | rain_loop | [Indoors_Shed_RainOnTinRoof_01.wav](https://freesound.org/s/521773/) | MrFossy | CC0 |
+| galley_loop | [Indoors_Shed_RainOnTinRoof_01.wav](https://freesound.org/s/521773/), high end only, as a pan frying | MrFossy | CC0 |
 | step_1, step_2, step_3 | [walk carpet.wav](https://freesound.org/s/575321/) | taure | CC0 |
 | canister | [Metal Canister Impact Hard](https://freesound.org/s/650573/) | h2p34 | CC0 |
 | alarm | [fire alarm bell](https://freesound.org/s/678345/) | msx2plus | CC0 |
