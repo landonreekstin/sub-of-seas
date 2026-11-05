@@ -241,7 +241,35 @@ and update "Current style" in the same commit.
   plays like all other music. **As real as we can get** (Blaney): where a Typhoon
   choice is between the game's usual look and the real boat, go with the real boat. Outside she is black
   rubber all over (her anechoic tiles): hull, fin and a deck a shade lighter, the missile hatches flush
-  in two rows, no wood.
+  in two rows, no wood. **Inside, as in The Hunt for Red October** (Blaney): cold blue-grey steel
+  (walls `#8E9BA6`, deckhead `#A9B3BB`, dark grey deck), cold blue-white lights, and the whole boat
+  rigged for deep red while all hands are called. Walls packed with pipe runs (grey, blue, yellow,
+  red), valves, gauges, Russian-stencilled junction boxes and cable looms.
+- **Typhoon command bay** (Blaney: a realistic layout, as in the film): the helmsman (starboard)
+  and the planesman (port) sit side by side facing the bow, each at a black aircraft-style yoke on
+  a blue-grey console with a green readout in Russian, under a bank of gauges. Planesman: hold W to
+  push forward and go down, S to pull back and come up, Shift gently. Helmsman: A/D or the mouse
+  turns the yoke for rudder, C centres, W/S the engine order lever by his right hand. Behind them a
+  low round dais with a brass rail round the front and the scope, the attack scope beside it; the
+  skipper's brown leather chair to port, sonar on the port wall, fire control to starboard.
+  Bot crewmen sit in the chairs.
+- **The skipper's hologram** (Blaney: a 3D view of the water from what the boat knows, everyone
+  sees it; Typhoon only, blue glow): sit in the skipper's chair, H turns it on or off. It hangs in
+  front of the chair from a projector in the deckhead: a ring for the sea's surface, the sea floor
+  8 km round as glowing blue grid lines, our boat bright in the middle, bow ahead (heading-up),
+  ships the boat hears or sees as small blocks with a thin line up from a sub's depth and a name and
+  range, our torpedoes bright, theirs red. Past 8 km a contact sits on the rim on its bearing.
+- **Crash surface** (Blaney: emergency breaching): an emergency blow from depth (X twice on the
+  ballast, or "crash surface" on the PA) brings her up so fast her bow leaps out: up to 28° bow up
+  and thrown 6 m out of the sea, slammed back down with a great splash, rocking to rest. Inside,
+  everyone is shaken twice (the leap and the slam), the lights flicker, "CRASH SURFACE! Hold on!".
+  A normal blow comes up gently.
+- **All hands on deck** (Blaney, any boat): every post manned, three more men standing in each
+  room, see-through so they never block the way (Blaney), damage parties on standby, and the crew
+  work the patrol's objective by themselves until "stand down".
+- **Packed walls on the Gato and Narwhal** (Blaney: like the real one): the same pipe runs (white,
+  grey-green, red, blue), valves, gauges, stencilled boxes (FRESH WATER, HP AIR, HYDRAULIC, FIRE
+  MAIN) and cable looms between the stations.
 - **Handing over** (Blaney): J at any station: a bot takes it over and you walk off.
 - **Bot crewmen:** look like any crewman (random build, face and shirt, a navy watch cap),
   standing their station with hands on the gear and a name tag with their job ("Sparks
@@ -369,3 +397,8 @@ and update "Current style" in the same commit.
 | 2026-11-04 | Blaney | Typhoon damage parties shouldn't walk through walls: send them through the doors. |
 | 2026-11-04 | Blaney | (On the Typhoon's deck: tan wood or black rubber like the real boat?) "Definitely as real as we can get for the typhoon." |
 | 2026-11-04 | Blaney | "I dont know how to make the choir happen, no music like that that i hear." (It played, too quietly, and stops while the band plays: now as loud as the menu music.) |
+| 2026-11-04 | Blaney | Add more detail to the Typhoon and Gato. For the Typhoon look at scenes from The Hunt for Red October. (Then: Typhoon lit like the film, cold blue-white and red at battle stations; Gato packed like the real one.) |
+| 2026-11-04 | Blaney | A realistic control scheme and positions for the Typhoon bridge. (Then: two seats side by side at aircraft yokes, helmsman and planesman, the skipper behind at the periscope.) |
+| 2026-11-04 | Blaney | A command "all hands on deck" that completely fills the sub with people controlling everything needed for the current objective. (Then: the crowd see-through, never blocking.) |
+| 2026-11-05 | Blaney | Add emergency breaching. (Then: a crash surface, the bow leaping out and slamming down.) |
+| 2026-11-05 | Blaney | A control panel where the skipper sees a 3D view of what is happening in the water from all the information the sub has, in front of him when he takes a position on the bridge; everyone sees the hologram when he toggles it on. (Then: Typhoon only, blue glow.) |
