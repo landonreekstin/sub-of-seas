@@ -35,7 +35,14 @@ WWII photos; the all-hands crowd see-through, never blocking.
   S-boat): four coloured pipe runs high on each wall and a bilge run; between stations valves,
   gauges, stencilled junction boxes, pipe drops, cable looms. Typhoon painted blue-grey like the
   film (`TYPHOON_PAINT` through `Build.recolor`).
-- [next] style log + CLAUDE.md, `make test`, Blaney plays (breach not seen from outside yet) (Typhoon, Gato), style log, make test, Blaney plays.
+- [done] style log + CLAUDE.md. `make test`: unit tests (575) and the first training courses
+  passed; the damage course stalled once while xvfb screenshots ran alongside, and passed rerun
+  alone. The rest rerun one by one. Breach not seen in xvfb (its clock crawls): Blaney watches it.
+- [next] Blaney plays: Typhoon command bay, hologram, "all hands on deck", crash surface
+  (`--depth 80 --test-breach`), Gato walls. Then tick the five items, `gh pr ready 36`,
+  `vibenote --collect-usage`.
+- An accidental `git stash pop` brought back the old pause-menu stash; it was put back as
+  `stash@{0}` (nothing new in it). Never `git stash` with nothing to stash. (Typhoon, Gato), style log, make test, Blaney plays.
 - **Earlier stop.** Next was: open the screenshots already taken in
   `screenshots/bay/calm/` and `screenshots/bay/full/` (`tools/typhoon_looks.gd -- <dir> bay [calm]`),
   fix what looks wrong, run `make test` (unit tests passed after all hands; walkthroughs not rerun
