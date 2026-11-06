@@ -22,6 +22,7 @@ var _was_on := false
 var _bout_view: CanvasLayer ## the wrestling panel, while a bout is on and we're out on deck
 var _bout_lines: Array[Label] = []
 var _thrown := -1.0 ## the bout (its start time) we were already thrown out of
+var fishing: Fishing ## the local player's rod, while he fishes off the stern
 
 
 static func create(sub: SubClassData) -> Deck:
@@ -71,6 +72,12 @@ func _ready() -> void:
 	hatch.position = Vector3(0, fb, dims.hatch_z)
 	add_child(hatch)
 	Build.area(hatch, Vector3(1.1, 0.5, 1.1), Vector3(0, 0.25, 0))
+	# The stern rail, starboard, where a man can fish (Blaney).
+	var fz := minf(float(dims.ring_z) + 4.0, l * 0.5 - 3.0)
+	var rod := FishingSpot.new()
+	rod.position = Vector3(ShipModels.hull_half((fz + l * 0.5) / l, beam) - 0.4, ShipModels.hull_deck((fz + l * 0.5) / l, fb), fz)
+	add_child(rod)
+	Build.area(rod, Vector3(1.4, 1.6, 1.6), Vector3(0, 0.8, 0))
 	var lt := (float(dims.ladder_z) + l * 0.5) / l
 	var lz: float = dims.ladder_z
 	for side in [-1.0, 1.0]:
@@ -114,6 +121,8 @@ func _process(delta: float) -> void:
 		ext.deck_fov = me.camera.fov
 	_sync_figures(delta)
 	_sync_bout(on)
+	if is_instance_valid(fishing) and (not on or me.is_knocked_out()):
+		fishing.queue_free()
 
 
 ## Standing in the wrestling ring on the aft casing (not swimming)?
@@ -141,7 +150,7 @@ func bout_spot(w: Dictionary, peer: int) -> Transform3D:
 
 ## The local wrestler is held in the clinch: Deck places him, his feet don't move him.
 func pinned(player: Player) -> bool:
-	return not bout_of(player.peer_id).is_empty()
+	return not bout_of(player.peer_id).is_empty() or (is_instance_valid(fishing) and player.is_local())
 
 
 func _sync_bout(on: bool) -> void:
@@ -314,3 +323,18 @@ class Hatch extends Node3D:
 
 	func interact(player: Player) -> void:
 		player.go_below()
+
+
+## The stern rail: E takes up a rod and fishes (Fishing), E again puts it down.
+class FishingSpot extends Node3D:
+	func get_prompt(_player: Player) -> String:
+		var d := Game.instance.deck
+		return "[E] Put the rod down" if is_instance_valid(d.fishing) else "[E] Fish off the stern"
+
+	func interact(_player: Player) -> void:
+		var d := Game.instance.deck
+		if is_instance_valid(d.fishing):
+			d.fishing.queue_free()
+		else:
+			d.fishing = Fishing.new()
+			d.add_child(d.fishing)

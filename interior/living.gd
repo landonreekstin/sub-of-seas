@@ -88,11 +88,16 @@ static func galley(i: SubInterior, c: Dictionary, side: float, za: float, zb: fl
 		Build.sphere(at, 0.035, Vector3(side * (w - 0.1), 1.02, uz), STEEL)
 	var title := Build.label(at, "КАМБУЗ" if red else "GALLEY", Vector3(side * (w - 0.04), 2.2, rz), 22, IRON)
 	title.rotation.y = -side * PI / 2.0
-	cook(i, Vector3(side * (w - 0.95), 0, rz), -side * PI / 2.0)
+	var spot := Vector3(side * (w - 0.95), 0, rz)
+	var range_ := GalleyStation.new().setup("galley", "Galley range") as GalleyStation
+	range_.pan = Vector3(side * 0.32, 0.955, -0.63)
+	i._add_station(range_, spot, -side * PI / 2.0)
+	range_.cook = cook(i, spot, -side * PI / 2.0)
+	FunSpot.add(at, "Cook's special", "[E] at the range: take over the stove and fry a meal; [Space] flips it in the green", Vector3(x, 1.35, rz + 0.3))
 
 
 ## The cook at his stove, in his whites and toque, stirring.
-static func cook(i: SubInterior, pos: Vector3, rot_y: float) -> void:
+static func cook(i: SubInterior, pos: Vector3, rot_y: float) -> Node3D:
 	var v := Node3D.new()
 	v.position = pos
 	v.rotation.y = rot_y
@@ -110,6 +115,7 @@ static func cook(i: SubInterior, pos: Vector3, rot_y: float) -> void:
 	Build.box(v, Vector3(0.34, 0.6, 0.02), Vector3(0, 0.85, -0.2), Color("#F2F0E8"), false) # apron
 	i._stirring.append(parts.arm_r)
 	parts.arm_l.rotation.x = 0.7
+	return v
 
 
 ## Benches along a mess table at `tx`, `tz` (length along z), and, when `set`, places laid:
@@ -136,6 +142,26 @@ static func table_settings(i: SubInterior, tx: float, tz: float, top: float, len
 	Build.cyl(at, 0.13, 0.015, Vector3(tx, top + 0.01, tz - 0.2), CREAM)
 	for b in 3:
 		Build.box(at, Vector3(0.07, 0.04, 0.05), Vector3(tx - 0.04 + b * 0.04, top + 0.035, tz - 0.2 + (b % 2) * 0.03), Color("#C08A4A"), false)
+
+
+## The arm-wrestling seats across a table at `tx`, `tz`: one each side, on the benches.
+static func arm_table(i: SubInterior, tx: float, tz: float, top: float) -> void:
+	for k in 2:
+		var a := ArmStation.new().setup(Pastimes.ARM[k], "Arm wrestling") as ArmStation
+		a.top = top
+		a.reach = 0.68 if k == 0 else 0.58
+		i._add_station(a, Vector3(tx - 0.68 if k == 0 else tx + 0.58, 0, tz), -PI / 2.0 if k == 0 else PI / 2.0)
+	FunSpot.add(i._at, "Arm wrestling", "[E] at a seat across the table, then tap [Space] as fast as you can; [B] at the empty seat sits a bot down to take you on", Vector3(tx, top + 0.6, tz))
+
+
+## Seats at a card table (blackjack against the house): [x, z, rot_y] each, the table's top.
+static func card_seats(i: SubInterior, seats: Array, top: float, centre: Vector3) -> void:
+	for k in seats.size():
+		var c := CardsStation.new().setup(Pastimes.CARDS[k], "Blackjack") as CardsStation
+		c.top = top
+		c.reach = Vector2(seats[k][0], seats[k][1]).distance_to(Vector2(centre.x, centre.z))
+		i._add_station(c, Vector3(seats[k][0], 0, seats[k][1]), seats[k][2])
+	FunSpot.add(i._at, "Blackjack", "[E] at a seat at the card table: [Space] deals and hits, [S] stands; beat the house to 21", centre + Vector3(0, top + 0.6, 0))
 
 
 ## A cribbage board mid-game and a deck of cards.
