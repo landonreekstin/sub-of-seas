@@ -135,3 +135,18 @@ func test_whales_are_false_contacts() -> bool:
 		w.step(1.0)
 	runner.check(wh.pos.distance_to(w.sub.pos) > 1000.0, "it swims about (%.0f m off)" % wh.pos.distance_to(w.sub.pos))
 	return true
+
+
+## A larger area (Blaney): features spread far out, and trenches only ever deepen the floor.
+func test_wide_area_and_trenches() -> bool:
+	var s := Seabed.new()
+	s.features.append({"kind": "trench", "x": 0.0, "y": 0.0, "r": 4000.0, "top": 2000.0, "reef": 0.0, "ang": 0.0, "stretch": 3.0, "h": []})
+	runner.check(s.floor_depth(Vector2.ZERO) > 1900.0, "a trench's floor is deep")
+	runner.check(is_equal_approx(s.floor_depth(Vector2(0, 40000)), Seabed.BASE), "the open floor far off it")
+	var far := 0.0
+	for seed_value in 5:
+		s.generate(seed_value, Vector2.ZERO, [Vector2.ZERO], [])
+		for f: Dictionary in s.features:
+			far = maxf(far, Vector2(f.x, f.y).length())
+	runner.check(far > 15000.0, "features spread well beyond 15 km (%d m)" % roundi(far))
+	return true

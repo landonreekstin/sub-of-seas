@@ -4,6 +4,66 @@ Where things stand, in plain English. The newest entry goes at the top. Update i
 Other docs: `roadmap.md` is the to-do list, `style.md` how it looks and feels, `design.md` the
 game's design, `credits.md` where every sound came from.
 
+## 2026-11-06 (later): built, waiting on Blaney's play (branch `blaney/sub-outsides`, #42 on #41)
+
+- [built, looked at in xvfb] `world/own_boat.gd`: new outsides for all four boats; `Deck`
+  collision is the same shape (convex slices); the hatch clear of the fin on every boat.
+  `tests/deck_walk.gd -- <sub>` passes on all four (out, walk, hatch, swim, rungs, below).
+- [built, unit-tested] depth orders to crush depth (yoke + host), `SubInterior._deep` (creaks,
+  bangs, weeping seams, wavering lights), black water deep (`ExteriorWorld.paint_water`).
+- [built, unit-tested] seabed over ~30 km with trenches (`Seabed`), chart zoom to 80 km, swim pen 40 m.
+- [next] Blaney plays the Typhoon (on his screen), then tick the four items + #41's, mark
+  #41 and #42 ready, `vibenote --collect-usage`.
+
+## 2026-11-06: deep, bigger sea, better outsides, the hatch (branch `blaney/sub-outsides`, on #41)
+
+Done first: the motion's "little push" taken out (Blaney: "the sliding around should not be a
+thing"); he played it, "feels good"; both motion items ticked, **#40 ready**. #41 (fun things)
+is still unplayed by him: put it on his screen when this is done.
+New items (roadmap, style log). His calls: Typhoon very deep, WWII boats realistic depths;
+real outside details, smoother hull, weathered paint, on every boat as far as real life has
+them, the Typhoon most; the bigger area he hasn't checked (assume the open sea).
+Found, not fixed yet:
+- **Hatch**: `ShipModels.own_dims` puts `hatch_z` 2.6 m ahead of the fin's front, but the
+  Typhoon's fin nose solid (`game/deck.gd` _ready, `beam*0.3` square) is 6.9 m wide, so the hatch
+  and `hatch_spot()` sit inside it: you clip in to see it and can't go below. Fix: place it clear
+  of the fin's nose (`- beam*0.15 - 1.5`), and a headless test that climbs out and goes below.
+- **Depth**: the yoke (`stations/yoke_station.gd:76`) and the host (`game/game.gd:982`) cap the
+  ordered depth at 200 m; use `sub.data.crush_depth`. Typhoon creaks
+  (`SubInterior._typhoon_sounds`) don't grow with depth; add scary deep (more and louder
+  groans, bangs, drips past test depth) for every boat.
+- **Outsides** (pictures: `tools/ship_gallery.gd -- own_typhoon out.png x,y,z,tx,ty,tz`, camera
+  option just added): boxy hull, plain box fin. Plan: new `world/own_boat.gd` with per-boat
+  builders (round lofted hull + casing; Gato/S-boat/Narwhal: limber holes, teak, rails,
+  bow/stern planes, screws, shears + radar, hull number, rust streaks; Typhoon: wide blunt hull,
+  20 missile hatches forward of the sail, rounded sail, ducted screws, tall rudder, tile
+  patches, white draught marks). `game/deck.gd` collision, `camera_station.gd` and the ring/
+  fishing spots read `own_dims`/`hull_half`/`hull_deck`: keep them matching the new shapes.
+- **Area**: no hard edge found yet; check the sandbox/missions for one.
+
+## 2026-11-05 (late night): more things to do (branch `blaney/fun-things`, draft #41, on #39)
+
+Blaney's item: "more fun things to do, clearer ways to access them and see a list". His calls:
+all four of cards, fishing, cooking, arm wrestling; the list on an easy key (T); glow when close.
+- [built, looked at in xvfb, tests pass] `Pastimes` rules, arm/cards/galley stations, `Fishing`,
+  `FunSpot` glow, `ThingsToDo` card; `tests/pastime_walkthrough.gd` on all four boats.
+- [next] Blaney plays it (and #40, the boat's motion, still unplayed), then tick both and mark
+  #40 and #41 ready. #39 (lived-in, door muffling) is ticked and waiting on Lando.
+
+## 2026-11-05 (evening): lived-in boats (branch `blaney/lived-in`)
+
+Blaney: "even more filled up, control room easy to move around, more pipes, accurate kitchen and
+living areas, lived in". His calls: lived in but tidy; family photos and 1940s pin-ups (fully
+dressed); a busy galley with steam, sizzle and a cook; all four boats.
+- [built, looked at, all tests pass] `interior/living.gd` (`Living`): galley on the mess's port side (S-boat: aft in
+  the battery room) with range, pots steaming, a frying pan (`galley_loop`, cut from the rain
+  recording), tins on fiddled shelves, sink, the cook stirring; benches and laid places in mess
+  and wardroom; photos, pin-ups, curtains, sea bags, shoes, towels and two sleepers per crew's
+  quarters; fold-down bunks over the reload torpedoes; vent trunk along every deckhead; control
+  room corner risers and overhead manifolds; gauge needles tremble (more with diesels on).
+  `tools/look_at.gd` pictures chosen spots.
+- [next] Blaney plays it (Gato on his screen), then tick, `gh pr ready 39`.
+
 ## 2026-11-05 (later): the other boats overhauled, natural bot poses (branch `blaney/subs-overhaul`, on #37)
 
 Built and looked at (xvfb): every WWII boat (S-boat included) gets the Typhoon's pipe density in

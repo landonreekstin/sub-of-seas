@@ -2,7 +2,7 @@ class_name Deck
 extends Node3D
 ## Out on deck (Blaney: "when the sub is high enough above water make it possible to get out and
 ## walk on the top of it"). The interior never moves, so the casing is built a second time as
-## plain collision far above the boat, in our own boat's coordinates (ShipModels.own_dims: z bow
+## plain collision far above the boat, in our own boat's coordinates (OwnBoat.dims: z bow
 ## to stern, y up from the waterline). A crewman up here walks on that; what everyone sees is
 ## the exterior ocean through a camera on the real model, and the crew on deck stand there as
 ## crewman figures. Over the side is the sea: you swim, and climb back up the rungs amidships.
@@ -22,6 +22,7 @@ var _was_on := false
 var _bout_view: CanvasLayer ## the wrestling panel, while a bout is on and we're out on deck
 var _bout_lines: Array[Label] = []
 var _thrown := -1.0 ## the bout (its start time) we were already thrown out of
+var fishing: Fishing ## the local player's rod, while he fishes off the stern
 
 
 static func create(sub: SubClassData) -> Deck:
@@ -44,45 +45,78 @@ func _ready() -> void:
 	position = ORIGIN
 	var l: float = dims.length
 	var beam: float = dims.beam
-	var fb: float = dims.deck
-	# The hull: a slab per station along her length, its top the deck and its sides the hull.
+	# The hull, a convex slice per station from her real sections (OwnBoat): walk the flat casing,
+	# slide off its curve into the sea.
 	for i in SEGMENTS:
-		var t := (i + 0.5) / SEGMENTS
-		var w := ShipModels.hull_half(t, beam) * 2.0
-		var top := ShipModels.hull_deck(t, fb)
-		_solid(Vector3(maxf(w, 0.4), top + 4.5, l / SEGMENTS + 0.02), Vector3(0, (top - 4.5) * 0.5, -l * 0.5 + t * l))
-	# The fairwater round the conning tower, the gun's pedestal, the ammunition lockers.
-	var ct_z: float = dims.ct_z
-	var ct_len: float = dims.ct_len
-	var ct_h: float = dims.ct_h
-	_solid(Vector3(beam * 0.32, ct_h, ct_len), Vector3(0, fb + ct_h * 0.5, ct_z))
-	_solid(Vector3(beam * 0.3, ct_h, beam * 0.3), Vector3(0, fb + ct_h * 0.5, ct_z - ct_len * 0.5))
-	_solid(Vector3(1.4, 1.6, 1.6), Vector3(0, fb + 0.8, dims.gun_z))
-	for side in [-1.0, 1.0]:
-		_solid(Vector3(0.6, 0.7, 1.4), Vector3(side * beam * 0.22, fb + 0.35, ct_z - ct_len * 0.5 - 1.5))
+		var pts := PackedVector3Array()
+		for t in [float(i) / SEGMENTS, float(i + 1) / SEGMENTS]:
+			for k in 24:
+				pts.append(OwnBoat.section(dims, t, TAU * k / 24.0))
+		_convex(pts)
+	# The fin, a slice per few metres of its length.
+	var z0: float = float(dims.ct_z) - float(dims.ct_len) * 0.5
+	var y0 := OwnBoat.deck_y(dims, OwnBoat.t_of(dims, z0)) - 0.4
+	for j in 10:
+		var pts := PackedVector3Array()
+		for s in [j / 10.0, (j + 1) / 10.0]:
+			var w := maxf(OwnBoat.fin_half(dims, s), 0.05)
+			var z: float = z0 + s * float(dims.ct_len)
+			for side in [-1.0, 1.0]:
+				pts.append(Vector3(side * w, y0, z))
+				pts.append(Vector3(side * w, y0 + 0.4 + OwnBoat.fin_h(dims, s), z))
+		_convex(pts)
+	if dims.guns: # the gun's pedestal and the ready-use lockers
+		_solid(Vector3(1.4, 1.6, 1.6), Vector3(0, _deck_at(dims.gun_z) + 0.8, dims.gun_z))
+		for side in [-1.0, 1.0]:
+			var lz := z0 - 1.5
+			_solid(Vector3(0.6, 0.7, 1.4), Vector3(side * beam * 0.2, _deck_at(lz) + 0.35, lz))
 	# Nobody swims off over the horizon: a pen of sea round her, and a floor under it.
-	var pen := Vector2(beam * 0.5 + 14.0, l * 0.5 + 14.0)
+	var pen := Vector2(beam * 0.5 + 40.0, l * 0.5 + 40.0)
 	for side in [-1.0, 1.0]:
 		_solid(Vector3(1.0, 30.0, pen.y * 2.0), Vector3(side * pen.x, 5.0, 0))
 		_solid(Vector3(pen.x * 2.0, 30.0, 1.0), Vector3(0, 5.0, side * pen.y))
-	_solid(Vector3(pen.x * 2.0, 1.0, pen.y * 2.0), Vector3(0, -6.0, 0))
+	_solid(Vector3(pen.x * 2.0, 1.0, pen.y * 2.0), Vector3(0, -14.0, 0))
 	# The hatch back down, and a ladder from the water up each side.
 	var hatch := Hatch.new()
-	hatch.position = Vector3(0, fb, dims.hatch_z)
+	hatch.position = Vector3(0, _deck_at(dims.hatch_z), dims.hatch_z)
 	add_child(hatch)
-	Build.area(hatch, Vector3(1.1, 0.5, 1.1), Vector3(0, 0.25, 0))
-	var lt := (float(dims.ladder_z) + l * 0.5) / l
+	Build.area(hatch, Vector3(1.4, 0.8, 1.4), Vector3(0, 0.3, 0))
+	# The stern rail, starboard, where a man can fish (Blaney).
+	var fz := minf(float(dims.ring_z) + 4.0, l * 0.5 - 3.0)
+	var ft := OwnBoat.t_of(dims, fz)
+	var rod := FishingSpot.new()
+	rod.position = Vector3(OwnBoat.deck_half(dims, ft) - 0.4, OwnBoat.deck_y(dims, ft), fz)
+	add_child(rod)
+	Build.area(rod, Vector3(1.4, 1.6, 1.6), Vector3(0, 0.8, 0))
 	var lz: float = dims.ladder_z
+	var lt := OwnBoat.t_of(dims, lz)
+	var dk := OwnBoat.deck_y(dims, lt)
+	var edge := OwnBoat.deck_half(dims, lt)
 	for side in [-1.0, 1.0]:
-		var hw := ShipModels.hull_half(lt, beam)
+		var hw := maxf(OwnBoat.half_at(dims, lt, 0.0), edge)
 		var ladder := Ladder.new()
 		ladder.label_up = "Climb aboard"
 		ladder.label_down = "Climb down into the sea"
 		add_child(ladder)
-		ladder.top_y = ORIGIN.y + fb
+		ladder.top_y = ORIGIN.y + dk
 		ladder.bottom_path = [ORIGIN + Vector3(side * (hw + 0.55), SWIM_EYE - Player.EYE_HEIGHT, lz),
-			ORIGIN + Vector3(side * (hw + 0.55), fb + 0.15, lz), ORIGIN + Vector3(side * (hw - 0.7), fb + 0.05, lz)]
-		Build.area(ladder, Vector3(1.2, fb + 2.0, 1.2), Vector3(side * (hw + 0.3), fb * 0.5 - 0.6, lz))
+			ORIGIN + Vector3(side * (hw + 0.55), dk + 0.15, lz), ORIGIN + Vector3(side * (edge - 0.7), dk + 0.05, lz)]
+		Build.area(ladder, Vector3(maxf(hw - edge, 0.0) + 1.6, dk + 2.0, 1.2), Vector3(side * ((hw + edge) * 0.5 + 0.3), dk * 0.5 - 0.6, lz))
+
+
+func _deck_at(z: float) -> float:
+	return OwnBoat.deck_y(dims, OwnBoat.t_of(dims, z))
+
+
+func _convex(pts: PackedVector3Array) -> void:
+	var body := StaticBody3D.new()
+	body.name = "DeckSolid"
+	var shape := CollisionShape3D.new()
+	var cs := ConvexPolygonShape3D.new()
+	cs.points = pts
+	shape.shape = cs
+	body.add_child(shape)
+	add_child(body)
 
 
 func _solid(size: Vector3, pos: Vector3) -> void:
@@ -92,7 +126,7 @@ func _solid(size: Vector3, pos: Vector3) -> void:
 
 ## Where a crewman coming up the hatch stands (interior space), facing forward.
 func hatch_spot() -> Vector3:
-	return ORIGIN + Vector3(0, float(dims.deck) + 0.05, float(dims.hatch_z) - 0.9)
+	return ORIGIN + Vector3(0, _deck_at(dims.hatch_z) + 0.05, float(dims.hatch_z) - 0.9)
 
 
 ## Can the crew go out? Surfaced, vents shut.
@@ -114,6 +148,8 @@ func _process(delta: float) -> void:
 		ext.deck_fov = me.camera.fov
 	_sync_figures(delta)
 	_sync_bout(on)
+	if is_instance_valid(fishing) and (not on or me.is_knocked_out()):
+		fishing.queue_free()
 
 
 ## Standing in the wrestling ring on the aft casing (not swimming)?
@@ -141,7 +177,7 @@ func bout_spot(w: Dictionary, peer: int) -> Transform3D:
 
 ## The local wrestler is held in the clinch: Deck places him, his feet don't move him.
 func pinned(player: Player) -> bool:
-	return not bout_of(player.peer_id).is_empty()
+	return not bout_of(player.peer_id).is_empty() or (is_instance_valid(fishing) and player.is_local())
 
 
 func _sync_bout(on: bool) -> void:
@@ -314,3 +350,18 @@ class Hatch extends Node3D:
 
 	func interact(player: Player) -> void:
 		player.go_below()
+
+
+## The stern rail: E takes up a rod and fishes (Fishing), E again puts it down.
+class FishingSpot extends Node3D:
+	func get_prompt(_player: Player) -> String:
+		var d := Game.instance.deck
+		return "[E] Put the rod down" if is_instance_valid(d.fishing) else "[E] Fish off the stern"
+
+	func interact(_player: Player) -> void:
+		var d := Game.instance.deck
+		if is_instance_valid(d.fishing):
+			d.fishing.queue_free()
+		else:
+			d.fishing = Fishing.new()
+			d.add_child(d.fishing)

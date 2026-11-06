@@ -93,6 +93,21 @@ and update "Current style" in the same commit.
   valves on the white pipe runs, wire cages round the bulbs, a red extinguisher by each
   after door; a coffee urn, mugs and a menu board in the mess, books over the wardroom table,
   a brass clock in the control room.
+- **Lived in, but tidy** (Blaney): a galley in every boat (the Gato's and Narwhal's on the
+  mess's port side, the S-boat's aft in the battery room, the Typhoon's in her mess): black iron
+  range with pots steaming and a pan frying you can hear, a hood over it, maple work counter with
+  loaves, a steel sink, rows of tins on shelves behind fiddle rails, ladles on a rail, and the
+  cook in whites and a toque stirring. Mess and wardroom tables laid (plates, knives and forks,
+  mugs, salt, pepper, ketchup, bread), cushioned benches, a cribbage board, photos and letters
+  pinned over the table, the cool room and freezer hatches in the deck. Bunks: family photos,
+  painted 1940s pin-ups (fully dressed; Soviet film posters on the Typhoon), letters, curtains
+  drawn part way, sea bags, books, shoes under the bottom bunk, a towel on a stanchion, and two
+  off-watch men asleep in each crew's quarters. Fold-down bunks over the reload torpedoes. Things
+  are stowed, not strewn.
+- **Full and working, the walkway clear** (Blaney): a ventilation trunk with grilles along every
+  deckhead; in the control room pipe risers up all four corners and valve manifolds overhead
+  either side of the walkway, their handwheels on reach rods; gauge needles tremble as she runs,
+  more with the diesels going.
 - **Planned for Phase 2:** Hand-painted feel via procedural textures
   (riveted steel, brass, painted pipes, chipped paint, rust streaks, wood decking), toon-ish
   shading with soft rim light, stylised ocean with foam and big readable waves.
@@ -173,6 +188,9 @@ and update "Current style" in the same commit.
   Blaney found the first version sounded like knocking on his door and the second annoying and
   clanky; half as loud again now: your own barely there, a crewmate's just audible when close), a clang per ladder rung, a clink
   picking up or putting down a tool.
+  **Shut doors keep the noise in** (Blaney): a sound from beyond a shut watertight door comes
+  through dull (low-passed) and much quieter, quieter again for each more door; open doors and
+  hatches let it straight through. Crew voices are not muffled.
 - **Handling** (Blaney): livelier than the real boat but still heavy and submarine-like, not a
   rocket ship. Speed changes are twice as quick, turns 1.6× and dives 1.5× (a Gato: 0 to 9 kn
   in about 15 s, a full circle in about 75 s, periscope depth to 45 m in about 28 s).
@@ -351,6 +369,14 @@ and update "Current style" in the same commit.
   that show the water and nearby hulls; reefs,
   undersea mountains and shelves; sharks, whales, octopus and fish; music (menu, patrol,
   combat); emotes seen in third person; a rec room for whimsical fun and mini games.
+- **Pastimes (Blaney):** arm wrestling across the mess table (tap Space, the locked fists swing
+  toward the loser), blackjack against the house at the card table (cards face up on the baize),
+  the cook's special at the galley range (a swinging heat needle, flip in the green, three flips
+  make a meal called out to the boat), fishing off the stern rail (strike, then reel keeping the
+  line's tension in the green). A bot takes on all comers at any empty seat. Each fun spot glows
+  warm with its name in cream caps when you walk within a few metres. **T** opens the "things to
+  do aboard" card: every pastime on this boat, its room, its keys, what needs her surfaced, and
+  the crew's records; "[T] things to do" sits small in brass in the bottom-left corner.
 - **Training crew calls (Blaney):** in the short per-job courses, the crewmates you would
   hear are played for you: a big line near the top, the speaker in brass caps and the words
   in cream quotes ("CAPTAIN: "Come to course zero-niner-zero.""), with a short bell like an
@@ -363,6 +389,27 @@ and update "Current style" in the same commit.
   call shows with their name and job in place of the scripted voice.
 - **UI:** typewriter / stencil feel, cream on dark panels, minimal HUD (crosshair, carried
   tool, interaction prompt).
+
+- **Our boat from outside** (Blaney: real details, smoother hull, weathered paint, every boat
+  as far as real life has them, the Typhoon most; `world/own_boat.gd`): a round lofted hull cut
+  flat by the casing, a streamlined fin with a rounded top edge. WWII boats: dark grey streaked
+  with rust down from the casing and fin, salt at the waterline, black below; teak deck,
+  limber holes, stanchions and lifelines, bow and stern planes, rudder and twin bronze screws,
+  anchor, bridge with windscreen, periscope shears, SJ radar and SD mast, a 20 mm on the
+  cigarette deck (not the S-boat), the hull number in white on the fin (S-44, SS-212, SS-167),
+  torpedo loading hatches; the Narwhal's second 6-inch gun aft. Typhoon: matte black rubber
+  tiles with some torn off, a wide flat deck, twenty missile hatches forward of the sail,
+  bridge windows, masts drawn down, white rescue-buoy frames, white draught marks, bow planes
+  folded low, stern planes with end plates, the tall upper rudder and two shrouded screws.
+  The deck hatch sits clear forward of the fin on every boat; what you walk and swim against
+  is the same shape as what you see.
+- **Deep down** (Blaney: scary deep; Typhoon very deep, WWII boats realistic): orders go all the
+  way to crush depth (Gato 150 m, Typhoon 500 m). The hull creaks more and louder the deeper she
+  goes; near test depth frames bang, the boat jolts and water weeps from the seams; past it the
+  lights waver. Outside the water is dim by 100 m and close to black by 300 m.
+- **The sea** (Blaney: a larger area): islands, seamounts and shelves spread over some 30 km
+  each way, with deep trenches far below any keel; the chart table zooms out to 80 km across;
+  swimmers have 40 m of sea round the boat.
 
 ## Direction log
 
@@ -424,3 +471,9 @@ and update "Current style" in the same commit.
 | 2026-11-05 | Blaney | A control panel where the skipper sees a 3D view of what is happening in the water from all the information the sub has, in front of him when he takes a position on the bridge; everyone sees the hologram when he toggles it on. (Then: Typhoon only, blue glow.) |
 | 2026-11-05 | Blaney | (After playing the bay, hologram, all hands and crash surface: "very good".) The Typhoon is empty: fill it up, more pipes, and make it accurate to a real Typhoon that's in service. |
 | 2026-11-05 | Blaney | Overhaul the other sub types as well; in all the sub types the characters should be in natural positions at their stations; all hands on deck mustn't change the vibe to stressful, it's only to fill places. (Undoes his own red light at all hands.) |
+| 2026-11-05 | Blaney | Even more filled up: the control room easy to move around, but more pipes and stuff so the subs feel full and working underway; accurate kitchen and living areas; the sub should look lived in. (Asked: lived in but tidy, not cluttered; both family photos and 1940s pin-ups; a busy galley with steam, a sizzling pan and a cook; all four boats, the Typhoon too.) |
+| 2026-11-05 | Blaney | (After playing the lived-in Gato: "the gato feels good".) Doors should insulate noise, like the engine. |
+| 2026-11-05 | Blaney | More fun things to do in the game, clearer ways to access them, and a list of the things we can do. (Asked: all four of cards in the mess, fishing off the deck, cooking in the galley and arm wrestling; the list on a key easier for a casual player to hit than F1; each fun spot glows softly with its name when you're close.) |
+| 2026-11-06 | Blaney | We need this sub to get scary deep: the Typhoon class should be able to get very deep, the WWII ones realistic. A better outside of the sub: real details, smoother hull shape, weathered paint; good, working outsides of all the subs as far as they exist in real life, the Typhoon most (he tests on it a lot). |
+| 2026-11-06 | Blaney | A larger area that the sub can go (he hadn't checked how far it went: "that takes a while"). |
+| 2026-11-06 | Blaney | (After playing the new outsides, hatch, deep dive and the T list on the Typhoon: "great, thanks".) |

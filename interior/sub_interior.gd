@@ -56,6 +56,7 @@ var compartments: Array[Dictionary] = [] ## {name, type, z0, z1}, as the hull mo
 var door_links := {} ## door_id -> [comp_a, comp_b]
 var stations := {} ## station_id -> Station, in build order
 var doors := {} ## door_id -> WatertightDoor
+var _muffle_timer := 0.0
 var racks := {} ## compartment type -> damage control rack position (global)
 var spawn_points: Array[Vector3] = []
 var has_conning_tower := true
@@ -353,6 +354,8 @@ func _torpedo_room(c: Dictionary, aft: bool) -> void:
 				var cz := lerpf(rz0 + 0.8, rz1 - 0.8, k / 2.0)
 				Build.arc(_at, Vector2(side * 1.5, y), 0.275, PI * 1.05, PI * 1.95, 0.025, cz - 0.04, cz + 0.04, DARK, 8)
 	_rack(c.type, c.z0 + 1.4 if aft else c.z1 - 1.4)
+	Living.torpedo_bunks(self, rz0, rz1)
+	Living.picture(self, Vector3(1.35, 1.5, c.z0 + 0.12 if aft else c.z1 - 0.12), 0.0 if aft else PI, "pinup", _next_tube)
 	# Chain hoist rail down the centre for moving torpedoes.
 	Build.box(_at, Vector3(0.12, 0.12, c.z1 - c.z0 - 2.0), Vector3(0, DECK_HEIGHT - 0.2, (c.z0 + c.z1) * 0.5), DARK, false)
 
@@ -366,6 +369,13 @@ func _battery(c: Dictionary) -> void:
 		Build.box(_at, Vector3(0.02, 0.1, 0.03), Vector3(-HALF_WIDTH + 0.56, 0.75, lz0 + k + 0.8), BRASS, false)
 	Build.box(_at, Vector3(1.0, 0.8, 2.2), Vector3(1.35, 0.4, (c.z0 + c.z1) * 0.5), WOOD)
 	Build.box(_at, Vector3(1.1, 0.04, 2.3), Vector3(1.35, 0.82, (c.z0 + c.z1) * 0.5), Color("#E8DFC4"), false)
+	Living.table_settings(self, 1.35, (c.z0 + c.z1) * 0.5, 0.84, 2.2, true)
+	if comp_index("crew") < 0: # the S-boat's little galley, aft in the battery room
+		Living.galley(self, c, -1.0, c.z0 + 5.0, c.z1 - 0.5)
+	if comp_index("crew") < 0: # and no mess or rec room: her pastimes are at the wardroom table
+		var wz: float = (c.z0 + c.z1) * 0.5
+		Living.arm_table(self, 1.35, wz + 0.55, 0.84)
+		Living.card_seats(self, [[0.67, wz - 0.55, -PI / 2.0]], 0.84, Vector3(1.35, 0, wz - 0.55))
 	for z in [c.z0 + 2.0, c.z1 - 2.0]:
 		Build.box(_at, Vector3(0.9, 0.03, 0.9), Vector3(0, 0.02, z), DARK, false)
 		Build.box(_at, Vector3(0.3, 0.04, 0.05), Vector3(0, 0.05, z), BRASS, false)
@@ -466,6 +476,22 @@ func _crew(c: Dictionary) -> void:
 	for tz: float in [c.z1 - 1.2, c.z0 + 2.2]:
 		Build.box(_at, Vector3(0.9, 0.75, 1.8), Vector3(1.3, 0.38, tz), WOOD)
 		Build.box(_at, Vector3(1.0, 0.04, 1.9), Vector3(1.3, 0.77, tz), Color("#E8DFC4"), false)
+		Living.table_settings(self, 1.3, tz, 0.79, 1.8, tz < c.z1 - 2.0)
+	Living.cribbage(self, Vector3(1.0, 0.79, c.z1 - 1.0))
+	Living.arm_table(self, 1.3, c.z0 + 2.2, 0.79)
+	# The galley along the port side (Gato: galley and mess share the after battery room).
+	Living.galley(self, c, -1.0, c.z0 + 2.2, minf(c.z0 + 6.0, c.z1 - 2.0))
+	# Photos and letters from home pinned up over the forward table.
+	c["wall_gear"] = c.get("wall_gear", []) + [[1.0, c.z0 + 1.5, c.z0 + 2.9]]
+	Build.box(_at, Vector3(0.02, 0.45, 0.8), Vector3(HALF_WIDTH - 0.02, 1.5, c.z0 + 2.2), Color("#A8845A"), false)
+	for k in 4:
+		Living.picture(self, Vector3(HALF_WIDTH - 0.04, 1.58 - (k / 2) * 0.17, c.z0 + 1.98 + (k % 2) * 0.42), -PI / 2.0, ["family", "letter", "pinup", "family"][k] if k != 2 else "letter", k + 1)
+	# The cool room and the freezer are under the mess deck: their flush hatches.
+	for h: Array in [[c.z0 + 1.0, "COOL ROOM" if sub_class.key != "typhoon" else "ХОЛОДИЛЬНИК"], [c.z0 + 6.6, "FREEZER" if sub_class.key != "typhoon" else "МОРОЗИЛКА"]]:
+		if h[0] < c.z1 - 0.8:
+			Build.box(_at, Vector3(0.7, 0.03, 0.7), Vector3(0.1, 0.02, h[0]), DARK, false)
+			Build.box(_at, Vector3(0.25, 0.04, 0.04), Vector3(0.1, 0.05, h[0] + 0.2), BRASS, false)
+			Build.label(_at, h[1], Vector3(0.1, 0.045, h[0] - 0.1), 16, BRASS).rotation.x = -PI / 2.0
 	# The magazine is under the mess: its scuttle to port, opposite the table.
 	if sub_class.gun_rounds > 0:
 		_add_station(AmmoStation.new().setup("ammo", "Ammunition scuttle"), Vector3(0, 0, c.z1 - 3.4)).set_meta("where", "crew's mess")
@@ -484,11 +510,18 @@ func _berthing(c: Dictionary, gap := {}) -> void:
 			var mid: float = z0 + bay * (b + 0.5)
 			if side == gap.get("side", 0.0) and absf(mid - float(gap.z)) < bay * 0.5: # a door there
 				continue
-			for y in [0.32, 0.96, 1.6]:
+			for t in 3:
+				var y: float = [0.32, 0.96, 1.6][t]
+				var k := int(absf(mid) * 5.0) + b * 7 + t * 3 + (11 if side > 0.0 else 0)
 				Build.box(_at, Vector3(0.75, 0.08, bay - 0.1), Vector3(side * 1.6, y, mid), WOOD)
 				Build.box(_at, Vector3(0.7, 0.1, bay - 0.25), Vector3(side * 1.6, y + 0.09, mid), BUNK, false)
-				Build.box(_at, Vector3(0.68, 0.05, (bay - 0.25) * 0.6), Vector3(side * 1.6, y + 0.16, mid + bay * 0.15), blanket, false)
 				Build.box(_at, Vector3(0.45, 0.09, 0.28), Vector3(side * 1.6, y + 0.18, mid - bay * 0.32), Color("#F2F0E8"), false)
+				# Off-watch men asleep (Blaney: the sub should look lived in), two in each room.
+				if (side < 0.0 and b == 0 and t == 0) or (side > 0.0 and b == bays - 1 and t == 1):
+					Living.sleeper(self, Vector3(side * 1.6, y + 0.3, mid), bay, k)
+					continue
+				Build.box(_at, Vector3(0.68, 0.05, (bay - 0.25) * 0.6), Vector3(side * 1.6, y + 0.16, mid + bay * 0.15), blanket, false)
+				Living.bunk_touches(self, Vector3(side * 1.6, y, mid), side, bay, k, t == 0, t == 2)
 			# Stanchions between the bays.
 			Build.cyl(_at, 0.025, 1.95, Vector3(side * 1.22, 0.97, mid - bay * 0.5), PIPE)
 		Build.cyl(_at, 0.025, 1.95, Vector3(side * 1.22, 0.97, z1), PIPE)
@@ -518,15 +551,19 @@ func _rec_room(c: Dictionary) -> void:
 	# The board on the starboard wall amidships (the bulkheads have doors); the oche across the room.
 	var mid: float = (c.z0 + c.z1) * 0.5
 	_add_station(DartsStation.new().setup("darts", "Darts"), Vector3(HALF_WIDTH - 0.06 - DartsStation.OCHE, 0, mid), -PI / 2.0)
+	FunSpot.add(_at, "Darts", "[E] at the board: aim with the mouse, [LMB] or [Space] throws; best turns go up on the chalkboard", Vector3(HALF_WIDTH - 0.3, 2.2, mid))
 	var jb := Jukebox.new()
 	jb.position = Vector3(-1.45, 0, c.z0 + 0.6)
 	jb.rotation.y = PI
 	_at.add_child(jb)
+	FunSpot.add(_at, "Jukebox", "[E] at the jukebox puts the next record on", jb.position + Vector3(0, 1.8, 0))
+	for st in [Vector3(0.62, 0, c.z0 + 1.4), Vector3(1.3, 0, c.z0 + 2.1)]: # stools at the card table
+		Build.cyl(_at, 0.18, 0.04, st + Vector3(0, 0.46, 0), Color("#3E5770"))
+		Build.cyl(_at, 0.03, 0.44, st + Vector3(0, 0.22, 0), DARK)
+	Living.card_seats(self, [[0.55, c.z0 + 1.4, -PI / 2.0], [1.3, c.z0 + 2.15, 0.0]], 0.76, Vector3(1.3, 0, c.z0 + 1.4))
 	Build.box(_at, Vector3(0.9, 0.72, 0.9), Vector3(1.3, 0.36, c.z0 + 1.4), WOOD) # card table
 	Build.box(_at, Vector3(1.0, 0.04, 1.0), Vector3(1.3, 0.74, c.z0 + 1.4), Color("#2B6A3A"), false) # baize
-	for k in 5:
-		var card := Build.box(_at, Vector3(0.06, 0.005, 0.09), Vector3(1.15 + k * 0.07, 0.765, c.z0 + 1.35 + (k % 2) * 0.05), Color("#F2F0E8"), false)
-		card.rotation.y = k * 0.3
+	Build.box(_at, Vector3(0.065, 0.03, 0.09), Vector3(1.6, 0.775, c.z0 + 1.1), Color("#F2F0E8"), false) # the deck
 	var p := Porthole.create(Vector3(-HALF_WIDTH + 0.02, 1.6, (c.z0 + c.z1) * 0.5), -1.0)
 	_at.add_child(p)
 	portholes.append(p)
@@ -540,6 +577,7 @@ func _band_rack(at: Vector3, port: bool) -> void:
 	if port:
 		rack.rotation.y = PI
 	_at.add_child(rack)
+	FunSpot.add(_at, "Ship's band", "[E] at the rack takes an instrument; hold [LMB] to play your part, [G] puts it back", at + Vector3(0, 0.9, 0))
 
 
 func _engine_room(c: Dictionary, controls: bool) -> void:
@@ -558,6 +596,8 @@ func _engine_room(c: Dictionary, controls: bool) -> void:
 			_rockers[0 if side < 0.0 else 1].append(rocker)
 		Build.cyl(_at, 0.18, eng_z1 - eng_z0, Vector3(side * 1.55, 2.1, (eng_z0 + eng_z1) * 0.5), Color("#3A3A3A"), Vector3.BACK)
 	_rack(c.type, z0 + 1.3, true)
+	Living.picture(self, Vector3(1.45, 1.55, z0 + 0.12), 0.0, "pinup", int(z0))
+	Living.picture(self, Vector3(1.15, 1.5, z0 + 0.12), 0.0, "letter", int(z0) + 1)
 	if controls:
 		_add_station(EngineStation.new().setup("engine", "Diesel controls"), Vector3(0, 0, z1 - 0.25), -PI / 2.0)
 
@@ -629,6 +669,15 @@ func _dressing(c: Dictionary, hatch: Rect2) -> void:
 			var w := Build.box(_at, Vector3(0.22, 0.015, 0.015), Vector3(0, DECK_HEIGHT - 0.1, z), DARK, false)
 			w.rotation.y = k * PI / 2.0
 		Build.wheel(_at, 0.11, Vector3(0, DECK_HEIGHT - 0.07, z), DARK, Vector3.DOWN)
+	# The ventilation trunk along the deckhead, port of the lamps, a grille every couple of metres
+	# (Blaney: more pipes and stuff, the boat full and working, the walkway kept clear).
+	var dz0 := z0 + 0.3
+	var dz1 := z1 - 0.3
+	Build.box(_at, Vector3(0.26, 0.18, dz1 - dz0), Vector3(-0.82, DECK_HEIGHT - 0.12, (dz0 + dz1) * 0.5), Color("#8A9486"), false)
+	var g := dz0 + 1.0
+	while g < dz1 - 0.5:
+		Build.box(_at, Vector3(0.2, 0.02, 0.3), Vector3(-0.82, DECK_HEIGHT - 0.215, g), DARK, false)
+		g += 2.2
 	# An extinguisher on the after bulkhead by the door, port side.
 	if c != compartments[-1]:
 		var ez := z1 - 0.2
@@ -643,6 +692,7 @@ func _dressing(c: Dictionary, hatch: Rect2) -> void:
 			var tz: float = z1 - 1.2
 			Build.cyl(_at, 0.13, 0.4, Vector3(1.5, 0.99, tz - 0.6), Color("#8A8F86"))
 			Build.cyl(_at, 0.14, 0.03, Vector3(1.5, 1.2, tz - 0.6), DARK)
+			Build.particles(_at, Color(1, 1, 1, 0.22), 6, 2.0, Vector3.UP, 0.15, 15.0, Vector3(0, 0.03, 0), 0.07).position = Vector3(1.5, 1.24, tz - 0.6)
 			Build.box(_at, Vector3(0.06, 0.03, 0.03), Vector3(1.4, 0.9, tz - 0.6), DARK, false)
 			for k in 4:
 				Build.cyl(_at, 0.04, 0.09, Vector3(1.1 + (k % 2) * 0.35, 0.83, tz - 0.2 + (k / 2) * 0.55), Color("#E8DFC4"))
@@ -656,6 +706,9 @@ func _dressing(c: Dictionary, hatch: Rect2) -> void:
 			var cols := [Color("#7A2E25"), Color("#3E5770"), Color("#2F4A2E"), Color("#6B5A44"), Color("#7A2E25"), Color("#2B2B26")]
 			for k in cols.size():
 				Build.box(_at, Vector3(0.16, 0.22 - (k % 3) * 0.03, 0.06), Vector3(1.86, 1.38 - (k % 3) * 0.015, bz - 0.2 + k * 0.09), cols[k], false)
+			for k in 2: # the officers' photos of home, standing on the shelf
+				Living.picture(self, Vector3(1.86, 1.33, bz + 0.5 + k * 0.2), -PI / 2.0, "family", k + 2)
+			Build.cyl(_at, 0.07, 0.2, Vector3(1.35, 0.94, bz - 0.15), Color("#8A8F86")) # the coffee pot
 		"control":
 			# The boat's clock over the depth board.
 			Build.cyl(_at, 0.15, 0.05, Vector3(-1.15, 2.2, z0 + 0.13), BRASS, Vector3.BACK)
@@ -731,7 +784,10 @@ func _clutter(c: Dictionary, gaps: Array) -> void:
 						for dz in [-0.13, 0.13]:
 							Build.cyl(_at, 0.075, 0.04, Vector3(x - side * 0.02, 1.55, z + dz), BRASS, Vector3.RIGHT)
 							Build.cyl(_at, 0.064, 0.02, Vector3(x - side * 0.045, 1.55, z + dz), Color("#F2E8CF"), Vector3.RIGHT)
-							Build.box(_at, Vector3(0.01, 0.05, 0.008), Vector3(x - side * 0.06, 1.56, z + dz), DARK, false).rotation.x = rng.randf_range(-1.2, 1.2)
+							var needle := Build.box(_at, Vector3(0.01, 0.05, 0.008), Vector3(x - side * 0.06, 1.56, z + dz), DARK, false)
+							needle.rotation.x = rng.randf_range(-1.2, 1.2)
+							needle.set_meta("a", needle.rotation.x)
+							_needles.append(needle)
 					2: # a junction box with its stencil
 						Build.box(_at, Vector3(0.12, 0.34, 0.28), Vector3(x - side * 0.03, 1.45, z), Color("#5A6048") if not red else Color("#6B747C"), false)
 						var lab := Build.label(_at, stencil[rng.randi() % stencil.size()], Vector3(x - side * 0.095, 1.67, z), 14, Color("#E8E0C8"))
@@ -773,6 +829,22 @@ func _wwii_control_gear(c: Dictionary) -> void:
 		Build.cyl(man, 0.015, 0.12, Vector3(-0.38 + k * 0.15, 0, -0.06), Color("#8A8F86"), Vector3.BACK)
 		Build.wheel(man, 0.055, Vector3(-0.38 + k * 0.15, 0, -0.13), RED if k < 3 else Color("#3E5770"), Vector3.FORWARD)
 	Build.label(man, "H.P. AIR", Vector3(0, 0.14, -0.02), 14, Color("#2B2B26")).rotation.y = PI
+	# Pipe risers up all four corners, and valve manifolds overhead either side of the walkway,
+	# their handwheels hanging on reach rods (Blaney: more pipes, but easy to move around).
+	for corner: Vector2 in [Vector2(-1, z0 + 0.25), Vector2(1, z0 + 0.25), Vector2(-1, z1 - 0.25), Vector2(1, z1 - 0.25)]:
+		for k in 3:
+			Build.cyl(self, 0.03 - k * 0.005, 1.95, Vector3(corner.x * (1.86 - k * 0.07), 0.975, corner.y), [PIPE, RED, Color("#3E5770")][k])
+	for side in [-1.0, 1.0]:
+		var mx: float = side * 1.28
+		var a := z0 + 2.9
+		var b := z1 - 2.4
+		Build.cyl(self, 0.045, b - a, Vector3(mx, DECK_HEIGHT - 0.24, (a + b) * 0.5), Color("#6E7F6A") if side < 0.0 else BRASS, Vector3.BACK)
+		var n := int((b - a) / 0.5)
+		for k in n + 1:
+			var vz := a + (b - a) * k / maxf(1.0, n)
+			Build.cyl(self, 0.012, 0.18, Vector3(mx, DECK_HEIGHT - 0.36, vz), Color("#8A8F86"))
+			Build.wheel(self, 0.065, Vector3(mx, DECK_HEIGHT - 0.46, vz), RED if k % 2 == 0 else Color("#3E5770"), Vector3.DOWN)
+		Build.label(self, "HYDRAULIC" if side < 0.0 else "LOW PRESSURE BLOW", Vector3(mx, DECK_HEIGHT - 0.3, a - 0.15), 12, Color("#2B2B26"))
 	for k in 2: # phone handsets on the port wall
 		var z := z0 + 3.2 + k * 0.25
 		Build.box(self, Vector3(0.06, 0.2, 0.12), Vector3(-1.93, 1.55, z), Color("#2B2B26"), false)
@@ -780,6 +852,8 @@ func _wwii_control_gear(c: Dictionary) -> void:
 
 
 var _tree_lamps: Array[MeshInstance3D] = []
+var _stirring: Array[Node3D] = [] ## the cooks' stirring arms
+var _needles: Array[Node3D] = [] ## gauge needles, trembling as she runs
 var _tree_red := -1
 
 
@@ -796,6 +870,9 @@ func _tree(sub: SubState) -> void:
 
 ## A Typhoon room's own big gear standing against that wall there (TyphoonLayout._fit).
 func _gear_against(c: Dictionary, side: float, z: float) -> bool:
+	for g: Array in c.get("wall_gear", []): # a galley, a notice board: [side, z from, z to]
+		if g[0] == side and z > g[1] and z < g[2]:
+			return true
 	match c.type:
 		"radio":
 			return side > 0.0 and z < c.z0 + 9.2
@@ -888,8 +965,16 @@ func _process(delta: float) -> void:
 			r.position.y = r.get_meta("y") + randf_range(-shake, shake)
 	_sounds(sub, delta)
 	_tree(sub)
+	var t := Time.get_ticks_msec() / 1000.0
+	for a: Node3D in _stirring:
+		a.rotation.x = 0.9 + sin(t * 3.0) * 0.2
+		a.rotation.z = cos(t * 3.0) * 0.15
+	var hum := 0.03 if sub.diesels_running() > 0 else 0.008
+	for k in _needles.size():
+		_needles[k].rotation.x = float(_needles[k].get_meta("a")) + sin(t * (5.0 + k % 7)) * hum
 	_sync_teams(delta)
 	_cull_rooms(delta)
+	_muffle(delta)
 	var text := {
 		"depth": "DEPTH   %5.1f m" % sub.depth,
 		"ordered": "ORDERED %5.0f m" % sub.ordered_depth,
@@ -923,14 +1008,37 @@ func _sounds(sub: SubState, delta: float) -> void:
 	if sub.vents_open and not _vents_were:
 		Sfx.play("klaxon")
 	_vents_were = sub.vents_open
+	_deep(sub, delta, 0.8)
+
+
+## Deep down it gets scary (Blaney): the hull creaks more and louder the deeper she goes; near
+## her test depth the frames bang like gunshots, the boat jolts and water weeps from the seams;
+## past it the lights waver. `pitch` is the boat's voice (a Typhoon's is lower).
+func _deep(sub: SubState, delta: float, pitch: float) -> void:
+	var deep := sub.depth / float(sub.data.test_depth)
 	_creak_timer -= delta
 	if _creak_timer <= 0.0:
-		var deep := sub.depth / float(sub.data.test_depth)
-		_creak_timer = randf_range(6.0, 14.0) / maxf(0.2, deep * deep)
-		if deep > 0.4:
+		_creak_timer = randf_range(6.0, 14.0) / maxf(0.25, deep * deep * 2.0)
+		if deep > 0.3:
 			var c: Dictionary = compartments[randi() % compartments.size()]
-			Sfx.play_at(self, "creak_%d" % randi_range(1, 3), Vector3(randf_range(-1.8, 1.8), 2.0, randf_range(c.z0, c.z1)),
-				lerpf(-14.0, 0.0, clampf(deep - 0.4, 0.0, 1.0)), randf_range(0.8, 1.1))
+			var at := Vector3(c.get("x", 0.0) + randf_range(-1.8, 1.8), c.get("y", 0.0) + 2.0, randf_range(c.z0, c.z1))
+			Sfx.play_at(self, "creak_%d" % randi_range(1, 3), at, lerpf(-14.0, 2.0, clampf(deep - 0.3, 0.0, 1.0)), randf_range(pitch, pitch + 0.3))
+			if deep > 0.85 and randf() < clampf((deep - 0.85) * 3.0, 0.15, 0.8): # a frame takes the strain: bang
+				Sfx.play_at(self, "creak_%d" % randi_range(1, 3), at, 6.0, pitch * 0.55)
+				var me := Game.instance.local_player
+				if me != null:
+					me.trauma = maxf(me.trauma, 0.25 + 0.2 * clampf(deep - 1.0, 0.0, 1.0))
+				_weep(at)
+				if deep > 1.0:
+					flicker(0.3)
+
+
+## A thin spray of water weeping from a seam in the deckhead.
+func _weep(at: Vector3) -> void:
+	var p := Build.particles(self, Color(0.7, 0.8, 0.85, 0.7), 24, 1.4, Vector3.DOWN, 0.8, 15.0, Vector3(0, -9.8, 0), 0.012)
+	p.position = at + Vector3(0, DECK_HEIGHT - 2.1, 0)
+	p.emitting = true
+	get_tree().create_timer(3.0).timeout.connect(p.queue_free)
 
 
 ## A Typhoon's noises: the turbines' soft whirr aft, a klaxon pitched down, deep slow creaks.
@@ -943,11 +1051,7 @@ func _typhoon_sounds(sub: SubState, delta: float) -> void:
 	if sub.vents_open and not _vents_were:
 		Sfx.play("klaxon", 0.0, 0.8)
 	_vents_were = sub.vents_open
-	_creak_timer -= delta
-	if _creak_timer <= 0.0:
-		_creak_timer = randf_range(8.0, 18.0)
-		var c: Dictionary = compartments[randi() % compartments.size()]
-		Sfx.play_at(self, "creak_%d" % randi_range(1, 3), Vector3(c.get("x", 0.0), c.get("y", 0.0) + 2.0, randf_range(c.z0, c.z1)), -6.0, randf_range(0.6, 0.8))
+	_deep(sub, delta, 0.6)
 
 
 ## Keeps a Typhoon's frame rate up (Blaney: "make sure this sub change doesn't lag anything out"):
@@ -986,6 +1090,39 @@ func _cull_rooms(delta: float) -> void:
 			_rooms[i].visible = show
 			if show:
 				people_room(i)
+
+
+## Shut watertight doors keep the noise in (Blaney): a sound from a room behind one comes through
+## dull (Sfx.MUFFLED's low-pass) and capped quieter, and quieter again for each more door.
+func _muffle(delta: float) -> void:
+	_muffle_timer -= delta
+	if _muffle_timer > 0.0:
+		return
+	_muffle_timer = 0.2
+	var me: Player = Game.instance.local_player if Game.instance != null else null
+	var shut := {} # room -> closed doors between it and us
+	if me != null and not Deck.is_out(me.global_position):
+		var doors_now: Dictionary = Game.instance.crew.get("doors", {})
+		shut[Sim.world.hull.comp_at_pos(me.camera.global_position)] = 0
+		var edge: Array = shut.keys()
+		while not edge.is_empty(): # closed doors cost one, open ones and hatches nothing
+			var next: Array = []
+			for link: Array in _walk_links():
+				var cost := 0 if link[0] == "" or doors_now.get(link[0], true) else 1
+				for k in 2:
+					var a: int = link[1 + k]
+					var b: int = link[2 - k]
+					if edge.has(a) and int(shut.get(b, 99)) > int(shut[a]) + cost:
+						shut[b] = int(shut[a]) + cost
+						next.append(b)
+			edge = next
+	for n: Node in get_tree().get_nodes_in_group(Sfx.GROUP):
+		var p := n as AudioStreamPlayer3D
+		var doors_between := 0
+		if not shut.is_empty() and not Deck.is_out(p.global_position):
+			doors_between = int(shut.get(Sim.world.hull.comp_at_pos(p.global_position), 0))
+		p.bus = Sfx.MUFFLED if doors_between > 0 else &"Effects"
+		p.max_db = 3.0 if doors_between == 0 else -12.0 - 8.0 * (doors_between - 1)
 
 
 ## Apply host crew state: doors.

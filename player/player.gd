@@ -373,6 +373,10 @@ func _unhandled_input(event: InputEvent) -> void:
 			Game.instance.rq_wrestle.rpc_id(1, Wrestling.KEYS[event.physical_keycode])
 			get_viewport().set_input_as_handled()
 			return
+	if station == null and event.is_action_pressed("things_to_do") and Game.instance.things_to_do != null:
+		Game.instance.things_to_do.toggle()
+		get_viewport().set_input_as_handled()
+		return
 	if station != null:
 		if event.is_action_pressed("leave_station"):
 			leave_station()

@@ -196,6 +196,19 @@ Added by Blaney after playing. In his words where it matters.
       *(Done, PR #37: pipe banks, cabinets, reactor and turbine pipework, missile tube fittings, the real boat's sauna, pool, gym and aviary.)*
 - [x] lets overhault the other sub types now as well, make sure that in all the sub types the characters are in natural positions when they go to their stations, dont make all hands on deck change the vibe to stressful (its only to full places)
       *(Done, PR #38: every WWII boat packed like the Typhoon, the Christmas tree board and HP air manifold; bots stand naturally at every station; all hands keeps the lights as they were.)*
+- [x] i want the subs even more filled up, the control room should be easy to move around but i want more pipes and stuff to make the subs feel full and funtional as they are underway. accurate kitchen quarters and living areas as well. the sub should look lived in
+      *(Done, PR #39: a galley with its cook, laid tables, lived-in bunks, photos and pin-ups, more pipes, on all four boats; shut doors now muffle the engines and every other sound.)*
+- [ ] youve done a good job on the feeling of movement in the game but we need more of it, every axis of movement should be felt and the sub should be realistically stable when still (it would still have some roll and pitch)
+- [x] lets add more fun things to do in the game and clearer ways to access them and see a list the things we can do
+      *(Done, PR #41: arm wrestling, blackjack, the galley, fishing, glowing spots and the T list.)*
+- [x] we need this sub to get scary deep (the typhoon class should be able to get very deep but the WWII ones should be realistic)
+      *(Done, PR #42: orders down to crush depth (Typhoon 500 m, WWII boats their real limits); creaks, bangs, weeping seams and wavering lights deep down; black water.)*
+- [x] we need a larger area that the sub can go
+      *(Done, PR #42: islands, seamounts, shelves and deep trenches over some 30 km each way; the chart zooms to 80 km; 40 m of sea for swimmers.)*
+- [x] we need a better outside of the sub (real details, smoother hull shape, weathered paint; good functioning outsides of all the subs to the extent that they exist in real life, the typhoon most)
+      *(Done, PR #42: new outsides for all four boats: round hull, rounded fin, real gear, weathered paint; the Typhoon's missile hatches, rudder and shrouded screws.)*
+- [x] the sub doesnt let you get back in, and you have to clip through the sub to even see the non functioning hatch
+      *(Done, PR #42: the hatch sits clear of the fin on every boat and works; the deck you walk on is the boat you see.)*
 
 ## M9 — Lando's list (2026-10-30)
 Added by lando. Direction: **more arcadey, not strict realism**. Every existing mechanic

@@ -1,6 +1,6 @@
 extends SceneTree
 ## A ship model on a flat sea, three-quarter view, for checking how it looks:
-##   godot --path . --rendering-driver opengl3 -s tools/ship_gallery.gd -- <class | plane | crew | sealife | own[_<sub>]> [out.png] [eye]
+##   godot --path . --rendering-driver opengl3 -s tools/ship_gallery.gd -- <class | plane | crew | sealife | own[_<sub>]> [out.png] [eye | x,y,z,tx,ty,tz]
 ## (under xvfb-run, add a screenshot). Bow points right.
 
 const CLASSES := ["subchaser", "kaibokan", "destroyer", "freighter", "tanker", "cruiser", "battleship", "carrier"]
@@ -82,6 +82,9 @@ func _initialize() -> void:
 		root3d.add_child(co)
 		if args.size() > 2 and args[2] == "eye": # what the gunlayer sees
 			co.transform = gun.transform * (gun.get_node("Eye") as Node3D).transform
+		elif args.size() > 2 and args[2].count(",") == 5: # "x,y,z,tx,ty,tz": from there, looking at that
+			var v := args[2].split_floats(",")
+			co.look_at_from_position(Vector3(v[0], v[1], v[2]), Vector3(v[3], v[4], v[5]))
 		else:
 			co.look_at_from_position(Vector3(sd.length * 0.35, sd.length * 0.12, -sd.length * 0.25), Vector3(0, 2, -sd.length * 0.15))
 		if args.size() > 1:
