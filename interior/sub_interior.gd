@@ -91,6 +91,9 @@ static func create(data: SubClassData) -> SubInterior:
 		i.has_conning_tower = false
 		TyphoonLayout.lay_out(i)
 		return i
+	if data.key == "titan":
+		TitanLayout.lay_out(i)
+		return i
 	var layout: Array = LAYOUTS.get(data.key, LAYOUTS.gato)
 	# Lay the compartments out so the control room ends at z = 0.
 	var z := 0.0
@@ -129,6 +132,10 @@ func build() -> void:
 	if not stations.is_empty():
 		return
 	_build_environment()
+	if sub_class.key == "titan":
+		TitanLayout.build(self)
+		_finish_build()
+		return
 	if sub_class.key == "typhoon":
 		Build.recolor = TYPHOON_PAINT
 		TyphoonLayout.build(self)

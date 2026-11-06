@@ -2,7 +2,7 @@ extends RefCounted
 ## The cave challenge: an S-bend tunnel through a ridge. Every boat fits through it held in the
 ## middle, and scrapes or stops when she isn't.
 
-const SUBS := ["s_boat", "gato", "narwhal", "typhoon"]
+const SUBS := ["s_boat", "gato", "narwhal", "typhoon", "titan"]
 
 var runner: Object
 
@@ -94,4 +94,36 @@ func test_ships_and_torpedoes_dont_pass_the_ridge() -> bool:
 	_cave(w)
 	runner.check(w.seabed.clear_course(Vector2(0, 0), 0.0, 8.0, 2000.0) != 0.0, "a ship won't steer over the tunnel's roof")
 	runner.check(w.seabed.roof_depth(Vector2(0, 750)) > 0.0 and w.seabed.roof_depth(Vector2(0, 200)) == 0.0, "the roof is only over the tunnel")
+	return true
+
+
+## The Titan (Blaney: too deep she cracks and warns first, then implodes).
+func test_the_titan_holds_at_her_rating_cracks_past_it_then_implodes() -> bool:
+	var w := _world("titan")
+	w.seabed.features.append({"kind": "trench", "x": 0.0, "y": 0.0, "r": 4000.0, "top": 5500.0, "reef": 0.0, "ang": 0.0, "stretch": 1.0, "h": []})
+	w.sub.ballast = 1.0
+	w.sub.depth = 3900.0
+	w.sub.ordered_depth = 3900.0
+	var cracks: Array[int] = []
+	var gone := []
+	w.event.connect(func(k: String, d: Dictionary) -> void:
+		if k == "crack":
+			cracks.append(int(d.level))
+		elif k == "implode":
+			gone.append(true))
+	for i in 400:
+		w.step(0.25)
+	runner.check(w.hull_strain == 0.0 and w.lost == "", "inside her rating she's sound")
+	runner.check(w.hull.leaks.is_empty(), "a carbon hull never leaks")
+	w.sub.depth = 4500.0
+	w.sub.ordered_depth = 4500.0
+	for i in 2000:
+		w.step(0.25)
+		if w.lost != "":
+			break
+	runner.check(cracks == [1, 2, 3], "the hull monitor calls out three warnings first (%s)" % [cracks])
+	runner.check(w.lost.contains("imploded") and gone.size() == 1, "then she implodes (%s)" % w.lost)
+	var back := _world("titan")
+	back.apply_snapshot(w.to_snapshot())
+	runner.check(is_equal_approx(back.hull_strain, w.hull_strain), "the strain reaches every crewman's screen")
 	return true

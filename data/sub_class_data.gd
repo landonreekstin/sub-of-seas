@@ -35,5 +35,6 @@ extends Resource
 @export_group("")
 ## Suggested jobs, most important first: player N is offered roles[N-1]. Not locks.
 @export var nuclear := false ## reactors: no battery, no diesels, the same speed wherever she is
+@export var fragile := false ## a carbon hull (the Titan): no leaks, it cracks past test depth, warns, then implodes
 @export var era := "ww2" ## which patrols she sails on (MissionData.era)
 @export var roles: Array[String] = []

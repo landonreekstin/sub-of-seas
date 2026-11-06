@@ -10,7 +10,7 @@ extends Node
 const NAMES_SOVIET := ["Ivanov", "Petrov", "Sidorov", "Volkov", "Kuznetsov", "Sokolov", "Popov", "Lebedev", "Orlov", "Morozov", "Vasiliev", "Borodin"]
 const NAMES := ["Cookie", "Sparks", "Stubby", "Doc", "Mac", "Swede", "Tex", "Lucky", "Moose", "Red", "Chips", "Gunner"]
 const TICK := 0.5
-const FULL_CREW := {"s_boat": 42, "gato": 80, "narwhal": 88, "typhoon": 160} ## a full complement, for "all hands"
+const FULL_CREW := {"s_boat": 42, "gato": 80, "narwhal": 88, "typhoon": 160, "titan": 5} ## a full complement, for "all hands"
 
 var game: Game
 var _timer := 0.0

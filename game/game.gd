@@ -416,6 +416,10 @@ func _lay_seabed(islands_only := false) -> void:
 	w.seabed.generate(w.rng.randi(), w.sub.pos, keep, routes, 2500.0, islands_only)
 	var m := MissionData.load_key(crew.mission)
 	var size := Seabed.cave_size(sub_class.length, sub_class.beam, sub_class.height, sub_class.test_depth)
+	if m != null:
+		for k in m.deep_holes.size(): # the Titan's dives: the deep floor under her, and deeper still nearby
+			var at := w.sub.pos + (Vector2.ZERO if k == 0 else Vector2.from_angle(k * 2.4) * 6000.0)
+			w.seabed.features.append({"kind": "trench", "x": at.x, "y": at.y, "r": 3500.0, "top": m.deep_holes[k], "reef": 0.0, "ang": 0.0, "stretch": 1.0, "h": []})
 	if m != null and m.cave: # the challenge: the cave's mouth dead ahead, she starts lined up on it
 		var dir := w.sub.direction()
 		var f := w.seabed.add_cave(w.sub.pos + dir * (CAVE_RUN_IN + 350.0), atan2(dir.y, dir.x), size)
@@ -516,6 +520,8 @@ func _show_objectives() -> void:
 		match o.kind:
 			"tonnage":
 				progress = "  (%d t)" % crew.tonnage
+			"deep":
+				progress = "  (%d m)" % roundi(Sim.world.sub.depth) if Sim.world != null and not o.get("done", false) else ""
 			"survive", "cave":
 				progress = "  (%s)" % OceanWorld.clock(Sim.world.time) if Sim.world != null else ""
 				if o.kind == "cave" and Sim.world != null and Sim.world.cave_scrapes > 0:
@@ -1018,6 +1024,12 @@ func apply_order(station_id: String, key: String, value: Variant, by: int) -> vo
 				sub.telegraph = clampi(int(value), -2, 4)
 			elif key == "rudder":
 				sub.rudder = clampi(int(value), -3, 3)
+			elif key == "depth" and sub_class.fragile: # the Titan's pilot does it all
+				sub.ordered_depth = clampf(float(value), 0.0, sub.data.crush_depth)
+			elif key == "weights" and sub_class.fragile:
+				sub.ordered_depth = 0.0
+				sub.ballast_order("emergency")
+				announce.rpc("Pilot: weights away! She's going up.")
 		"dive":
 			if key == "depth":
 				if float(value) > 0.0 and _deck_blocks_dive():
@@ -1515,6 +1527,12 @@ func _check_patrol_complete(delta: float) -> void:
 			"cave":
 				o.done = w.caves_through >= 1
 				cave = cave or o.done
+			"deep":
+				o.done = o.done or w.sub.depth >= float(o.value) or (w.sub.depth > float(o.value) * 0.9 and w.seabed.floor_depth(w.sub.pos) - w.sub.depth < 3.0)
+			"surface":
+				var rest: bool = crew.objectives.all(func(x: Dictionary) -> bool: return x.kind == "surface" or x.done)
+				o.done = rest and w.sub.depth <= 5.0
+				cave = cave or o.done
 		changed = changed or was != o.done
 		if not o.done and not o.get("bonus", false):
 			all_done = false
@@ -1525,7 +1543,11 @@ func _check_patrol_complete(delta: float) -> void:
 		return
 	if all_done and cave:
 		var hits := w.cave_scrapes
-		end_patrol("complete", "Through the cave in %s, %s." % [OceanWorld.clock(w.time), "not a scratch on her" if hits == 0 else "%d scrape%s" % [hits, "" if hits == 1 else "s"]])
+		var how := "not a scratch on her" if hits == 0 else "%d scrape%s" % [hits, "" if hits == 1 else "s"]
+		if w.caves_through == 0:
+			end_patrol("complete", "Down to the bottom and back up in %s. The hull monitor peaked at %d%%." % [OceanWorld.clock(w.time), roundi(w.hull_strain * 100.0)])
+		else:
+			end_patrol("complete", "Through the cave in %s, %s." % [OceanWorld.clock(w.time), how])
 		return
 	if hopeless:
 		end_patrol("escaped", "The targets got away.")
@@ -1665,6 +1687,11 @@ func _event_sound(kind: String, data: Dictionary) -> void:
 			Sfx.play("torpedo_launch")
 		"hit", "beached":
 			Sfx.play("torpedo_hit")
+		"crack": # the carbon going: sharp cracks, louder each time
+			Sfx.play("clang", -6.0 + 4.0 * float(data.level), 1.6)
+			Sfx.play("creak_%d" % randi_range(1, 3), 2.0 * float(data.level), 1.3)
+		"implode":
+			Sfx.play("torpedo_hit", 8.0, 0.7)
 		"grounded":
 			Sfx.play("clang", 4.0 if data.hard else -2.0, 0.6)
 			Sfx.play("creak_%d" % randi_range(1, 3), 0.0, 0.7)
@@ -1699,6 +1726,12 @@ func _on_sim_event(kind: String, data: Dictionary) -> void:
 		interior.flicker(p * 0.8)
 		if multiplayer.is_server():
 			announce.rpc("Control: CRASH SURFACE! Hold on!")
+	elif kind == "crack" and local_player != null:
+		local_player.add_trauma(0.2 * float(data.level))
+		interior.flicker(0.3 * float(data.level))
+	elif kind == "implode" and local_player != null:
+		local_player.add_trauma(1.0)
+		interior.flicker(1.0)
 	elif kind == "grounded" and local_player != null:
 		local_player.add_trauma(0.8 if data.hard else 0.3)
 	elif kind == "shell":
@@ -1751,7 +1784,7 @@ func _on_sim_event(kind: String, data: Dictionary) -> void:
 			announce.rpc("The convoy is zig-zagging. They've spotted us!")
 		"aircraft":
 			announce.rpc("The plane has seen us! Escorts will be coming.")
-		"leak", "power", "breakdown", "grounded", "cave_through":
+		"leak", "power", "breakdown", "grounded", "cave_through", "crack":
 			announce.rpc(data.text)
 			push_crew()
 		"beached":

@@ -46,7 +46,10 @@ var conditions := Conditions.new()
 var seabed := Seabed.new()
 var _ground_cooldown := 0.0
 var _scrape_cooldown := 0.0
+const STRAIN_RATE := 0.02 ## a fragile hull's strain a second just past test depth (x0.3), more deeper
 const CAVE_SHOVE := 3.0 ## m: brushing a cave's roof or floor by less shoves her level; more and it's a wall
+var hull_strain := 0.0 ## a fragile hull's damage, 0..1: past test depth it cracks, and at 1 it goes
+var _crack_said := 0 ## the last quarter of strain the hull monitor called out
 var cave_scrapes := 0 ## times she's hit a cave's roof, walls or floor this patrol
 var caves_through := 0 ## caves she's gone right through, in one end and out the other
 var cave_entered := 0.0 ## sim time she went into the cave she's in (0: not in one)
@@ -678,6 +681,9 @@ static func clock(seconds: float) -> String:
 
 func _hull_stress(dt: float) -> void:
 	var over := (sub.depth - sub.data.test_depth) / float(sub.data.crush_depth - sub.data.test_depth)
+	if sub.data.fragile:
+		_carbon_hull(over, dt)
+		return
 	if over <= 0.0 or hull.comps.is_empty() or lost != "":
 		return
 	if rng.randf() < 0.05 * over * dt:
@@ -686,10 +692,26 @@ func _hull_stress(dt: float) -> void:
 		event.emit("leak", {"text": "Rivets popping in the %s!" % hull.comps[c].name})
 
 
+## Blaney: too deep she cracks and warns first, then implodes once she can't take any more.
+## Past test depth the strain builds (faster the deeper), and it never goes away: every dive
+## that deep wears her. The hull monitor calls each quarter of it.
+func _carbon_hull(over: float, dt: float) -> void:
+	if over <= 0.0 or lost != "":
+		return
+	hull_strain = minf(1.0, hull_strain + STRAIN_RATE * (0.3 + over * 2.0) * dt)
+	var quarter := int(hull_strain * 4.0)
+	if quarter > _crack_said and quarter < 4:
+		_crack_said = quarter
+		event.emit("crack", {"text": ["", "Hull monitor: cracking in the carbon. Strain %d%%.", "Hull monitor: LOUD CRACKS! Strain %d%%! Take her up!", "Hull monitor: she's breaking up! Strain %d%%! UP, NOW!"][quarter] % roundi(hull_strain * 100.0), "level": quarter})
+
+
 func _check_lost() -> void:
 	if lost != "":
 		return
-	if sub.depth >= sub.data.crush_depth:
+	if sub.data.fragile and (hull_strain >= 1.0 or sub.depth >= sub.data.crush_depth):
+		lost = "She imploded at %d m. It was over faster than anyone aboard could have known." % roundi(sub.depth)
+		event.emit("implode", {})
+	elif sub.depth >= sub.data.crush_depth:
 		lost = "Hull crushed at %d m." % roundi(sub.depth)
 	elif sub.heaviness >= 0.65:
 		lost = "Flooded. She went down with %d%% of the hull full of seawater." % roundi(sub.heaviness * 100.0)
@@ -760,6 +782,7 @@ func to_snapshot() -> Dictionary:
 		"air": air.to_snapshot(),
 		"cd": conditions.to_snapshot(),
 		"lost": lost,
+		"strain": hull_strain,
 	}
 
 
@@ -826,6 +849,7 @@ func apply_snapshot(s: Dictionary) -> void:
 	air.apply_snapshot(s.air)
 	conditions.apply_snapshot(s.cd)
 	lost = s.lost
+	hull_strain = s.get("strain", 0.0)
 
 
 func _take_id() -> int:

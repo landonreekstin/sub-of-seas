@@ -28,6 +28,10 @@ const NUMBERS := {"s_boat": "S-44", "gato": "SS-212", "narwhal": "SS-167"}
 static func dims(sub: SubClassData) -> Dictionary:
 	var l := sub.length
 	var ty := sub.key == "typhoon"
+	if sub.key == "titan": # small, and nobody walks on her
+		return {"key": sub.key, "typhoon": false, "length": sub.length, "beam": sub.beam, "deck": 1.1, "draft": 1.4, "n": 2.0, "k": 0.3,
+			"bow": 0.3, "tail": 0.7, "ct_z": 0.0, "ct_len": 1.0, "ct_h": 0.2, "guns": false, "a": sub.beam * 0.5, "b": 1.25, "yc": -0.15,
+			"ct_w": 0.8, "gun_z": -2.0, "hatch_z": -1.5, "ladder_z": 1.5, "ring_z": 2.0, "ring_edge": 0.5}
 	var d := {"key": sub.key, "typhoon": ty, "length": l,
 		"beam": 23.0 if ty else clampf(l * 0.088, 6.0, 10.0),
 		"deck": 5.0 if ty else clampf(l * 0.028, 2.2, 3.2),
@@ -136,6 +140,9 @@ static func _hash(a: float, b: float) -> float:
 static func build(sub: SubClassData) -> Node3D:
 	var root := Node3D.new()
 	root.name = "OwnBoat"
+	if sub.key == "titan":
+		_titan(root, sub)
+		return root
 	var d := dims(sub)
 	var kit := {}
 	_hull(root, d)
@@ -615,3 +622,28 @@ static func _gun(root: Node3D, sub: SubClassData, d: Dictionary) -> void:
 	eye.position = Vector3(-1.0, 2.2, 3.6) # the pointer's seat, left of and behind the breech
 	eye.rotation.x = deg_to_rad(-3.0)
 	gun.add_child(eye)
+
+
+## The Titan from outside: a white fairing round the tube, the clear-domed bow, the black frame
+## and skids under her, four thrusters aft. No maker's name on her.
+static func _titan(root: Node3D, sub: SubClassData) -> void:
+	var white := Color("#E8E8E2")
+	var black := Color("#1E2022")
+	var l := sub.length
+	var body := Build.cyl(root, 1.25, l * 0.62, Vector3(0, -0.15, -0.2), white, Vector3.BACK)
+	body.name = "Body"
+	var nose := Build.sphere(root, 1.25, Vector3(0, -0.15, -0.2 - l * 0.31), Color("#9CB6C4"))
+	nose.scale = Vector3(1, 1, 0.75)
+	Build.sphere(root, 0.32, Vector3(0, -0.4, -0.2 - l * 0.31 - 0.85), Color("#203440")) # the viewport
+	var tail := Build.sphere(root, 1.25, Vector3(0, -0.15, -0.2 + l * 0.31), white)
+	tail.scale = Vector3(1, 1, 0.6)
+	Build.box(root, Vector3(2.6, 0.25, l * 0.9), Vector3(0, -1.45, 0), black, false) # the frame
+	for side in [-1.0, 1.0]:
+		Build.box(root, Vector3(0.18, 0.2, l), Vector3(side * 1.2, -1.6, 0), black, false) # skids
+		Build.box(root, Vector3(0.12, 1.1, 0.12), Vector3(side * 1.1, -0.95, -1.5), black, false)
+		Build.box(root, Vector3(0.12, 1.1, 0.12), Vector3(side * 1.1, -0.95, 1.5), black, false)
+	for t: Vector3 in [Vector3(-0.9, 0.5, l * 0.45), Vector3(0.9, 0.5, l * 0.45), Vector3(-1.5, -0.3, 1.0), Vector3(1.5, -0.3, 1.0)]:
+		var vertical := t.z < 2.0
+		Build.cyl(root, 0.28, 0.5, t, black, Vector3.UP if vertical else Vector3.BACK)
+		Build.cyl(root, 0.08, 0.6, t, Color("#5A5E62"), Vector3.UP if vertical else Vector3.BACK)
+	Build.label(root, "TITAN", Vector3(1.27, 0.1, -0.4), 64, Color("#1E2022")).rotation.y = PI * 0.5
