@@ -209,6 +209,12 @@ Added by Blaney after playing. In his words where it matters.
       *(Done, PR #42: new outsides for all four boats: round hull, rounded fin, real gear, weathered paint; the Typhoon's missile hatches, rudder and shrouded screws.)*
 - [x] the sub doesnt let you get back in, and you have to clip through the sub to even see the non functioning hatch
       *(Done, PR #42: the hatch sits clear of the fin on every boat and works; the deck you walk on is the boat you see.)*
+- [ ] there is going to be an underwater navigation challenge where you have to go through a short underwater cave and come out the other end, all subs should be able to do it but for an inexperienced crew it is going to take some coordination
+- [ ] there should be dive suits and spots you can "hold on" to because we are going to make it so that the sub can dive without everyone inside, if we need a visual then we need a guy that can physically look out to tell us where we are going for fun, he cannot get back in until we are surfaced
+- [ ] make terrifying sea creatures that live in the depths that can be hunted, or that can hunt us. there should be a command in the PA to spawn one
+- [ ] add the oceangate sub, there is a ton of information on how it was made after its incident including that it was controlled with an XBOX controller
+- [ ] getting around in the sub with a full crew should be doable and make the sub move around faster in arcade mode, i dont want the game to be a waiting simulator
+- [ ] the crew member hats go through their heads
 
 ## M9 — Lando's list (2026-10-30)
 Added by lando. Direction: **more arcadey, not strict realism**. Every existing mechanic
