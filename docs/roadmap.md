@@ -200,6 +200,10 @@ Added by Blaney after playing. In his words where it matters.
       *(Done, PR #39: a galley with its cook, laid tables, lived-in bunks, photos and pin-ups, more pipes, on all four boats; shut doors now muffle the engines and every other sound.)*
 - [ ] youve done a good job on the feeling of movement in the game but we need more of it, every axis of movement should be felt and the sub should be realistically stable when still (it would still have some roll and pitch)
 - [ ] lets add more fun things to do in the game and clearer ways to access them and see a list the things we can do
+- [ ] we need this sub to get scary deep (the typhoon class should be able to get very deep but the WWII ones should be realistic)
+- [ ] we need a larger area that the sub can go
+- [ ] we need a better outside of the sub (real details, smoother hull shape, weathered paint; good functioning outsides of all the subs to the extent that they exist in real life, the typhoon most)
+- [ ] the sub doesnt let you get back in, and you have to clip through the sub to even see the non functioning hatch
 
 ## M9 — Lando's list (2026-10-30)
 Added by lando. Direction: **more arcadey, not strict realism**. Every existing mechanic

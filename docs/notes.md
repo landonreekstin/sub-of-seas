@@ -4,6 +4,32 @@ Where things stand, in plain English. The newest entry goes at the top. Update i
 Other docs: `roadmap.md` is the to-do list, `style.md` how it looks and feels, `design.md` the
 game's design, `credits.md` where every sound came from.
 
+## 2026-11-06: deep, bigger sea, better outsides, the hatch (branch `blaney/sub-outsides`, on #41)
+
+Done first: the motion's "little push" taken out (Blaney: "the sliding around should not be a
+thing"); he played it, "feels good"; both motion items ticked, **#40 ready**. #41 (fun things)
+is still unplayed by him: put it on his screen when this is done.
+New items (roadmap, style log). His calls: Typhoon very deep, WWII boats realistic depths;
+real outside details, smoother hull, weathered paint, on every boat as far as real life has
+them, the Typhoon most; the bigger area he hasn't checked (assume the open sea).
+Found, not fixed yet:
+- **Hatch**: `ShipModels.own_dims` puts `hatch_z` 2.6 m ahead of the fin's front, but the
+  Typhoon's fin nose solid (`game/deck.gd` _ready, `beam*0.3` square) is 6.9 m wide, so the hatch
+  and `hatch_spot()` sit inside it: you clip in to see it and can't go below. Fix: place it clear
+  of the fin's nose (`- beam*0.15 - 1.5`), and a headless test that climbs out and goes below.
+- **Depth**: the yoke (`stations/yoke_station.gd:76`) and the host (`game/game.gd:982`) cap the
+  ordered depth at 200 m; use `sub.data.crush_depth`. Typhoon creaks
+  (`SubInterior._typhoon_sounds`) don't grow with depth; add scary deep (more and louder
+  groans, bangs, drips past test depth) for every boat.
+- **Outsides** (pictures: `tools/ship_gallery.gd -- own_typhoon out.png x,y,z,tx,ty,tz`, camera
+  option just added): boxy hull, plain box fin. Plan: new `world/own_boat.gd` with per-boat
+  builders (round lofted hull + casing; Gato/S-boat/Narwhal: limber holes, teak, rails,
+  bow/stern planes, screws, shears + radar, hull number, rust streaks; Typhoon: wide blunt hull,
+  20 missile hatches forward of the sail, rounded sail, ducted screws, tall rudder, tile
+  patches, white draught marks). `game/deck.gd` collision, `camera_station.gd` and the ring/
+  fishing spots read `own_dims`/`hull_half`/`hull_deck`: keep them matching the new shapes.
+- **Area**: no hard edge found yet; check the sandbox/missions for one.
+
 ## 2026-11-05 (late night): more things to do (branch `blaney/fun-things`, draft #41, on #39)
 
 Blaney's item: "more fun things to do, clearer ways to access them and see a list". His calls:
