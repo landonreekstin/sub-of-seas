@@ -1036,7 +1036,11 @@ func apply_order(station_id: String, key: String, value: Variant, by: int) -> vo
 					push_crew()
 					return
 				sub.ordered_depth = clampf(float(value), 0.0, sub.data.crush_depth) # down to where she breaks (Blaney: scary deep)
-		"first_mate":
+				# Surface on the planes alone leaves her awash with the tanks full and the hatch
+				# shut, so the order to surface blows main ballast too (Blaney: "i cannot open the
+				# hatch even though i pressed 1 to surface").
+				if sub.ordered_depth <= 0.0 and sub.ballast > 0.0 and sub.blowing == 0 and not sub_class.fragile:
+					sub.ballast_order("blow")
 			if key == "party":
 				bot_crew.send_party()
 				announce.rpc("First mate: damage parties, turn to!")

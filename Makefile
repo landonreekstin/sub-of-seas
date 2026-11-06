@@ -19,7 +19,8 @@ walkthrough:
 	godot --headless --path . -s tests/typhoon_walkthrough.gd
 	set -e; for s in typhoon gato s_boat narwhal; do godot --headless --path . -s tests/party_walkthrough.gd -- $$s; done
 	godot --headless --path . -s tests/door_walk.gd -- typhoon
-	set -e; for h in pa ballast planesman; do godot --headless --path . -s tests/breach_hatch.gd -- typhoon $$h; done
+	set -e; for h in pa ballast planesman dive; do godot --headless --path . -s tests/breach_hatch.gd -- typhoon $$h; done
+	godot --headless --path . -s tests/breach_hatch.gd -- gato dive
 	set -e; for s in gato s_boat typhoon; do godot --headless --path . -s tests/muffle_check.gd -- $$s; done
 	set -e; for s in gato s_boat narwhal typhoon; do godot --headless --path . -s tests/pastime_walkthrough.gd -- $$s; done
 	set -e; for c in scope torpedo attack; do godot --headless --path . -s tests/tutorial_walkthrough.gd -- $$c realistic; done

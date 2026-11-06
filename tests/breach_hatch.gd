@@ -2,8 +2,9 @@ extends SceneTree
 ## Crash surface and out (Blaney: "it was staying locked even though we were surfaced"): the
 ## boat dived deep with bot crewmen at the yokes and the ballast, "crash surface" on the PA (or
 ## X twice on the ballast, or the bot planesman told to surface), and once she's up the hatch
-## must open and stay open.
-##   godot --headless --path . -s tests/breach_hatch.gd -- <sub> [pa | ballast | planesman]
+## must open and stay open. "dive": nobody at the ballast, the player presses 1 (surface) at the
+## dive station (Blaney: "i cannot open the hatch even though i pressed 1 to surface").
+##   godot --headless --path . -s tests/breach_hatch.gd -- <sub> [pa | ballast | planesman | dive]
 
 var _game: Node
 var _t := 0.0
@@ -20,7 +21,7 @@ func _initialize() -> void:
 	net.mission = "cw_convoy" if sub == "typhoon" else "convoy"
 	net.sub_key = sub
 	net.debug_depth = 80.0
-	net.start_bots = PackedStringArray(["helm", "dive", "ballast"])
+	net.start_bots = PackedStringArray(["helm"] if _how == "dive" else ["helm", "dive", "ballast"])
 	net.mode = 1
 	net.port = 7097
 	Engine.time_scale = 2.0
@@ -49,6 +50,8 @@ func _physics_process(delta: float) -> bool:
 				var b: Dictionary = _game.crew.bots.dive
 				b.auto = false
 				b.depth = 0.0
+			"dive":
+				_game.apply_order("dive", "depth", 0.0, -1)
 	var sub: Variant = w.sub
 	if int(_t) != int(before) and int(_t) % 5 == 0:
 		print("breach_hatch: %3d s depth %.1f ordered %.1f ballast %.2f vents %s blowing %d hatch %s" % [int(_t), sub.depth, sub.ordered_depth, sub.ballast, sub.vents_open, sub.blowing, _D.can_go_out()])

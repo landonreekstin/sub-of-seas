@@ -221,6 +221,8 @@ Added by Blaney after playing. In his words where it matters.
       *(Done, PR #43: in arcade she goes, speeds up, turns and dives twice as fast, as quiet and as easy on the battery as before; crewmates and bots already walk through each other.)*
 - [x] the crew member hats go through their heads
       *(Done, PR #43: every hat sized over the hair and sitting on it; curls and waves pressed flat under a hat.)*
+- [x] i cannot open the hatch even though i pressed 1 to surface
+      *(Done, PR #43: an order to surface from the dive station (1, or W up to 0) blows main ballast too, so she comes right up and the hatch opens without anyone at the ballast.)*
 
 ## M9 — Lando's list (2026-10-30)
 Added by lando. Direction: **more arcadey, not strict realism**. Every existing mechanic

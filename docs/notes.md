@@ -4,6 +4,13 @@ Where things stand, in plain English. The newest entry goes at the top. Update i
 Other docs: `roadmap.md` is the to-do list, `style.md` how it looks and feels, `design.md` the
 game's design, `credits.md` where every sound came from.
 
+## 2026-11-06 (latest): the hatch after pressing 1
+
+Blaney: "i cannot open the hatch even though i pressed 1 to surface". With nobody at the ballast,
+an ordered depth of 0 only brought her up to awash (4.5 m, tanks full), and the hatch needs her
+surfaced (<1 m). Now `apply_order("dive", "depth", 0)` also blows main ballast (not the Titan).
+`tests/breach_hatch.gd -- <sub> dive` (no bots but the helm) in `make test`.
+
 ## 2026-11-06 (later still): the hatch after a crash surface
 
 Blaney: after an emergency breach "it was staying locked even though we were surfaced". X twice on
