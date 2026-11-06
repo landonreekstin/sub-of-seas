@@ -892,6 +892,19 @@ func call_enemy_sub(attack: bool) -> String:
 	return "Enemy sub reported close by, Skipper. Rig for quiet: from here on the chart's only what we can see."
 
 
+## A monster on the PA (Blaney: "a command in the PA to spawn one"): one of the things from the
+## depths, close by and below, coming for us. It only comes as shallow as its own depth.
+func call_monster(kind: String) -> String:
+	var w := Sim.world
+	for m in w.monsters:
+		if not m.is_dead() and m.pos.distance_to(w.sub.pos) < 4000.0:
+			return "There's already something out there, Skipper. The %s. Listen." % m.info().name
+	var m := w.add_monster(kind, 900.0, true)
+	if w.sub.depth < m.floor_depth() - 20.0:
+		return "Something's down there, Skipper... a %s, deep. It won't come above %d metres: take her down if you want it." % [m.info().name, roundi(m.floor_depth())]
+	return "Sonar: something's moving down there, Skipper. Something big. A %s... and it's coming for us." % m.info().name
+
+
 func enemy_sub_class() -> String:
 	return "los_angeles" if sub_class.era == "cold_war" else "i_boat"
 
@@ -1524,6 +1537,78 @@ func _targets(o: Dictionary) -> Array[ShipState]:
 	return out
 
 
+## A thing from the depths (Monster) does something: what the crew hears and feels of it, and
+## (host) what's called out. Creepy dread, no gore (Blaney): a groaning call through the hull,
+## the frames creaking as it squeezes, a great thump and the lights going when it strikes.
+func _monster_event(d: Dictionary) -> void:
+	var near := Vector2(d.x, d.y).distance_to(Sim.world.sub.pos) < 1200.0
+	var trauma := 0.0
+	match String(d.act):
+		"call", "charge":
+			if near or d.act == "charge":
+				_monster_call(-4.0 if d.act == "charge" else -12.0)
+		"grab", "squeeze":
+			Sfx.play("creak_%d" % randi_range(1, 3), 4.0, 0.4)
+			Sfx.play("creak_%d" % randi_range(1, 3), 0.0, 0.55)
+			trauma = 0.55 if d.act == "grab" else 0.3
+		"bite", "strike", "ram":
+			Sfx.play("torpedo_hit", 2.0, 0.45)
+			Sfx.play("clang", 0.0, 0.5)
+			trauma = 0.9 if d.act == "ram" else 0.65
+		"hurt", "dead":
+			_monster_call(-2.0, 0.5)
+	if trauma > 0.0:
+		if local_player != null:
+			local_player.add_trauma(trauma)
+		interior.flicker(trauma)
+		interior.shake_loose(trauma * 0.8)
+	if not multiplayer.is_server():
+		return
+	var lines: Array[String] = []
+	match String(d.act):
+		"charge":
+			lines.append("Sonar: something huge, coming in fast... it's not a ship!")
+		"grab":
+			lines.append("Something's got hold of the hull! The %s is wrapped round us!" % d.name)
+		"bite":
+			lines.append("The %s bit into the hull!" % d.name)
+		"strike":
+			lines.append("The %s struck the hull!" % d.name)
+		"ram":
+			lines.append("The %s rammed us!" % d.name)
+		"release":
+			lines.append("It's let go... it's gone back into the dark.")
+		"hurt":
+			lines.append("HIT! The %s thrashes off into the deep." % d.name)
+		"dead":
+			lines.append("The %s is dead. It sinks away into the black." % d.name)
+		"give_up":
+			lines.append("Sonar: it's not following us up. It's going back down.")
+	for m: String in d.get("dmg", []):
+		if m.begins_with("BROKEN:"):
+			var st: Station = interior.stations.get(m.trim_prefix("BROKEN:"))
+			lines.append("%s knocked out!" % (st.display_name if st != null else "Equipment"))
+		else:
+			lines.append(m)
+	if not lines.is_empty():
+		announce.rpc("  ".join(lines))
+		push_crew()
+
+
+## Its call through the hull: the whale's song slowed to a groan, fading out.
+func _monster_call(db: float, pitch := 0.32) -> void:
+	var p := AudioStreamPlayer.new()
+	p.stream = Sfx.stream("whale_loop")
+	p.bus = "Effects"
+	p.volume_db = db
+	p.pitch_scale = pitch * randf_range(0.9, 1.1)
+	add_child(p)
+	p.play(randf_range(0.0, 4.0))
+	var tw := create_tween()
+	tw.tween_property(p, "volume_db", -50.0, 7.0).set_delay(2.0)
+	tw.tween_callback(p.queue_free)
+
+
 ## What the crew hears of a sim event. Sonar-only sounds need the local player on the sonar.
 func _event_sound(kind: String, data: Dictionary) -> void:
 	var on_sonar := local_player != null and local_player.station != null and local_player.station.station_id == "sonar"
@@ -1567,6 +1652,8 @@ func _event_sound(kind: String, data: Dictionary) -> void:
 
 func _on_sim_event(kind: String, data: Dictionary) -> void:
 	_event_sound(kind, data)
+	if kind == "monster":
+		_monster_event(data)
 	if kind == "own_ping" and crew.get("limited_map", false):
 		known.reveal(Sim.world.sub.pos, ChartKnown.PING_RANGE, ChartKnown.SONAR)
 	if kind == "enemy_torpedo" and multiplayer.is_server():
@@ -1650,7 +1737,8 @@ func _on_sim_event(kind: String, data: Dictionary) -> void:
 		"lost":
 			end_patrol("lost", data.reason)
 		"hit":
-			announce.rpc("HIT! %s" % data.name)
+			if not data.get("monster", false):
+				announce.rpc("HIT! %s" % data.name)
 		"gun_hit":
 			var ship := Sim.world.find_ship(int(data.ship))
 			if ship != null and not ship.is_sinking():

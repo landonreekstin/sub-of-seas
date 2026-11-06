@@ -12,7 +12,7 @@ const ECHO_SHOW_TIME := 10.0
 const LISTEN_TIME := 3.0 ## seconds on a contact before the readout names it
 ## Headphone loops: what each kind of contact sounds like.
 const PHONES := {"merchant": "screws_merchant_loop", "warship": "screws_warship_loop",
-	"capital": "screws_capital_loop", "whale": "whale_loop", "shrimp": "shrimp_loop", "sea": "sea_loop"}
+	"capital": "screws_capital_loop", "whale": "whale_loop", "monster": "whale_loop", "shrimp": "shrimp_loop", "sea": "sea_loop"}
 
 var trained := 0.0 ## true bearing of the hydrophone, degrees
 var _scope: Control
@@ -63,6 +63,8 @@ static func loudness(ship: ShipState, sub: SubState) -> float:
 static func sound_kind(c: Object) -> String:
 	if c is Whale:
 		return "whale"
+	if c is Monster:
+		return "monster"
 	var ship := c as ShipState
 	if ship.data.role == "capital":
 		return "capital"
@@ -80,7 +82,20 @@ static func contacts(sub: SubState) -> Array:
 		var l := wh.loudness(sub, HEAR_RANGE)
 		if l > 0.02:
 			out.append({"c": wh, "loud": l, "b": ShipState.bearing(sub.pos, wh.pos)})
+	for m in Sim.world.monsters:
+		var l := m.loudness(sub, HEAR_RANGE)
+		if l > 0.02:
+			out.append({"c": m, "loud": l, "b": ShipState.bearing(sub.pos, m.pos)})
 	return out
+
+
+## A contact in a few words, for the crew's reports: "whale", "warship", ...
+static func describe(c: Object) -> String:
+	if c is Whale:
+		return "biological, a whale"
+	if c is Monster:
+		return "biological, something far bigger than a whale"
+	return classify(c as ShipState).get_slice(" — ", 1).to_lower()
 
 
 static func classify(ship: ShipState) -> String:
@@ -146,6 +161,8 @@ func _process(_delta: float) -> void:
 		var brg := roundi(ShipState.bearing(sub.pos, best.pos))
 		if _listen_time < LISTEN_TIME:
 			_lines[1].text = "CONTACT %03d°  listening%s" % [brg, ".".repeat(1 + int(_listen_time * 2.0) % 3)]
+		elif best is Monster:
+			_lines[1].text = "CONTACT %03d°  a deep slow groaning, nothing on the charts makes it — BIOLOGICAL, HUGE, about %d m down" % [brg, roundi(best.depth / 10.0) * 10]
 		elif best is Whale:
 			_lines[1].text = "CONTACT %03d°  %s — BIOLOGICAL: a whale, not a ship" % [brg, "long moaning song" if best.singing else "slow swishing, no screws"]
 		else:
@@ -251,6 +268,8 @@ func _headphones(heard: Array, sub: SubState) -> void:
 			level[kind] = v
 			if h.c is ShipState:
 				pitch[kind] = 0.8 + 0.45 * h.c.speed / (h.c.data.max_speed_kn * SubState.KNOT)
+			elif h.c is Monster:
+				pitch[kind] = 0.3
 	if broken:
 		level.clear()
 	level["sea"] = 0.5

@@ -184,7 +184,7 @@ func _sonar(b: Dictionary, _hunted: bool) -> void:
 		return
 	heard.sort_custom(func(x: Dictionary, y: Dictionary) -> bool: return x.loud > y.loud)
 	var top: Dictionary = heard[0]
-	var what: String = "biological, a whale" if top.c is Whale else SonarStation.classify(top.c).get_slice(" — ", 1).to_lower()
+	var what: String = SonarStation.describe(top.c)
 	if top.c is ShipState and top.c.data.role == "sub":
 		game.alarm.rpc() # the one sonar report worth waking people for
 	game.announce.rpc("%s (sonar): contact bearing %03d, %s." % [b.name, roundi(top.b) % 360, what])
@@ -468,6 +468,8 @@ func _carry_out(o: Dictionary) -> String:
 			return _objective_report()
 		"enemy_sub":
 			return game.call_enemy_sub(o.get("attack", false))
+		"monster":
+			return game.call_monster(o.get("kind", ""))
 		"band":
 			return game.call_band(o.get("off", false))
 	return "Aye."
@@ -810,7 +812,7 @@ func _contacts_report() -> String:
 	var out: Array[String] = []
 	for k in mini(3, heard.size()):
 		var c: Dictionary = heard[k]
-		out.append("%s bearing %03d" % ["whale" if c.c is Whale else SonarStation.classify(c.c).get_slice(" — ", 1).to_lower(), roundi(c.b) % 360])
+		out.append("%s bearing %03d" % ["whale" if c.c is Whale else SonarStation.describe(c.c), roundi(c.b) % 360])
 	return "Sonar has " + ", ".join(out) + "."
 
 

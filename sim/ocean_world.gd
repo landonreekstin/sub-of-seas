@@ -36,6 +36,10 @@ var charges: Array[DepthCharge] = []
 var shells: Array[Dictionary] = []
 var planes: Array[Aircraft] = []
 var whales: Array[Whale] = []
+var monsters: Array[Monster] = [] ## things from the depths (Monster)
+var deep_life := true ## host: monsters turn up now and then when the boat goes deep
+var _deep_rng := RandomNumberGenerator.new() ## their comings, apart from the patrol's own dice
+var _deep_timer := 300.0
 var hull := HullState.new()
 var air := AirState.new()
 var conditions := Conditions.new()
@@ -86,6 +90,38 @@ func add_whale(dist: float) -> Whale:
 	return wh
 
 
+## A thing from the depths (Monster.KINDS key, or "" for any), `dist` metres off and below the
+## boat. `hunt`: it comes for her straight away (called up on the PA).
+func add_monster(kind: String, dist: float, hunt := false) -> Monster:
+	if not Monster.KINDS.has(kind):
+		kind = Monster.KINDS.keys()[_deep_rng.randi() % Monster.KINDS.size()]
+	var m := Monster.make(kind)
+	m.id = _take_id()
+	m.pos = sub.pos + Vector2.from_angle(_deep_rng.randf() * TAU) * dist
+	m.heading = _deep_rng.randf() * 360.0
+	var bottom := seabed.floor_depth(m.pos) - 15.0
+	m.depth = clampf(maxf(sub.depth + 60.0, m.floor_depth() + 40.0), m.floor_depth(), maxf(bottom, m.floor_depth()))
+	m.hunting = hunt
+	monsters.append(m)
+	return m
+
+
+## Host: deep enough and long enough, and something down there finds her.
+func _deep_comings(dt: float) -> void:
+	if not deep_life or sub.depth < 150.0:
+		return
+	for m in monsters:
+		if not m.is_dead() and m.pos.distance_to(sub.pos) < 6000.0:
+			return
+	_deep_timer -= dt
+	if _deep_timer > 0.0:
+		return
+	_deep_timer = _deep_rng.randf_range(240.0, 480.0)
+	var can: Array = Monster.KINDS.keys().filter(func(k: String) -> bool: return float(Monster.KINDS[k].floor) < sub.depth)
+	if not can.is_empty():
+		add_monster(can[_deep_rng.randi() % can.size()], 2500.0)
+
+
 ## Escort `ship` keeps station at (right, ahead) metres from `guard`.
 func set_escort(ship: ShipState, guard: ShipState, offset: Vector2) -> void:
 	ship.ai.guard = guard
@@ -115,6 +151,12 @@ func own_ping() -> void:
 		var d := wh.pos.distance_to(sub.pos)
 		if d < 6000.0:
 			echoes.append({"b": ShipState.bearing(sub.pos, wh.pos), "r": d * rng.randf_range(0.97, 1.03)})
+	for m in monsters: # so does something far bigger than a whale; and it hears the ping
+		var d := m.pos.distance_to(sub.pos)
+		if d < 6000.0 and not m.is_dead():
+			echoes.append({"b": ShipState.bearing(sub.pos, m.pos), "r": d * rng.randf_range(0.97, 1.03)})
+			if d < 4000.0 and m.state == "lurk":
+				m.hunting = true
 	event.emit("own_ping", {"echoes": echoes})
 	if hull.station_comp.has("sonar") and rng.randf() < 0.04:
 		breakdown("sonar")
@@ -225,6 +267,14 @@ func step(dt: float, authoritative := true) -> void:
 		ship.step(dt, rng if authoritative else null, seabed)
 	for wh in whales:
 		wh.step(dt, rng if authoritative else null)
+	for m in monsters:
+		if authoritative:
+			m.think(dt, self)
+		else:
+			m.coast(dt)
+	if authoritative:
+		monsters = monsters.filter(func(m: Monster) -> bool: return not (m.is_dead() and m.depth > 3000.0) and m.pos.distance_to(sub.pos) < 30000.0)
+		_deep_comings(dt)
 	for t in torpedoes:
 		t.step(dt)
 		if authoritative and t.alive:
@@ -560,6 +610,16 @@ func _check_hits(t: Torpedo) -> void:
 	if t.enemy:
 		_check_hit_on_us(t)
 		return
+	for m in monsters:
+		if m.is_dead() or m.pos.distance_to(t.pos) > m.length() * 0.45 + 4.0 or absf(m.depth - t.depth) > SUB_HIT_DEPTH * 1.5:
+			continue
+		t.alive = false
+		if t.dud:
+			event.emit("dud", {"ship": -1, "x": t.pos.x, "y": t.pos.y, "name": m.info().name})
+			return
+		event.emit("hit", {"ship": -1, "x": t.pos.x, "y": t.pos.y, "name": m.info().name, "monster": true})
+		m.wounded(self)
+		return
 	for ship in ships:
 		if ship.is_sinking() or ship.distance_to_hull(t.pos) > ship.data.beam * 0.5 + 1.0:
 			continue
@@ -602,6 +662,7 @@ func to_snapshot() -> Dictionary:
 		"dcs": charges.map(func(dc: DepthCharge) -> Array: return dc.to_snapshot()),
 		"pl": planes.map(func(p: Aircraft) -> Array: return p.to_snapshot()),
 		"wh": whales.map(func(wh: Whale) -> Array: return wh.to_snapshot()),
+		"mo": monsters.map(func(m: Monster) -> Array: return m.to_snapshot()),
 		"hull": hull.to_snapshot(),
 		"air": air.to_snapshot(),
 		"cd": conditions.to_snapshot(),
@@ -659,6 +720,15 @@ func apply_snapshot(s: Dictionary) -> void:
 		wh.apply_snapshot(a)
 		whs.append(wh)
 	whales = whs
+	var mos: Array[Monster] = []
+	for a: Array in s.get("mo", []):
+		var m := Monster.new()
+		for old in monsters:
+			if old.id == a[0]:
+				m = old
+		m.apply_snapshot(a)
+		mos.append(m)
+	monsters = mos
 	hull.apply_snapshot(s.hull)
 	air.apply_snapshot(s.air)
 	conditions.apply_snapshot(s.cd)

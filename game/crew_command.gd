@@ -12,6 +12,10 @@ const TARGETS := {"freighter": "freighter", "freighters": "freighter", "cargo": 
 	"tanker": "tanker", "oiler": "tanker", "carrier": "carrier", "flattop": "carrier", "battleship": "battleship", "cruiser": "cruiser",
 	"destroyer": "destroyer", "tincan": "destroyer", "escort": "escort", "frigate": "frigate", "kaibokan": "kaibokan", "chaser": "subchaser", "subchaser": "subchaser",
 	"sub": "sub", "submarine": "sub", "boat": "sub"}
+## Words for the things in the depths (Monster.KINDS); "" is any of them.
+const MONSTERS := {"monster": "", "monsters": "", "creature": "", "beast": "", "leviathan": "", "kraken": "squid", "squid": "squid",
+	"anglerfish": "angler", "angler": "angler", "serpent": "serpent", "eel": "serpent", "megalodon": "megalodon", "megladon": "megalodon",
+	"meg": "megalodon", "shark": "megalodon"}
 const ATTACK := ["sink", "attack", "torpedo", "kill", "destroy", "hit", "engage", "shoot", "blow", "fire", "get", "target", "take"]
 const SPEEDS := {"stop": 0, "halt": 0, "reverse": -1, "back": -1, "slow": 1, "quiet": 1, "half": 2, "standard": 3, "cruise": 3, "full": 4, "flank": 4, "fast": 4, "maximum": 4, "max": 4}
 
@@ -79,6 +83,9 @@ static func _clause(c: String) -> Dictionary:
 		return {"intent": "evade"}
 	if " enemy sub " in c or " enemy submarine " in c:
 		return {"intent": "enemy_sub", "attack": _has(c, ATTACK)}
+	for w: String in MONSTERS: # "spawn a kraken": something comes up out of the deep for us (Blaney)
+		if " %s " % w in c:
+			return {"intent": "monster", "kind": MONSTERS[w]}
 	if _has(c, ["play", "music", "song", "band", "concert"]):
 		return {"intent": "band", "off": _has(c, ["stop", "quit", "enough"])}
 	if _has(c, ["cease", "cancel", "belay", "abort", "nevermind"]):

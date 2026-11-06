@@ -102,6 +102,8 @@ static func known(world: OceanWorld) -> Array:
 	for c: Dictionary in SonarStation.contacts(sub):
 		if c.c is ShipState:
 			heard[c.c] = true
+		elif c.c is Monster: # a shape in the dark, heard but not known
+			out.append([c.c, c.c.depth, ENEMY, "?"])
 	var looking := sub.is_surfaced() or (sub.periscope_raised and sub.depth <= sub.data.periscope_depth + 1.0)
 	for s in world.ships:
 		if s.is_sinking():
