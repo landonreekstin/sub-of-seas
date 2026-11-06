@@ -90,6 +90,20 @@ and update "Current style" in the same commit.
   black drysuit, full mask, twin tanks; modern: scuba). The view out is framed by the helmet's
   round brass window (a mask's dark edge on the Typhoon); a lamp lights the water deep down.
   Steel grab rails either side of the bow, the fin and the after casing.
+- **The cave** (Blaney): a grey-green rock ridge standing some 45 m out of the water, sheer cliffs
+  down to its foot, a square-ish mouth low in each end face. Inside, an S-bend tunnel of dark rough
+  rock, its roof rising and dipping and its floor humped in places, lit only by soft glowing spots
+  (blue-green, sea-blue, pale green) on the walls and roof. Every boat fits, with room to spare
+  only if she's held straight and level. Scrapes clang and judder the crew; the time and the
+  scrapes show on the objective.
+- **The Titan** (Blaney: like the real one, game controller and all): inside, one dark carbon tube
+  with flat titanium ends bolted round, floor mats and five cushions, cold white LED strips, the
+  viewport low in the bow end, the scrubber on the starboard wall; a little roomier than the real
+  tube so the crew can stand. The pilot sits on the floor aft holding a dark grey game controller
+  with coloured buttons, a black screen on the wall ahead to starboard (depth, speed, battery,
+  HULL MONITOR, red when the strain passes half). Past 4,000 m the carbon cracks: sharp cracks
+  louder each time, lights flicker, three warnings, then a single deep bang. No gore. Outside: a
+  white fairing, black frame and skids, four black thrusters; no maker's name.
 - **Things from the depths** (Blaney: creepy dread, no gore): dark shapes with eyes that catch the
   light. A dark red giant squid, a black anglerfish with needle teeth and a glowing green lure, a
   long dark green serpent with a frill and yellow eyes, a dark grey megalodon as long as a boat.

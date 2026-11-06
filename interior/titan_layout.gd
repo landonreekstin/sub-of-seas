@@ -32,24 +32,21 @@ static func build(i: SubInterior) -> void:
 	Build.box(i, Vector3(floor_w + 0.2, 0.1, LENGTH), Vector3(0, -0.05, z0 * 0.5), MAT)
 	for k in 5: # seat cushions along the floor, one per crewman
 		Build.box(i, Vector3(0.5, 0.08, 0.6), Vector3(0.38 * (1 if k % 2 == 0 else -1), 0.04, z0 + 0.6 + k * 0.72), Color("#1F2A38"), false)
-	# Titanium rings where the tube meets the domes, and the domes themselves.
-	for z in [z0, 0.0]:
-		var ring := Build.cyl(i, R + 0.02, 0.14, Vector3(0, AXIS_Y, z), TITANIUM, Vector3.BACK)
-		ring.material_override = Build.mat(TITANIUM)
-	for z in [z0 - 0.35, 0.3]: # the domes' insides, seen face on
+	# The titanium domes' insides at each end, seen face on, bolted round the edge.
+	for z in [z0 - 0.05, 0.05]:
 		Build.cyl(i, R + 0.02, 0.1, Vector3(0, AXIS_Y, z), TITANIUM.darkened(0.25), Vector3.BACK)
 		for k in 12: # the bolts round the ring
 			var a := TAU * k / 12.0
 			Build.sphere(i, 0.025, Vector3(sin(a) * (R - 0.08), AXIS_Y + cos(a) * (R - 0.08), z + (0.06 if z < 0.0 else -0.06)), TITANIUM)
-	for z in [z0 - 0.45, 0.4]: # stop anyone walking into the domes
+	for z in [z0 - 0.2, 0.2]: # stop anyone walking into the domes
 		Build.hitbox(i, Vector3(2.4, 2.4, 0.2), Vector3(0, AXIS_Y, z))
 	# The viewport in the bow dome, low, where you lie on your front to look out.
-	var vp := Porthole.create(Vector3(0, 0.75, z0 - 0.29), 1.0)
+	var vp := Porthole.create(Vector3(0, 0.75, z0 + 0.02), 1.0)
 	vp.rotation.y = PI * 0.5
 	vp.scale = Vector3.ONE * 1.5
 	i.add_child(vp)
 	i.portholes.append(vp)
-	Build.label(i, "VIEWPORT", Vector3(0, 1.25, z0 - 0.29), 20, Color("#C8D2DC"))
+	Build.label(i, "VIEWPORT", Vector3(0, 1.25, z0 + 0.02), 20, Color("#C8D2DC"))
 	# LED strips overhead, cold and bright.
 	for z in [z0 + 1.0, z0 + 3.0]:
 		Build.box(i, Vector3(0.5, 0.03, 0.08), Vector3(0, AXIS_Y + R - 0.08, z), LED, false).material_override = Build.mat(LED, 2.0)

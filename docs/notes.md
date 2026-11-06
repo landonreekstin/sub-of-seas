@@ -4,6 +4,23 @@ Where things stand, in plain English. The newest entry goes at the top. Update i
 Other docs: `roadmap.md` is the to-do list, `style.md` how it looks and feels, `design.md` the
 game's design, `credits.md` where every sound came from.
 
+## 2026-11-06 (late night): the cave and the Titan (branch `blaney/deep-sea`, draft #43)
+
+All six of #43's items built and ticked; none played by Blaney yet.
+- [built, tests pass, looked at] the cave: `Seabed` kind "cave" (`add_cave`, `cave_size` from the
+  boat's new `beam`/`height`, `roof_depth`, `floor_depth(p, solid)`), `OceanWorld._check_cave`
+  (bow/middle/stern x port/centre/starboard samples; a wall, a pinch or >3 m into rock stops her),
+  `world/cave_view.gd` (`tools/cave_look.gd -- <sub> out.png air|mouth|inside` pictures it),
+  missions `cave`, `cw_cave`, `titan_cave`; one hidden in the open patrol. `tests/test_cave.gd`.
+- [built, tests pass, looked at] the Titan: `data/subs/titan.tres` (era "modern", `fragile`),
+  `interior/titan_layout.gd`, `stations/pilot_station.gd` (gamepad or keyboard; the host takes
+  depth and "weights" on "helm" for a fragile boat), `OceanWorld.hull_strain` / `_carbon_hull`
+  (in the snapshot), `OwnBoat._titan`, missions `titan_dive` (`deep_holes` 3,800 m and 4,800 m)
+  and `titan_cave`; `deep`/`surface` objectives.
+- `pastime_walkthrough` typhoon once failed "nobody won at arm wrestling" and passed on a rerun:
+  it's down to the bots' luck.
+- [next] Blaney plays the cave and the Titan; then `gh pr ready 43`.
+
 ## 2026-11-06 (night): divers, deep monsters, faster arcade, hats (branch `blaney/deep-sea`, draft #43 on #42)
 
 Blaney's six items and his calls are in the style log. Stopped here when he ran low on tokens.

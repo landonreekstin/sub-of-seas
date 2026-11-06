@@ -209,12 +209,14 @@ Added by Blaney after playing. In his words where it matters.
       *(Done, PR #42: new outsides for all four boats: round hull, rounded fin, real gear, weathered paint; the Typhoon's missile hatches, rudder and shrouded screws.)*
 - [x] the sub doesnt let you get back in, and you have to clip through the sub to even see the non functioning hatch
       *(Done, PR #42: the hatch sits clear of the fin on every boat and works; the deck you walk on is the boat you see.)*
-- [ ] there is going to be an underwater navigation challenge where you have to go through a short underwater cave and come out the other end, all subs should be able to do it but for an inexperienced crew it is going to take some coordination
+- [x] there is going to be an underwater navigation challenge where you have to go through a short underwater cave and come out the other end, all subs should be able to do it but for an inexperienced crew it is going to take some coordination
+      *(Done, PR #43: "The Cave" on the menu for every era: an S-bend tunnel through a rock ridge, sized to the boat, its roof and floor rising and dipping; timed, scrapes counted; hit the roof, walls or floor and she's stopped or shoved, hard knocks open a leak. One hidden in the open patrol too. Not played yet.)*
 - [x] there should be dive suits and spots you can "hold on" to because we are going to make it so that the sub can dive without everyone inside, if we need a visual then we need a guy that can physically look out to tell us where we are going for fun, he cannot get back in until we are surfaced
       *(Done, PR #43: a diving locker by the deck hatch, suits by era; six grab rails; she dives with suited divers out; let go and she leaves you behind, R hauls you back; the hatch stays shut till she surfaces; too deep you black out, never die; the helmet phone to the helm. Not played yet.)*
 - [x] make terrifying sea creatures that live in the depths that can be hunted, or that can hunt us. there should be a command in the PA to spawn one
       *(Done, PR #43: giant squid, anglerfish, sea serpent, megalodon below their own depths; they stalk, grab, bite, strike, ram; go shallow and they give up; torpedoes kill them; "spawn a kraken" on the PA. Not played yet.)*
-- [ ] add the oceangate sub, there is a ton of information on how it was made after its incident including that it was controlled with an XBOX controller
+- [x] add the oceangate sub, there is a ton of information on how it was made after its incident including that it was controlled with an XBOX controller
+      *(Done, PR #43: the Titan, up to 5 crew, no weapons: one carbon tube, the bow viewport, the pilot on the floor aft with a game controller (a real one works if plugged in, else the keyboard) and the screen; rated 4,000 m, past it the hull monitor calls cracks three times, then she implodes. Missions: The Deep Dive (3,800 m and back) and The Cave. Not played yet.)*
 - [x] getting around in the sub with a full crew should be doable and make the sub move around faster in arcade mode, i dont want the game to be a waiting simulator
       *(Done, PR #43: in arcade she goes, speeds up, turns and dives twice as fast, as quiet and as easy on the battery as before; crewmates and bots already walk through each other.)*
 - [x] the crew member hats go through their heads

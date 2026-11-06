@@ -647,3 +647,11 @@ static func _titan(root: Node3D, sub: SubClassData) -> void:
 		Build.cyl(root, 0.28, 0.5, t, black, Vector3.UP if vertical else Vector3.BACK)
 		Build.cyl(root, 0.08, 0.6, t, Color("#5A5E62"), Vector3.UP if vertical else Vector3.BACK)
 	Build.label(root, "TITAN", Vector3(1.27, 0.1, -0.4), 64, Color("#1E2022")).rotation.y = PI * 0.5
+	var gun := Node3D.new() # no gun, but the views that aim one look for it
+	gun.name = "Gun"
+	gun.visible = false
+	root.add_child(gun)
+	for part in ["Eye", "Barrel"]:
+		var n := Node3D.new()
+		n.name = part
+		gun.add_child(n)
