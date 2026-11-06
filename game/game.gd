@@ -979,7 +979,7 @@ func apply_order(station_id: String, key: String, value: Variant, by: int) -> vo
 				if float(value) > 0.0 and _deck_blocks_dive():
 					push_crew()
 					return
-				sub.ordered_depth = clampf(float(value), 0.0, 200.0)
+				sub.ordered_depth = clampf(float(value), 0.0, sub.data.crush_depth) # down to where she breaks (Blaney: scary deep)
 		"first_mate":
 			if key == "party":
 				bot_crew.send_party()

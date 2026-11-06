@@ -3,7 +3,7 @@ extends Station
 ## The chart table in the control room. The plot fills the screen while you're on it:
 ## W/S zoom, LMB puts a pencil mark down for everyone, RMB rubs out the nearest one.
 
-const ZOOMS := [1500.0, 3000.0, 6000.0, 12000.0, 25000.0]
+const ZOOMS := [1500.0, 3000.0, 6000.0, 12000.0, 25000.0, 40000.0]
 
 var _zoom := 2
 var _chart: ChartView

@@ -6,7 +6,7 @@ extends RefCounted
 ## sends the features to the clients once (crew state); everything else derives from them.
 
 const BASE := 600.0 ## open-ocean floor, far below any boat's crush depth
-const KINDS: Array[String] = ["island", "seamount", "shelf"]
+const KINDS: Array[String] = ["island", "seamount", "shelf", "trench"]
 
 ## Each: {kind, x, y, r (m), top (m: island height above water as a negative, or the depth of
 ## a seamount's peak / a shelf's flat), reef (island: depth of its reef flat), ang (rad),
@@ -18,7 +18,14 @@ var version := 0 ## goes up whenever the features change, so views know to rebui
 ## Metres from the surface down to the floor at `p`; negative is dry land that high.
 func floor_depth(p: Vector2) -> float:
 	var depth := BASE
+	for f: Dictionary in features: # trenches first: they only ever deepen the open floor
+		if f.kind == "trench":
+			var d := _norm_dist(f, p)
+			if d < 1.2:
+				depth = maxf(depth, lerpf(float(f.top), BASE, smoothstep(0.2, 1.2, d)))
 	for f: Dictionary in features:
+		if f.kind == "trench":
+			continue
 		var d := _norm_dist(f, p)
 		if d >= 2.0:
 			continue
@@ -83,21 +90,23 @@ func generate(seed_value: int, centre: Vector2, keep_clear: Array[Vector2], rout
 	version += 1
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_value
-	var want := {"island": rng.randi_range(2, 3), "seamount": rng.randi_range(2, 5), "shelf": rng.randi_range(0, 1)}
+	# Spread over some 30 km each way (Blaney: a larger area), with a trench or two far below
+	# anything a boat survives.
+	var want := {"island": rng.randi_range(3, 5), "seamount": rng.randi_range(6, 10), "shelf": rng.randi_range(1, 3), "trench": rng.randi_range(1, 2)}
 	if islands_only:
-		want = {"island": rng.randi_range(1, 2), "seamount": 0, "shelf": 0}
+		want = {"island": rng.randi_range(1, 2), "seamount": 0, "shelf": 0, "trench": 0}
 	for kind: String in KINDS:
 		var placed := 0
-		for attempt in 60:
+		for attempt in 120:
 			if placed >= want[kind]:
 				break
-			var f := _random_feature(rng, kind, centre)
+			var f := _random_feature(rng, kind, centre, placed > 0) # the first island stays near
 			if _fits(f, keep_clear, routes, clear):
 				features.append(f)
 				placed += 1
 
 
-func _random_feature(rng: RandomNumberGenerator, kind: String, centre: Vector2) -> Dictionary:
+func _random_feature(rng: RandomNumberGenerator, kind: String, centre: Vector2, placed_any := false) -> Dictionary:
 	var r := 0.0
 	var top := 0.0
 	var dist := 0.0
@@ -105,22 +114,26 @@ func _random_feature(rng: RandomNumberGenerator, kind: String, centre: Vector2) 
 		"island":
 			r = rng.randf_range(900.0, 2600.0)
 			top = -rng.randf_range(50.0, 260.0)
-			dist = rng.randf_range(4000.0, 10000.0)
+			dist = rng.randf_range(4000.0, 30000.0) if placed_any else rng.randf_range(4000.0, 10000.0)
 		"seamount":
 			r = rng.randf_range(350.0, 900.0)
 			top = rng.randf_range(18.0, 70.0)
-			dist = rng.randf_range(1500.0, 9000.0)
+			dist = rng.randf_range(1500.0, 30000.0)
+		"trench": # a long deep valley in the ocean floor
+			r = rng.randf_range(3000.0, 6000.0)
+			top = rng.randf_range(1400.0, 2600.0)
+			dist = rng.randf_range(6000.0, 25000.0)
 		_:
 			r = rng.randf_range(1800.0, 3500.0)
 			top = rng.randf_range(55.0, 90.0)
-			dist = rng.randf_range(3000.0, 10000.0)
+			dist = rng.randf_range(3000.0, 30000.0)
 	var at := centre + Vector2.from_angle(rng.randf() * TAU) * dist
 	var harm := []
 	for k in 4:
 		harm.append([rng.randf_range(0.0, 0.16 / (k + 1)), rng.randf() * TAU])
 	return {
 		"kind": kind, "x": at.x, "y": at.y, "r": r, "top": top, "reef": rng.randf_range(3.0, 12.0),
-		"ang": rng.randf() * TAU, "stretch": rng.randf_range(1.0, 1.8), "h": harm,
+		"ang": rng.randf() * TAU, "stretch": rng.randf_range(2.5, 4.0) if kind == "trench" else rng.randf_range(1.0, 1.8), "h": harm,
 	}
 
 
@@ -128,6 +141,11 @@ func _random_feature(rng: RandomNumberGenerator, kind: String, centre: Vector2) 
 ## for anything a boat could hit) stays `clear` from the points and routes.
 func _fits(f: Dictionary, keep_clear: Array[Vector2], routes: Array, clear: float) -> bool:
 	var c := Vector2(f.x, f.y)
+	if f.kind == "trench": # deep below every keel: it only has to keep off the other features
+		for other: Dictionary in features:
+			if Vector2(other.x, other.y).distance_to(c) < float(f.r) * float(f.stretch) + float(other.r) * 2.0:
+				return false
+		return true
 	var reach := float(f.r) * float(f.stretch) * 1.4 + clear
 	for p in keep_clear:
 		if p.distance_to(c) < reach:

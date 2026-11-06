@@ -1008,14 +1008,37 @@ func _sounds(sub: SubState, delta: float) -> void:
 	if sub.vents_open and not _vents_were:
 		Sfx.play("klaxon")
 	_vents_were = sub.vents_open
+	_deep(sub, delta, 0.8)
+
+
+## Deep down it gets scary (Blaney): the hull creaks more and louder the deeper she goes; near
+## her test depth the frames bang like gunshots, the boat jolts and water weeps from the seams;
+## past it the lights waver. `pitch` is the boat's voice (a Typhoon's is lower).
+func _deep(sub: SubState, delta: float, pitch: float) -> void:
+	var deep := sub.depth / float(sub.data.test_depth)
 	_creak_timer -= delta
 	if _creak_timer <= 0.0:
-		var deep := sub.depth / float(sub.data.test_depth)
-		_creak_timer = randf_range(6.0, 14.0) / maxf(0.2, deep * deep)
-		if deep > 0.4:
+		_creak_timer = randf_range(6.0, 14.0) / maxf(0.25, deep * deep * 2.0)
+		if deep > 0.3:
 			var c: Dictionary = compartments[randi() % compartments.size()]
-			Sfx.play_at(self, "creak_%d" % randi_range(1, 3), Vector3(randf_range(-1.8, 1.8), 2.0, randf_range(c.z0, c.z1)),
-				lerpf(-14.0, 0.0, clampf(deep - 0.4, 0.0, 1.0)), randf_range(0.8, 1.1))
+			var at := Vector3(c.get("x", 0.0) + randf_range(-1.8, 1.8), c.get("y", 0.0) + 2.0, randf_range(c.z0, c.z1))
+			Sfx.play_at(self, "creak_%d" % randi_range(1, 3), at, lerpf(-14.0, 2.0, clampf(deep - 0.3, 0.0, 1.0)), randf_range(pitch, pitch + 0.3))
+			if deep > 0.85 and randf() < clampf((deep - 0.85) * 3.0, 0.15, 0.8): # a frame takes the strain: bang
+				Sfx.play_at(self, "creak_%d" % randi_range(1, 3), at, 6.0, pitch * 0.55)
+				var me := Game.instance.local_player
+				if me != null:
+					me.trauma = maxf(me.trauma, 0.25 + 0.2 * clampf(deep - 1.0, 0.0, 1.0))
+				_weep(at)
+				if deep > 1.0:
+					flicker(0.3)
+
+
+## A thin spray of water weeping from a seam in the deckhead.
+func _weep(at: Vector3) -> void:
+	var p := Build.particles(self, Color(0.7, 0.8, 0.85, 0.7), 24, 1.4, Vector3.DOWN, 0.8, 15.0, Vector3(0, -9.8, 0), 0.012)
+	p.position = at + Vector3(0, DECK_HEIGHT - 2.1, 0)
+	p.emitting = true
+	get_tree().create_timer(3.0).timeout.connect(p.queue_free)
 
 
 ## A Typhoon's noises: the turbines' soft whirr aft, a klaxon pitched down, deep slow creaks.
@@ -1028,11 +1051,7 @@ func _typhoon_sounds(sub: SubState, delta: float) -> void:
 	if sub.vents_open and not _vents_were:
 		Sfx.play("klaxon", 0.0, 0.8)
 	_vents_were = sub.vents_open
-	_creak_timer -= delta
-	if _creak_timer <= 0.0:
-		_creak_timer = randf_range(8.0, 18.0)
-		var c: Dictionary = compartments[randi() % compartments.size()]
-		Sfx.play_at(self, "creak_%d" % randi_range(1, 3), Vector3(c.get("x", 0.0), c.get("y", 0.0) + 2.0, randf_range(c.z0, c.z1)), -6.0, randf_range(0.6, 0.8))
+	_deep(sub, delta, 0.6)
 
 
 ## Keeps a Typhoon's frame rate up (Blaney: "make sure this sub change doesn't lag anything out"):
