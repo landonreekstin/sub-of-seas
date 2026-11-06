@@ -214,7 +214,8 @@ Added by Blaney after playing. In his words where it matters.
 - [ ] make terrifying sea creatures that live in the depths that can be hunted, or that can hunt us. there should be a command in the PA to spawn one
 - [ ] add the oceangate sub, there is a ton of information on how it was made after its incident including that it was controlled with an XBOX controller
 - [ ] getting around in the sub with a full crew should be doable and make the sub move around faster in arcade mode, i dont want the game to be a waiting simulator
-- [ ] the crew member hats go through their heads
+- [x] the crew member hats go through their heads
+      *(Done, PR #43: every hat sized over the hair and sitting on it; curls and waves pressed flat under a hat.)*
 
 ## M9 — Lando's list (2026-10-30)
 Added by lando. Direction: **more arcadey, not strict realism**. Every existing mechanic
