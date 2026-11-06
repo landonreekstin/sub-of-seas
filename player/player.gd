@@ -461,10 +461,6 @@ func _physics_process(delta: float) -> void:
 		crouching = false
 	velocity.x = dir.x * speed
 	velocity.z = dir.z * speed
-	if not swim:
-		var push := _motion_push()
-		velocity.x += push.x
-		velocity.z += push.z
 	if swim:
 		# Float with the eye just above the water; sinking in from a fall, bob back up.
 		var float_y := Deck.ORIGIN.y + Deck.SWIM_EYE - EYE_HEIGHT
@@ -592,16 +588,6 @@ func _apply_hull_tilt(delta: float) -> void:
 	var heave := SubMotion.heave(sub, sea, _motion_t)
 	_motion_offset = hb.inverse() * Vector3(clampf(-_sway * 0.3, -0.08, 0.08), heave * 0.08, clampf(_surge * 0.15, -0.08, 0.08))
 
-
-## The boat pushes a walking man a little (Blaney): downhill as she rolls and pitches, aft as
-## she gathers way, outward in a turn. Easy to walk against.
-func _motion_push() -> Vector3:
-	if Sim.world == null or Deck.is_out(global_position) or not is_on_floor():
-		return Vector3.ZERO
-	var up := _tilt * Vector3.UP # where up is, seen from the boat
-	var push := Vector3(-up.x, 0.0, -up.z) * 3.0
-	push += Vector3(clampf(_sway, -1.0, 1.0) * -1.2, 0.0, clampf(_surge, -1.0, 1.0) * 1.0)
-	return push.limit_length(0.6)
 
 
 func _interact_target() -> Node:
