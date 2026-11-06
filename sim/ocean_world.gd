@@ -45,6 +45,12 @@ var air := AirState.new()
 var conditions := Conditions.new()
 var seabed := Seabed.new()
 var _ground_cooldown := 0.0
+var _scrape_cooldown := 0.0
+const CAVE_SHOVE := 3.0 ## m: brushing a cave's roof or floor by less shoves her level; more and it's a wall
+var cave_scrapes := 0 ## times she's hit a cave's roof, walls or floor this patrol
+var caves_through := 0 ## caves she's gone right through, in one end and out the other
+var cave_entered := 0.0 ## sim time she went into the cave she's in (0: not in one)
+var _cave_side := 0.0 ## which end she went in at: -1 the way in, +1 the far end
 var crew_count := 1 ## players aboard, set by the host; they breathe
 var lost := "" ## why the boat was lost, once it is
 var dud_chance := 0.05
@@ -254,6 +260,7 @@ func step(dt: float, authoritative := true) -> void:
 	Detection.conditions = conditions
 	Detection.sharpness = escort_sharpness
 	var before := sub.pos
+	var before_heading := sub.heading
 	sub.step(dt)
 	if sub.breached:
 		sub.breached = false
@@ -261,6 +268,7 @@ func step(dt: float, authoritative := true) -> void:
 			event.emit("breach", {"p": sub.breach_power, "x": sub.pos.x, "y": sub.pos.y})
 	conditions.step(dt, sub.pos, rng if authoritative else null)
 	_check_ground(before, dt, authoritative)
+	_check_cave(before, before_heading, dt, authoritative)
 	for ship in ships:
 		if authoritative:
 			_think(ship, dt)
@@ -279,7 +287,7 @@ func step(dt: float, authoritative := true) -> void:
 		t.step(dt)
 		if authoritative and t.alive:
 			_check_hits(t)
-		if authoritative and t.alive and seabed.floor_depth(t.pos) < 2.0:
+		if authoritative and t.alive and (seabed.floor_depth(t.pos) < 2.0 or seabed.roof_depth(t.pos) > 0.0):
 			t.alive = false
 			event.emit("beached", {"x": t.pos.x, "y": t.pos.y})
 	torpedoes = torpedoes.filter(func(t: Torpedo) -> bool: return t.alive)
@@ -317,6 +325,8 @@ func step(dt: float, authoritative := true) -> void:
 ## a bottom she dives onto, and a hard hit opens a leak in the bow.
 func _check_ground(before: Vector2, dt: float, authoritative: bool) -> void:
 	_ground_cooldown = maxf(0.0, _ground_cooldown - dt)
+	if seabed.cave_near(sub.pos, sub.data.length) >= 0:
+		return # _check_cave has her, ends and sides
 	var floor_at := seabed.floor_depth(sub.pos)
 	var keel := maxf(sub.depth, SubState.AWASH_DEPTH)
 	if floor_at >= keel:
@@ -583,6 +593,89 @@ func breakdown(sid: String) -> void:
 
 
 ## Below test depth the hull starts to give.
+## Inside a cave (and nosing up to one) her bow, middle and stern, each side and centre, have to
+## fit between its roof and floor and inside its walls: a wall or a pinch stops her and knocks
+## her back, a roof or a floor shoves her level; going hard into either opens a leak at that
+## end. Also counts her through: in at one end, out at the other.
+func _check_cave(before: Vector2, before_heading: float, dt: float, authoritative: bool) -> void:
+	_scrape_cooldown = maxf(0.0, _scrape_cooldown - dt)
+	var ci := seabed.cave_near(sub.pos, sub.data.length)
+	if ci < 0:
+		cave_entered = 0.0
+		return
+	var f := seabed.features[ci]
+	_count_through(f)
+	var dir := sub.direction()
+	var side := Vector2(dir.y, -dir.x)
+	var keel := maxf(sub.depth, SubState.AWASH_DEPTH)
+	var top := keel - sub.data.height
+	var roof := 0.0
+	var bottom := INF
+	var wall := false
+	var hit_end := 0 # -1 the stern, +1 the bow: which end took it
+	for along in [0.45, 0.0, -0.45]:
+		for across in [-0.5, 0.0, 0.5]:
+			var q: Vector2 = sub.pos + dir * sub.data.length * along + side * sub.data.beam * across
+			var r := seabed.roof_depth(q)
+			var b := seabed.floor_depth(q)
+			if b < SubState.AWASH_DEPTH or (r > 0.0 and b - r < sub.data.height):
+				wall = true
+			if r > roof:
+				roof = r
+				if r > top:
+					hit_end = signi(roundi(along * 10.0))
+			if b < bottom:
+				bottom = b
+				if b < keel:
+					hit_end = signi(roundi(along * 10.0))
+	if not wall and roof == 0.0 and bottom >= keel:
+		return
+	if roof > top + CAVE_SHOVE or bottom < keel - CAVE_SHOVE:
+		wall = true # nosing into the rock round the mouth, not just brushing the roof or floor
+	var what := ""
+	var impact := absf(sub.speed)
+	if wall:
+		sub.pos = before
+		sub.heading = before_heading
+		sub.speed = -0.25 * sub.speed # knocked back off it
+		what = "wall"
+	elif roof > top:
+		sub.depth = roof + sub.data.height + 0.1
+		impact = maxf(impact * 0.4, 0.0)
+		what = "roof"
+	elif bottom < keel:
+		sub.depth = maxf(bottom - 0.2, 0.0)
+		impact *= 0.4
+		what = "floor"
+	if what == "" or not authoritative or _scrape_cooldown > 0.0:
+		return
+	_scrape_cooldown = 5.0
+	cave_scrapes += 1
+	var comp := 0 if hit_end >= 0 else hull.comps.size() - 1
+	if impact > 1.2 and not hull.comps.is_empty():
+		hull.add_leak(comp, 1 if impact > 3.0 else 0, rng)
+		event.emit("grounded", {"text": "We've hit the cave %s! Leak in the %s!" % [what, hull.comps[comp].name], "hard": true})
+	else:
+		event.emit("grounded", {"text": "Scraping the cave %s!" % what, "hard": false})
+
+
+func _count_through(f: Dictionary) -> void:
+	var c := Seabed.cave_local(f, sub.pos)
+	var inside := Seabed.in_tunnel(f, c)
+	if inside and cave_entered == 0.0:
+		cave_entered = maxf(time, 0.001)
+		_cave_side = signf(c.x)
+	elif not inside and cave_entered > 0.0:
+		if signf(c.x) == -_cave_side and absf(c.x) > float(f.len) * 0.5:
+			caves_through += 1
+			event.emit("cave_through", {"text": "We're through the cave! %s." % clock(time - cave_entered), "time": time - cave_entered})
+		cave_entered = 0.0
+
+
+static func clock(seconds: float) -> String:
+	return "%d:%02d" % [int(seconds) / 60, int(seconds) % 60]
+
+
 func _hull_stress(dt: float) -> void:
 	var over := (sub.depth - sub.data.test_depth) / float(sub.data.crush_depth - sub.data.test_depth)
 	if over <= 0.0 or hull.comps.is_empty() or lost != "":

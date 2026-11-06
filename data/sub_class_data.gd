@@ -7,6 +7,8 @@ extends Resource
 @export var crew_min := 3
 @export var crew_max := 4
 @export var length := 95.0
+@export var beam := 8.4 ## m, her widest
+@export var height := 12.0 ## m, keel to the top of the fin (the shears down): what a cave roof scrapes
 @export var surface_speed_kn := 20.0
 @export var submerged_speed_kn := 9.0
 @export var acceleration := 0.15 ## m/s²

@@ -11,6 +11,7 @@ const RELOAD_TIME := 30.0 ## seconds of hands-on work at the tube
 const HELP_RELOAD := 1.7 ## a second crewmate on the hoist speeds a reload this much
 const HELP_REACH := 2.2 ## metres from the tube (along the deck) a helper stands
 const PING_NOTICE_GAP := 20.0 ## s between "they have us" announcements
+const CAVE_RUN_IN := 500.0 ## m from the start to the cave's mouth, on a cave challenge
 const CLEAR_TIME := 60.0 ## s with no escort hunting nearby before the patrol counts as done
 const PASS_OUT_AFTER := 6.0 ## s breathing air at its worst before a crewman passes out
 const KNOCKED_OUT_TIME := 15.0
@@ -413,6 +414,17 @@ func _lay_seabed(islands_only := false) -> void:
 		routes.append([s.pos, s.pos + s.direction() * 30000.0])
 		routes.append([w.sub.pos, s.pos])
 	w.seabed.generate(w.rng.randi(), w.sub.pos, keep, routes, 2500.0, islands_only)
+	var m := MissionData.load_key(crew.mission)
+	var size := Seabed.cave_size(sub_class.length, sub_class.beam, sub_class.height, sub_class.test_depth)
+	if m != null and m.cave: # the challenge: the cave's mouth dead ahead, she starts lined up on it
+		var dir := w.sub.direction()
+		var f := w.seabed.add_cave(w.sub.pos + dir * (CAVE_RUN_IN + 350.0), atan2(dir.y, dir.x), size)
+		w.sub.depth = (Seabed.cave_roof(f, -350.0) + sub_class.height + Seabed.cave_bottom(f, -350.0)) * 0.5
+		w.sub.ordered_depth = w.sub.depth
+		w.sub.ballast = 1.0
+	elif m != null and m.sandbox: # Blaney: caves hidden in the open sea too
+		var at := w.sub.pos + Vector2.from_angle(w.rng.randf() * TAU) * w.rng.randf_range(7000.0, 14000.0)
+		w.seabed.add_cave(at, w.rng.randf() * TAU, size)
 	crew.seabed = w.seabed.to_array()
 
 
@@ -504,8 +516,10 @@ func _show_objectives() -> void:
 		match o.kind:
 			"tonnage":
 				progress = "  (%d t)" % crew.tonnage
-			"survive":
-				progress = "  (%d:%02d)" % [int(Sim.world.time) / 60, int(Sim.world.time) % 60] if Sim.world != null else ""
+			"survive", "cave":
+				progress = "  (%s)" % OceanWorld.clock(Sim.world.time) if Sim.world != null else ""
+				if o.kind == "cave" and Sim.world != null and Sim.world.cave_scrapes > 0:
+					progress += "  scrapes: %d" % Sim.world.cave_scrapes
 		lines.append("%s  %s%s" % ["✓" if o.get("done", false) else "○", o.text, progress])
 	hud.set_objective(m.title.to_upper() + ("" if crew.get("realism", "arcade") == "arcade" else "  ·  " + Realism.level(crew.realism).title.to_upper()), ("\n".join(lines) + "\n\n" if not lines.is_empty() else "") + _skipper_orders() + crew_roles())
 
@@ -1479,6 +1493,7 @@ func _check_patrol_complete(delta: float) -> void:
 	var all_done := true
 	var hopeless := false
 	var survive := false
+	var cave := false
 	for o: Dictionary in crew.objectives:
 		var was: bool = o.done
 		match o.kind:
@@ -1497,6 +1512,9 @@ func _check_patrol_complete(delta: float) -> void:
 			"survive":
 				survive = true
 				o.done = w.time >= float(o.value)
+			"cave":
+				o.done = w.caves_through >= 1
+				cave = cave or o.done
 		changed = changed or was != o.done
 		if not o.done and not o.get("bonus", false):
 			all_done = false
@@ -1504,6 +1522,10 @@ func _check_patrol_complete(delta: float) -> void:
 		push_crew()
 	if all_done and survive:
 		end_patrol("complete", "They gave up the hunt. We made it.")
+		return
+	if all_done and cave:
+		var hits := w.cave_scrapes
+		end_patrol("complete", "Through the cave in %s, %s." % [OceanWorld.clock(w.time), "not a scratch on her" if hits == 0 else "%d scrape%s" % [hits, "" if hits == 1 else "s"]])
 		return
 	if hopeless:
 		end_patrol("escaped", "The targets got away.")
@@ -1729,7 +1751,7 @@ func _on_sim_event(kind: String, data: Dictionary) -> void:
 			announce.rpc("The convoy is zig-zagging. They've spotted us!")
 		"aircraft":
 			announce.rpc("The plane has seen us! Escorts will be coming.")
-		"leak", "power", "breakdown", "grounded":
+		"leak", "power", "breakdown", "grounded", "cave_through":
 			announce.rpc(data.text)
 			push_crew()
 		"beached":

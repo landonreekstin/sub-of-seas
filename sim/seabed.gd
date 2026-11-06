@@ -7,6 +7,13 @@ extends RefCounted
 
 const BASE := 600.0 ## open-ocean floor, far below any boat's crush depth
 const KINDS: Array[String] = ["island", "seamount", "shelf", "trench"]
+## A cave (Blaney: "a short underwater cave to go through and out the other end"): an S-bend
+## tunnel through a rock ridge that stands above the water, so the only way on is through it.
+## Its own fields: len (tunnel, m), w (width), bend (the S's sideways swing), roof (shallowest
+## roof, m), open (roof to floor), ridge (half the ridge's width across), land (its height
+## above water, negative), foot (the floor at its cliffs).
+const CAVE_ROOF_SWING := 12.0 ## the roof rises and dips this much along the tunnel
+const CAVE_FLOOR_BUMPS := 6.0 ## and the floor comes up this much in places
 
 ## Each: {kind, x, y, r (m), top (m: island height above water as a negative, or the depth of
 ## a seamount's peak / a shelf's flat), reef (island: depth of its reef flat), ang (rad),
@@ -15,8 +22,10 @@ var features: Array[Dictionary] = []
 var version := 0 ## goes up whenever the features change, so views know to rebuild
 
 
-## Metres from the surface down to the floor at `p`; negative is dry land that high.
-func floor_depth(p: Vector2) -> float:
+## Metres from the surface down to the floor at `p`; negative is dry land that high. Inside a
+## cave it is the tunnel's floor (its roof is roof_depth); `solid` treats a cave's ridge as all
+## rock instead, for drawing the floor around it.
+func floor_depth(p: Vector2, solid := false) -> float:
 	var depth := BASE
 	for f: Dictionary in features: # trenches first: they only ever deepen the open floor
 		if f.kind == "trench":
@@ -26,11 +35,100 @@ func floor_depth(p: Vector2) -> float:
 	for f: Dictionary in features:
 		if f.kind == "trench":
 			continue
+		if f.kind == "cave":
+			depth = minf(depth, _cave_floor(f, p, solid))
+			continue
 		var d := _norm_dist(f, p)
 		if d >= 2.0:
 			continue
 		depth = minf(depth, _profile(f, d))
 	return depth
+
+
+## How far down a cave's roof is over `p`; 0 is open water above.
+func roof_depth(p: Vector2) -> float:
+	for f: Dictionary in features:
+		if f.kind == "cave":
+			var c := cave_local(f, p)
+			if in_tunnel(f, c):
+				return cave_roof(f, c.x)
+	return 0.0
+
+
+## The cave whose ridge is within `margin` m of `p` (its index), or -1.
+func cave_near(p: Vector2, margin := 400.0) -> int:
+	for i in features.size():
+		var f := features[i]
+		if f.kind == "cave":
+			var c := cave_local(f, p)
+			if absf(c.x) < float(f.len) * 0.5 + margin and absf(c.y) < float(f.ridge) + margin:
+				return i
+	return -1
+
+
+## `p` in a cave's own frame: x along the tunnel (the way in at -len/2, out at +len/2), y across.
+static func cave_local(f: Dictionary, p: Vector2) -> Vector2:
+	return (p - Vector2(f.x, f.y)).rotated(-float(f.ang))
+
+
+static func cave_world(f: Dictionary, c: Vector2) -> Vector2:
+	return Vector2(f.x, f.y) + c.rotated(float(f.ang))
+
+
+## The tunnel's middle line, sideways from the cave's axis, `u` metres along.
+static func cave_centre(f: Dictionary, u: float) -> float:
+	return float(f.bend) * sin(TAU * u / float(f.len))
+
+
+static func cave_roof(f: Dictionary, u: float) -> float:
+	return float(f.roof) + CAVE_ROOF_SWING * (0.5 + 0.5 * sin(3.0 * PI * u / float(f.len) + 1.0))
+
+
+static func cave_bottom(f: Dictionary, u: float) -> float:
+	return cave_roof(f, u) + float(f.open) - CAVE_FLOOR_BUMPS * maxf(0.0, sin(5.0 * PI * u / float(f.len) + 0.4))
+
+
+static func in_tunnel(f: Dictionary, c: Vector2) -> bool:
+	return absf(c.x) <= float(f.len) * 0.5 and absf(c.y - cave_centre(f, c.x)) <= float(f.w) * 0.5
+
+
+func _cave_floor(f: Dictionary, p: Vector2, solid: bool) -> float:
+	var c := cave_local(f, p)
+	var out := maxf(absf(c.x) - float(f.len) * 0.5, absf(c.y) - float(f.ridge))
+	if out > 0.0: # off the ridge: the floor at its cliffs, then down to the deep
+		return lerpf(float(f.foot), BASE, smoothstep(250.0, 1800.0, out))
+	if solid:
+		return float(f.foot)
+	if in_tunnel(f, c):
+		return cave_bottom(f, c.x)
+	return float(f.land)
+
+
+## A cave sized for a boat (length, beam, keel to the top of her fin, in m; her test depth): wide
+## and tall enough for her with room to spare, but only if the crew hold her straight and level.
+static func cave_size(length: float, beam: float, height: float, test_depth: float) -> Dictionary:
+	var open := height * 1.5 + 22.0
+	var roof := clampf(test_depth - CAVE_ROOF_SWING - open - 4.0, 8.0, 24.0)
+	return {
+		"len": 700.0, "w": clampf(beam * 3.0 + length * 0.12 + 20.0, 24.0, 90.0), "bend": clampf(length * 0.3 + 20.0, 25.0, 60.0),
+		"roof": roof, "open": open,
+	}
+
+
+## Puts a cave across the way at `centre`, its tunnel running along `ang` (rad), sized by
+## cave_size(); anything else in the way of its ridge is cleared off.
+func add_cave(centre: Vector2, ang: float, size: Dictionary, ridge := 1500.0) -> Dictionary:
+	var f := {
+		"kind": "cave", "x": centre.x, "y": centre.y, "ang": ang, "ridge": ridge, "land": -45.0,
+		"foot": float(size.roof) + float(size.open) + 30.0, "r": maxf(ridge, float(size.len)), "stretch": 1.0,
+		"top": float(size.roof), "reef": 0.0, "h": [],
+	}
+	f.merge(size)
+	features = features.filter(func(o: Dictionary) -> bool:
+		return o.kind == "trench" or Vector2(o.x, o.y).distance_to(centre) > float(o.r) * float(o.stretch) * 1.6 + ridge + 2500.0)
+	features.append(f)
+	version += 1
+	return f
 
 
 func is_land(p: Vector2) -> bool:
@@ -51,7 +149,8 @@ func _clear(pos: Vector2, course: float, draft: float, look: float) -> bool:
 	var dir := Vector2(sin(deg_to_rad(course)), cos(deg_to_rad(course)))
 	var step := look / 5.0
 	for i in range(1, 6):
-		if floor_depth(pos + dir * step * i) < draft:
+		var q := pos + dir * step * i
+		if floor_depth(q) < draft or roof_depth(q) > 0.0:
 			return false
 	return true
 

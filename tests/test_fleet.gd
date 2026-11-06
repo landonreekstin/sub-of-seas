@@ -110,8 +110,8 @@ func test_every_mission_loads_and_spawns() -> bool:
 	for k in MissionData.KEYS:
 		var m := MissionData.load_key(k)
 		runner.check(m != null and m.key == k and m.title != "" and (m.sandbox or not m.objectives.is_empty()), "mission %s loads" % k)
-		if m.sandbox:
-			continue # ships come later, from the Sandbox director
+		if m.sandbox or m.cave:
+			continue # ships come later, from the Sandbox director; a cave has none
 		var w := _world()
 		var n := 0
 		for g: Dictionary in m.groups:
