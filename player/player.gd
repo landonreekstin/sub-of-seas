@@ -335,6 +335,8 @@ func is_knocked_out() -> bool:
 func breathing() -> Vector2:
 	if Sim.world == null:
 		return Vector2.ZERO
+	if Deck.is_out(global_position): # outside, only a diver's depth weighs on him
+		return Vector2(Game.instance.deck.strain if is_local() else 0.0, 0.0)
 	var c := Sim.world.hull.comp_at_pos(global_position)
 	var smoke: float = Sim.world.air.smoke[c] if c < Sim.world.air.smoke.size() else 0.0
 	return Vector2(Sim.world.air.badness_in(c), smoke)
@@ -434,10 +436,27 @@ func _physics_process(delta: float) -> void:
 		crouching = false
 	velocity.x = dir.x * speed
 	velocity.z = dir.z * speed
+	if Deck.is_under(global_position):
+		# A diver under the sea: swim where you look, Space up, Ctrl down; the sea goes past him
+		# as she moves on (Deck.drift); never below the sea floor.
+		var look := (head.global_basis * Vector3(input.x, 0.0, input.y)).normalized()
+		var up := (1.0 if Input.is_action_pressed("jump") else 0.0) - (1.0 if Input.is_action_pressed("crouch") else 0.0)
+		if Game.instance.menu_open():
+			up = 0.0
+		var sink := -0.25 if Game.instance.sub_class.era == "ww2" else 0.0 # the hard hat's lead boots
+		velocity = look * speed + Vector3(0, up * 1.6 + sink, 0) + Game.instance.deck.drift
+		crouching = false
+		_swimming = true
+		move_and_slide()
+		var floor_y := Deck.floor_at(global_position)
+		if global_position.y < floor_y:
+			global_position.y = floor_y
+		return
 	if swim:
 		# Float with the eye just above the water; sinking in from a fall, bob back up.
-		var float_y := Deck.ORIGIN.y + Deck.SWIM_EYE - EYE_HEIGHT
+		var float_y := Deck.ORIGIN.y + Diving.water_y() + Deck.SWIM_EYE - EYE_HEIGHT
 		velocity.y = clampf((float_y - global_position.y) * 3.0, -4.0, 2.5)
+		velocity += Game.instance.deck.drift
 		if not _swimming:
 			_swimming = true
 			Sfx.play_at(self, "splash", Vector3(0, 1.0, 0), -2.0, randf_range(0.9, 1.1))
@@ -469,8 +488,9 @@ func _process(delta: float) -> void:
 	_pose_sprint(delta)
 	var hud := Game.instance.hud
 	var air := breathing()
-	hud.set_air(air.x, air.y, is_knocked_out())
-	if is_knocked_out():
+	var blacked := Game.instance.deck != null and Game.instance.deck.blacked_out
+	hud.set_air(air.x, air.y, is_knocked_out() or blacked)
+	if is_knocked_out() or blacked:
 		hud.set_prompt("")
 		return
 	if station != null or climbing:
@@ -478,6 +498,12 @@ func _process(delta: float) -> void:
 		return
 	var target := _interact_target()
 	var prompt: String = target.get_prompt(self) if target != null else ""
+	var deck := Game.instance.deck
+	if prompt == "" and deck != null and Deck.is_out(global_position):
+		if deck.holding >= 0:
+			prompt = "Holding on  —  [Space] let go"
+		elif deck.far_from_boat(global_position - Deck.ORIGIN):
+			prompt = "[R] Back to the boat on your lifeline"
 	if prompt == "" and held_tool != "":
 		if Tools.is_instrument(held_tool):
 			prompt = "%s  —  [LMB] hold to play your part of %s    [G] put it back" % [Tools.display_name(held_tool), Band.SONG]
@@ -700,6 +726,8 @@ func go_on_deck() -> void:
 ## Down the hatch to the foot of the ladder by the gun.
 func go_below() -> void:
 	var gun: Station = Game.instance.interior.stations.get("gun")
+	if Diving.suited(peer_id): # the suit goes back in the locker
+		Game.instance.rq_suit.rpc_id(1, false)
 	velocity = Vector3.ZERO
 	_swimming = false
 	if gun != null:

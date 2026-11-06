@@ -176,10 +176,11 @@ func instrument_free(kind: String) -> bool:
 	return not crew.get("tools", {}).values().has(kind)
 
 
-## Host: is anyone out on deck or in the sea round her?
+## Host: is anyone out on deck or in the sea round her without a dive suit? (Divers in suits
+## stay out while she dives: Diving.)
 func crew_on_deck() -> bool:
 	for p: Player in _players.get_children():
-		if Deck.is_out(p.global_position):
+		if Deck.is_out(p.global_position) and not Diving.suited(p.peer_id):
 			return true
 	return false
 
@@ -190,7 +191,7 @@ func _deck_blocks_dive() -> bool:
 		return false
 	if Sim.world.time - _deck_notice > 6.0:
 		_deck_notice = Sim.world.time
-		announce.rpc("Can't dive: there's crew out on deck! Get them below first.")
+		announce.rpc("Can't dive: there's crew out on deck without a dive suit! Get them below or suited up first.")
 	return true
 
 
@@ -304,6 +305,7 @@ func _initial_crew() -> Dictionary:
 		"sunk_by": {}, ## ship class key -> ships sunk
 		"tutorial": {"step": 0, "course": Net.course}, ## course: a Tutorial.COURSES key
 		"knocked": {}, ## peer -> seconds until they come round
+		"suits": {}, ## peer -> true: wearing the boat's dive suit (Diving)
 		"looks": {}, ## peer -> {hat, hue, rank} from their own profile
 		"parts": sub_class.spare_parts, ## spare-parts boxes left in stores
 		## The TDC: periscope marks on one target, the operator's nudges, and whether the
@@ -817,6 +819,21 @@ func rq_station_enter(station_id: String) -> void:
 	push_crew()
 
 
+## A crewman out on deck puts the dive suit on or takes it off, at the locker by the hatch (surfaced).
+@rpc("any_peer", "call_local", "reliable")
+func rq_suit(on: bool) -> void:
+	if not multiplayer.is_server() or Sim.world.sub.depth > 1.0:
+		return
+	var peer := _sender()
+	if not crew.has("suits"):
+		crew.suits = {}
+	if on:
+		crew.suits[peer] = true
+	else:
+		crew.suits.erase(peer)
+	push_crew()
+
+
 @rpc("any_peer", "call_local", "reliable")
 func rq_station_leave() -> void:
 	if not multiplayer.is_server():
@@ -1304,9 +1321,9 @@ func _host_tick(delta: float) -> void:
 		if _arm_push_timer <= 0.0: # the hands move: let everyone see it a few times a second
 			_arm_push_timer = 0.15
 			push_crew()
-	if not sub.is_surfaced(): # going under anyway (flooding): everyone on deck down the hatch
+	if not sub.is_surfaced(): # going under anyway (flooding): everyone on deck without a suit down the hatch
 		for p: Player in _players.get_children():
-			if Deck.is_out(p.global_position):
+			if Deck.is_out(p.global_position) and not Diving.suited(p.peer_id):
 				send_below.rpc_id(p.peer_id)
 	if station_occupant("gun") > 0 and not sub.is_surfaced():
 		crew.stations.erase("gun")

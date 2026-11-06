@@ -243,3 +243,37 @@ static func make_hat(face: Node3D, kind: String) -> Node3D:
 			var brim := Build.cyl(h, 0.13, 0.035, Vector3(0, 0.09, 0), white)
 			brim.rotation.x = 0.1
 	return h
+
+
+## A crewman in the boat's dive suit (Diving): the WWII boats' Mark V hard hat (a round brass
+## helmet with a face window and two side ports on a brass breastplate, grey-tan canvas dress), the Typhoon's black rubber drysuit with a full mask and twin tanks, or modern
+## scuba (a dark wetsuit, mask, one tank).
+static func dress_diver(body: Node3D, face: Node3D, era: String) -> void:
+	var canvas := Color("#8C7B5A") if era == "ww2" else Color("#1E2124")
+	for m in face.get_children():
+		if m.is_in_group("hair_top"):
+			m.visible = false
+	for m in body.find_children("*", "MeshInstance3D", true, false):
+		(m as MeshInstance3D).material_override = Build.mat(canvas, 0.0, "cloth")
+	var brass := Color("#C9A04A")
+	match era:
+		"ww2":
+			var helmet := Build.sphere(face, 0.2, Vector3(0, 0.02, 0.0), brass)
+			helmet.scale = Vector3(1.0, 1.05, 1.0)
+			Build.cyl(face, 0.26, 0.06, Vector3(0, -0.2, 0.0), brass) # the breastplate's rim
+			var plate := Build.sphere(face, 0.26, Vector3(0, -0.26, 0.0), brass)
+			plate.scale = Vector3(1.0, 0.35, 0.9)
+			var glass := Color("#1C2A30")
+			Build.cyl(face, 0.105, 0.035, Vector3(0, 0.02, -0.2), brass.darkened(0.2), Vector3.BACK) # the face window's rim
+			Build.cyl(face, 0.085, 0.03, Vector3(0, 0.02, -0.215), glass, Vector3.BACK)
+			for side in [-1.0, 1.0]:
+				Build.cyl(face, 0.06, 0.04, Vector3(side * 0.2, 0.04, 0.0), glass, Vector3.RIGHT)
+			Build.cyl(face, 0.03, 0.08, Vector3(0.05, 0.1, 0.17), brass, Vector3.BACK) # the air hose's gooseneck
+		_:
+			var hood := Build.sphere(face, 0.128, Vector3(0, 0.03, 0.02), canvas)
+			hood.material_override = Build.mat(canvas, 0.0, "cloth")
+			var mask := Build.box(face, Vector3(0.16, 0.11, 0.05), Vector3(0, 0.005, -0.1), Color("#1A2830"), false)
+			mask.material_override = Build.mat(Color("#2A4450"), 0.3)
+			Build.box(face, Vector3(0.18, 0.13, 0.03), Vector3(0, 0.005, -0.085), Color("#101214"), false)
+			for side in ([-1.0, 1.0] if era == "cold_war" else [0.0]):
+				Build.cyl(face, 0.075, 0.6, Vector3(side * 0.09, -0.4, 0.22), Color("#D8D2C0") if era == "cold_war" else Color("#E0B020"))

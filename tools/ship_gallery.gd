@@ -39,12 +39,14 @@ func _initialize() -> void:
 			face.position.y = 1.6 # Player.EYE_HEIGHT (Player needs the autoloads)
 			m.add_child(face)
 			Crewman.build_face(face, look)
-			if args.size() > 2 and args[2] != "eye":
+			if args.size() > 2 and args[2].begins_with("diver_"): # e.g. diver_ww2: in the dive suit
+				Crewman.dress_diver(m, face, args[2].trim_prefix("diver_"))
+			elif args.size() > 2 and args[2] != "eye":
 				Crewman.make_hat(face, args[2])
 		var cc := Camera3D.new()
 		cc.fov = 35.0
 		root3d.add_child(cc)
-		cc.look_at_from_position(Vector3(0.2, 1.55, -2.6) if args.size() < 3 else Vector3(0.6, 1.7, -1.4), Vector3(0, 1.4, 0) if args.size() < 3 else Vector3(0, 1.62, 0))
+		cc.look_at_from_position(Vector3(0.2, 1.55, -2.6) if args.size() < 3 else (Vector3(0.6, 1.7, -1.4) if not args[2].begins_with("diver_") else Vector3(1.0, 1.5, -3.2)), Vector3(0, 1.4, 0) if args.size() < 3 else Vector3(0, 1.62 if not args[2].begins_with("diver_") else 1.1, 0))
 		env.background_color = Color("#14324F")
 		if args.size() > 1:
 			_save(args[1])
