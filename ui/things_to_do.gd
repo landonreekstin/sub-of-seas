@@ -12,25 +12,35 @@ var _refresh := 0.0
 
 
 func _ready() -> void:
-	set_anchors_preset(Control.PRESET_FULL_RECT)
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_hint = UiKit.label("", 15, UiKit.BRASS)
+	_hint = UiKit.label("", 16, UiKit.BRASS)
 	add_child(_hint)
-	_hint.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT)
-	_hint.position += Vector2(18, -30)
+	_hint.anchor_top = 1.0
+	_hint.anchor_bottom = 1.0
+	_hint.offset_left = 18.0
+	_hint.offset_right = 420.0
+	_hint.offset_top = -40.0
+	_hint.offset_bottom = -14.0
 	_card = UiKit.panel()
 	add_child(_card)
-	_card.set_anchors_and_offsets_preset(Control.PRESET_CENTER_LEFT)
-	_card.position.x = 24
-	_card.grow_vertical = Control.GROW_DIRECTION_BOTH
+	_card.anchor_bottom = 1.0
+	_card.offset_left = 24.0
+	_card.offset_top = 40.0
+	_card.offset_right = 24.0 + 640.0
+	_card.offset_bottom = -56.0
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 8)
 	_card.add_child(box)
 	box.add_child(UiKit.label("THINGS TO DO ABOARD", 22, UiKit.BRASS))
-	_list = UiKit.label("", 15)
+	var scroll := ScrollContainer.new() # a long list scrolls with the wheel
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	box.add_child(scroll)
+	_list = UiKit.label("", 14)
 	_list.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_list.custom_minimum_size.x = 560
-	box.add_child(_list)
+	_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(_list)
 	_card.visible = false
 
 
@@ -45,6 +55,10 @@ func is_open() -> bool:
 
 func _process(delta: float) -> void:
 	var key := OS.get_keycode_string(Settings.key_for("things_to_do"))
+	var me: Player = Game.instance.local_player
+	_hint.visible = me != null and me.station == null
+	if _card.visible and not _hint.visible:
+		_card.visible = false
 	_hint.text = "[%s] %s things to do" % [key, "hide" if _card.visible else ""]
 	if not _card.visible:
 		return
@@ -61,14 +75,15 @@ static func text() -> String:
 	var spots := Game.instance.get_tree().get_nodes_in_group(FunSpot.GROUP)
 	spots.sort_custom(func(a: FunSpot, b: FunSpot) -> bool: return a.global_position.z < b.global_position.z)
 	for f: FunSpot in spots:
-		lines.append("• %s  (%s)\n    %s" % [f.title.to_upper(), f.room(), f.how])
-	var up := Sim.world != null and Sim.world.sub.is_surfaced()
-	var deck := "on the surface" if up else "SURFACE FIRST"
-	lines.append("• OUT ON DECK  (%s)\n    climb the bridge-hatch ladder in the conning tower and look up: [E] climbs out" % deck)
-	lines.append("• FISHING  (out on deck, the stern)\n    [E] at the stern rail; [Space] strikes when it bites, hold [LMB] to reel, keep the line in the green")
-	lines.append("• DECK WRESTLING  (out on deck, the painted ring aft)\n    two step in; [1] push [2] arm drag [3] body lock [4] suplex [5] brace")
-	lines.append("• SWIMMING  (over the side)\n    walk off the casing; [E] at a side ladder climbs back aboard")
-	lines.append("• EMOTES  (anywhere)\n    [1] wave  [2] salute  [3] jig  [4] point  [5] cheer")
+		lines.append("• %s  (%s): %s" % [f.title.to_upper(), f.room(), f.how])
+	var gun: Station = Game.instance.interior.stations.get("gun")
+	if gun != null: # a boat with a deck gun has a way out on deck
+		var up := Sim.world != null and Sim.world.sub.is_surfaced()
+		lines.append("• OUT ON DECK  (%s; %s): at the deck gun's ladder look up at the hatch: [E] climbs out" % [FunSpot.room_at(gun.global_position), "she's surfaced" if up else "SURFACE FIRST"])
+		lines.append("• FISHING  (out on deck, the stern rail): [E] at the rail; [Space] strikes when it bites, hold [LMB] to reel, keep the line in the green")
+		lines.append("• DECK WRESTLING  (out on deck, the painted ring aft): two step in; [1] push [2] arm drag [3] body lock [4] suplex [5] brace")
+		lines.append("• SWIMMING  (over the side): walk off the casing; [E] at a side ladder climbs back aboard")
+	lines.append("• EMOTES  (anywhere): [1] wave  [2] salute  [3] jig  [4] point  [5] cheer")
 	var bests := records()
 	if bests != "":
 		lines.append("\nCREW RECORDS\n" + bests)

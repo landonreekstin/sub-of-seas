@@ -24,9 +24,9 @@ func _ready() -> void:
 	_pivot = Node3D.new()
 	_pivot.position = Vector3(0, top + 0.02, -reach)
 	add_child(_pivot)
-	var hands := Vector3(0, 0.3, 0)
+	var hands := Vector3(0, 0.2, 0)
 	for side in [1.0, -1.0]: # our forearm, then his from across the table
-		var elbow := Vector3(side * 0.06, 0.03, side * 0.24)
+		var elbow := Vector3(side * 0.05, 0.03, side * 0.3)
 		var arm := Build.cyl(_pivot, 0.04, elbow.distance_to(hands), (elbow + hands) * 0.5, Living.SKIN, (hands - elbow).normalized())
 		arm.name = "Arm"
 		Build.cyl(_pivot, 0.045, 0.12, elbow + Vector3(0, 0.0, side * 0.03), Color("#F2F0E8"), Vector3.BACK) # a rolled-up sleeve

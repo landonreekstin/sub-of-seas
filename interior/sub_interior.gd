@@ -374,8 +374,8 @@ func _battery(c: Dictionary) -> void:
 		Living.galley(self, c, -1.0, c.z0 + 5.0, c.z1 - 0.5)
 	if comp_index("crew") < 0: # and no mess or rec room: her pastimes are at the wardroom table
 		var wz: float = (c.z0 + c.z1) * 0.5
-		Living.arm_table(self, 1.35, wz + 0.55, 0.82)
-		Living.card_seats(self, [[0.67, wz - 0.55, -PI / 2.0]], 0.82, Vector3(1.35, 0, wz - 0.55))
+		Living.arm_table(self, 1.35, wz + 0.55, 0.84)
+		Living.card_seats(self, [[0.67, wz - 0.55, -PI / 2.0]], 0.84, Vector3(1.35, 0, wz - 0.55))
 	for z in [c.z0 + 2.0, c.z1 - 2.0]:
 		Build.box(_at, Vector3(0.9, 0.03, 0.9), Vector3(0, 0.02, z), DARK, false)
 		Build.box(_at, Vector3(0.3, 0.04, 0.05), Vector3(0, 0.05, z), BRASS, false)
@@ -478,7 +478,7 @@ func _crew(c: Dictionary) -> void:
 		Build.box(_at, Vector3(1.0, 0.04, 1.9), Vector3(1.3, 0.77, tz), Color("#E8DFC4"), false)
 		Living.table_settings(self, 1.3, tz, 0.79, 1.8, tz < c.z1 - 2.0)
 	Living.cribbage(self, Vector3(1.0, 0.79, c.z1 - 1.0))
-	Living.arm_table(self, 1.3, c.z0 + 2.2, 0.77)
+	Living.arm_table(self, 1.3, c.z0 + 2.2, 0.79)
 	# The galley along the port side (Gato: galley and mess share the after battery room).
 	Living.galley(self, c, -1.0, c.z0 + 2.2, minf(c.z0 + 6.0, c.z1 - 2.0))
 	# Photos and letters from home pinned up over the forward table.
@@ -560,12 +560,10 @@ func _rec_room(c: Dictionary) -> void:
 	for st in [Vector3(0.62, 0, c.z0 + 1.4), Vector3(1.3, 0, c.z0 + 2.1)]: # stools at the card table
 		Build.cyl(_at, 0.18, 0.04, st + Vector3(0, 0.46, 0), Color("#3E5770"))
 		Build.cyl(_at, 0.03, 0.44, st + Vector3(0, 0.22, 0), DARK)
-	Living.card_seats(self, [[0.55, c.z0 + 1.4, -PI / 2.0], [1.3, c.z0 + 2.15, 0.0]], 0.74, Vector3(1.3, 0, c.z0 + 1.4))
+	Living.card_seats(self, [[0.55, c.z0 + 1.4, -PI / 2.0], [1.3, c.z0 + 2.15, 0.0]], 0.76, Vector3(1.3, 0, c.z0 + 1.4))
 	Build.box(_at, Vector3(0.9, 0.72, 0.9), Vector3(1.3, 0.36, c.z0 + 1.4), WOOD) # card table
 	Build.box(_at, Vector3(1.0, 0.04, 1.0), Vector3(1.3, 0.74, c.z0 + 1.4), Color("#2B6A3A"), false) # baize
-	for k in 5:
-		var card := Build.box(_at, Vector3(0.06, 0.005, 0.09), Vector3(1.15 + k * 0.07, 0.765, c.z0 + 1.35 + (k % 2) * 0.05), Color("#F2F0E8"), false)
-		card.rotation.y = k * 0.3
+	Build.box(_at, Vector3(0.065, 0.03, 0.09), Vector3(1.6, 0.775, c.z0 + 1.1), Color("#F2F0E8"), false) # the deck
 	var p := Porthole.create(Vector3(-HALF_WIDTH + 0.02, 1.6, (c.z0 + c.z1) * 0.5), -1.0)
 	_at.add_child(p)
 	portholes.append(p)

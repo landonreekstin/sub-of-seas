@@ -369,6 +369,14 @@ and update "Current style" in the same commit.
   that show the water and nearby hulls; reefs,
   undersea mountains and shelves; sharks, whales, octopus and fish; music (menu, patrol,
   combat); emotes seen in third person; a rec room for whimsical fun and mini games.
+- **Pastimes (Blaney):** arm wrestling across the mess table (tap Space, the locked fists swing
+  toward the loser), blackjack against the house at the card table (cards face up on the baize),
+  the cook's special at the galley range (a swinging heat needle, flip in the green, three flips
+  make a meal called out to the boat), fishing off the stern rail (strike, then reel keeping the
+  line's tension in the green). A bot takes on all comers at any empty seat. Each fun spot glows
+  warm with its name in cream caps when you walk within a few metres. **T** opens the "things to
+  do aboard" card: every pastime on this boat, its room, its keys, what needs her surfaced, and
+  the crew's records; "[T] things to do" sits small in brass in the bottom-left corner.
 - **Training crew calls (Blaney):** in the short per-job courses, the crewmates you would
   hear are played for you: a big line near the top, the speaker in brass caps and the words
   in cream quotes ("CAPTAIN: "Come to course zero-niner-zero.""), with a short bell like an
@@ -444,3 +452,4 @@ and update "Current style" in the same commit.
 | 2026-11-05 | Blaney | Overhaul the other sub types as well; in all the sub types the characters should be in natural positions at their stations; all hands on deck mustn't change the vibe to stressful, it's only to fill places. (Undoes his own red light at all hands.) |
 | 2026-11-05 | Blaney | Even more filled up: the control room easy to move around, but more pipes and stuff so the subs feel full and working underway; accurate kitchen and living areas; the sub should look lived in. (Asked: lived in but tidy, not cluttered; both family photos and 1940s pin-ups; a busy galley with steam, a sizzling pan and a cook; all four boats, the Typhoon too.) |
 | 2026-11-05 | Blaney | (After playing the lived-in Gato: "the gato feels good".) Doors should insulate noise, like the engine. |
+| 2026-11-05 | Blaney | More fun things to do in the game, clearer ways to access them, and a list of the things we can do. (Asked: all four of cards in the mess, fishing off the deck, cooking in the galley and arm wrestling; the list on a key easier for a casual player to hit than F1; each fun spot glows softly with its name when you're close.) |

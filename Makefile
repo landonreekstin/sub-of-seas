@@ -20,4 +20,5 @@ walkthrough:
 	set -e; for s in typhoon gato s_boat narwhal; do godot --headless --path . -s tests/party_walkthrough.gd -- $$s; done
 	godot --headless --path . -s tests/door_walk.gd -- typhoon
 	set -e; for s in gato s_boat typhoon; do godot --headless --path . -s tests/muffle_check.gd -- $$s; done
+	set -e; for s in gato s_boat narwhal typhoon; do godot --headless --path . -s tests/pastime_walkthrough.gd -- $$s; done
 	set -e; for c in scope torpedo attack; do godot --headless --path . -s tests/tutorial_walkthrough.gd -- $$c realistic; done

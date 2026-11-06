@@ -57,7 +57,7 @@ func _names(hand: Array) -> String:
 func _lay(t: Dictionary) -> void:
 	for c in _cards.get_children():
 		c.queue_free()
-	for row: Array in [[t.get("hand", []), -0.3], [t.get("house", []), -0.55]]:
+	for row: Array in [[t.get("hand", []), -0.42], [t.get("house", []), -0.66]]:
 		var hand: Array = row[0]
 		for k in hand.size():
 			var at := Vector3((k - (hand.size() - 1) * 0.5) * 0.075, top + 0.004, float(row[1]))

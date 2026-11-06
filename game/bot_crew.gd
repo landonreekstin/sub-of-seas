@@ -350,8 +350,9 @@ func _darts(b: Dictionary, _hunted: bool) -> void:
 ## A bot at a pastime: heaves away at the mess table, plays blackjack (hits to 16, stands on
 ## 17), or turns out a meal now and then.
 func _pastime(sid: String, b: Dictionary) -> void:
-	if sid in Pastimes.ARM:
-		_order(sid, b, "push", randi_range(1, 3))
+	if sid in Pastimes.ARM: # some bouts he's strong, some he isn't
+		var strong := absi(hash(String(b.name) + str(game.crew.get("arm", {}).get("until", 0.0)))) % 3
+		_order(sid, b, "push", randi_range(0, 2 + strong))
 	elif sid in Pastimes.CARDS:
 		var t: Dictionary = game.crew.get("cards", {}).get(sid, {})
 		if t.get("state", "idle") != "play":

@@ -4,6 +4,15 @@ Where things stand, in plain English. The newest entry goes at the top. Update i
 Other docs: `roadmap.md` is the to-do list, `style.md` how it looks and feels, `design.md` the
 game's design, `credits.md` where every sound came from.
 
+## 2026-11-05 (late night): more things to do (branch `blaney/fun-things`, draft #41, on #39)
+
+Blaney's item: "more fun things to do, clearer ways to access them and see a list". His calls:
+all four of cards, fishing, cooking, arm wrestling; the list on an easy key (T); glow when close.
+- [built, looked at in xvfb, tests pass] `Pastimes` rules, arm/cards/galley stations, `Fishing`,
+  `FunSpot` glow, `ThingsToDo` card; `tests/pastime_walkthrough.gd` on all four boats.
+- [next] Blaney plays it (and #40, the boat's motion, still unplayed), then tick both and mark
+  #40 and #41 ready. #39 (lived-in, door muffling) is ticked and waiting on Lando.
+
 ## 2026-11-05 (evening): lived-in boats (branch `blaney/lived-in`)
 
 Blaney: "even more filled up, control room easy to move around, more pipes, accurate kitchen and

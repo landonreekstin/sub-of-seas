@@ -34,7 +34,7 @@ func _ready() -> void:
 	_light.shadow_enabled = false
 	_light.visible = false
 	add_child(_light)
-	_label = Build.label(self, title.to_upper(), Vector3(0, 0.55, 0), 30, Color("#FFE2A8"))
+	_label = Build.label(self, title.to_upper(), Vector3(0, 0.55, 0), 44, Color("#FFE2A8"))
 	_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	_label.no_depth_test = true
 	_label.outline_size = 8
@@ -54,8 +54,14 @@ func _process(delta: float) -> void:
 
 ## Which room it is in, by the boat's own names.
 func room() -> String:
+	return room_at(global_position)
+
+
+static func room_at(p: Vector3) -> String:
 	var i := Game.instance.interior if Game.instance != null else null
 	if i == null or Sim.world == null:
 		return ""
-	var c: Dictionary = i.compartments[Sim.world.hull.comp_at_pos(global_position)]
-	return String(c.get("title", c.get("name", c.get("type", ""))))
+	if i.has_conning_tower and p.y > SubInterior.CT_FLOOR - 0.5:
+		return "conning tower"
+	var c: Dictionary = i.compartments[Sim.world.hull.comp_at_pos(p)]
+	return String(c.get("name", c.get("type", "")))
