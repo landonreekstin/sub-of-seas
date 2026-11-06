@@ -4,6 +4,29 @@ Where things stand, in plain English. The newest entry goes at the top. Update i
 Other docs: `roadmap.md` is the to-do list, `style.md` how it looks and feels, `design.md` the
 game's design, `credits.md` where every sound came from.
 
+## 2026-11-05 (late night): more things to do (branch `blaney/fun-things`, draft #41, on #39)
+
+Blaney's item: "more fun things to do, clearer ways to access them and see a list". His calls:
+all four of cards, fishing, cooking, arm wrestling; the list on an easy key (T); glow when close.
+- [built, looked at in xvfb, tests pass] `Pastimes` rules, arm/cards/galley stations, `Fishing`,
+  `FunSpot` glow, `ThingsToDo` card; `tests/pastime_walkthrough.gd` on all four boats.
+- [next] Blaney plays it (and #40, the boat's motion, still unplayed), then tick both and mark
+  #40 and #41 ready. #39 (lived-in, door muffling) is ticked and waiting on Lando.
+
+## 2026-11-05 (evening): lived-in boats (branch `blaney/lived-in`)
+
+Blaney: "even more filled up, control room easy to move around, more pipes, accurate kitchen and
+living areas, lived in". His calls: lived in but tidy; family photos and 1940s pin-ups (fully
+dressed); a busy galley with steam, sizzle and a cook; all four boats.
+- [built, looked at, all tests pass] `interior/living.gd` (`Living`): galley on the mess's port side (S-boat: aft in
+  the battery room) with range, pots steaming, a frying pan (`galley_loop`, cut from the rain
+  recording), tins on fiddled shelves, sink, the cook stirring; benches and laid places in mess
+  and wardroom; photos, pin-ups, curtains, sea bags, shoes, towels and two sleepers per crew's
+  quarters; fold-down bunks over the reload torpedoes; vent trunk along every deckhead; control
+  room corner risers and overhead manifolds; gauge needles tremble (more with diesels on).
+  `tools/look_at.gd` pictures chosen spots.
+- [next] Blaney plays it (Gato on his screen), then tick, `gh pr ready 39`.
+
 ## 2026-11-05 (later): the other boats overhauled, natural bot poses (branch `blaney/subs-overhaul`, on #37)
 
 Built and looked at (xvfb): every WWII boat (S-boat included) gets the Typhoon's pipe density in

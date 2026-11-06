@@ -26,7 +26,7 @@ static func job(station_id: String) -> String:
 		return "torpedoman"
 	return {"helm": "helmsman", "dive": "planesman", "ballast": "ballast man", "periscope": "lookout",
 		"tdc": "TDC operator", "sonar": "sonarman", "engine": "motor machinist", "air": "auxiliaryman", "bilge": "pump man", "gun": "gunlayer", "ammo": "ammunition passer",
-		"nav": "navigator", "darts": "darts player", "first_mate": "first mate", "skipper": "skipper's writer", "holo": "officer of the watch"}.get(station_id, "crewman")
+		"nav": "navigator", "darts": "darts player", "arm_a": "arm wrestler", "arm_b": "arm wrestler", "cards_1": "card player", "cards_2": "card player", "galley": "cook", "first_mate": "first mate", "skipper": "skipper's writer", "holo": "officer of the watch"}.get(station_id, "crewman")
 
 
 # --- Requests (host) -------------------------------------------------------------
@@ -113,6 +113,8 @@ func _process(delta: float) -> void:
 		b.t = float(b.t) + TICK
 		if sid.begins_with("tube_"):
 			_torpedoman(sid, b)
+		elif sid in Pastimes.STATIONS:
+			_pastime(sid, b)
 		elif has_method("_" + sid):
 			call("_" + sid, b, hunted)
 
@@ -345,6 +347,26 @@ func _darts(b: Dictionary, _hunted: bool) -> void:
 		_order("darts", b, "score", randi_range(15, 140))
 
 
+## A bot at a pastime: heaves away at the mess table, plays blackjack (hits to 16, stands on
+## 17), or turns out a meal now and then.
+func _pastime(sid: String, b: Dictionary) -> void:
+	if sid in Pastimes.ARM: # some bouts he's strong, some he isn't
+		var strong := absi(hash(String(b.name) + str(game.crew.get("arm", {}).get("until", 0.0)))) % 3
+		_order(sid, b, "push", randi_range(0, 2 + strong))
+	elif sid in Pastimes.CARDS:
+		var t: Dictionary = game.crew.get("cards", {}).get(sid, {})
+		if t.get("state", "idle") != "play":
+			if float(b.t) >= 6.0:
+				b.t = 0.0
+				_order(sid, b, "deal")
+		elif float(b.t) >= 2.0:
+			b.t = 0.0
+			_order(sid, b, "hit" if Pastimes.hand_value(t.hand) < 17 else "stand")
+	elif float(b.t) >= 90.0:
+		b.t = 0.0
+		_order(sid, b, "meal", randi_range(1, 3))
+
+
 func _nearest_hunter() -> ShipState:
 	var sub := Sim.world.sub
 	var best: ShipState = null
@@ -479,7 +501,7 @@ func _ammo_up() -> String:
 func _watch_stations() -> Array[String]:
 	var out: Array[String] = []
 	for sid: String in game.interior.stations:
-		if sid in ["darts", "sand_table", "cameras", "nav", "skipper", "holo"] or (sid in ["gun", "ammo"] and not Sim.world.sub.is_surfaced()):
+		if sid in ["darts", "sand_table", "cameras", "nav", "skipper", "holo"] or sid in Pastimes.STATIONS or (sid in ["gun", "ammo"] and not Sim.world.sub.is_surfaced()):
 			continue
 		out.append(sid)
 	return out

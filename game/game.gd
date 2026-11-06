@@ -19,6 +19,8 @@ const JOIN_TIMEOUT := 20.0 ## s a joining client waits for the boat before givin
 
 static var instance: Game
 
+var _fun_rng := RandomNumberGenerator.new() ## the pastimes' cards
+var _arm_push_timer := 0.0
 var deck: Deck ## the casing out on deck (built with the boat)
 var _deck_notice := -INF ## when "crew on deck" was last announced
 var _ring_free_at := 0.0 ## sim time the wrestling ring takes a new bout
@@ -29,6 +31,7 @@ var hud: Hud
 var pause_menu: PauseMenu
 var bot_crew: BotCrew
 var bot_orders: BotOrders ## open while the local player gives a bot orders
+var things_to_do: ThingsToDo ## the T card: every pastime aboard
 var known := ChartKnown.new() ## what we've seen of the map, while crew.limited_map (an enemy-sub fight)
 var _known_timer := 0.0
 var pa_panel: PaPanel ## open while the local player has the PA microphone
@@ -78,6 +81,9 @@ func _ready() -> void:
 	_fit_exterior()
 	hud = Hud.new()
 	add_child(hud)
+	things_to_do = ThingsToDo.new()
+	things_to_do.theme = UiKit.theme()
+	hud.add_child(things_to_do)
 	move_child(pause_menu, -1)
 
 	_players = Node3D.new()
@@ -666,6 +672,11 @@ func _quit(reason: String) -> void:
 
 # --- Crew state ------------------------------------------------------------
 
+## Who sits at a pastime's seat, "" if nobody.
+func _seated(id: String) -> String:
+	return crew_name(station_occupant(id)) if station_occupant(id) != 0 else ""
+
+
 func station_occupant(id: String) -> int:
 	return crew.stations.get(id, 0)
 
@@ -897,6 +908,17 @@ func call_band(off: bool) -> String:
 	return "Forty hands to the rec room, Skipper. %s." % ("The Foggy Dew" if rec[1] == "" or rec[1] == "foggy_dew" else "Playing along with \"%s\"" % rec[0])
 
 
+## A crewman out on deck lands a fish (Pastimes.FISH index, kg).
+@rpc("any_peer", "call_local", "reliable")
+func rq_fish(kind: int, kg: float) -> void:
+	if not multiplayer.is_server():
+		return
+	var said := Pastimes.landed(crew, crew_name(_sender()), kind, kg)
+	if said != "":
+		announce.rpc(said)
+		push_crew()
+
+
 ## Any crewman: the jukebox's next record.
 @rpc("any_peer", "call_local", "reliable")
 func rq_jukebox() -> void:
@@ -1058,6 +1080,16 @@ func apply_order(station_id: String, key: String, value: Variant, by: int) -> vo
 				if int(value) > int(best.get(who, -1)):
 					best[who] = clampi(int(value), 0, 180)
 				announce.rpc("%s throws %d%s" % [who, int(value), "  — ONE HUNDRED AND EIGHTY!" if int(value) == 180 else ""])
+		"arm_a", "arm_b":
+			if key == "push":
+				Pastimes.arm_push(crew, station_id, int(value))
+		"cards_1", "cards_2":
+			var said := Pastimes.cards_order(crew, station_id, String(key), crew_name(by), _fun_rng)
+			if said != "":
+				announce.rpc(said)
+		"galley":
+			if key == "meal":
+				announce.rpc(Pastimes.meal(crew, crew_name(by), int(value)))
 		_:
 			if station_id.begins_with("tube_"):
 				_tube_order(station_id.trim_prefix("tube_").to_int() - 1, key, value)
@@ -1263,6 +1295,15 @@ func _host_tick(delta: float) -> void:
 		sub.periscope_raised = false
 	Sim.world.crew_count = crew.names.size()
 	_wrestle_tick()
+	var said := Pastimes.arm_step(crew, _seated(Pastimes.ARM[0]), _seated(Pastimes.ARM[1]), Sim.world.time)
+	if said != "":
+		announce.rpc(said)
+		push_crew()
+	elif crew.get("arm", {}).get("on", false):
+		_arm_push_timer -= delta
+		if _arm_push_timer <= 0.0: # the hands move: let everyone see it a few times a second
+			_arm_push_timer = 0.15
+			push_crew()
 	if not sub.is_surfaced(): # going under anyway (flooding): everyone on deck down the hatch
 		for p: Player in _players.get_children():
 			if Deck.is_out(p.global_position):

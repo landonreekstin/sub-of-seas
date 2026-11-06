@@ -21,13 +21,14 @@ const BINDINGS := {
 	"pause": [KEY_ESCAPE],
 	"bot": [KEY_B], # post a bot crewman to an empty station, or stand one down
 	"relieve": [KEY_J], # at a station: a bot takes over from you
+	"things_to_do": [KEY_T], # the list of pastimes (Blaney: easier to hit than F1)
 }
 ## The rebindable actions, in the settings menu's order, with their names there.
 const REBINDABLE := {
 	"move_forward": "Walk forward", "move_back": "Walk back", "move_left": "Step left",
 	"move_right": "Step right", "jump": "Jump", "crouch": "Crouch (hold)", "sprint": "Sprint (hold)", "interact": "Use / man a station",
 	"leave_station": "Leave a station", "next_station": "Next station in a cluster",
-	"drop_tool": "Put a tool down", "voice": "Talk (hold)", "bot": "Post / stand down a bot", "relieve": "Hand your station to a bot", "quit_to_menu": "Leave to the menu",
+	"drop_tool": "Put a tool down", "voice": "Talk (hold)", "bot": "Post / stand down a bot", "relieve": "Hand your station to a bot", "things_to_do": "Things to do (the list)", "quit_to_menu": "Leave to the menu",
 }
 ## Mouse-button actions.
 const MOUSE_BINDINGS := {
