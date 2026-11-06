@@ -4,6 +4,17 @@ Where things stand, in plain English. The newest entry goes at the top. Update i
 Other docs: `roadmap.md` is the to-do list, `style.md` how it looks and feels, `design.md` the
 game's design, `credits.md` where every sound came from.
 
+## 2026-11-06 (later): built, waiting on Blaney's play (branch `blaney/sub-outsides`, #42 on #41)
+
+- [built, looked at in xvfb] `world/own_boat.gd`: new outsides for all four boats; `Deck`
+  collision is the same shape (convex slices); the hatch clear of the fin on every boat.
+  `tests/deck_walk.gd -- <sub>` passes on all four (out, walk, hatch, swim, rungs, below).
+- [built, unit-tested] depth orders to crush depth (yoke + host), `SubInterior._deep` (creaks,
+  bangs, weeping seams, wavering lights), black water deep (`ExteriorWorld.paint_water`).
+- [built, unit-tested] seabed over ~30 km with trenches (`Seabed`), chart zoom to 80 km, swim pen 40 m.
+- [next] Blaney plays the Typhoon (on his screen), then tick the four items + #41's, mark
+  #41 and #42 ready, `vibenote --collect-usage`.
+
 ## 2026-11-06: deep, bigger sea, better outsides, the hatch (branch `blaney/sub-outsides`, on #41)
 
 Done first: the motion's "little push" taken out (Blaney: "the sliding around should not be a
