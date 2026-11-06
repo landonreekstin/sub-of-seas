@@ -10,6 +10,7 @@ const ROAM := 30.0 ## metres around the boat the scenery keeps to
 const FISH_COLOURS: Array[Color] = [Color("#FFD93D"), Color("#3EC8FF"), Color("#FF8A3D"), Color("#7CF2C8"), Color("#FF6FB0"), Color("#C9F2FF")]
 
 var _whales := {} ## id -> Node3D
+var _monsters := {} ## id -> Node3D
 var _schools: Array[Dictionary] = [] ## {mm: MultiMeshInstance3D, centre: Vector3, vel: Vector3, phase}
 var _sharks: Array[Node3D] = []
 var _octopi: Array[Node3D] = []
@@ -51,6 +52,7 @@ func sync(delta: float) -> void:
 		return
 	_t += delta
 	_sync_whales()
+	_sync_monsters()
 	var sub := Sim.world.sub
 	var here := ExteriorWorld.to_3d(sub.pos, -maxf(sub.depth, 3.0))
 	var floor_at := Sim.world.seabed.floor_depth(sub.pos)
@@ -85,6 +87,48 @@ func _sync_whales() -> void:
 		if not seen.has(id):
 			_whales[id].queue_free()
 			_whales.erase(id)
+
+
+# --- Things from the depths --------------------------------------------------
+
+func _sync_monsters() -> void:
+	var seen := {}
+	for m in Sim.world.monsters:
+		seen[m.id] = true
+		var node: Node3D = _monsters.get(m.id)
+		if node == null:
+			node = Creatures.monster(m.kind, m.length())
+			add_child(node)
+			_monsters[m.id] = node
+		node.position = ExteriorWorld.to_3d(m.pos, -m.depth)
+		var swim := _t * (0.6 + m.speed * 0.08) + m.id
+		node.rotation = Vector3(0.0, -deg_to_rad(m.heading), PI * 0.8 if m.is_dead() else 0.0)
+		match m.kind:
+			"squid": # the arms trail and curl, the tentacles reach
+				var arms: Node3D = node.get_node("Arms")
+				for k in arms.get_child_count():
+					var j: Node3D = arms.get_child(k).get_child(0)
+					var depth_in := 0
+					while j != null:
+						j.rotation.x = sin(swim * 1.3 + k + depth_in * 0.7) * 0.12
+						j.rotation.y = cos(swim + k * 1.7 + depth_in * 0.5) * 0.1
+						depth_in += 1
+						j = j.get_child(1) as Node3D if j.get_child_count() > 1 else null
+			"serpent": # a wave runs down its body
+				var j: Node3D = node.get_node("Seg").get_child(0)
+				var i := 0
+				while j != null:
+					j.rotation.y = sin(swim * 1.6 - i * 0.55) * 0.22
+					i += 1
+					j = j.get_child(1) as Node3D if j.get_child_count() > 1 else null
+			"angler": # the lure bobs in front of the mouth
+				(node.get_node("Lure") as Node3D).rotation.z = sin(swim * 0.8) * 0.15
+			_:
+				(node.get_node("Tail") as Node3D).rotation.y = sin(swim * 1.5) * 0.35
+	for id: int in _monsters.keys():
+		if not seen.has(id):
+			_monsters[id].queue_free()
+			_monsters.erase(id)
 
 
 # --- Fish ----------------------------------------------------------------------

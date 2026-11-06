@@ -4,6 +4,19 @@ Where things stand, in plain English. The newest entry goes at the top. Update i
 Other docs: `roadmap.md` is the to-do list, `style.md` how it looks and feels, `design.md` the
 game's design, `credits.md` where every sound came from.
 
+## 2026-11-06 (night): divers, deep monsters, faster arcade, hats (branch `blaney/deep-sea`, draft #43 on #42)
+
+Blaney's six items and his calls are in the style log. Stopped here when he ran low on tokens.
+- [done, looked at] hats fit over the hair (`Crewman.make_hat`); arcade pace x2 (`SubState.pace()`).
+- [done, tests pass, not played] divers (`game/diving.gd`, `Deck._dive`, `tests/diver_walk.gd`), monsters
+  (`sim/monster.gd`, `Creatures.squid/angler/serpent/megalodon`, `tests/test_monsters.gd`, PA "kraken").
+- [not checked] the diver's-eye view under xvfb (`tests/diver_walk.gd -- gato shots`) was too slow; never seen.
+- [next] the cave (plan: a "cave" seabed feature: S-bend tunnel ~700 m, 70 m wide, roof 30-45 m,
+  50 m high, in a rock ridge above water; `floor_depth` plus a new `roof_depth`, a hull-ends scrape
+  check in `OceanWorld`, `world/cave_view.gd` a lofted rock tube with glowing wall spots, a timed
+  "cave" mission for every era plus one cave in the sandbox); then the Titan (era "modern", crew 5,
+  no weapons, gamepad pilot, creaks then implodes at crush); then Blaney plays it all, `make test`.
+
 ## 2026-11-06 (later): built, waiting on Blaney's play (branch `blaney/sub-outsides`, #42 on #41)
 
 - [built, looked at in xvfb] `world/own_boat.gd`: new outsides for all four boats; `Deck`

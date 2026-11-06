@@ -85,6 +85,16 @@ and update "Current style" in the same commit.
   of shot is a tall thin white splash; a hit is an orange flash and a puff of black smoke on
   her side. Inside: a ladder up to a hatch ring in the deckhead marked DECK GUN; the
   ammunition scuttle is a hatch flush in the deck with brass rounds showing down the hole.
+- **Divers** (Blaney): a grey DIVING GEAR locker by the deck hatch; the suit goes with the boat's
+  era (WWII: brass hard hat with a round face window and side ports, tan canvas dress; Typhoon:
+  black drysuit, full mask, twin tanks; modern: scuba). The view out is framed by the helmet's
+  round brass window (a mask's dark edge on the Typhoon); a lamp lights the water deep down.
+  Steel grab rails either side of the bow, the fin and the after casing.
+- **Things from the depths** (Blaney: creepy dread, no gore): dark shapes with eyes that catch the
+  light. A dark red giant squid, a black anglerfish with needle teeth and a glowing green lure, a
+  long dark green serpent with a frill and yellow eyes, a dark grey megalodon as long as a boat.
+  Their call is a whale's song slowed to a groan; a grab creaks the frames, a strike thumps and
+  flickers the lights.
 - **Pace** (Blaney: not a waiting simulator): in arcade the boat moves, speeds up, turns and
   dives twice as fast as standard; noise and battery go by her real speed. Crewmates never block
   each other.

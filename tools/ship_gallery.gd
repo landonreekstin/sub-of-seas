@@ -1,6 +1,6 @@
 extends SceneTree
 ## A ship model on a flat sea, three-quarter view, for checking how it looks:
-##   godot --path . --rendering-driver opengl3 -s tools/ship_gallery.gd -- <class | plane | crew | sealife | own[_<sub>]> [out.png] [eye | x,y,z,tx,ty,tz]
+##   godot --path . --rendering-driver opengl3 -s tools/ship_gallery.gd -- <class | plane | crew | sealife | squid | angler | serpent | megalodon | own[_<sub>]> [out.png] [eye | x,y,z,tx,ty,tz]
 ## (under xvfb-run, add a screenshot). Bow points right.
 
 const CLASSES := ["subchaser", "kaibokan", "destroyer", "freighter", "tanker", "cruiser", "battleship", "carrier"]
@@ -48,6 +48,20 @@ func _initialize() -> void:
 		root3d.add_child(cc)
 		cc.look_at_from_position(Vector3(0.2, 1.55, -2.6) if args.size() < 3 else (Vector3(0.6, 1.7, -1.4) if not args[2].begins_with("diver_") else Vector3(1.0, 1.5, -3.2)), Vector3(0, 1.4, 0) if args.size() < 3 else Vector3(0, 1.62 if not args[2].begins_with("diver_") else 1.1, 0))
 		env.background_color = Color("#14324F")
+		if args.size() > 1:
+			_save(args[1])
+		return
+	if k in Monster.KINDS: # one of the things from the depths, side on, lit like a diver's lamp
+		var mo := Creatures.monster(k, float(Monster.KINDS[k].length))
+		mo.rotation.y = PI * 0.5
+		mo.position = Vector3(0, 10, 0)
+		root3d.add_child(mo)
+		env.background_color = Color("#06121C")
+		var cm := Camera3D.new()
+		cm.far = 2000.0
+		root3d.add_child(cm)
+		var L: float = Monster.KINDS[k].length
+		cm.look_at_from_position(Vector3(L * 0.25, 10.0 + L * 0.2, L * 1.05), Vector3(0, 10, 0))
 		if args.size() > 1:
 			_save(args[1])
 		return
