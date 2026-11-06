@@ -174,8 +174,8 @@ func _place_own(sub: SubState) -> void:
 	var t := Sim.world.time
 	var sea := Sim.world.conditions.sea_at(sub.pos)
 	var under := sub.depth if sub.depth > 1.0 else 0.0 # dived, she's down there for the outside cameras
-	_own.position = to_3d(sub.pos, sin(t * 0.7) * 0.15 * (1.0 + sea) - under + sub.breach_lift())
-	_own.rotation = Vector3(sin(t * 0.45) * 0.006 * (1.0 + sea) + (deg_to_rad(sub.pitch) if sub.breach > 0.0 else 0.0), -deg_to_rad(sub.heading), sin(t * 0.6) * 0.012 * (1.0 + sea))
+	_own.position = to_3d(sub.pos, SubMotion.heave(sub, sea, t) - under + sub.breach_lift())
+	_own.basis = Basis(Vector3.UP, -deg_to_rad(sub.heading)) * SubMotion.basis(SubMotion.attitude(sub, sea, t))
 	(_own.get_node("Gun") as Node3D).rotation.y = -deg_to_rad(gun_bearing)
 
 

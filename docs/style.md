@@ -338,6 +338,14 @@ and update "Current style" in the same commit.
 - **Hits:** camera shake, lights stutter, paint flakes shake down from the deckhead.
 - **Night:** a deep blue-black sky, cold dim moonlight, black water with silver foam; inside,
   submerged, the boat rigs for red (`#FF4A35` light). Rough seas are big rolling waves.
+- **The boat's motion** (Blaney: every axis felt, realistically stable when still; strong but
+  playable; it pushes you a little): inside, the view rolls, pitches, yaws and heaves with the
+  swell, about 1° calm, 3.5° moderate, 7° rough on the surface, a third of that at periscope
+  depth and a slow drift of a fraction of a degree deep and stopped (never quite still). She
+  heels in turns, trims with dive angle and way on, you are pressed back as she gathers way
+  and swing outward in a turn, and the deck plates hum under the diesels. Walking, the deck
+  nudges you downhill on big rolls and with her lurches, easy to walk against. Our boat seen
+  from outside moves the same way (`sim/motion.gd`).
 - **Aircraft:** low-wing carrier planes, green-grey with red roundels.
 - **Hats by rank:** white Dixie cup (Seaman), navy watch cap, ball cap, officer's peaked
   cap with a brass badge, and a salt-stained grey skipper's cap for a Commander.
@@ -424,3 +432,4 @@ and update "Current style" in the same commit.
 | 2026-11-05 | Blaney | A control panel where the skipper sees a 3D view of what is happening in the water from all the information the sub has, in front of him when he takes a position on the bridge; everyone sees the hologram when he toggles it on. (Then: Typhoon only, blue glow.) |
 | 2026-11-05 | Blaney | (After playing the bay, hologram, all hands and crash surface: "very good".) The Typhoon is empty: fill it up, more pipes, and make it accurate to a real Typhoon that's in service. |
 | 2026-11-05 | Blaney | Overhaul the other sub types as well; in all the sub types the characters should be in natural positions at their stations; all hands on deck mustn't change the vibe to stressful, it's only to fill places. (Undoes his own red light at all hands.) |
+| 2026-11-05 | Blaney | Good job on the feeling of movement but more of it: every axis of movement should be felt, and the sub realistically stable when still (still some roll and pitch). (Asked: strong but playable in rough seas, about 7°; yes, the motion pushes you a little when you walk.) |

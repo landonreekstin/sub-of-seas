@@ -35,6 +35,12 @@ var _band: AudioStreamPlayer3D ## his instrument's part, kept in time with the b
 var _swimming := false ## over the side, in the sea round the deck (Deck)
 var held_tool := "" ## from crew state (host-owned)
 var trauma := 0.0 ## camera shake, 0..1, decays
+var _tilt := Basis.IDENTITY ## the boat's motion as the view's tilt against the interior
+var _motion_t := 0.0 ## a smooth copy of the sim's clock for it
+var _motion_offset := Vector3.ZERO ## the eye lagging her heave, surge and sway (camera-local)
+var _last_speed := 0.0
+var _surge := 0.0 ## her fore-and-aft acceleration, smoothed (m/s², + gathering way)
+var _sway := 0.0 ## her turning acceleration, smoothed (m/s², + to starboard)
 
 var _hand: Node3D ## the held tool, in front of the camera (local) or in the hands (others)
 var _tool_fx: CPUParticles3D ## spray or sparks while the tool is working
@@ -422,6 +428,7 @@ func _pose_sprint(delta: float) -> void:
 	_bob += delta * Vector2(velocity.x, velocity.z).length() * 2.6
 	camera.position.y = absf(sin(_bob)) * 0.05 * _sprint
 	camera.position.x = sin(_bob) * 0.025 * _sprint
+	camera.position.z = _motion_offset.z
 
 
 func _physics_process(delta: float) -> void:
@@ -454,6 +461,10 @@ func _physics_process(delta: float) -> void:
 		crouching = false
 	velocity.x = dir.x * speed
 	velocity.z = dir.z * speed
+	if not swim:
+		var push := _motion_push()
+		velocity.x += push.x
+		velocity.z += push.z
 	if swim:
 		# Float with the eye just above the water; sinking in from a fall, bob back up.
 		var float_y := Deck.ORIGIN.y + Deck.SWIM_EYE - EYE_HEIGHT
@@ -484,7 +495,7 @@ func _process(delta: float) -> void:
 		var moving := Input.get_vector("move_left", "move_right", "move_forward", "move_back") != Vector2.ZERO
 		if _emote_t > float(EMOTE_TIME.get(emote, 2.5)) or moving or station != null:
 			_end_emote()
-	_apply_hull_tilt()
+	_apply_hull_tilt(delta)
 	_apply_shake(delta)
 	_pose_sprint(delta)
 	var hud := Game.instance.hud
@@ -546,22 +557,51 @@ func _apply_shake(delta: float) -> void:
 	trauma = maxf(0.0, trauma - delta * 0.9)
 	var s := trauma * trauma
 	var t := Time.get_ticks_msec() * 0.001
-	camera.h_offset = s * 0.12 * sin(t * 37.0) * cos(t * 13.0)
-	camera.v_offset = s * 0.12 * sin(t * 29.0 + 1.3)
+	var tremble := 0.0 # the deck plates hum under running diesels, and a little at flank
+	if Sim.world != null and not Deck.is_out(global_position):
+		var sub := Sim.world.sub
+		tremble = 0.0012 * sub.diesels_running() + 0.0015 * clampf(absf(sub.speed) / (sub.data.surface_speed_kn * SubState.KNOT) - 0.6, 0.0, 1.0)
+	camera.h_offset = s * 0.12 * sin(t * 37.0) * cos(t * 13.0) + _motion_offset.x + tremble * sin(t * 71.0)
+	camera.v_offset = s * 0.12 * sin(t * 29.0 + 1.3) + _motion_offset.y + tremble * sin(t * 89.0 + 0.5)
 
 
-## The interior never moves; the sub's pitch and roll are shown by tilting the view.
-func _apply_hull_tilt() -> void:
+## The interior never moves; the boat's motion (SubMotion: swell, heel, trim) is shown by
+## tilting the view against it, and her surges and turns by the eye lagging a little.
+func _apply_hull_tilt(delta: float) -> void:
 	if Sim.world == null or station != null or camera.top_level: # a station's or an emote's view
 		return
 	if Deck.is_out(global_position): # out on deck the boat's own roll is in the view
 		camera.basis = Basis.IDENTITY
+		_motion_offset = Vector3.ZERO
 		return
 	var sub := Sim.world.sub
-	var roll := clampf(-sub.turn_rate * 1.2, -4.0, 4.0)
-	var tilt := Basis(Vector3.RIGHT, deg_to_rad(-sub.pitch)) * Basis(Vector3.BACK, deg_to_rad(roll))
+	# A smooth clock: on a client the sim's time only arrives ten times a second.
+	_motion_t += delta
+	_motion_t = Sim.world.time if absf(Sim.world.time - _motion_t) > 0.5 else lerpf(_motion_t, Sim.world.time, clampf(delta, 0.0, 1.0))
+	var sea := Sim.world.conditions.sea_at(sub.pos)
+	_tilt = SubMotion.basis(SubMotion.attitude(sub, sea, _motion_t)).inverse()
+	# Surge and sway: what her speeding up, slowing and turning do to a man standing in her.
+	if delta > 0.0:
+		var accel := (sub.speed - _last_speed) / delta
+		_last_speed = sub.speed
+		_surge = lerpf(_surge, clampf(accel, -1.0, 1.0), clampf(delta * 1.5, 0.0, 1.0))
+	_sway = lerpf(_sway, sub.speed * deg_to_rad(sub.turn_rate), clampf(delta * 1.5, 0.0, 1.0))
+	var lean := Basis(Vector3.RIGHT, deg_to_rad(clampf(_surge * 4.0, -2.0, 2.0))) # pressed back as she gathers way
 	var hb := head.global_basis.orthonormalized()
-	camera.basis = hb.inverse() * tilt * hb
+	camera.basis = hb.inverse() * lean * _tilt * hb
+	var heave := SubMotion.heave(sub, sea, _motion_t)
+	_motion_offset = hb.inverse() * Vector3(clampf(-_sway * 0.3, -0.08, 0.08), heave * 0.08, clampf(_surge * 0.15, -0.08, 0.08))
+
+
+## The boat pushes a walking man a little (Blaney): downhill as she rolls and pitches, aft as
+## she gathers way, outward in a turn. Easy to walk against.
+func _motion_push() -> Vector3:
+	if Sim.world == null or Deck.is_out(global_position) or not is_on_floor():
+		return Vector3.ZERO
+	var up := _tilt * Vector3.UP # where up is, seen from the boat
+	var push := Vector3(-up.x, 0.0, -up.z) * 3.0
+	push += Vector3(clampf(_sway, -1.0, 1.0) * -1.2, 0.0, clampf(_surge, -1.0, 1.0) * 1.0)
+	return push.limit_length(0.6)
 
 
 func _interact_target() -> Node:
