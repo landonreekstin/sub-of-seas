@@ -434,3 +434,4 @@ and update "Current style" in the same commit.
 | 2026-11-05 | Blaney | Overhaul the other sub types as well; in all the sub types the characters should be in natural positions at their stations; all hands on deck mustn't change the vibe to stressful, it's only to fill places. (Undoes his own red light at all hands.) |
 | 2026-11-05 | Blaney | Good job on the feeling of movement but more of it: every axis of movement should be felt, and the sub realistically stable when still (still some roll and pitch). (Asked: strong but playable in rough seas, about 7°; yes, the motion pushes you a little when you walk.) |
 | 2026-11-06 | Blaney | "The sliding around should not be a thing actually." (The motion no longer pushes you when you walk; it is only felt in the view.) |
+| 2026-11-06 | Blaney | (After playing the boat's motion with the push taken out: "feels good".) |

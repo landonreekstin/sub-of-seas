@@ -197,8 +197,10 @@ Added by Blaney after playing. In his words where it matters.
 - [x] lets overhault the other sub types now as well, make sure that in all the sub types the characters are in natural positions when they go to their stations, dont make all hands on deck change the vibe to stressful (its only to full places)
       *(Done, PR #38: every WWII boat packed like the Typhoon, the Christmas tree board and HP air manifold; bots stand naturally at every station; all hands keeps the lights as they were.)*
 - [ ] i want the subs even more filled up, the control room should be easy to move around but i want more pipes and stuff to make the subs feel full and funtional as they are underway. accurate kitchen quarters and living areas as well. the sub should look lived in
-- [ ] youve done a good job on the feeling of movement in the game but we need more of it, every axis of movement should be felt and the sub should be realistically stable when still (it would still have some roll and pitch)
-- [ ] the sliding around around should not be a thing actually
+- [x] youve done a good job on the feeling of movement in the game but we need more of it, every axis of movement should be felt and the sub should be realistically stable when still (it would still have some roll and pitch)
+      *(Done, PR #40: the view rolls, pitches, yaws and heaves with the swell, heels in turns, presses you back as she gathers way; steady but never quite still when stopped.)*
+- [x] the sliding around around should not be a thing actually
+      *(Done, PR #40: the motion is only in the view; it never slides or pushes you about.)*
 
 ## M9 — Lando's list (2026-10-30)
 Added by lando. Direction: **more arcadey, not strict realism**. Every existing mechanic
