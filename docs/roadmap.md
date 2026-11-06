@@ -213,7 +213,8 @@ Added by Blaney after playing. In his words where it matters.
 - [ ] there should be dive suits and spots you can "hold on" to because we are going to make it so that the sub can dive without everyone inside, if we need a visual then we need a guy that can physically look out to tell us where we are going for fun, he cannot get back in until we are surfaced
 - [ ] make terrifying sea creatures that live in the depths that can be hunted, or that can hunt us. there should be a command in the PA to spawn one
 - [ ] add the oceangate sub, there is a ton of information on how it was made after its incident including that it was controlled with an XBOX controller
-- [ ] getting around in the sub with a full crew should be doable and make the sub move around faster in arcade mode, i dont want the game to be a waiting simulator
+- [x] getting around in the sub with a full crew should be doable and make the sub move around faster in arcade mode, i dont want the game to be a waiting simulator
+      *(Done, PR #43: in arcade she goes, speeds up, turns and dives twice as fast, as quiet and as easy on the battery as before; crewmates and bots already walk through each other.)*
 - [x] the crew member hats go through their heads
       *(Done, PR #43: every hat sized over the hair and sitting on it; curls and waves pressed flat under a hat.)*
 

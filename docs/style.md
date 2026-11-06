@@ -85,6 +85,9 @@ and update "Current style" in the same commit.
   of shot is a tall thin white splash; a hit is an orange flash and a puff of black smoke on
   her side. Inside: a ladder up to a hatch ring in the deckhead marked DECK GUN; the
   ammunition scuttle is a hatch flush in the deck with brass rounds showing down the hole.
+- **Pace** (Blaney: not a waiting simulator): in arcade the boat moves, speeds up, turns and
+  dives twice as fast as standard; noise and battery go by her real speed. Crewmates never block
+  each other.
 - **Sprint:** hold Shift running forward: 2.1× walking speed (Blaney: a bit faster, for the long walks on the bigger boats), the view widens a few degrees
   and the head bobs, footsteps a little louder and further apart (crewmates hear it). Not while
   crouched; foul air takes it away.
