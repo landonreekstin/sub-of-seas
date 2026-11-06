@@ -163,6 +163,7 @@ godot --headless --path . --quit-after 120          # script/parse errors
 godot --headless --path . -s tests/run_tests.gd     # unit tests, exit code 1 on failure
 godot --headless --path . -s tests/party_walkthrough.gd -- <sub>   # damage parties stay inside the boat, through shut doors
 godot --headless --path . -s tests/door_walk.gd -- typhoon         # a player walks through every door, both ways
+godot --headless --path . -s tests/breach_hatch.gd -- <sub> [pa | ballast | planesman]  # crash surface from 80 m with bots aboard: the hatch opens and stays open
 godot --headless --path . -s tests/deck_walk.gd -- <sub>           # out of the hatch, along the deck, back down; swim and climb aboard
 godot --headless --path . -s tests/pastime_walkthrough.gd -- <sub> # bots play every pastime; the T card lists them
 godot --headless --path . -s tests/all_hands_walkthrough.gd [-- <mission> <sub>]  # "all hands on deck": the crew sink a ship on their own

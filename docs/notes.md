@@ -4,6 +4,15 @@ Where things stand, in plain English. The newest entry goes at the top. Update i
 Other docs: `roadmap.md` is the to-do list, `style.md` how it looks and feels, `design.md` the
 game's design, `credits.md` where every sound came from.
 
+## 2026-11-06 (later still): the hatch after a crash surface
+
+Blaney: after an emergency breach "it was staying locked even though we were surfaced". X twice on
+the ballast blew her up, but the ordered depth stayed deep: the bot planesman (on his own
+initiative: periscope depth) took her back down and the ballast bot flooded the tanks again, vents
+open, hatch shut. Now any blow (and the Titan's weights) is an order to surface:
+`Game._surface_order()` sets the ordered depth and the bot planesman's to 0, off his own
+initiative. `tests/breach_hatch.gd` (PA, ballast, planesman; in `make test`).
+
 ## 2026-11-06 (late night): the cave and the Titan (branch `blaney/deep-sea`, draft #43)
 
 All six of #43's items built and ticked; none played by Blaney yet.

@@ -1027,8 +1027,8 @@ func apply_order(station_id: String, key: String, value: Variant, by: int) -> vo
 			elif key == "depth" and sub_class.fragile: # the Titan's pilot does it all
 				sub.ordered_depth = clampf(float(value), 0.0, sub.data.crush_depth)
 			elif key == "weights" and sub_class.fragile:
-				sub.ordered_depth = 0.0
 				sub.ballast_order("emergency")
+				_surface_order()
 				announce.rpc("Pilot: weights away! She's going up.")
 		"dive":
 			if key == "depth":
@@ -1085,6 +1085,8 @@ func apply_order(station_id: String, key: String, value: Variant, by: int) -> vo
 					push_crew()
 					return
 				sub.ballast_order(key)
+				if key in ["blow", "emergency"]:
+					_surface_order() # or the planesman and the ballast bot take her straight back down
 				if key == "emergency" and sub.blowing == 2:
 					announce.rpc("EMERGENCY BLOW! All main ballast tanks blowing.")
 		"bilge":
@@ -1330,6 +1332,17 @@ func rq_take_pump(index: int) -> void:
 	hull.pumps.remove_at(index)
 	crew.tools[_sender()] = "pump"
 	push_crew()
+
+
+## A blow is an order to surface: the ordered depth goes to the surface and so does the bot
+## planesman's (off his own initiative), so nobody floods her back down and the hatch opens once she's up (Blaney: "it
+## was staying locked even though we were surfaced").
+func _surface_order() -> void:
+	Sim.world.sub.ordered_depth = 0.0
+	var b: Dictionary = crew.get("bots", {}).get("dive", {})
+	if not b.is_empty():
+		b.depth = 0.0
+		b.auto = false # his own idea of a depth would take her back down
 
 
 func end_patrol(result: String, text: String) -> void:
