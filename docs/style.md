@@ -390,6 +390,27 @@ and update "Current style" in the same commit.
 - **UI:** typewriter / stencil feel, cream on dark panels, minimal HUD (crosshair, carried
   tool, interaction prompt).
 
+- **Our boat from outside** (Blaney: real details, smoother hull, weathered paint, every boat
+  as far as real life has them, the Typhoon most; `world/own_boat.gd`): a round lofted hull cut
+  flat by the casing, a streamlined fin with a rounded top edge. WWII boats: dark grey streaked
+  with rust down from the casing and fin, salt at the waterline, black below; teak deck,
+  limber holes, stanchions and lifelines, bow and stern planes, rudder and twin bronze screws,
+  anchor, bridge with windscreen, periscope shears, SJ radar and SD mast, a 20 mm on the
+  cigarette deck (not the S-boat), the hull number in white on the fin (S-44, SS-212, SS-167),
+  torpedo loading hatches; the Narwhal's second 6-inch gun aft. Typhoon: matte black rubber
+  tiles with some torn off, a wide flat deck, twenty missile hatches forward of the sail,
+  bridge windows, masts drawn down, white rescue-buoy frames, white draught marks, bow planes
+  folded low, stern planes with end plates, the tall upper rudder and two shrouded screws.
+  The deck hatch sits clear forward of the fin on every boat; what you walk and swim against
+  is the same shape as what you see.
+- **Deep down** (Blaney: scary deep; Typhoon very deep, WWII boats realistic): orders go all the
+  way to crush depth (Gato 150 m, Typhoon 500 m). The hull creaks more and louder the deeper she
+  goes; near test depth frames bang, the boat jolts and water weeps from the seams; past it the
+  lights waver. Outside the water is dim by 100 m and close to black by 300 m.
+- **The sea** (Blaney: a larger area): islands, seamounts and shelves spread over some 30 km
+  each way, with deep trenches far below any keel; the chart table zooms out to 80 km across;
+  swimmers have 40 m of sea round the boat.
+
 ## Direction log
 
 | Date | Who | Direction |
@@ -454,3 +475,4 @@ and update "Current style" in the same commit.
 | 2026-11-05 | Blaney | (After playing the lived-in Gato: "the gato feels good".) Doors should insulate noise, like the engine. |
 | 2026-11-05 | Blaney | More fun things to do in the game, clearer ways to access them, and a list of the things we can do. (Asked: all four of cards in the mess, fishing off the deck, cooking in the galley and arm wrestling; the list on a key easier for a casual player to hit than F1; each fun spot glows softly with its name when you're close.) |
 | 2026-11-06 | Blaney | We need this sub to get scary deep: the Typhoon class should be able to get very deep, the WWII ones realistic. A better outside of the sub: real details, smoother hull shape, weathered paint; good, working outsides of all the subs as far as they exist in real life, the Typhoon most (he tests on it a lot). |
+| 2026-11-06 | Blaney | A larger area that the sub can go (he hadn't checked how far it went: "that takes a while"). |
