@@ -371,7 +371,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			var post := station.station_id
 			leave_station()
 			Game.instance.rq_bot.rpc_id(1, post, "post", null)
-		elif event.is_action_pressed("next_station"):
+		elif event.is_action_pressed("next_station") and not station is CaptainStation: # Tab picks the captain's target
 			var next := Game.instance.interior.next_in_cluster(station)
 			if next != null:
 				request_station(next)

@@ -21,6 +21,7 @@ const SONAR_SHOAL := Color("#6D8C9E")
 const SONAR_DEEP := Color("#A8B8B8")
 const LIMITED_REDRAW := 3000 ## ms between redraws as more of it comes in
 const LAND_SAMPLES := 180 ## across the chart, for the land and shoal picture
+const WAYPOINT := Color("#2F7A3A")
 
 var half_width := 5000.0 ## metres from the boat to the left/right edge
 var font: Font
@@ -87,11 +88,38 @@ func _draw() -> void:
 		var c := to_chart(Vector2(pencil[i].x, pencil[i].y))
 		draw_arc(c, 10.0, 0.0, TAU, 20, PENCIL, 2.0)
 		draw_string(font, c + Vector2(12, -8), str(i + 1), HORIZONTAL_ALIGNMENT_LEFT, -1, 16, PENCIL)
+	_draw_places(crew)
 	_draw_boat()
 	if crew.get("limited_map", false):
 		draw_string(font, Vector2(12, size.y - 32), "ONLY WHAT WE'VE SEEN.  Clear: by eye.  Dotted: by sonar (P pings further).  Shaded: unknown.", HORIZONTAL_ALIGNMENT_LEFT, -1, 15, PENCIL)
 	draw_string(font, Vector2(12, size.y - 12), "%d km across   north up" % roundi(half_width * 2.0 / 1000.0),
 		HORIZONTAL_ALIGNMENT_LEFT, -1, 16, PENCIL)
+
+
+## The places to go (Places), named, and the waypoint with a dashed line out to it.
+func _draw_places(crew: Dictionary) -> void:
+	if not crew.get("limited_map", false):
+		var found: Dictionary = crew.get("found", {})
+		for p: Dictionary in Places.list(Sim.world.seabed):
+			var c := to_chart(Places.pos(p))
+			if not Rect2(Vector2.ZERO, size).grow(40.0).has_point(c):
+				continue
+			var site := float(p.depth) > 0.0
+			if site:
+				draw_rect(Rect2(c - Vector2(5, 5), Vector2(10, 10)), BLUE, found.has(p.name), 2.0)
+			else:
+				draw_circle(c, 3.0, PENCIL)
+			draw_string(font, c + Vector2(8, 4), "%s%s" % [str(p.name).capitalize() if site else p.name, " %d m" % roundi(float(p.depth)) if site else ""], HORIZONTAL_ALIGNMENT_LEFT, -1, 14, BLUE if site else PENCIL)
+	var wp: Dictionary = crew.get("waypoint", {})
+	if wp.is_empty():
+		return
+	var at := to_chart(Vector2(wp.x, wp.y))
+	var from := to_chart(Sim.world.sub.pos)
+	draw_dashed_line(from, at, WAYPOINT, 2.0, 10.0)
+	draw_arc(at, 12.0, 0.0, TAU, 24, WAYPOINT, 3.0)
+	draw_line(at + Vector2(-6, 0), at + Vector2(6, 0), WAYPOINT, 2.0)
+	draw_line(at + Vector2(0, -6), at + Vector2(0, 6), WAYPOINT, 2.0)
+	draw_string(font, at + Vector2(14, -10), "WAYPOINT  %.1f km" % (Vector2(wp.x, wp.y).distance_to(Sim.world.sub.pos) / 1000.0), HORIZONTAL_ALIGNMENT_LEFT, -1, 15, WAYPOINT)
 
 
 ## Land, reefs and shoal water, sampled from the seabed into a picture a little bigger than the

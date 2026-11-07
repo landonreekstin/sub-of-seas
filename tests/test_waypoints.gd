@@ -22,7 +22,7 @@ func test_every_boat_gets_every_site_within_reach() -> bool:
 		for f in sites:
 			var floor_at := w.seabed.floor_depth(Vector2(f.x, f.y))
 			runner.check(absf(floor_at - float(f.top)) < 1.0, "%s: %s's floor is at its depth (%.0f vs %.0f)" % [key, f.type, floor_at, f.top])
-			runner.check(float(f.top) - BotCrew.SITE_LOOK - w.sub.data.height <= w.sub.data.test_depth, "%s: she can get down to look at %s" % [key, f.type])
+			runner.check(float(f.top) - BotCrew.SITE_LOOK - w.sub.data.height <= w.sub.data.test_depth and float(f.top) > w.sub.data.height + 8.0, "%s: she can get down to look at %s, and over it" % [key, f.type])
 			var d := Vector2(f.x, f.y).length()
 			runner.check(d > 2500.0 and d < 15000.0, "%s: %s is a trip away, not on top of us (%.0f m)" % [key, f.type, d])
 		var garden: Dictionary = sites.filter(func(f: Dictionary) -> bool: return f.type == "garden")[0]
@@ -76,7 +76,11 @@ func test_down_to_look_at_a_site() -> bool:
 	var w := _world()
 	var wp := {"name": "the wreck", "x": 0.0, "y": 1500.0, "depth": 60.0}
 	var want := BotCrew.waypoint_wants(w, wp)
-	runner.check(is_equal_approx(float(want.depth), 60.0 - BotCrew.SITE_LOOK - w.sub.data.height), "down to look at her (%.0f)" % want.depth)
+	runner.check(is_equal_approx(float(want.depth), maxf(60.0 - BotCrew.SITE_LOOK - w.sub.data.height, w.sub.data.periscope_depth)), "down to look at her (%.0f)" % want.depth)
 	wp.y = 9000.0
-	runner.check(float(BotCrew.waypoint_wants(w, wp).depth) < 0.0, "far off, the depth is left alone")
+	runner.check(is_equal_approx(float(BotCrew.waypoint_wants(w, wp).depth), 0.0), "far off with nobody about, she runs up on the diesels")
+	var s := ShipState.new(load("res://data/ships/freighter.tres"))
+	s.pos = Vector2(0, 3000)
+	w.ships.append(s)
+	runner.check(float(BotCrew.waypoint_wants(w, wp).depth) < 0.0, "with a ship about, she stays down")
 	return true

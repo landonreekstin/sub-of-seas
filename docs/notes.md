@@ -4,6 +4,16 @@ Where things stand, in plain English. The newest entry goes at the top. Update i
 Other docs: `roadmap.md` is the to-do list, `style.md` how it looks and feels, `design.md` the
 game's design, `credits.md` where every sound came from.
 
+## 2026-11-06 (latest, 3): captain's chair, waypoints, hologram, sea floor, swimming (branch `blaney/captain-and-sea-floor`, draft #44 on #43)
+
+Blaney's last five M8 items, in this order (his calls: style log, last row).
+- [done, tests pass] places and waypoints: `Seabed.add_sites` (kind "site": type, name; a pit when
+  deeper than the ocean floor), `sim/places.gd`, `Game.set_waypoint`, `BotCrew.order_waypoint` /
+  `waypoint_wants` / `_step_waypoint` (plan kind "waypoint"; `crew.wants` for players' hints),
+  PA "goto"/"places"; `Seabed.clear_course` got `width` and `step`. `tests/test_waypoints.gd`.
+- [next] captain's chair (`CaptainStation`, the Typhoon's "holo" becomes "captain"), then the
+  nav-room hologram (`HoloView`), the sites' models and events, swimming.
+
 ## 2026-11-06 (latest, 2): the crew through the cave, the PA list
 
 - [done, tests pass] "take us through the cave" (`cave` intent; `BotCrew.order_cave` / `_step_cave`:

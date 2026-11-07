@@ -522,6 +522,8 @@ func _process(delta: float) -> void:
 		hud.set_status("%s  |  crew %d  |  sunk %d (%d t)%s  |  F10 leave" % [
 			sub_class.display_name, crew.names.size(), crew.sunk, crew.tonnage,
 			"  |  FLOODING %d%%" % roundi(water * 100.0) if water > 0.01 else ""])
+		var post: Station = local_player.station if local_player != null else null
+		hud.set_captain(CaptainStation.hint_for(post.station_id, crew, Sim.world.sub) if post != null else "")
 
 
 ## The patrol's objectives in the top-right panel, ticked as they are done (every peer).
@@ -1064,10 +1066,10 @@ func apply_order(station_id: String, key: String, value: Variant, by: int) -> vo
 			if key == "party":
 				bot_crew.send_party()
 				announce.rpc("First mate: damage parties, turn to!")
-		"holo":
-			crew.holo = not crew.get("holo", false)
-			announce.rpc("Skipper: %s" % ("hologram on." if crew.holo else "hologram off."))
-			push_crew()
+		"captain":
+			var said := bot_crew.captain(String(key), value)
+			if said != "":
+				announce.rpc("Captain: " + said)
 		"skipper":
 			if key == "read":
 				crew.mate_read = crew.get("mate_news", 0)

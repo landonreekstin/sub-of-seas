@@ -19,6 +19,7 @@ var _smoke: ColorRect
 var _vignette: ColorRect
 var _blackout: ColorRect
 var _talk: Label
+var _captain: Label ## what the captain wants of the post you're on (CaptainStation.hint_for)
 
 
 func _ready() -> void:
@@ -60,6 +61,14 @@ func _ready() -> void:
 	_status.add_theme_color_override("font_outline_color", Color.BLACK)
 	_root.add_child(_status)
 	_status.position = Vector2(12, 8)
+
+	_captain = UiKit.label("", 20, UiKit.BRASS)
+	_captain.add_theme_constant_override("outline_size", 6)
+	_captain.add_theme_color_override("font_outline_color", Color.BLACK)
+	_root.add_child(_captain)
+	_captain.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+	_captain.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_captain.offset_top = 36
 
 
 ## The training checklist panel, top right. An empty title hides it.
@@ -140,6 +149,11 @@ func set_talking(on: bool) -> void:
 
 func set_prompt(text: String) -> void:
 	_prompt.text = text
+
+
+## "CAPTAIN: come to 090: D, right rudder" while the captain wants something of your post.
+func set_captain(text: String) -> void:
+	_captain.text = "" if text == "" else "CAPTAIN: " + text
 
 
 func set_status(text: String) -> void:

@@ -534,14 +534,33 @@ func _berthing(c: Dictionary, gap := {}) -> void:
 		Build.cyl(_at, 0.025, 1.95, Vector3(side * 1.22, 0.97, z1), PIPE)
 
 
-## The navigation room (Blaney): the outside cameras' bank of screens on the port side, a chart
-## locker to starboard; the middle kept clear (the sand table is gone: Blaney, "lets get rid of
-## the sand table").
-func _nav_room(c: Dictionary) -> void:
+## The navigation room (Blaney): mostly a giant hologram of everything in the water, the
+## outside cameras' bank of screens on the port side forward, the captain's chair in the port
+## after corner looking at the hologram (`chair`: the Typhoon's is in her command bay), a chart
+## locker to starboard.
+func _nav_room(c: Dictionary, chair := true) -> void:
 	var mid: float = (c.z0 + c.z1) * 0.5
+	var hz: float = mid + 0.6
+	var holo := HoloView.new()
+	holo.name = "nav_holo"
+	holo.radius = minf(1.35, (c.z1 - c.z0) * 0.5 - 0.6)
+	holo.height = 1.05
+	holo.position = Vector3(0, 1.8, hz)
+	_at.add_child(holo)
+	# The projector: a ring in the deckhead over it, and a glow on the deck under it.
+	Build.cyl(_at, holo.radius * 0.3, 0.06, Vector3(0, DECK_HEIGHT - 0.05, hz), Color("#2E3A44"), Vector3.UP)
+	Build.sphere(_at, 0.08, Vector3(0, DECK_HEIGHT - 0.1, hz), Color("#4FC3FF"), 2.0)
+	Build.cyl(_at, holo.radius * 0.35, 0.03, Vector3(0, 0.015, hz), Color("#2E3A44"), Vector3.UP, false)
+	Build.sphere(_at, 0.05, Vector3(0, 0.05, hz), Color("#4FC3FF"), 2.0)
 	# Stood out from the wall so its screens are in front of the pipe runs (Blaney: "there are
 	# pipes in the way of the tv screen").
-	_add_station(CameraStation.new().setup("cameras", "Outside cameras"), Vector3(-HALF_WIDTH + 1.32, 0, mid), PI / 2.0)
+	_add_station(CameraStation.new().setup("cameras", "Outside cameras"), Vector3(-HALF_WIDTH + 1.32, 0, c.z0 + 1.2), PI / 2.0)
+	if chair:
+		var at := Vector3(-1.05, 0, c.z1 - 0.75)
+		var cap := CaptainStation.new().setup("captain", "Captain's chair") as CaptainStation
+		var to := Vector3(0, 0, hz) - at
+		cap.look = Vector3(0, 1.3, -to.length())
+		_add_station(cap, at, atan2(-to.x, -to.z))
 	# A chart locker of wide flat drawers in the starboard after corner, clear of the walkway.
 	var lz: float = c.z1 - 0.75
 	Build.box(_at, Vector3(0.55, 1.0, 1.0), Vector3(HALF_WIDTH - 0.4, 0.5, lz), WOOD)

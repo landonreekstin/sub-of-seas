@@ -19,6 +19,7 @@ var _hunted_until := -INF
 var _quiet := false ## posting for a PA order: the reply speaks for them
 var _asker := 0 ## the peer whose PA order is being carried out
 var plan := {} ## what the crew are carrying out for the skipper: {kind: "attack", id, ...}
+var _from_chair := false ## carrying out the captain's chair's orders: a player on a post sees them as hints
 
 
 ## What a bot at this station is called in its job.
@@ -27,7 +28,7 @@ static func job(station_id: String) -> String:
 		return "torpedoman"
 	return {"helm": "helmsman", "dive": "planesman", "ballast": "ballast man", "periscope": "lookout",
 		"tdc": "TDC operator", "sonar": "sonarman", "engine": "motor machinist", "air": "auxiliaryman", "bilge": "pump man", "gun": "gunlayer", "ammo": "ammunition passer",
-		"nav": "navigator", "darts": "darts player", "arm_a": "arm wrestler", "arm_b": "arm wrestler", "cards_1": "card player", "cards_2": "card player", "galley": "cook", "first_mate": "first mate", "skipper": "skipper's writer", "holo": "officer of the watch"}.get(station_id, "crewman")
+		"nav": "navigator", "darts": "darts player", "arm_a": "arm wrestler", "arm_b": "arm wrestler", "cards_1": "card player", "cards_2": "card player", "galley": "cook", "first_mate": "first mate", "skipper": "skipper's writer", "captain": "officer of the watch"}.get(station_id, "crewman")
 
 
 # --- Requests (host) -------------------------------------------------------------
@@ -382,6 +383,119 @@ func _nearest_hunter() -> ShipState:
 	return best
 
 
+# --- The captain's chair (host) -----------------------------------------------------
+
+## An order from the captain's chair (CaptainStation's keys). It goes to whoever has the post:
+## a bot (posted if it's empty) carries it out, a player sees it as what the captain wants
+## (crew.wants, CaptainStation.hint_for). Returns what to say to the boat, or "".
+func captain(key: String, value: Variant) -> String:
+	var w := Sim.world
+	var sub := w.sub
+	var want: Dictionary = game.crew.get_or_add("wants", {})
+	var said := ""
+	_from_chair = true
+	_quiet = true
+	match key:
+		"speed", "course":
+			if plan.get("kind", "") in ["waypoint", "cave"]: # steering by hand again
+				game.crew.erase("waypoint")
+				plan.clear()
+				game.crew.orders = ""
+			if key == "speed":
+				want.speed = clampi(int(want.get("speed", sub.telegraph)) + int(value), -2, 4)
+			else:
+				want.course = fposmod(float(want.get("course", roundf(sub.heading))) + float(value), 360.0)
+			var c: float = want.get("course", sub.heading)
+			var t: int = want.get("speed", sub.telegraph)
+			_hand("helm", func(b: Dictionary) -> void:
+				b.course = c
+				b.speed = t)
+		"depth", "preset", "crash_dive", "emergency":
+			var from := float(want.get("depth", -1.0))
+			var o := {"intent": "depth", "metres": clampf((from if from >= 0.0 else sub.ordered_depth) + float(value if key == "depth" else 0.0), 0.0, sub.data.test_depth)}
+			if key == "preset":
+				o = {"intent": "depth", "to": str(value)}
+			elif key == "crash_dive": # down fast: vents open, planes hard down, full ahead
+				o = {"intent": "depth", "to": "dive"}
+				want.speed = 4
+				_hand("helm", func(b: Dictionary) -> void: b.speed = 4)
+			elif key == "emergency":
+				o = {"intent": "depth", "to": "crash"}
+			if str(o.get("to", "")) == "surface" or (o.has("metres") and float(o.metres) <= 0.0):
+				o = {"intent": "depth", "to": "surface"}
+			said = _order_depth(o)
+			want.depth = sub.data.periscope_depth if o.get("to", "") == "periscope" else (0.0 if o.get("to", "") in ["surface", "crash"] \
+					else (maxf(45.0, sub.data.periscope_depth + 15.0) if o.get("to", "") == "dive" else (sub.data.test_depth - 5.0 if o.get("to", "") == "deep" else float(o.get("metres", sub.ordered_depth)))))
+			if key == "crash_dive":
+				var bb: Dictionary = game.crew.get("bots", {}).get("ballast", {})
+				if not bb.is_empty():
+					bb.vent = true
+				said = "Crash dive! " + said
+			if key == "depth" or key == "preset":
+				said = "" if key == "depth" else said # R/F is too often to say every time
+		"target":
+			var mine: Array[ShipState] = []
+			var k := HoloView.known(w)
+			for s in w.ships:
+				if not s.is_sinking() and k.has(s):
+					mine.append(s)
+			if mine.is_empty():
+				said = "No ship we know of, yet. Sonar or the periscope first."
+			else:
+				mine.sort_custom(func(a: ShipState, b: ShipState) -> bool: return a.pos.distance_to(sub.pos) < b.pos.distance_to(sub.pos))
+				var at := -1
+				for i in mine.size():
+					if mine[i].id == int(game.crew.get("captain_target", -1)):
+						at = i
+				var s := mine[(at + 1) % mine.size()]
+				game.crew.captain_target = s.id
+				said = "Target the %s, bearing %03d, %.1f km." % [s.data.display_name.to_lower(), roundi(ShipState.bearing(sub.pos, s.pos)) % 360, s.pos.distance_to(sub.pos) / 1000.0]
+		"attack":
+			var s := w.find_ship(int(game.crew.get("captain_target", -1)))
+			if s == null or s.is_sinking():
+				s = find_target("", {})
+			if s == null:
+				said = "Nothing to attack in reach."
+			else:
+				game.crew.erase("waypoint")
+				begin_attack(s)
+				want.erase("course") # the attack steers now
+				want.erase("speed")
+				want.attack = true
+				said = "Attack the %s! %s" % [s.data.display_name.to_lower(), "Bow on to the lead and fire a spread." if game.arcade_aim() else "Marks on her, then a spread."]
+		"scope":
+			want.scope = not sub.periscope_raised
+			if sub.depth > sub.data.periscope_depth + 1.0 and want.scope:
+				said = "Too deep for the scope: periscope depth first (2)."
+				want.erase("scope")
+			elif game.station_occupant("periscope") <= 0:
+				if game.station_occupant("periscope") == 0:
+					request("periscope", "post", null)
+				var b: Dictionary = game.crew.get("bots", {}).get("periscope", {})
+				if not b.is_empty():
+					b.auto = false
+					_order("periscope", b, "raised", want.scope)
+		"next_place":
+			var all := Places.by_distance(w.seabed, sub.pos)
+			if all.is_empty():
+				said = "No places on the chart."
+			else:
+				var at := -1
+				var wp: Dictionary = game.crew.get("waypoint", {})
+				for i in all.size():
+					if not wp.is_empty() and all[i].name == wp.name:
+						at = i
+				said = game.set_waypoint(all[(at + 1) % all.size()])
+		"clear_place":
+			said = game.set_waypoint({})
+	_from_chair = false
+	_quiet = false
+	if not want.has("attack") or plan.get("kind", "") != "attack":
+		want.erase("attack")
+	game.push_crew()
+	return said
+
+
 # --- The skipper's PA (host) -------------------------------------------------------
 
 ## A line from the PA: says it to the boat, and the crew reply and get on with it.
@@ -513,6 +627,8 @@ func _carry_out(o: Dictionary) -> String:
 func _hand(sid: String, what: Callable) -> String:
 	if not game.interior.stations.has(sid):
 		return ""
+	if game.station_occupant(sid) > 0 and _from_chair: # he has it on his screen already (crew.wants)
+		return ""
 	if game.station_occupant(sid) > 0:
 		game.notice.rpc_id(game.station_occupant(sid), "That order's for you on the %s." % game.interior.stations[sid].display_name.to_lower())
 		return "%s has the %s. " % [game.crew_name(game.station_occupant(sid)), game.interior.stations[sid].display_name.to_lower()]
@@ -536,7 +652,7 @@ func _ammo_up() -> String:
 func _watch_stations() -> Array[String]:
 	var out: Array[String] = []
 	for sid: String in game.interior.stations:
-		if sid in ["darts", "cameras", "nav", "skipper", "holo"] or sid in Pastimes.STATIONS or (sid in ["gun", "ammo"] and not Sim.world.sub.is_surfaced()):
+		if sid in ["darts", "cameras", "nav", "skipper", "captain"] or sid in Pastimes.STATIONS or (sid in ["gun", "ammo"] and not Sim.world.sub.is_surfaced()):
 			continue
 		out.append(sid)
 	return out
@@ -696,6 +812,7 @@ func _step_plan() -> void:
 		target = null
 	if target == null:
 		plan.clear()
+		game.crew.erase("wants")
 		for sid: String in bots:
 			bots[sid].ready = false
 			bots[sid].fire = false if sid.begins_with("tube_") else bots[sid].get("fire", false)
@@ -711,9 +828,14 @@ func _step_plan() -> void:
 	var r := target.pos.distance_to(sub.pos)
 	var lead := w.lead_bearing(target)
 	var course := ShipState.bearing(sub.pos, target.pos) if is_nan(lead) else lead
+	var speed := 4 if r > 4000.0 else (3 if r > 2000.0 else 2)
+	var want: Dictionary = game.crew.get_or_add("wants", {}) # a player at the helm steers the attack too
+	want.course = course
+	want.speed = speed
+	want.attack = true
 	if bots.has("helm"):
 		bots.helm.course = course
-		bots.helm.speed = 4 if r > 4000.0 else (3 if r > 2000.0 else 2)
+		bots.helm.speed = speed
 	if bots.has("dive"):
 		bots.dive.depth = target.depth if target.data.role == "sub" else sub.data.periscope_depth
 	if not game.arcade_aim() and target.data.role != "sub": # a sub is hunted by ear: down the bearing at any level
@@ -817,10 +939,11 @@ func order_waypoint() -> String:
 	var sub := Sim.world.sub
 	var at := Vector2(wp.x, wp.y)
 	var reply := _hand("helm", func(b: Dictionary) -> void: b.auto = false)
-	if float(wp.depth) > 0.0 and not sub.data.fragile:
+	if not sub.data.fragile:
 		reply += _hand("dive", func(b: Dictionary) -> void: b.auto = false)
-		if game.interior.stations.has("ballast") and game.station_occupant("ballast") == 0:
-			request("ballast", "post", null)
+		for sid: String in ["ballast", "engine"]: # to surface and run on the diesels on the way
+			if game.interior.stations.has(sid) and game.station_occupant(sid) == 0:
+				request(sid, "post", null)
 	plan = {"kind": "waypoint"}
 	game.crew.orders = "To " + str(wp.name)
 	_step_waypoint()
@@ -838,8 +961,17 @@ static func waypoint_wants(w: OceanWorld, wp: Dictionary) -> Dictionary:
 	var course := w.seabed.clear_course(sub.pos, ShipState.bearing(sub.pos, at), draft, clampf(d, 300.0, 1500.0), sub.data.beam + 60.0, 80.0)
 	var speed := 4 if d > 3000.0 else (3 if d > 1200.0 else (2 if d > 600.0 else 1))
 	var depth := -1.0
-	if float(wp.get("depth", -1.0)) > 0.0 and d < 2000.0:
-		depth = clampf(float(wp.depth) - SITE_LOOK - sub.data.height, 0.0, sub.data.test_depth - 5.0)
+	var site := float(wp.get("depth", -1.0)) > 0.0
+	# A long way with nobody about: up on the diesels, as a real crew would (dived, the battery
+	# would run flat on the way), and down again for the last of it over a site.
+	var alone := not w.ships.any(func(s: ShipState) -> bool: return not s.is_sinking() and s.pos.distance_to(sub.pos) < 10000.0)
+	if not sub.data.nuclear and not sub.data.fragile and alone and d > (2000.0 if site else 600.0):
+		depth = 0.0
+		speed = 4 if d > 1200.0 else speed
+	elif not sub.is_surfaced() and not sub.data.nuclear: # on the battery: easy on it, or she runs flat on the way
+		speed = mini(speed, 1 if sub.battery < 0.25 else 2)
+	if site and d < 2000.0:
+		depth = clampf(maxf(float(wp.depth) - SITE_LOOK - sub.data.height, sub.data.periscope_depth), 0.0, minf(sub.data.test_depth - 5.0, float(wp.depth) - sub.data.height - 4.0))
 	return {"course": course, "speed": speed, "depth": depth, "range": d}
 
 
