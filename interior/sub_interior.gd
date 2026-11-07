@@ -539,7 +539,9 @@ func _berthing(c: Dictionary, gap := {}) -> void:
 ## the sand table").
 func _nav_room(c: Dictionary) -> void:
 	var mid: float = (c.z0 + c.z1) * 0.5
-	_add_station(CameraStation.new().setup("cameras", "Outside cameras"), Vector3(-HALF_WIDTH + 1.0, 0, mid), PI / 2.0)
+	# Stood out from the wall so its screens are in front of the pipe runs (Blaney: "there are
+	# pipes in the way of the tv screen").
+	_add_station(CameraStation.new().setup("cameras", "Outside cameras"), Vector3(-HALF_WIDTH + 1.32, 0, mid), PI / 2.0)
 	# A chart locker of wide flat drawers in the starboard after corner, clear of the walkway.
 	var lz: float = c.z1 - 0.75
 	Build.box(_at, Vector3(0.55, 1.0, 1.0), Vector3(HALF_WIDTH - 0.4, 0.5, lz), WOOD)

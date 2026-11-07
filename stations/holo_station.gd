@@ -220,10 +220,14 @@ func _build_overlay(root: Control) -> void:
 		var l := UiKit.label()
 		box.add_child(l)
 		_lines.append(l)
+	box.add_child(UiKit.label("[Enter] PA: type an order to the crew", 15, UiKit.BRASS))
 	box.add_child(UiKit.label(footer(cluster != ""), 14, UiKit.DIM))
 
 
 func station_input(event: InputEvent) -> void:
 	if key_pressed(event, KEY_H) and not event.echo:
 		order("holo")
+		click()
+	elif (key_pressed(event, KEY_ENTER) or key_pressed(event, KEY_KP_ENTER)) and not event.echo:
+		Game.instance.open_pa() # the PA from the chair (Blaney: "a PA button so that you can type from there")
 		click()

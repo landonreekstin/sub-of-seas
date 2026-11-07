@@ -234,6 +234,10 @@ Added by Blaney after playing. In his words where it matters.
       *(Done, PR #43: gone from every boat's navigation room; the middle of the room is clear. The cameras' console and the chart locker stay.)*
 - [x] lets also just turn the volume down, i think it is by default too loud
       *(Done, PR #43: out of the box master 40% (was 80%), effects 70% (was 100%), music 50% (was 60%); anyone's saved settings keep their own.)*
+- [x] the captains chair should have a PA button so that you can type from there
+      *(Done, PR #43: Enter in the skipper's chair opens the PA; the captain's chair for every boat will have it too.)*
+- [x] there are pipes in the way of the tv screen as well
+      *(Done, PR #43: the outside cameras' console stands 30 cm out from the wall in every boat, so the big screen is in front of the pipe runs.)*
 - [ ] the navigation room is mostly a giant hologram showing every piece of information needed for testing (everything, even unseen); the hologram leaves the captain's chair
 - [ ] a captain's chair in every boat with its own keys to pilot the sub entirely alone by issuing commands; bots do it unless a player is on that station; more UI for the captain and more information for piloting, so a crew with no sub knowledge can do their jobs
 - [ ] waypoints and places to travel to (click on the chart, a list of places, the PA); the boat steers there itself

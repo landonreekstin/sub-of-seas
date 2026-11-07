@@ -519,3 +519,5 @@ and update "Current style" in the same commit.
 | 2026-11-06 | Blaney | "Make it so i can also exit the boat at any time for now", and "god mode" on the PA: "superspeed and invincibility and super swim speed so i can catch up to subs and watch them from the outside". |
 | 2026-11-06 | Blaney | "Lets get rid of the sand table." |
 | 2026-11-06 | Blaney | "Lets also just turn the volume down, i think it is by default too loud." (Defaults now master 40%, effects 70%, music 50%; saved settings keep their own.) |
+| 2026-11-06 | Blaney | "The captains chair should have a PA button so that you can type from there." (Enter, from the chair; every captain's chair to come has it too.) |
+| 2026-11-06 | Blaney | "There are pipes in the way of the tv screen as well." (The outside cameras' console now stands out from the wall, its screens in front of the pipe runs.) |
