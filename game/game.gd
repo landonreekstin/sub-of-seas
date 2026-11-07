@@ -480,6 +480,83 @@ func _debug_torpedo() -> void:
 		Sim.world.fire_torpedo(gyro)
 
 
+# --- Places on the sea floor (host) --------------------------------------------------------
+
+const SITE_REACH := 450.0 ## m: the boat (or a swimmer from her) this close finds a site
+const VENT_PUSH := 0.7 ## m/s the smokers' rising heat lifts her
+const VENT_TIME := 25.0
+var _site_timer := 0.0
+var _vent_until := -INF
+
+
+## The first time she comes near each place, it's found and its event happens (Blaney: "they
+## should each have an event linked to them, simple but still an event").
+func _check_sites(delta: float) -> void:
+	var w := Sim.world
+	if w.time < _vent_until and not w.sub.is_surfaced(): # the vents' heat: up she goes
+		w.sub.depth = maxf(w.sub.depth - VENT_PUSH * delta, 0.0)
+	_site_timer -= delta
+	if _site_timer > 0.0:
+		return
+	_site_timer = 1.0
+	var found: Dictionary = crew.get_or_add("found", {})
+	for f in w.seabed.sites():
+		if found.has(f.name) or Vector2(f.x, f.y).distance_to(w.sub.pos) > SITE_REACH:
+			continue
+		found[f.name] = w.time
+		if f.type == "vents":
+			_vent_until = w.time + VENT_TIME
+		site_event.rpc(str(f.type), str(f.name))
+		announce.rpc(_site_lines(str(f.type), str(f.name)))
+		push_crew()
+
+
+func _site_lines(type: String, place: String) -> String:
+	var said := "DISCOVERED: %s. " % (place[0].to_upper() + place.substr(1))
+	match type:
+		"wreck":
+			said += "Sonar: Skipper... tapping on the hydrophone. Three short, three long, three short. From the wreck."
+		"ruins":
+			said += "The sea floor's shaking! Stones are coming down... the temple's door is opening."
+		"vents":
+			said += "Hot water coming up under us, she's being lifted! Sonar can't hear a thing over the roar."
+		"garden":
+			said += "Lookout: fish, thousands of them, all glowing... they're all round the boat."
+		"alien":
+			said += "The lights... something's answering us. A light's coming up out of the city. It's following us."
+	return said
+
+
+## Every peer: what the crew hear and feel of a place's event (SiteView shows the rest).
+@rpc("authority", "call_local", "reliable")
+func site_event(type: String, _place: String) -> void:
+	match type:
+		"wreck": # tapping, the hull groaning in sympathy, a bell tolling once
+			for k in 9:
+				get_tree().create_timer(0.6 + k * (0.25 if k < 3 or k >= 6 else 0.6)).timeout.connect(func() -> void: Sfx.play("click", 2.0, 0.45))
+			Sfx.play("creak_%d" % randi_range(1, 3), 2.0, 0.5)
+			get_tree().create_timer(6.0).timeout.connect(func() -> void: Sfx.play("clang", 0.0, 0.35))
+		"ruins": # a tremor
+			Sfx.play("depth_charge", -6.0, 0.35)
+			Sfx.play("creak_%d" % randi_range(1, 3), 2.0, 0.6)
+			if local_player != null:
+				local_player.add_trauma(0.5)
+			interior.shake_loose(0.5)
+			get_tree().create_timer(3.0).timeout.connect(func() -> void: Sfx.play("clang", -4.0, 0.5))
+		"vents": # a roar of rising water, the hull ticking as it warms
+			Sfx.play("blow_loop", 0.0, 0.5)
+			for k in 6:
+				get_tree().create_timer(2.0 + k * 1.7).timeout.connect(func() -> void: Sfx.play("click", -2.0, 1.6))
+			if local_player != null:
+				local_player.add_trauma(0.25)
+		"garden":
+			_monster_call(-14.0, 1.4) # a high, soft song
+		"alien": # our lights flicker, a deep chord answers
+			interior.flicker(0.7)
+			for pitch in [0.25, 0.315, 0.375]:
+				_monster_call(-8.0, pitch)
+
+
 ## Testing aid (--test-breach): an emergency blow 3 s in; with --depth 80 she crash-surfaces.
 func _debug_breach() -> void:
 	await get_tree().create_timer(3.0).timeout
@@ -1390,6 +1467,7 @@ func _host_tick(delta: float) -> void:
 	if Sim.world == null or crew.result != "":
 		return
 	var sub := Sim.world.sub
+	_check_sites(delta)
 	if sub.periscope_raised and Sim.world.hull.is_broken("periscope"):
 		sub.periscope_raised = false
 	Sim.world.crew_count = crew.names.size()

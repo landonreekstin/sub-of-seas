@@ -258,6 +258,7 @@ func show_debrief(crew: Dictionary, career := "") -> void:
 		"Leaks welded          %d" % st.leaks,
 		"Fires put out         %d" % st.fires,
 		"Repairs               %d" % st.repairs,
+		"Places discovered     %d%s" % [crew.get("found", {}).size(), ("  (" + ", ".join(crew.get("found", {}).keys()) + ")") if not crew.get("found", {}).is_empty() else ""],
 		"Crew                  %s" % ", ".join(crew.names.values()),
 	]:
 		box.add_child(UiKit.label(line, 18))

@@ -27,9 +27,12 @@ func sync(seabed: Seabed) -> void:
 		if f.kind == "cave":
 			add_child(CaveView.build(f, rng))
 			continue
-		var reach := float(f.r) * float(f.stretch) * (1.25 if f.kind == "island" else 1.7)
+		var site: bool = f.kind == "site"
+		var reach := float(f.r) * float(f.stretch) * (1.25 if f.kind == "island" else (1.2 if site else 1.7))
 		var cells := 110 if f.kind == "island" else 60
-		var mesh := _build(seabed, Vector2(f.x, f.y), reach, cells, rng)
+		var mesh := _build(seabed, Vector2(f.x, f.y), reach, cells, rng, INF if site else DEEPEST_DRAWN) # a site is seen however deep
+		if site:
+			add_child(SiteView.build(f, rng))
 		if mesh != null:
 			add_child(mesh)
 		if f.kind == "island":
@@ -40,7 +43,7 @@ func sync(seabed: Seabed) -> void:
 
 
 ## One feature's patch of floor: a square grid `reach` metres each way from `centre`.
-func _build(seabed: Seabed, centre: Vector2, reach: float, cells: int, rng: RandomNumberGenerator) -> MeshInstance3D:
+func _build(seabed: Seabed, centre: Vector2, reach: float, cells: int, rng: RandomNumberGenerator, deepest := DEEPEST_DRAWN) -> MeshInstance3D:
 	var step := reach * 2.0 / cells
 	var h := PackedFloat32Array()
 	h.resize((cells + 1) * (cells + 1))
@@ -62,7 +65,7 @@ func _build(seabed: Seabed, centre: Vector2, reach: float, cells: int, rng: Rand
 				var a: Vector3 = v[tri[0]]
 				var b: Vector3 = v[tri[1]]
 				var c3: Vector3 = v[tri[2]]
-				if maxf(a.y, maxf(b.y, c3.y)) < -DEEPEST_DRAWN:
+				if maxf(a.y, maxf(b.y, c3.y)) < -deepest:
 					continue
 				any = true
 				st.set_color(_colour((a.y + b.y + c3.y) / 3.0, rng))

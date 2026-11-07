@@ -109,7 +109,7 @@ func _draw_places(crew: Dictionary) -> void:
 				draw_rect(Rect2(c - Vector2(5, 5), Vector2(10, 10)), BLUE, found.has(p.name), 2.0)
 			else:
 				draw_circle(c, 3.0, PENCIL)
-			draw_string(font, c + Vector2(8, 4), "%s%s" % [str(p.name).capitalize() if site else p.name, " %d m" % roundi(float(p.depth)) if site else ""], HORIZONTAL_ALIGNMENT_LEFT, -1, 14, BLUE if site else PENCIL)
+			draw_string(font, c + Vector2(8, 4), "%s%s" % [str(p.name)[0].to_upper() + str(p.name).substr(1), " %d m" % roundi(float(p.depth)) if site else ""], HORIZONTAL_ALIGNMENT_LEFT, -1, 14, BLUE if site else PENCIL)
 	var wp: Dictionary = crew.get("waypoint", {})
 	if wp.is_empty():
 		return
