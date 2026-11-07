@@ -15,7 +15,7 @@ static var sharpness := 1.0 ## the realism level: lookouts and hydrophones pick 
 
 ## Sound the sub makes, 0.1 (creeping) .. ~1.6 (flank on the surface, both diesels).
 static func sub_noise(sub: SubState) -> float:
-	var frac := absf(sub.speed) / (sub.data.submerged_speed_kn * SubState.KNOT)
+	var frac := absf(sub.speed) / sub.pace() / (sub.data.submerged_speed_kn * SubState.KNOT)
 	var noise := 0.1 + 0.9 * frac * frac
 	if sub.is_surfaced():
 		noise = 0.6 + 0.7 * minf(frac, 1.0) + 0.15 * sub.diesels_running()
@@ -33,7 +33,7 @@ static func sub_exposure(sub: SubState) -> float:
 	var h := sub.scope_height()
 	if h <= 0.0:
 		return 0.0
-	var kn := absf(sub.speed) / SubState.KNOT
+	var kn := absf(sub.speed) / sub.pace() / SubState.KNOT
 	return clampf(h / 3.0, 0.3, 1.0) * (1.0 + kn / 3.0) # feather grows with speed
 
 

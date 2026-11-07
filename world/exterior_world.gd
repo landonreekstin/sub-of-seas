@@ -338,8 +338,9 @@ func environment() -> Environment:
 ## Sets `env` and its `sky` up for an eye `depth` metres under the surface (the periscope's,
 ## or a porthole's own environment).
 static func paint_water(env: Environment, sky: ToonSky, depth: float, night: bool) -> void:
-	var dark := clampf(clampf(depth / 150.0, 0.0, 0.7) + (0.55 if night else 0.0), 0.0, 0.9)
-	var mid := Color("#2FB3C4").lerp(Color("#04182A"), dark)
+	# Light fades fast with depth: dim by 100 m, near black by 300 (Blaney: scary deep).
+	var dark := clampf((1.0 - exp(-depth / 130.0)) + (0.55 if night else 0.0), 0.0, 0.97)
+	var mid := Color("#2FB3C4").lerp(Color("#04182A"), dark).lerp(Color("#000306"), clampf((depth - 150.0) / 250.0, 0.0, 1.0))
 	sky.sky_top_color = Color("#B4F2F2").lerp(Color("#0A2A40"), dark)
 	sky.sky_horizon_color = mid
 	sky.ground_horizon_color = mid

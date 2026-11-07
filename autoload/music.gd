@@ -14,6 +14,7 @@ const HUSH_RATE := 80.0 ## dB a second, so it clears the air in under a second
 var current := ""
 var _players: Array[AudioStreamPlayer] = []
 var _front := 0
+var _tweens: Array[Tween] = [null, null]
 var _streams := {}
 var _hushed := false
 var _bus := 0
@@ -59,13 +60,24 @@ func play(track: String, fade := 2.5) -> void:
 	var old := _players[_front]
 	_front = 1 - _front
 	var new := _players[_front]
-	var tw := create_tween().set_parallel(true)
-	tw.tween_property(old, "volume_db", -80.0, fade)
-	tw.chain().tween_callback(old.stop)
+	_fade(1 - _front, -80.0, fade, true)
 	if track == "":
 		return
 	new.stream = _stream(track, true)
 	new.volume_db = -60.0
 	new.play()
-	create_tween().tween_property(new, "volume_db", float(LEVEL.get(track, -8.0)), fade)
+	_fade(_front, float(LEVEL.get(track, -8.0)), fade, false)
+
+
+## Fades player `i` to `db` (and stops it after, if `stop`). A fade still running on it is cut
+## short first: an old fade-out's stop would otherwise silence the next track started on it
+## (Blaney: the Typhoon's music "started playing then stopped").
+func _fade(i: int, db: float, secs: float, stop: bool) -> void:
+	if _tweens[i] != null and _tweens[i].is_valid():
+		_tweens[i].kill()
+	var tw := create_tween()
+	tw.tween_property(_players[i], "volume_db", db, secs)
+	if stop:
+		tw.tween_callback(_players[i].stop)
+	_tweens[i] = tw
 

@@ -21,7 +21,12 @@ func sync(seabed: Seabed) -> void:
 	var rng := RandomNumberGenerator.new()
 	for i in seabed.features.size():
 		var f: Dictionary = seabed.features[i]
+		if f.kind == "trench": # far too deep for any eye or light to reach
+			continue
 		rng.seed = hash([f.x, f.y])
+		if f.kind == "cave":
+			add_child(CaveView.build(f, rng))
+			continue
 		var reach := float(f.r) * float(f.stretch) * (1.25 if f.kind == "island" else 1.7)
 		var cells := 110 if f.kind == "island" else 60
 		var mesh := _build(seabed, Vector2(f.x, f.y), reach, cells, rng)

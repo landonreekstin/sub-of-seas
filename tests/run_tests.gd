@@ -8,12 +8,15 @@ const TEST_FILES: Array[String] = [
 	"res://tests/test_fleet.gd",
 	"res://tests/test_settings.gd",
 	"res://tests/test_seabed.gd",
+	"res://tests/test_cave.gd",
 	"res://tests/test_weather.gd",
 	"res://tests/test_gun.gd",
 	"res://tests/test_wrestling.gd",
 	"res://tests/test_sound.gd",
 	"res://tests/test_crew_command.gd",
 	"res://tests/test_enemy_sub.gd",
+	"res://tests/test_pastimes.gd",
+	"res://tests/test_monsters.gd",
 ]
 
 var passed := 0

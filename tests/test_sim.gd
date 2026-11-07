@@ -32,7 +32,7 @@ func test_sub_reaches_ordered_speed() -> bool:
 	w.sub.diesels.assign([1.0, 1.0])
 	w.sub.telegraph = 4
 	_run(w, 120.0)
-	var expected := GATO.surface_speed_kn * SubState.KNOT
+	var expected := GATO.surface_speed_kn * SubState.KNOT * w.sub.pace()
 	runner.check(absf(w.sub.speed - expected) < 0.05, "surfaced flank speed %.2f ~ %.2f" % [w.sub.speed, expected])
 	runner.check(w.sub.pos.y > 500.0 and absf(w.sub.pos.x) < 1.0, "sub moved north")
 	return true
@@ -42,7 +42,7 @@ func test_right_rudder_turns_clockwise() -> bool:
 	var w := _world()
 	w.sub.telegraph = 2
 	w.sub.rudder = 3
-	_run(w, 40.0)
+	_run(w, 20.0)
 	runner.check(w.sub.heading > 10.0 and w.sub.heading < 180.0, "heading went east: %.1f" % w.sub.heading)
 	return true
 
@@ -474,4 +474,19 @@ func test_arcade_lead_mark_hits_a_crossing_ship() -> bool:
 	w.fire_torpedo(0.0)
 	_run(w, 60.0)
 	runner.check(ship.hp < FREIGHTER.hp, "the straight shot hit him")
+	return true
+
+
+func test_arcade_moves_twice_as_fast_but_sounds_the_same() -> bool:
+	var w := _world()
+	w.sub.telegraph = 4
+	_run(w, 60.0)
+	var fast := w.sub.speed
+	var noise := Detection.sub_noise(w.sub)
+	var r := _world()
+	Realism.apply(r, "standard")
+	r.sub.telegraph = 4
+	_run(r, 60.0)
+	runner.check(absf(fast - 2.0 * r.sub.speed) < 0.05, "arcade %.2f m/s is twice standard %.2f" % [fast, r.sub.speed])
+	runner.check(absf(noise - Detection.sub_noise(r.sub)) < 0.01, "same noise at flank: %.2f" % noise)
 	return true

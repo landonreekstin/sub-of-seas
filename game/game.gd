@@ -11,6 +11,7 @@ const RELOAD_TIME := 30.0 ## seconds of hands-on work at the tube
 const HELP_RELOAD := 1.7 ## a second crewmate on the hoist speeds a reload this much
 const HELP_REACH := 2.2 ## metres from the tube (along the deck) a helper stands
 const PING_NOTICE_GAP := 20.0 ## s between "they have us" announcements
+const CAVE_RUN_IN := 500.0 ## m from the start to the cave's mouth, on a cave challenge
 const CLEAR_TIME := 60.0 ## s with no escort hunting nearby before the patrol counts as done
 const PASS_OUT_AFTER := 6.0 ## s breathing air at its worst before a crewman passes out
 const KNOCKED_OUT_TIME := 15.0
@@ -19,6 +20,8 @@ const JOIN_TIMEOUT := 20.0 ## s a joining client waits for the boat before givin
 
 static var instance: Game
 
+var _fun_rng := RandomNumberGenerator.new() ## the pastimes' cards
+var _arm_push_timer := 0.0
 var deck: Deck ## the casing out on deck (built with the boat)
 var _deck_notice := -INF ## when "crew on deck" was last announced
 var _ring_free_at := 0.0 ## sim time the wrestling ring takes a new bout
@@ -29,6 +32,7 @@ var hud: Hud
 var pause_menu: PauseMenu
 var bot_crew: BotCrew
 var bot_orders: BotOrders ## open while the local player gives a bot orders
+var things_to_do: ThingsToDo ## the T card: every pastime aboard
 var known := ChartKnown.new() ## what we've seen of the map, while crew.limited_map (an enemy-sub fight)
 var _known_timer := 0.0
 var pa_panel: PaPanel ## open while the local player has the PA microphone
@@ -78,6 +82,9 @@ func _ready() -> void:
 	_fit_exterior()
 	hud = Hud.new()
 	add_child(hud)
+	things_to_do = ThingsToDo.new()
+	things_to_do.theme = UiKit.theme()
+	hud.add_child(things_to_do)
 	move_child(pause_menu, -1)
 
 	_players = Node3D.new()
@@ -170,10 +177,11 @@ func instrument_free(kind: String) -> bool:
 	return not crew.get("tools", {}).values().has(kind)
 
 
-## Host: is anyone out on deck or in the sea round her?
+## Host: is anyone out on deck or in the sea round her without a dive suit? (Divers in suits
+## stay out while she dives: Diving.)
 func crew_on_deck() -> bool:
 	for p: Player in _players.get_children():
-		if Deck.is_out(p.global_position):
+		if Deck.is_out(p.global_position) and not Diving.suited(p.peer_id) and not p.godly():
 			return true
 	return false
 
@@ -184,7 +192,7 @@ func _deck_blocks_dive() -> bool:
 		return false
 	if Sim.world.time - _deck_notice > 6.0:
 		_deck_notice = Sim.world.time
-		announce.rpc("Can't dive: there's crew out on deck! Get them below first.")
+		announce.rpc("Can't dive: there's crew out on deck without a dive suit! Get them below or suited up first.")
 	return true
 
 
@@ -298,6 +306,7 @@ func _initial_crew() -> Dictionary:
 		"sunk_by": {}, ## ship class key -> ships sunk
 		"tutorial": {"step": 0, "course": Net.course}, ## course: a Tutorial.COURSES key
 		"knocked": {}, ## peer -> seconds until they come round
+		"suits": {}, ## peer -> true: wearing the boat's dive suit (Diving)
 		"looks": {}, ## peer -> {hat, hue, rank} from their own profile
 		"parts": sub_class.spare_parts, ## spare-parts boxes left in stores
 		## The TDC: periscope marks on one target, the operator's nudges, and whether the
@@ -405,6 +414,21 @@ func _lay_seabed(islands_only := false) -> void:
 		routes.append([s.pos, s.pos + s.direction() * 30000.0])
 		routes.append([w.sub.pos, s.pos])
 	w.seabed.generate(w.rng.randi(), w.sub.pos, keep, routes, 2500.0, islands_only)
+	var m := MissionData.load_key(crew.mission)
+	var size := Seabed.cave_size(sub_class.length, sub_class.beam, sub_class.height, sub_class.test_depth)
+	if m != null:
+		for k in m.deep_holes.size(): # the Titan's dives: the deep floor under her, and deeper still nearby
+			var at := w.sub.pos + (Vector2.ZERO if k == 0 else Vector2.from_angle(k * 2.4) * 6000.0)
+			w.seabed.features.append({"kind": "trench", "x": at.x, "y": at.y, "r": 3500.0, "top": m.deep_holes[k], "reef": 0.0, "ang": 0.0, "stretch": 1.0, "h": []})
+	if m != null and m.cave: # the challenge: the cave's mouth dead ahead, she starts lined up on it
+		var dir := w.sub.direction()
+		var f := w.seabed.add_cave(w.sub.pos + dir * (CAVE_RUN_IN + 350.0), atan2(dir.y, dir.x), size)
+		w.sub.depth = (Seabed.cave_roof(f, -350.0) + sub_class.height + Seabed.cave_bottom(f, -350.0)) * 0.5
+		w.sub.ordered_depth = w.sub.depth
+		w.sub.ballast = 1.0
+	elif m != null and m.sandbox: # Blaney: caves hidden in the open sea too
+		var at := w.sub.pos + Vector2.from_angle(w.rng.randf() * TAU) * w.rng.randf_range(7000.0, 14000.0)
+		w.seabed.add_cave(at, w.rng.randf() * TAU, size)
 	crew.seabed = w.seabed.to_array()
 
 
@@ -496,8 +520,12 @@ func _show_objectives() -> void:
 		match o.kind:
 			"tonnage":
 				progress = "  (%d t)" % crew.tonnage
-			"survive":
-				progress = "  (%d:%02d)" % [int(Sim.world.time) / 60, int(Sim.world.time) % 60] if Sim.world != null else ""
+			"deep":
+				progress = "  (%d m)" % roundi(Sim.world.sub.depth) if Sim.world != null and not o.get("done", false) else ""
+			"survive", "cave":
+				progress = "  (%s)" % OceanWorld.clock(Sim.world.time) if Sim.world != null else ""
+				if o.kind == "cave" and Sim.world != null and Sim.world.cave_scrapes > 0:
+					progress += "  scrapes: %d" % Sim.world.cave_scrapes
 		lines.append("%s  %s%s" % ["✓" if o.get("done", false) else "○", o.text, progress])
 	hud.set_objective(m.title.to_upper() + ("" if crew.get("realism", "arcade") == "arcade" else "  ·  " + Realism.level(crew.realism).title.to_upper()), ("\n".join(lines) + "\n\n" if not lines.is_empty() else "") + _skipper_orders() + crew_roles())
 
@@ -666,6 +694,11 @@ func _quit(reason: String) -> void:
 
 # --- Crew state ------------------------------------------------------------
 
+## Who sits at a pastime's seat, "" if nobody.
+func _seated(id: String) -> String:
+	return crew_name(station_occupant(id)) if station_occupant(id) != 0 else ""
+
+
 func station_occupant(id: String) -> int:
 	return crew.stations.get(id, 0)
 
@@ -806,6 +839,21 @@ func rq_station_enter(station_id: String) -> void:
 	push_crew()
 
 
+## A crewman out on deck puts the dive suit on or takes it off, at the locker by the hatch (surfaced).
+@rpc("any_peer", "call_local", "reliable")
+func rq_suit(on: bool) -> void:
+	if not multiplayer.is_server():
+		return
+	var peer := _sender()
+	if not crew.has("suits"):
+		crew.suits = {}
+	if on:
+		crew.suits[peer] = true
+	else:
+		crew.suits.erase(peer)
+	push_crew()
+
+
 @rpc("any_peer", "call_local", "reliable")
 func rq_station_leave() -> void:
 	if not multiplayer.is_server():
@@ -834,7 +882,7 @@ func rq_bot(station_id: String, key: String, value: Variant) -> void:
 @rpc("any_peer", "call_local", "reliable")
 func rq_pa(text: String) -> void:
 	if multiplayer.is_server() and crew.get("result", "") == "":
-		bot_crew.skipper_order(text.left(160), crew_name(_sender()))
+		bot_crew.skipper_order(text.left(160), crew_name(_sender()), _sender())
 
 
 ## The skipper's words over the speakers, for everyone.
@@ -864,11 +912,24 @@ func call_enemy_sub(attack: bool) -> String:
 	return "Enemy sub reported close by, Skipper. Rig for quiet: from here on the chart's only what we can see."
 
 
+## A monster on the PA (Blaney: "a command in the PA to spawn one"): one of the things from the
+## depths, close by and below, coming for us. It only comes as shallow as its own depth.
+func call_monster(kind: String) -> String:
+	var w := Sim.world
+	for m in w.monsters:
+		if not m.is_dead() and m.pos.distance_to(w.sub.pos) < 4000.0:
+			return "There's already something out there, Skipper. The %s. Listen." % m.info().name
+	var m := w.add_monster(kind, 900.0, true)
+	if w.sub.depth < m.floor_depth() - 20.0:
+		return "Something's down there, Skipper... a %s, deep. It won't come above %d metres: take her down if you want it." % [m.info().name, roundi(m.floor_depth())]
+	return "Sonar: something's moving down there, Skipper. Something big. A %s... and it's coming for us." % m.info().name
+
+
 func enemy_sub_class() -> String:
 	return "los_angeles" if sub_class.era == "cold_war" else "i_boat"
 
 
-## From now on the chart and sand table only show what the boat has seen.
+## From now on the chart only shows what the boat has seen.
 func _limit_map() -> void:
 	crew.limited_map = true
 	known.start(Sim.world.sub.pos)
@@ -895,6 +956,17 @@ func call_band(off: bool) -> String:
 	crew.full_crew = true
 	var rec: Array = Jukebox.RECORDS[int(crew.get("jukebox", 0)) % Jukebox.RECORDS.size()]
 	return "Forty hands to the rec room, Skipper. %s." % ("The Foggy Dew" if rec[1] == "" or rec[1] == "foggy_dew" else "Playing along with \"%s\"" % rec[0])
+
+
+## A crewman out on deck lands a fish (Pastimes.FISH index, kg).
+@rpc("any_peer", "call_local", "reliable")
+func rq_fish(kind: int, kg: float) -> void:
+	if not multiplayer.is_server():
+		return
+	var said := Pastimes.landed(crew, crew_name(_sender()), kind, kg)
+	if said != "":
+		announce.rpc(said)
+		push_crew()
 
 
 ## Any crewman: the jukebox's next record.
@@ -952,13 +1024,23 @@ func apply_order(station_id: String, key: String, value: Variant, by: int) -> vo
 				sub.telegraph = clampi(int(value), -2, 4)
 			elif key == "rudder":
 				sub.rudder = clampi(int(value), -3, 3)
+			elif key == "depth" and sub_class.fragile: # the Titan's pilot does it all
+				sub.ordered_depth = clampf(float(value), 0.0, sub.data.crush_depth)
+			elif key == "weights" and sub_class.fragile:
+				sub.ballast_order("emergency")
+				_surface_order()
+				announce.rpc("Pilot: weights away! She's going up.")
 		"dive":
 			if key == "depth":
 				if float(value) > 0.0 and _deck_blocks_dive():
 					push_crew()
 					return
-				sub.ordered_depth = clampf(float(value), 0.0, 200.0)
-		"first_mate":
+				sub.ordered_depth = clampf(float(value), 0.0, sub.data.crush_depth) # down to where she breaks (Blaney: scary deep)
+				# Surface on the planes alone leaves her awash with the tanks full and the hatch
+				# shut, so the order to surface blows main ballast too (Blaney: "i cannot open the
+				# hatch even though i pressed 1 to surface").
+				if sub.ordered_depth <= 0.0 and sub.ballast > 0.0 and sub.blowing == 0 and not sub_class.fragile:
+					sub.ballast_order("blow")
 			if key == "party":
 				bot_crew.send_party()
 				announce.rpc("First mate: damage parties, turn to!")
@@ -1007,6 +1089,8 @@ func apply_order(station_id: String, key: String, value: Variant, by: int) -> vo
 					push_crew()
 					return
 				sub.ballast_order(key)
+				if key in ["blow", "emergency"]:
+					_surface_order() # or the planesman and the ballast bot take her straight back down
 				if key == "emergency" and sub.blowing == 2:
 					announce.rpc("EMERGENCY BLOW! All main ballast tanks blowing.")
 		"bilge":
@@ -1058,6 +1142,16 @@ func apply_order(station_id: String, key: String, value: Variant, by: int) -> vo
 				if int(value) > int(best.get(who, -1)):
 					best[who] = clampi(int(value), 0, 180)
 				announce.rpc("%s throws %d%s" % [who, int(value), "  — ONE HUNDRED AND EIGHTY!" if int(value) == 180 else ""])
+		"arm_a", "arm_b":
+			if key == "push":
+				Pastimes.arm_push(crew, station_id, int(value))
+		"cards_1", "cards_2":
+			var said := Pastimes.cards_order(crew, station_id, String(key), crew_name(by), _fun_rng)
+			if said != "":
+				announce.rpc(said)
+		"galley":
+			if key == "meal":
+				announce.rpc(Pastimes.meal(crew, crew_name(by), int(value)))
 		_:
 			if station_id.begins_with("tube_"):
 				_tube_order(station_id.trim_prefix("tube_").to_int() - 1, key, value)
@@ -1244,6 +1338,17 @@ func rq_take_pump(index: int) -> void:
 	push_crew()
 
 
+## A blow is an order to surface: the ordered depth goes to the surface and so does the bot
+## planesman's (off his own initiative), so nobody floods her back down and the hatch opens once she's up (Blaney: "it
+## was staying locked even though we were surfaced").
+func _surface_order() -> void:
+	Sim.world.sub.ordered_depth = 0.0
+	var b: Dictionary = crew.get("bots", {}).get("dive", {})
+	if not b.is_empty():
+		b.depth = 0.0
+		b.auto = false # his own idea of a depth would take her back down
+
+
 func end_patrol(result: String, text: String) -> void:
 	if crew.result != "":
 		return
@@ -1263,9 +1368,18 @@ func _host_tick(delta: float) -> void:
 		sub.periscope_raised = false
 	Sim.world.crew_count = crew.names.size()
 	_wrestle_tick()
-	if not sub.is_surfaced(): # going under anyway (flooding): everyone on deck down the hatch
+	var said := Pastimes.arm_step(crew, _seated(Pastimes.ARM[0]), _seated(Pastimes.ARM[1]), Sim.world.time)
+	if said != "":
+		announce.rpc(said)
+		push_crew()
+	elif crew.get("arm", {}).get("on", false):
+		_arm_push_timer -= delta
+		if _arm_push_timer <= 0.0: # the hands move: let everyone see it a few times a second
+			_arm_push_timer = 0.15
+			push_crew()
+	if not sub.is_surfaced(): # going under anyway (flooding): everyone on deck without a suit down the hatch
 		for p: Player in _players.get_children():
-			if Deck.is_out(p.global_position):
+			if Deck.is_out(p.global_position) and not Diving.suited(p.peer_id) and not p.godly():
 				send_below.rpc_id(p.peer_id)
 	if station_occupant("gun") > 0 and not sub.is_surfaced():
 		crew.stations.erase("gun")
@@ -1355,6 +1469,8 @@ func _breathe(delta: float) -> void:
 	var changed := false
 	for p: Player in _players.get_children():
 		var peer := p.peer_id
+		if crew.get("god", {}).has(peer): # god mode: nothing knocks him out
+			continue
 		if crew.knocked.has(peer):
 			crew.knocked[peer] -= delta
 			if crew.knocked[peer] <= 0.0:
@@ -1408,6 +1524,7 @@ func _check_patrol_complete(delta: float) -> void:
 	var all_done := true
 	var hopeless := false
 	var survive := false
+	var cave := false
 	for o: Dictionary in crew.objectives:
 		var was: bool = o.done
 		match o.kind:
@@ -1426,6 +1543,15 @@ func _check_patrol_complete(delta: float) -> void:
 			"survive":
 				survive = true
 				o.done = w.time >= float(o.value)
+			"cave":
+				o.done = w.caves_through >= 1
+				cave = cave or o.done
+			"deep":
+				o.done = o.done or w.sub.depth >= float(o.value) or (w.sub.depth > float(o.value) * 0.9 and w.seabed.floor_depth(w.sub.pos) - w.sub.depth < 3.0)
+			"surface":
+				var rest: bool = crew.objectives.all(func(x: Dictionary) -> bool: return x.kind == "surface" or x.done)
+				o.done = rest and w.sub.depth <= 5.0
+				cave = cave or o.done
 		changed = changed or was != o.done
 		if not o.done and not o.get("bonus", false):
 			all_done = false
@@ -1433,6 +1559,14 @@ func _check_patrol_complete(delta: float) -> void:
 		push_crew()
 	if all_done and survive:
 		end_patrol("complete", "They gave up the hunt. We made it.")
+		return
+	if all_done and cave:
+		var hits := w.cave_scrapes
+		var how := "not a scratch on her" if hits == 0 else "%d scrape%s" % [hits, "" if hits == 1 else "s"]
+		if w.caves_through == 0:
+			end_patrol("complete", "Down to the bottom and back up in %s. The hull monitor peaked at %d%%." % [OceanWorld.clock(w.time), roundi(w.hull_strain * 100.0)])
+		else:
+			end_patrol("complete", "Through the cave in %s, %s." % [OceanWorld.clock(w.time), how])
 		return
 	if hopeless:
 		end_patrol("escaped", "The targets got away.")
@@ -1464,6 +1598,78 @@ func _targets(o: Dictionary) -> Array[ShipState]:
 		if fits or (o.kind == "tonnage" and s.data.role != "merchant"):
 			out.append(s)
 	return out
+
+
+## A thing from the depths (Monster) does something: what the crew hears and feels of it, and
+## (host) what's called out. Creepy dread, no gore (Blaney): a groaning call through the hull,
+## the frames creaking as it squeezes, a great thump and the lights going when it strikes.
+func _monster_event(d: Dictionary) -> void:
+	var near := Vector2(d.x, d.y).distance_to(Sim.world.sub.pos) < 1200.0
+	var trauma := 0.0
+	match String(d.act):
+		"call", "charge":
+			if near or d.act == "charge":
+				_monster_call(-4.0 if d.act == "charge" else -12.0)
+		"grab", "squeeze":
+			Sfx.play("creak_%d" % randi_range(1, 3), 4.0, 0.4)
+			Sfx.play("creak_%d" % randi_range(1, 3), 0.0, 0.55)
+			trauma = 0.55 if d.act == "grab" else 0.3
+		"bite", "strike", "ram":
+			Sfx.play("torpedo_hit", 2.0, 0.45)
+			Sfx.play("clang", 0.0, 0.5)
+			trauma = 0.9 if d.act == "ram" else 0.65
+		"hurt", "dead":
+			_monster_call(-2.0, 0.5)
+	if trauma > 0.0:
+		if local_player != null:
+			local_player.add_trauma(trauma)
+		interior.flicker(trauma)
+		interior.shake_loose(trauma * 0.8)
+	if not multiplayer.is_server():
+		return
+	var lines: Array[String] = []
+	match String(d.act):
+		"charge":
+			lines.append("Sonar: something huge, coming in fast... it's not a ship!")
+		"grab":
+			lines.append("Something's got hold of the hull! The %s is wrapped round us!" % d.name)
+		"bite":
+			lines.append("The %s bit into the hull!" % d.name)
+		"strike":
+			lines.append("The %s struck the hull!" % d.name)
+		"ram":
+			lines.append("The %s rammed us!" % d.name)
+		"release":
+			lines.append("It's let go... it's gone back into the dark.")
+		"hurt":
+			lines.append("HIT! The %s thrashes off into the deep." % d.name)
+		"dead":
+			lines.append("The %s is dead. It sinks away into the black." % d.name)
+		"give_up":
+			lines.append("Sonar: it's not following us up. It's going back down.")
+	for m: String in d.get("dmg", []):
+		if m.begins_with("BROKEN:"):
+			var st: Station = interior.stations.get(m.trim_prefix("BROKEN:"))
+			lines.append("%s knocked out!" % (st.display_name if st != null else "Equipment"))
+		else:
+			lines.append(m)
+	if not lines.is_empty():
+		announce.rpc("  ".join(lines))
+		push_crew()
+
+
+## Its call through the hull: the whale's song slowed to a groan, fading out.
+func _monster_call(db: float, pitch := 0.32) -> void:
+	var p := AudioStreamPlayer.new()
+	p.stream = Sfx.stream("whale_loop")
+	p.bus = "Effects"
+	p.volume_db = db
+	p.pitch_scale = pitch * randf_range(0.9, 1.1)
+	add_child(p)
+	p.play(randf_range(0.0, 4.0))
+	var tw := create_tween()
+	tw.tween_property(p, "volume_db", -50.0, 7.0).set_delay(2.0)
+	tw.tween_callback(p.queue_free)
 
 
 ## What the crew hears of a sim event. Sonar-only sounds need the local player on the sonar.
@@ -1500,6 +1706,11 @@ func _event_sound(kind: String, data: Dictionary) -> void:
 			Sfx.play("torpedo_launch")
 		"hit", "beached":
 			Sfx.play("torpedo_hit")
+		"crack": # the carbon going: sharp cracks, louder each time
+			Sfx.play("clang", -6.0 + 4.0 * float(data.level), 1.6)
+			Sfx.play("creak_%d" % randi_range(1, 3), 2.0 * float(data.level), 1.3)
+		"implode":
+			Sfx.play("torpedo_hit", 8.0, 0.7)
 		"grounded":
 			Sfx.play("clang", 4.0 if data.hard else -2.0, 0.6)
 			Sfx.play("creak_%d" % randi_range(1, 3), 0.0, 0.7)
@@ -1509,6 +1720,8 @@ func _event_sound(kind: String, data: Dictionary) -> void:
 
 func _on_sim_event(kind: String, data: Dictionary) -> void:
 	_event_sound(kind, data)
+	if kind == "monster":
+		_monster_event(data)
 	if kind == "own_ping" and crew.get("limited_map", false):
 		known.reveal(Sim.world.sub.pos, ChartKnown.PING_RANGE, ChartKnown.SONAR)
 	if kind == "enemy_torpedo" and multiplayer.is_server():
@@ -1532,6 +1745,12 @@ func _on_sim_event(kind: String, data: Dictionary) -> void:
 		interior.flicker(p * 0.8)
 		if multiplayer.is_server():
 			announce.rpc("Control: CRASH SURFACE! Hold on!")
+	elif kind == "crack" and local_player != null:
+		local_player.add_trauma(0.2 * float(data.level))
+		interior.flicker(0.3 * float(data.level))
+	elif kind == "implode" and local_player != null:
+		local_player.add_trauma(1.0)
+		interior.flicker(1.0)
 	elif kind == "grounded" and local_player != null:
 		local_player.add_trauma(0.8 if data.hard else 0.3)
 	elif kind == "shell":
@@ -1584,7 +1803,7 @@ func _on_sim_event(kind: String, data: Dictionary) -> void:
 			announce.rpc("The convoy is zig-zagging. They've spotted us!")
 		"aircraft":
 			announce.rpc("The plane has seen us! Escorts will be coming.")
-		"leak", "power", "breakdown", "grounded":
+		"leak", "power", "breakdown", "grounded", "cave_through", "crack":
 			announce.rpc(data.text)
 			push_crew()
 		"beached":
@@ -1592,7 +1811,8 @@ func _on_sim_event(kind: String, data: Dictionary) -> void:
 		"lost":
 			end_patrol("lost", data.reason)
 		"hit":
-			announce.rpc("HIT! %s" % data.name)
+			if not data.get("monster", false):
+				announce.rpc("HIT! %s" % data.name)
 		"gun_hit":
 			var ship := Sim.world.find_ship(int(data.ship))
 			if ship != null and not ship.is_sinking():
