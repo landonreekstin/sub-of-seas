@@ -11,7 +11,7 @@ var _sub: OptionButton
 var _realism: OptionButton
 var _realism_blurb: Label
 var _mission_keys: Array[String] = []
-const SUBS: Array[String] = ["s_boat", "gato", "narwhal", "typhoon"]
+const SUBS: Array[String] = ["s_boat", "gato", "narwhal", "typhoon", "titan"]
 var _briefing: Label
 
 

@@ -10,14 +10,16 @@ extends Node
 const NAMES_SOVIET := ["Ivanov", "Petrov", "Sidorov", "Volkov", "Kuznetsov", "Sokolov", "Popov", "Lebedev", "Orlov", "Morozov", "Vasiliev", "Borodin"]
 const NAMES := ["Cookie", "Sparks", "Stubby", "Doc", "Mac", "Swede", "Tex", "Lucky", "Moose", "Red", "Chips", "Gunner"]
 const TICK := 0.5
-const FULL_CREW := {"s_boat": 42, "gato": 80, "narwhal": 88, "typhoon": 160} ## a full complement, for "all hands"
+const FULL_CREW := {"s_boat": 42, "gato": 80, "narwhal": 88, "typhoon": 160, "titan": 5} ## a full complement, for "all hands"
 
 var game: Game
 var _timer := 0.0
 var _last_fire := -INF
 var _hunted_until := -INF
 var _quiet := false ## posting for a PA order: the reply speaks for them
+var _asker := 0 ## the peer whose PA order is being carried out
 var plan := {} ## what the crew are carrying out for the skipper: {kind: "attack", id, ...}
+var _from_chair := false ## carrying out the captain's chair's orders: a player on a post sees them as hints
 
 
 ## What a bot at this station is called in its job.
@@ -26,7 +28,7 @@ static func job(station_id: String) -> String:
 		return "torpedoman"
 	return {"helm": "helmsman", "dive": "planesman", "ballast": "ballast man", "periscope": "lookout",
 		"tdc": "TDC operator", "sonar": "sonarman", "engine": "motor machinist", "air": "auxiliaryman", "bilge": "pump man", "gun": "gunlayer", "ammo": "ammunition passer",
-		"nav": "navigator", "darts": "darts player", "first_mate": "first mate", "skipper": "skipper's writer", "holo": "officer of the watch"}.get(station_id, "crewman")
+		"nav": "navigator", "darts": "darts player", "arm_a": "arm wrestler", "arm_b": "arm wrestler", "cards_1": "card player", "cards_2": "card player", "galley": "cook", "first_mate": "first mate", "skipper": "skipper's writer", "captain": "officer of the watch"}.get(station_id, "crewman")
 
 
 # --- Requests (host) -------------------------------------------------------------
@@ -97,6 +99,11 @@ func _process(delta: float) -> void:
 	_timer = 0.0
 	_step_news()
 	_step_party()
+	if plan.get("kind", "") == "waypoint": # steered even with players on every post: they get the word
+		_step_waypoint()
+	elif game.crew.has("waypoint"): # another order took over from it
+		game.crew.erase("waypoint")
+		game.crew.erase("wants")
 	var bots: Dictionary = game.crew.get("bots", {})
 	if bots.is_empty():
 		return
@@ -113,6 +120,8 @@ func _process(delta: float) -> void:
 		b.t = float(b.t) + TICK
 		if sid.begins_with("tube_"):
 			_torpedoman(sid, b)
+		elif sid in Pastimes.STATIONS:
+			_pastime(sid, b)
 		elif has_method("_" + sid):
 			call("_" + sid, b, hunted)
 
@@ -182,7 +191,7 @@ func _sonar(b: Dictionary, _hunted: bool) -> void:
 		return
 	heard.sort_custom(func(x: Dictionary, y: Dictionary) -> bool: return x.loud > y.loud)
 	var top: Dictionary = heard[0]
-	var what: String = "biological, a whale" if top.c is Whale else SonarStation.classify(top.c).get_slice(" — ", 1).to_lower()
+	var what: String = SonarStation.describe(top.c)
 	if top.c is ShipState and top.c.data.role == "sub":
 		game.alarm.rpc() # the one sonar report worth waking people for
 	game.announce.rpc("%s (sonar): contact bearing %03d, %s." % [b.name, roundi(top.b) % 360, what])
@@ -345,6 +354,26 @@ func _darts(b: Dictionary, _hunted: bool) -> void:
 		_order("darts", b, "score", randi_range(15, 140))
 
 
+## A bot at a pastime: heaves away at the mess table, plays blackjack (hits to 16, stands on
+## 17), or turns out a meal now and then.
+func _pastime(sid: String, b: Dictionary) -> void:
+	if sid in Pastimes.ARM: # some bouts he's strong, some he isn't
+		var strong := absi(hash(String(b.name) + str(game.crew.get("arm", {}).get("until", 0.0)))) % 3
+		_order(sid, b, "push", randi_range(0, 2 + strong))
+	elif sid in Pastimes.CARDS:
+		var t: Dictionary = game.crew.get("cards", {}).get(sid, {})
+		if t.get("state", "idle") != "play":
+			if float(b.t) >= 6.0:
+				b.t = 0.0
+				_order(sid, b, "deal")
+		elif float(b.t) >= 2.0:
+			b.t = 0.0
+			_order(sid, b, "hit" if Pastimes.hand_value(t.hand) < 17 else "stand")
+	elif float(b.t) >= 90.0:
+		b.t = 0.0
+		_order(sid, b, "meal", randi_range(1, 3))
+
+
 func _nearest_hunter() -> ShipState:
 	var sub := Sim.world.sub
 	var best: ShipState = null
@@ -354,10 +383,124 @@ func _nearest_hunter() -> ShipState:
 	return best
 
 
+# --- The captain's chair (host) -----------------------------------------------------
+
+## An order from the captain's chair (CaptainStation's keys). It goes to whoever has the post:
+## a bot (posted if it's empty) carries it out, a player sees it as what the captain wants
+## (crew.wants, CaptainStation.hint_for). Returns what to say to the boat, or "".
+func captain(key: String, value: Variant) -> String:
+	var w := Sim.world
+	var sub := w.sub
+	var want: Dictionary = game.crew.get_or_add("wants", {})
+	var said := ""
+	_from_chair = true
+	_quiet = true
+	match key:
+		"speed", "course":
+			if plan.get("kind", "") in ["waypoint", "cave"]: # steering by hand again
+				game.crew.erase("waypoint")
+				plan.clear()
+				game.crew.orders = ""
+			if key == "speed":
+				want.speed = clampi(int(want.get("speed", sub.telegraph)) + int(value), -2, 4)
+			else:
+				want.course = fposmod(float(want.get("course", roundf(sub.heading))) + float(value), 360.0)
+			var c: float = want.get("course", sub.heading)
+			var t: int = want.get("speed", sub.telegraph)
+			_hand("helm", func(b: Dictionary) -> void:
+				b.course = c
+				b.speed = t)
+		"depth", "preset", "crash_dive", "emergency":
+			var from := float(want.get("depth", -1.0))
+			var o := {"intent": "depth", "metres": clampf((from if from >= 0.0 else sub.ordered_depth) + float(value if key == "depth" else 0.0), 0.0, sub.data.test_depth)}
+			if key == "preset":
+				o = {"intent": "depth", "to": str(value)}
+			elif key == "crash_dive": # down fast: vents open, planes hard down, full ahead
+				o = {"intent": "depth", "to": "dive"}
+				want.speed = 4
+				_hand("helm", func(b: Dictionary) -> void: b.speed = 4)
+			elif key == "emergency":
+				o = {"intent": "depth", "to": "crash"}
+			if str(o.get("to", "")) == "surface" or (o.has("metres") and float(o.metres) <= 0.0):
+				o = {"intent": "depth", "to": "surface"}
+			said = _order_depth(o)
+			want.depth = sub.data.periscope_depth if o.get("to", "") == "periscope" else (0.0 if o.get("to", "") in ["surface", "crash"] \
+					else (maxf(45.0, sub.data.periscope_depth + 15.0) if o.get("to", "") == "dive" else (sub.data.test_depth - 5.0 if o.get("to", "") == "deep" else float(o.get("metres", sub.ordered_depth)))))
+			if key == "crash_dive":
+				var bb: Dictionary = game.crew.get("bots", {}).get("ballast", {})
+				if not bb.is_empty():
+					bb.vent = true
+				said = "Crash dive! " + said
+			if key == "depth" or key == "preset":
+				said = "" if key == "depth" else said # R/F is too often to say every time
+		"target":
+			var mine: Array[ShipState] = []
+			var k := HoloView.known(w)
+			for s in w.ships:
+				if not s.is_sinking() and k.has(s):
+					mine.append(s)
+			if mine.is_empty():
+				said = "No ship we know of, yet. Sonar or the periscope first."
+			else:
+				mine.sort_custom(func(a: ShipState, b: ShipState) -> bool: return a.pos.distance_to(sub.pos) < b.pos.distance_to(sub.pos))
+				var at := -1
+				for i in mine.size():
+					if mine[i].id == int(game.crew.get("captain_target", -1)):
+						at = i
+				var s := mine[(at + 1) % mine.size()]
+				game.crew.captain_target = s.id
+				said = "Target the %s, bearing %03d, %.1f km." % [s.data.display_name.to_lower(), roundi(ShipState.bearing(sub.pos, s.pos)) % 360, s.pos.distance_to(sub.pos) / 1000.0]
+		"attack":
+			var s := w.find_ship(int(game.crew.get("captain_target", -1)))
+			if s == null or s.is_sinking():
+				s = find_target("", {})
+			if s == null:
+				said = "Nothing to attack in reach."
+			else:
+				game.crew.erase("waypoint")
+				begin_attack(s)
+				want.erase("course") # the attack steers now
+				want.erase("speed")
+				want.attack = true
+				said = "Attack the %s! %s" % [s.data.display_name.to_lower(), "Bow on to the lead and fire a spread." if game.arcade_aim() else "Marks on her, then a spread."]
+		"scope":
+			want.scope = not sub.periscope_raised
+			if sub.depth > sub.data.periscope_depth + 1.0 and want.scope:
+				said = "Too deep for the scope: periscope depth first (2)."
+				want.erase("scope")
+			elif game.station_occupant("periscope") <= 0:
+				if game.station_occupant("periscope") == 0:
+					request("periscope", "post", null)
+				var b: Dictionary = game.crew.get("bots", {}).get("periscope", {})
+				if not b.is_empty():
+					b.auto = false
+					_order("periscope", b, "raised", want.scope)
+		"next_place":
+			var all := Places.by_distance(w.seabed, sub.pos)
+			if all.is_empty():
+				said = "No places on the chart."
+			else:
+				var at := -1
+				var wp: Dictionary = game.crew.get("waypoint", {})
+				for i in all.size():
+					if not wp.is_empty() and all[i].name == wp.name:
+						at = i
+				said = game.set_waypoint(all[(at + 1) % all.size()])
+		"clear_place":
+			said = game.set_waypoint({})
+	_from_chair = false
+	_quiet = false
+	if not want.has("attack") or plan.get("kind", "") != "attack":
+		want.erase("attack")
+	game.push_crew()
+	return said
+
+
 # --- The skipper's PA (host) -------------------------------------------------------
 
 ## A line from the PA: says it to the boat, and the crew reply and get on with it.
-func skipper_order(text: String, who: String) -> void:
+func skipper_order(text: String, who: String, peer := 0) -> void:
+	_asker = peer
 	var orders := CrewCommand.parse(text)
 	game.pa_call.rpc(who, text)
 	if orders.is_empty():
@@ -446,8 +589,36 @@ func _carry_out(o: Dictionary) -> String:
 			return _objective_report()
 		"enemy_sub":
 			return game.call_enemy_sub(o.get("attack", false))
+		"monster":
+			return game.call_monster(o.get("kind", ""))
 		"band":
 			return game.call_band(o.get("off", false))
+		"cave":
+			return order_cave()
+		"goto":
+			if o.get("clear", false):
+				return game.set_waypoint({})
+			var place := Places.nearest(Sim.world.seabed, sub.pos, str(o.get("place", "")))
+			if place.is_empty():
+				return "There's no %s on the chart, Skipper." % ("such place" if str(o.get("place", "")) == "" else str(o.place))
+			return game.set_waypoint(place)
+		"places":
+			var out: Array[String] = []
+			for p: Dictionary in Places.by_distance(Sim.world.seabed, sub.pos).slice(0, 8):
+				out.append("%s %03d %.1f km" % [p.name, roundi(ShipState.bearing(sub.pos, Places.pos(p))) % 360, Places.pos(p).distance_to(sub.pos) / 1000.0])
+			return "On the chart: " + (", ".join(out) if not out.is_empty() else "nothing but open sea") + "."
+		"god":
+			if _asker <= 0:
+				return "Aye."
+			if not game.crew.has("god"):
+				game.crew.god = {}
+			var on: bool = not o.get("off", false) and not (game.crew.god.has(_asker) and o.get("toggle", false))
+			if on:
+				game.crew.god[_asker] = true
+			else:
+				game.crew.god.erase(_asker)
+			game.crew.knocked.erase(_asker)
+			return ("God mode for %s: super speed, super swimming (Shift for more), nothing can knock him out." if on else "God mode off for %s.") % game.crew_name(_asker)
 	return "Aye."
 
 
@@ -455,6 +626,8 @@ func _carry_out(o: Dictionary) -> String:
 ## gets the skipper's word on his screen instead. Returns what to add to the reply.
 func _hand(sid: String, what: Callable) -> String:
 	if not game.interior.stations.has(sid):
+		return ""
+	if game.station_occupant(sid) > 0 and _from_chair: # he has it on his screen already (crew.wants)
 		return ""
 	if game.station_occupant(sid) > 0:
 		game.notice.rpc_id(game.station_occupant(sid), "That order's for you on the %s." % game.interior.stations[sid].display_name.to_lower())
@@ -479,7 +652,7 @@ func _ammo_up() -> String:
 func _watch_stations() -> Array[String]:
 	var out: Array[String] = []
 	for sid: String in game.interior.stations:
-		if sid in ["darts", "sand_table", "cameras", "nav", "skipper", "holo"] or (sid in ["gun", "ammo"] and not Sim.world.sub.is_surfaced()):
+		if sid in ["darts", "cameras", "nav", "skipper", "captain"] or sid in Pastimes.STATIONS or (sid in ["gun", "ammo"] and not Sim.world.sub.is_surfaced()):
 			continue
 		out.append(sid)
 	return out
@@ -624,6 +797,9 @@ func _plan_target() -> ShipState:
 
 ## Steers the attack: the bow on to the lead, then a spread of three, then again until she goes.
 func _step_plan() -> void:
+	if plan.get("kind", "") == "cave":
+		_step_cave()
+		return
 	if plan.get("kind", "") == "objective":
 		_work_objective()
 		return
@@ -636,6 +812,7 @@ func _step_plan() -> void:
 		target = null
 	if target == null:
 		plan.clear()
+		game.crew.erase("wants")
 		for sid: String in bots:
 			bots[sid].ready = false
 			bots[sid].fire = false if sid.begins_with("tube_") else bots[sid].get("fire", false)
@@ -651,9 +828,16 @@ func _step_plan() -> void:
 	var r := target.pos.distance_to(sub.pos)
 	var lead := w.lead_bearing(target)
 	var course := ShipState.bearing(sub.pos, target.pos) if is_nan(lead) else lead
+	var speed := 4 if r > 4000.0 else (3 if r > 2000.0 else 2)
+	if not sub.is_surfaced() and not sub.data.nuclear and sub.battery < 0.5: # don't run the battery flat on the way in
+		speed = mini(speed, 2 if sub.battery > 0.2 else 1)
+	var want: Dictionary = game.crew.get_or_add("wants", {}) # a player at the helm steers the attack too
+	want.course = course
+	want.speed = speed
+	want.attack = true
 	if bots.has("helm"):
 		bots.helm.course = course
-		bots.helm.speed = 4 if r > 4000.0 else (3 if r > 2000.0 else 2)
+		bots.helm.speed = speed
 	if bots.has("dive"):
 		bots.dive.depth = target.depth if target.data.role == "sub" else sub.data.periscope_depth
 	if not game.arcade_aim() and target.data.role != "sub": # a sub is hunted by ear: down the bearing at any level
@@ -704,6 +888,12 @@ func _work_objective() -> void:
 			plan = {"kind": "objective", "evading": true}
 			game.announce.rpc("Crew: They're on to us. " + reply)
 		return
+	if objectives.any(func(o: Dictionary) -> bool: return o.kind == "cave" and not o.get("done", false)):
+		if not plan.has("cave_dir"):
+			game.announce.rpc("Crew: " + order_cave())
+			plan.kind = "objective"
+		_step_cave()
+		return
 	var target: ShipState = null
 	for main in [true, false]: # the main objectives first, then the bonus ones
 		for o: Dictionary in objectives:
@@ -737,6 +927,168 @@ func _work_objective() -> void:
 	begin_attack(target)
 	plan.objective = true
 	game.announce.rpc("Crew: Going after the %s, bearing %03d, %.1f km." % [target.data.display_name.to_lower(), roundi(ShipState.bearing(sub.pos, target.pos)) % 360, r / 1000.0])
+
+
+const ARRIVE := 350.0 ## m: close enough to a waypoint to call it reached
+const SITE_LOOK := 15.0 ## m above a site's floor the planesman takes her to look at it
+
+## Off to the waypoint (crew.waypoint, Game.set_waypoint): the helmsman (and the planesman, for a
+## place on the sea floor) on it, steering clear of shoal water on the way.
+func order_waypoint() -> String:
+	var wp: Dictionary = game.crew.get("waypoint", {})
+	if wp.is_empty():
+		return "No waypoint, Skipper."
+	var sub := Sim.world.sub
+	var at := Vector2(wp.x, wp.y)
+	var reply := _hand("helm", func(b: Dictionary) -> void: b.auto = false)
+	if not sub.data.fragile:
+		reply += _hand("dive", func(b: Dictionary) -> void: b.auto = false)
+		for sid: String in ["ballast", "engine"]: # to surface and run on the diesels on the way
+			if game.interior.stations.has(sid) and game.station_occupant(sid) == 0:
+				request(sid, "post", null)
+	plan = {"kind": "waypoint"}
+	game.crew.orders = "To " + str(wp.name)
+	_step_waypoint()
+	return reply + "Setting course for %s, bearing %03d, %.1f km." % [wp.name, roundi(ShipState.bearing(sub.pos, at)) % 360, at.distance_to(sub.pos) / 1000.0]
+
+
+## What the waypoint wants of the helm and the planes, this tick: {course, speed, depth}
+## (depth -1: leave it). Away from shoals; full ahead far off, slowing as she closes; over a
+## sea-floor site, down to just above it.
+static func waypoint_wants(w: OceanWorld, wp: Dictionary) -> Dictionary:
+	var sub := w.sub
+	var at := Vector2(wp.x, wp.y)
+	var d := at.distance_to(sub.pos)
+	var draft := maxf(sub.depth, SubState.AWASH_DEPTH) + 10.0
+	var course := w.seabed.clear_course(sub.pos, ShipState.bearing(sub.pos, at), draft, clampf(d, 300.0, 1500.0), sub.data.beam + 60.0, 80.0)
+	var speed := 4 if d > 3000.0 else (3 if d > 1200.0 else (2 if d > 600.0 else 1))
+	var depth := -1.0
+	var site := float(wp.get("depth", -1.0)) > 0.0
+	# A long way with nobody about: up on the diesels, as a real crew would (dived, the battery
+	# would run flat on the way), and down again for the last of it over a site.
+	var alone := not w.ships.any(func(s: ShipState) -> bool: return not s.is_sinking() and s.pos.distance_to(sub.pos) < 10000.0)
+	if not sub.data.nuclear and not sub.data.fragile and alone and d > (2000.0 if site else 600.0):
+		depth = 0.0
+		speed = 4 if d > 1200.0 else speed
+	elif not sub.is_surfaced() and not sub.data.nuclear: # on the battery: easy on it, or she runs flat on the way
+		speed = mini(speed, 1 if sub.battery < 0.25 else 2)
+	if site and d < 2000.0:
+		depth = clampf(maxf(float(wp.depth) - SITE_LOOK - sub.data.height, sub.data.periscope_depth), 0.0, minf(sub.data.test_depth - 5.0, float(wp.depth) - sub.data.height - 4.0))
+	return {"course": course, "speed": speed, "depth": depth, "range": d}
+
+
+func _step_waypoint() -> void:
+	var w := Sim.world
+	var wp: Dictionary = game.crew.get("waypoint", {})
+	if wp.is_empty():
+		plan.clear()
+		return
+	var want := waypoint_wants(w, wp)
+	var bots: Dictionary = game.crew.get("bots", {})
+	if float(want.range) < ARRIVE:
+		var site := float(wp.depth) > 0.0
+		game.crew.erase("waypoint")
+		game.crew.erase("wants")
+		game.crew.orders = ""
+		plan.clear()
+		if bots.has("helm"):
+			bots.helm.course = w.sub.heading
+			bots.helm.speed = 0 if site else 1 # stopped over a site, to look
+		var more := " Say \"take us through the cave\" to go on through." if wp.kind == "cave" else ""
+		game.announce.rpc("Crew: %s, Skipper.%s" % ["We're over " + str(wp.name) if site else "Arrived at " + str(wp.name), more])
+		game.push_crew()
+		return
+	game.crew.wants = {"course": want.course, "speed": want.speed, "depth": want.depth}
+	if bots.has("helm"):
+		bots.helm.auto = false
+		bots.helm.course = want.course
+		bots.helm.speed = want.speed
+	if float(want.depth) >= 0.0:
+		if bots.has("dive"):
+			bots.dive.auto = false
+			bots.dive.depth = want.depth
+		elif bots.has("helm") and w.sub.data.fragile and absf(w.sub.ordered_depth - float(want.depth)) > 0.5:
+			_order("helm", bots.helm, "depth", want.depth)
+
+
+const CAVE_FIND := 4000.0 ## m: how far off a cave the crew will go for it
+
+## "Take us through the cave" (Blaney: on board while the crew do it): the helmsman, planesman
+## and ballast man take her in at the near end and out of the far one on their own.
+func order_cave() -> String:
+	var w := Sim.world
+	var i := w.seabed.cave_near(w.sub.pos, CAVE_FIND)
+	if i < 0:
+		return "No cave on the chart near us, Skipper."
+	var f: Dictionary = w.seabed.features[i]
+	var c := Seabed.cave_local(f, w.sub.pos)
+	for sid: String in ["helm", "dive", "ballast"]:
+		if game.station_occupant(sid) == 0:
+			request(sid, "post", null)
+	var bots: Dictionary = game.crew.get("bots", {})
+	for sid: String in ["helm", "dive"]:
+		if bots.has(sid):
+			bots[sid].auto = false
+	if plan.get("kind", "") != "objective":
+		plan = {"kind": "cave"}
+	plan.cave_dir = -1.0 if c.x > 0.0 else 1.0 # in at the near end
+	plan.cave = i
+	game.crew.orders = "Through the cave"
+	return "Taking her through the cave, Skipper: slow ahead, holding her in the middle."
+
+
+## Each tick through a cave: the helm steers for the tunnel's middle line a couple of lengths
+## ahead, the planes hold her halfway between the roof and the floor over her whole length.
+func _step_cave() -> void:
+	var w := Sim.world
+	var sub := w.sub
+	var i: int = plan.get("cave", -1)
+	if i < 0 or i >= w.seabed.features.size() or w.seabed.features[i].kind != "cave":
+		plan.clear()
+		return
+	var f: Dictionary = w.seabed.features[i]
+	var dir: float = plan.cave_dir
+	var half := float(f.len) * 0.5
+	var u := Seabed.cave_local(f, sub.pos).x * dir # metres along her way through, in at -half
+	if u > half + sub.data.length + 60.0:
+		plan.clear()
+		game.crew.orders = ""
+		game.announce.rpc("Crew: Through and clear, Skipper.")
+		game.push_crew()
+		return
+	var l := sub.data.length
+	var c := Seabed.cave_local(f, sub.pos)
+	var course: float
+	if u < -half - 2.0 * l: # still on the way in: for the mouth's middle
+		course = ShipState.bearing(sub.pos, Seabed.cave_world(f, Vector2(-half * dir, Seabed.cave_centre(f, -half * dir))))
+	else:
+		# Along the middle line's own heading a little ahead (she's slow to answer the rudder),
+		# turned back towards the line by how far off it she is.
+		var at := clampf(u + maxf(30.0, absf(sub.speed) * 12.0), -half, half) * dir
+		var x0 := clampf(c.x, -half, half)
+		var tangent := (Seabed.cave_world(f, Vector2(at + dir * 5.0, Seabed.cave_centre(f, at + dir * 5.0))) \
+				- Seabed.cave_world(f, Vector2(at, Seabed.cave_centre(f, at)))).normalized() if absf(u) < half + l else Vector2.from_angle(float(f.ang)) * dir
+		var off := sub.pos - Seabed.cave_world(f, Vector2(x0, Seabed.cave_centre(f, x0)))
+		var want := tangent - off / 45.0
+		course = ShipState.bearing(sub.pos, sub.pos + want)
+	# Halfway between the lowest roof and the highest floor over her length and a bit ahead.
+	var roof := 0.0
+	var bottom := INF
+	for k in 7:
+		var s := clampf(u - l * 0.6 + k * l * 0.35, -half, half) * dir
+		roof = maxf(roof, Seabed.cave_roof(f, s))
+		bottom = minf(bottom, Seabed.cave_bottom(f, s))
+	var bots: Dictionary = game.crew.get("bots", {})
+	if bots.has("helm"):
+		bots.helm.auto = false
+		bots.helm.course = course
+		bots.helm.speed = 4 if l < 30.0 else (1 if u > -half - 3.0 * l else 2) # a little one turns on a sixpence: full ahead
+	var depth := (roof + sub.data.height + bottom) * 0.5
+	if bots.has("dive"):
+		bots.dive.auto = false
+		bots.dive.depth = depth
+	elif bots.has("helm") and sub.data.fragile and absf(sub.ordered_depth - depth) > 0.5: # the Titan's pilot has the depth too
+		_order("helm", bots.helm, "depth", depth)
 
 
 ## Away from whoever's after us: deep under the layer, slow and quiet.
@@ -788,7 +1140,7 @@ func _contacts_report() -> String:
 	var out: Array[String] = []
 	for k in mini(3, heard.size()):
 		var c: Dictionary = heard[k]
-		out.append("%s bearing %03d" % ["whale" if c.c is Whale else SonarStation.classify(c.c).get_slice(" — ", 1).to_lower(), roundi(c.b) % 360])
+		out.append("%s bearing %03d" % ["whale" if c.c is Whale else SonarStation.describe(c.c), roundi(c.b) % 360])
 	return "Sonar has " + ", ".join(out) + "."
 
 

@@ -153,3 +153,170 @@ static func shark() -> Node3D:
 	tm.material_override = creature_mat()
 	tail.add_child(tm)
 	return s
+
+
+# --- Things from the depths (Monster) --------------------------------------------
+# Creepy dread, no gore (Blaney): big dark shapes with eyes that catch the light, a lure that
+# glows in the black. Each nose to -Z; the parts that move are named so SeaLifeView sweeps them.
+
+## A chain of tapering joints along +Z from `parent` (an arm, a tentacle, a serpent's body):
+## each joint is a Node3D holding its segment and the next joint. Returns the joints.
+static func _limb(parent: Node3D, length: float, r0: float, r1: float, segs: int, back: Color, belly: Color) -> Array[Node3D]:
+	var joints: Array[Node3D] = []
+	var at := parent
+	var seg := length / segs
+	for i in segs:
+		var j := Node3D.new()
+		if i > 0:
+			j.position.z = seg
+		at.add_child(j)
+		var ra := lerpf(r0, r1, float(i) / segs)
+		var rb := lerpf(r0, r1, float(i + 1) / segs)
+		var st := _begin()
+		_spindle(st, seg * 1.08, [[0.0, ra, ra], [1.0, rb, rb]], Vector3(0, 0, seg * 0.5), back, belly, 0.0, false, 8)
+		var mi := MeshInstance3D.new()
+		mi.mesh = _commit(st)
+		mi.material_override = creature_mat()
+		j.add_child(mi)
+		joints.append(j)
+		at = j
+	return joints
+
+
+## An eye that catches the light: a pale ball with a black slot, glowing a little in the dark.
+static func _eye(parent: Node3D, r: float, pos: Vector3, glow: Color) -> void:
+	Build.sphere(parent, r, pos, glow, 0.6)
+	var pupil := Build.sphere(parent, r * 0.55, pos + Vector3(signf(pos.x) * r * 0.6, 0, 0), Color("#050506"))
+	pupil.scale = Vector3(0.5, 1.0, 0.35)
+
+
+## The giant squid, mantle first: a long dark red mantle with fins at its tip, the head with two
+## eyes as big as a man, eight arms and two long tentacles with clubs trailing ("Arms").
+static func squid(length := 40.0) -> Node3D:
+	var n := Node3D.new()
+	var back := Color("#5E2224")
+	var belly := Color("#A35A50")
+	var mantle := length * 0.38
+	var st := _begin()
+	_spindle(st, mantle, [[0.0, 0.0, 0.0], [0.12, 1.2, 1.2], [0.5, 2.4, 2.3], [0.85, 2.6, 2.5], [1.0, 2.3, 2.2]],
+			Vector3(0, 0, -length * 0.5 + mantle * 0.5), back, belly, 0.0)
+	for side in [-1.0, 1.0]: # the fins at the mantle's tip
+		_fin(st, [Vector3(0, 0, -length * 0.5 + 0.5), Vector3(side * 4.5, 0, -length * 0.5 + 4.0), Vector3(side * 0.8, 0, -length * 0.5 + 7.5)], back.darkened(0.2))
+	var head_z := -length * 0.5 + mantle + 1.5
+	_spindle(st, 4.0, [[0.0, 2.2, 2.1], [0.5, 2.0, 1.9], [1.0, 1.3, 1.3]], Vector3(0, 0, head_z), back, belly, 0.0)
+	var body := MeshInstance3D.new()
+	body.mesh = _commit(st)
+	body.material_override = creature_mat()
+	n.add_child(body)
+	for side in [-1.0, 1.0]:
+		_eye(n, 0.9, Vector3(side * 1.9, 0.3, head_z - 0.3), Color("#C8D4C0"))
+	var arms := Node3D.new()
+	arms.name = "Arms"
+	arms.position.z = head_z + 1.8
+	n.add_child(arms)
+	for k in 10:
+		var a := TAU * k / 8.0
+		var root := Node3D.new()
+		var long := k >= 8 # the two hunting tentacles
+		if long:
+			a = PI * 0.5 + (k - 8) * PI
+		root.position = Vector3(cos(a) * 1.0, sin(a) * 1.0, 0)
+		root.rotation = Vector3(-sin(a) * 0.25, cos(a) * 0.25, 0)
+		arms.add_child(root)
+		var joints := _limb(root, length * (0.55 if long else 0.3), 0.55 if not long else 0.35, 0.08, 7 if long else 5, back, belly)
+		if long:
+			var club := Build.sphere(joints[-1], 0.9, Vector3(0, 0, length * 0.55 / 7.0), back)
+			club.scale = Vector3(0.7, 0.5, 2.0)
+	return n
+
+
+## The giant anglerfish: a huge black round body and a gaping mouth of needle teeth, tiny dead
+## eyes, and a rod off its head with a glowing lure hanging in front ("Lure").
+static func angler(length := 28.0) -> Node3D:
+	var n := Node3D.new()
+	var back := Color("#16181C")
+	var belly := Color("#2C2A30")
+	var st := _begin()
+	_spindle(st, length, [[0.0, 3.5, 3.0], [0.15, 6.5, 6.0], [0.4, 7.0, 6.5], [0.7, 4.0, 3.8], [0.9, 1.2, 1.4], [1.0, 0.6, 0.8]],
+			Vector3.ZERO, back, belly, 0.0)
+	_fin(st, [Vector3(0, 1.0, length * 0.38), Vector3(0, 5.5, length * 0.55), Vector3(0, -5.5, length * 0.55), Vector3(0, -1.0, length * 0.38)], back)
+	for side in [-1.0, 1.0]:
+		_fin(st, [Vector3(side * 6.0, -1.0, -length * 0.05), Vector3(side * 10.0, -3.0, length * 0.05), Vector3(side * 6.5, -2.0, length * 0.15)], back)
+	var body := MeshInstance3D.new()
+	body.mesh = _commit(st)
+	body.material_override = creature_mat()
+	n.add_child(body)
+	# The mouth: a black gape across the front, needle teeth down from the top and up from the jaw.
+	var mz := -length * 0.5 - 0.2
+	Build.box(n, Vector3(9.0, 3.2, 1.0), Vector3(0, -1.2, mz + 0.8), Color("#020203"), false)
+	var tooth := Color("#D8D4C4")
+	for k in 13:
+		var x := -4.2 + k * 0.7
+		var top := Build.box(n, Vector3(0.12, 1.4 + 0.5 * sin(k * 2.3), 0.12), Vector3(x, 0.0, mz), tooth, false)
+		top.rotation.x = 0.3
+		var bottom := Build.box(n, Vector3(0.12, 1.2 + 0.6 * cos(k * 1.7), 0.12), Vector3(x + 0.35, -2.6, mz - 0.3), tooth, false)
+		bottom.rotation.x = -0.4
+	for side in [-1.0, 1.0]:
+		_eye(n, 0.35, Vector3(side * 3.2, 2.0, -length * 0.38), Color("#9AA8A0"))
+	var lure := Node3D.new()
+	lure.name = "Lure"
+	lure.position = Vector3(0, 5.5, -length * 0.3)
+	n.add_child(lure)
+	var rod := _limb(lure, 9.0, 0.18, 0.08, 4, back, belly)
+	for j in rod:
+		j.rotation.x = 0.35 # it arches up and over, forward
+	rod[0].rotation.x = -1.2
+	var bulb := Build.sphere(rod[-1], 0.7, Vector3(0, 0, 2.4), Color("#7CFFE0"), 4.0)
+	var light := OmniLight3D.new()
+	light.light_color = Color("#7CFFE0")
+	light.light_energy = 1.6
+	light.omni_range = 30.0
+	bulb.add_child(light)
+	return n
+
+
+## The sea serpent: a long dark green body in segments ("Seg"), a long head with a frill and
+## yellow eyes. SeaLifeView sends a wave down it.
+static func serpent(length := 90.0) -> Node3D:
+	var n := Node3D.new()
+	var back := Color("#1D2E26")
+	var belly := Color("#5C6A4E")
+	var st := _begin()
+	_spindle(st, 8.0, [[0.0, 0.5, 0.4], [0.3, 2.4, 1.8], [0.7, 3.2, 2.7], [1.0, 3.3, 3.1]], Vector3(0, 0, -length * 0.5 + 3.5), back, belly, -0.1)
+	for k in 6: # the frill down the back of the head
+		_fin(st, [Vector3(0, 1.5, -length * 0.5 + 3.0 + k * 0.8), Vector3(0, 3.2 - k * 0.2, -length * 0.5 + 3.6 + k * 0.8), Vector3(0, 1.6, -length * 0.5 + 4.0 + k * 0.8)], Color("#3A5A40"))
+	var head := MeshInstance3D.new()
+	head.mesh = _commit(st)
+	head.material_override = creature_mat()
+	n.add_child(head)
+	for side in [-1.0, 1.0]:
+		_eye(n, 0.4, Vector3(side * 1.2, 0.6, -length * 0.5 + 2.5), Color("#E8C840"))
+	var spine := Node3D.new()
+	spine.name = "Seg"
+	spine.position.z = -length * 0.5 + 7.0
+	n.add_child(spine)
+	_limb(spine, length - 7.0, 3.3, 0.4, 18, back, belly)
+	return n
+
+
+## The megalodon: the shark, as long as a boat and darker.
+static func megalodon(length := 45.0) -> Node3D:
+	var s := shark()
+	s.scale = Vector3.ONE * (length / 3.6)
+	for m in s.find_children("*", "MeshInstance3D", true, false):
+		var mi := m as MeshInstance3D
+		if mi.material_override is ShaderMaterial:
+			mi.material_override = mi.material_override.duplicate()
+			(mi.material_override as ShaderMaterial).set_shader_parameter("albedo", Color("#6A6F74"))
+	return s
+
+
+static func monster(kind: String, length: float) -> Node3D:
+	match kind:
+		"angler":
+			return angler(length)
+		"serpent":
+			return serpent(length)
+		"megalodon":
+			return megalodon(length)
+	return squid(length)

@@ -11,8 +11,11 @@ const EYE_HEIGHT := 1.6
 const CROUCH_EYE := 1.05
 const CROUCH_SPEED := 0.5 ## of walking speed
 const SPRINT_SPEED := 2.1 ## of walking speed, running forward
+const GOD_RUN := 3.0 ## god mode: this many times as fast on his feet
+const GOD_SWIM := 8.0 ## and in the sea (twice that with Shift): fast enough to catch a boat at flank speed
 const SPRINT_FOV := 7.0 ## degrees the view widens at a run
 const REACH := 2.2
+const FLOOD_SWIM := 1.25 ## m of flood water at your feet before you swim
 ## Emotes: key -> name, and how long each plays (seconds).
 const EMOTE_KEYS := {KEY_1: "wave", KEY_2: "salute", KEY_3: "jig", KEY_4: "point", KEY_5: "cheer"}
 const EMOTE_TIME := {"wave": 2.5, "salute": 2.5, "jig": 5.0, "point": 2.5, "cheer": 3.0}
@@ -32,7 +35,7 @@ var _step_pos := Vector3.ZERO ## for footsteps
 var _step_dist := 0.0 ## distance since the last footstep or rung
 var playing := false ## holding LMB with an instrument: his part of the band's song; replicated
 var _band: AudioStreamPlayer3D ## his instrument's part, kept in time with the band (Band)
-var _swimming := false ## over the side, in the sea round the deck (Deck)
+var _swimming := false ## over the side, in the sea round the deck (Deck), or in a flooded room
 var held_tool := "" ## from crew state (host-owned)
 var trauma := 0.0 ## camera shake, 0..1, decays
 
@@ -165,31 +168,7 @@ func set_looks(look: Dictionary) -> void:
 
 
 static func _make_hat(face: Node3D, kind: String) -> Node3D:
-	var h := Node3D.new()
-	face.add_child(h)
-	var white := Color("#F2F0E8")
-	var navy := Color("#2B3A55")
-	match kind:
-		"watch": # navy knit watch cap
-			var cap := Build.sphere(h, 0.112, Vector3(0, 0.05, 0.005), navy)
-			cap.scale = Vector3(1.0, 0.75, 1.02)
-			Build.cyl(h, 0.113, 0.035, Vector3(0, 0.035, 0.005), Color("#24304A"))
-		"ball": # ball cap
-			var crown := Build.sphere(h, 0.108, Vector3(0, 0.055, 0.005), navy)
-			crown.scale = Vector3(1.0, 0.7, 1.0)
-			Build.box(h, Vector3(0.12, 0.012, 0.08), Vector3(0, 0.05, -0.12), navy, false)
-		"officer", "skipper": # peaked cap, white top; the skipper's is weathered grey
-			var top := Color("#C9C3B0") if kind == "skipper" else white
-			Build.cyl(h, 0.125, 0.04, Vector3(0, 0.11, 0), top)
-			Build.cyl(h, 0.106, 0.05, Vector3(0, 0.075, 0), Color("#1E1E20"))
-			var visor := Build.box(h, Vector3(0.13, 0.01, 0.065), Vector3(0, 0.055, -0.115), Color("#1E1E20"), false)
-			visor.rotation.x = 0.2
-			Build.box(h, Vector3(0.04, 0.025, 0.008), Vector3(0, 0.09, -0.107), Color("#C9A04A"), false) # badge
-		_: # white Dixie cup
-			Build.cyl(h, 0.098, 0.065, Vector3(0, 0.095, 0), white)
-			var brim := Build.cyl(h, 0.118, 0.03, Vector3(0, 0.07, 0), white)
-			brim.rotation.x = 0.1
-	return h
+	return Crewman.make_hat(face, kind)
 
 
 ## Procedural walk for everyone else's sailor: legs and arms swing with ground speed, arms
@@ -356,9 +335,17 @@ func is_knocked_out() -> bool:
 
 
 ## How bad the air is where you stand (0..1), and the smoke there.
+## God mode (Blaney, on the PA): super speed and super swimming to catch the boats up and watch
+## them from outside, and nothing knocks him out.
+func godly() -> bool:
+	return Game.instance != null and Game.instance.crew.get("god", {}).has(peer_id)
+
+
 func breathing() -> Vector2:
-	if Sim.world == null:
+	if Sim.world == null or godly():
 		return Vector2.ZERO
+	if Deck.is_out(global_position): # outside, only a diver's depth weighs on him
+		return Vector2(Game.instance.deck.strain if is_local() else 0.0, 0.0)
 	var c := Sim.world.hull.comp_at_pos(global_position)
 	var smoke: float = Sim.world.air.smoke[c] if c < Sim.world.air.smoke.size() else 0.0
 	return Vector2(Sim.world.air.badness_in(c), smoke)
@@ -373,6 +360,10 @@ func _unhandled_input(event: InputEvent) -> void:
 			Game.instance.rq_wrestle.rpc_id(1, Wrestling.KEYS[event.physical_keycode])
 			get_viewport().set_input_as_handled()
 			return
+	if station == null and event.is_action_pressed("things_to_do") and Game.instance.things_to_do != null:
+		Game.instance.things_to_do.toggle()
+		get_viewport().set_input_as_handled()
+		return
 	if station != null:
 		if event.is_action_pressed("leave_station"):
 			leave_station()
@@ -381,7 +372,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			var post := station.station_id
 			leave_station()
 			Game.instance.rq_bot.rpc_id(1, post, "post", null)
-		elif event.is_action_pressed("next_station"):
+		elif event.is_action_pressed("next_station") and not station is CaptainStation: # Tab picks the captain's target
 			var next := Game.instance.interior.next_in_cluster(station)
 			if next != null:
 				request_station(next)
@@ -434,10 +425,16 @@ func _physics_process(delta: float) -> void:
 	if is_knocked_out() or Game.instance.menu_open():
 		input = Vector2.ZERO
 	var dir := (transform.basis * Vector3(input.x, 0.0, input.y)).normalized()
-	# Wading through flood water is slow.
+	# Wading through flood water is slow; deeper than your chest, you swim (Blaney: swimming in
+	# flooded rooms).
 	var wade := 0.0
-	if Game.instance.interior != null:
-		wade = clampf(Game.instance.interior.damage.water_height_at(position) - position.y, 0.0, 1.2) / 1.2
+	var flood := 0.0
+	if Game.instance.interior != null and not Deck.is_out(global_position):
+		flood = Game.instance.interior.damage.water_height_at(position) - position.y
+		wade = clampf(flood, 0.0, 1.2) / 1.2
+	if flood > FLOOD_SWIM:
+		_swim_flooded(dir, flood, delta)
+		return
 	crouching = Input.is_action_pressed("crouch") and not Game.instance.menu_open() and emote == ""
 	var speed := SPEED * lerpf(1.0, 0.4, wade) * lerpf(1.0, 0.55, breathing().x) # bad air makes your legs heavy
 	if crouching:
@@ -448,16 +445,38 @@ func _physics_process(delta: float) -> void:
 	if sprinting:
 		speed *= lerpf(SPRINT_SPEED, 1.0, breathing().x)
 	var swim := Deck.is_swimming(global_position)
+	if godly():
+		speed *= GOD_SWIM * (2.0 if Input.is_action_pressed("sprint") else 1.0) if swim else GOD_RUN
 	if swim:
 		speed *= 0.55
 		sprinting = false
 		crouching = false
 	velocity.x = dir.x * speed
 	velocity.z = dir.z * speed
+	if Deck.is_under(global_position):
+		# A diver under the sea: swim where you look, Space up, Ctrl down; the sea goes past him
+		# as she moves on (Deck.drift); never below the sea floor.
+		var look := (head.global_basis * Vector3(input.x, 0.0, input.y)).normalized()
+		var up := (1.0 if Input.is_action_pressed("jump") else 0.0) - (1.0 if Input.is_action_pressed("crouch") else 0.0)
+		if Game.instance.menu_open():
+			up = 0.0
+		var sink := -0.25 if Game.instance.sub_class.era == "ww2" else 0.0 # the hard hat's lead boots
+		velocity = look * speed + Vector3(0, up * 1.6 * (GOD_RUN if godly() else 1.0) + sink, 0) + Game.instance.deck.drift
+		crouching = false
+		_swimming = true
+		move_and_slide()
+		var floor_y := Deck.floor_at(global_position)
+		if global_position.y < floor_y:
+			global_position.y = floor_y
+		return
 	if swim:
-		# Float with the eye just above the water; sinking in from a fall, bob back up.
-		var float_y := Deck.ORIGIN.y + Deck.SWIM_EYE - EYE_HEIGHT
+		# Float with the eye just above the water; sinking in from a fall, bob back up. Ctrl
+		# dives under (Blaney: swimming down to the sea floor).
+		var float_y := Deck.ORIGIN.y + Diving.water_y() + Deck.SWIM_EYE - EYE_HEIGHT
 		velocity.y = clampf((float_y - global_position.y) * 3.0, -4.0, 2.5)
+		if Input.is_action_pressed("crouch") and not Game.instance.menu_open():
+			velocity.y = -2.0
+		velocity += Game.instance.deck.drift
 		if not _swimming:
 			_swimming = true
 			Sfx.play_at(self, "splash", Vector3(0, 1.0, 0), -2.0, randf_range(0.9, 1.1))
@@ -469,6 +488,43 @@ func _physics_process(delta: float) -> void:
 	if not swim:
 		_swimming = false
 	move_and_slide()
+
+
+## Swimming in a flooded compartment: where you look, Space up, Ctrl down, or float with your
+## eye just clear of the water; the deckhead stops you.
+func _swim_flooded(dir: Vector3, flood: float, _delta: float) -> void:
+	var input := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
+	if is_knocked_out() or Game.instance.menu_open():
+		input = Vector2.ZERO
+	var up := 0.0
+	if not Game.instance.menu_open():
+		up = (1.0 if Input.is_action_pressed("jump") else 0.0) - (1.0 if Input.is_action_pressed("crouch") else 0.0)
+	var speed := SPEED * 0.5 * (GOD_SWIM if godly() else 1.0)
+	var look := (head.global_basis * Vector3(input.x, 0.0, input.y)).normalized() if up == 0.0 else dir
+	velocity = look * speed
+	var surface := position.y + flood
+	if up != 0.0:
+		velocity.y = up * 1.6
+	else:
+		velocity.y = clampf((surface - EYE_HEIGHT + 0.2 - position.y) * 3.0, -2.0, 2.0)
+	sprinting = false
+	crouching = false
+	if not _swimming:
+		_swimming = true
+		Sfx.play_at(self, "splash", Vector3(0, 1.0, 0), -6.0, randf_range(0.9, 1.1))
+	move_and_slide()
+
+
+## Is your eye under water: in the sea, or in a flooded room? How deep (m), or -1.
+func eye_under() -> float:
+	var eye := global_position.y + EYE_HEIGHT
+	if Deck.is_out(global_position):
+		var d := Deck.ORIGIN.y + Diving.water_y() - eye
+		return d if d > 0.05 else -1.0
+	if Game.instance.interior == null:
+		return -1.0
+	var d := Game.instance.interior.damage.water_height_at(position) - (position.y + EYE_HEIGHT)
+	return d if d > 0.05 else -1.0
 
 
 func _process(delta: float) -> void:
@@ -489,8 +545,10 @@ func _process(delta: float) -> void:
 	_pose_sprint(delta)
 	var hud := Game.instance.hud
 	var air := breathing()
-	hud.set_air(air.x, air.y, is_knocked_out())
-	if is_knocked_out():
+	var blacked := Game.instance.deck != null and Game.instance.deck.blacked_out
+	hud.set_air(air.x, air.y, is_knocked_out() or blacked)
+	hud.set_underwater(eye_under() if not Deck.is_out(global_position) else -1.0) # outside, the sea itself is drawn
+	if is_knocked_out() or blacked:
 		hud.set_prompt("")
 		return
 	if station != null or climbing:
@@ -498,6 +556,12 @@ func _process(delta: float) -> void:
 		return
 	var target := _interact_target()
 	var prompt: String = target.get_prompt(self) if target != null else ""
+	var deck := Game.instance.deck
+	if prompt == "" and deck != null and Deck.is_out(global_position):
+		if deck.holding >= 0:
+			prompt = "Holding on  —  [Space] let go"
+		elif deck.far_from_boat(global_position - Deck.ORIGIN):
+			prompt = "[R] Back to the boat on your lifeline"
 	if prompt == "" and held_tool != "":
 		if Tools.is_instrument(held_tool):
 			prompt = "%s  —  [LMB] hold to play your part of %s    [G] put it back" % [Tools.display_name(held_tool), Band.SONG]
@@ -707,12 +771,14 @@ func _pose_emote(t: float) -> void:
 
 ## Climb along a list of global points (a ladder's path). Movement is a tween, synced
 ## like any other movement.
-## Up the bridge hatch onto the deck (Deck), facing forward.
-func go_on_deck() -> void:
+## Up the bridge hatch onto the deck (Deck), facing forward; `bow`: out of the escape trunk forward.
+func go_on_deck(bow := false) -> void:
 	if station != null:
 		leave_station()
+	if Diving.water_y() > 0.0 and not Diving.suited(peer_id) and not godly(): # out into the sea: suited up in the trunk
+		Game.instance.rq_suit.rpc_id(1, true)
 	velocity = Vector3.ZERO
-	global_position = Game.instance.deck.hatch_spot()
+	global_position = Game.instance.deck.bow_spot() if bow else Game.instance.deck.hatch_spot()
 	rotation.y = 0.0
 	Sfx.play_at(self, "door_open", Vector3(0, 1.0, 0), -6.0)
 
@@ -720,6 +786,8 @@ func go_on_deck() -> void:
 ## Down the hatch to the foot of the ladder by the gun.
 func go_below() -> void:
 	var gun: Station = Game.instance.interior.stations.get("gun")
+	if Diving.suited(peer_id): # the suit goes back in the locker
+		Game.instance.rq_suit.rpc_id(1, false)
 	velocity = Vector3.ZERO
 	_swimming = false
 	if gun != null:

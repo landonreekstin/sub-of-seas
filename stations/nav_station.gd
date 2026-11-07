@@ -3,7 +3,7 @@ extends Station
 ## The chart table in the control room. The plot fills the screen while you're on it:
 ## W/S zoom, LMB puts a pencil mark down for everyone, RMB rubs out the nearest one.
 
-const ZOOMS := [1500.0, 3000.0, 6000.0, 12000.0, 25000.0]
+const ZOOMS := [1500.0, 3000.0, 6000.0, 12000.0, 25000.0, 40000.0]
 
 var _zoom := 2
 var _chart: ChartView
@@ -37,7 +37,7 @@ func _build_overlay(root: Control) -> void:
 	_chart.clip_contents = true
 	box.add_child(_chart)
 	var home := "   [H] head home (ends the patrol)" if Game.instance.crew.mission == "sandbox" else ""
-	var help := UiKit.label("CHART   [W/S] zoom   [LMB] pencil mark   [RMB] rub out   red: TDC   ◆ last marked   blue: sonar, soundings (m)%s    %s" % [home, footer(cluster != "")], 14, UiKit.CREAM)
+	var help := UiKit.label("CHART   [W/S] zoom   [LMB] pencil mark   [RMB] rub out   [N] waypoint at the pencil   [M] clear it   red: TDC   ◆ last marked   blue: sonar, soundings (m)%s    %s" % [home, footer(cluster != "")], 14, UiKit.CREAM)
 	help.add_theme_constant_override("outline_size", 5)
 	help.add_theme_color_override("font_outline_color", Color.BLACK)
 	box.add_child(help)
@@ -60,6 +60,17 @@ func station_input(event: InputEvent) -> void:
 		return
 	if key_pressed(event, KEY_H) and Game.instance.crew.mission == "sandbox":
 		order("home")
+		return
+	if key_pressed(event, KEY_N): # a waypoint where the pencil points: the crew steer there
+		var local := _chart.get_local_mouse_position()
+		if Rect2(Vector2.ZERO, _chart.size).has_point(local):
+			var at := _chart.to_world(local)
+			order("waypoint", [at.x, at.y])
+			Sfx.play_at(self, "pencil", Vector3(0, 1.0, 0))
+		return
+	if key_pressed(event, KEY_M):
+		order("clear_waypoint")
+		click(-6.0)
 		return
 	if key_pressed(event, KEY_W) or (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_WHEEL_UP):
 		_zoom = maxi(_zoom - 1, 0)
