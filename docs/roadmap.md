@@ -229,8 +229,8 @@ Added by Blaney after playing. In his words where it matters.
       *(Done, PR #43: the hatch opens at any depth; dived, you come out into the sea in the boat's dive suit, and go below again any time. The sea under her is open down 350 m.)*
 - [x] god mode as a command on the PA: superspeed, invincibility and super swim speed so i can catch up to subs and watch them from the outside
       *(Done, PR #43: "god mode" on the PA, for whoever says it (again, or "god mode off", to stop): 3x on foot, 8x swimming, 16x with Shift, faster than any boat at flank; bad air and depth can't knock you out; the sea pen round her opens.)*
-- [ ] swimming: down to the sea floor, out of the sub while dived, and in flooded rooms
-      *(Built, PR #44: Ctrl dives under from the surface and you can swim right down to the sea floor and stand on it; the escape trunk in the forward torpedo room goes out at the bow; flood water over your chest and you swim in the room, murky when your eye goes under.)*
+- [x] swimming: down to the sea floor, out of the sub while dived, and in flooded rooms
+      *(Done, PR #44, Blaney played it: "very nice": Ctrl dives under from the surface and you can swim right down to the sea floor and stand on it; the escape trunk in the forward torpedo room goes out at the bow; flood water over your chest and you swim in the room, murky when your eye goes under.)*
 - [x] lets get rid of the sand table
       *(Done, PR #43: gone from every boat's navigation room; the middle of the room is clear. The cameras' console and the chart locker stay.)*
 - [x] lets also just turn the volume down, i think it is by default too loud
@@ -241,14 +241,14 @@ Added by Blaney after playing. In his words where it matters.
       *(Done, PR #43: the outside cameras' console stands 30 cm out from the wall in every boat, so the big screen is in front of the pipe runs.)*
 - [x] the music started playing then stopped in the typhoon
       *(Done, PR #43: the menu music's fade-out was still running when the Typhoon's choir started on the same player, and its stop cut the choir off; a new fade now cancels the old one.)*
-- [ ] the navigation room is mostly a giant hologram showing every piece of information needed for testing (everything, even unseen); the hologram leaves the captain's chair
-      *(Built, PR #44: in every boat, everything in the water with what it's doing; what the boat hasn't found flickers as dim ghosts, colder the deeper she goes. H in the captain's chair puts it on his screen.)*
-- [ ] a captain's chair in every boat with its own keys to pilot the sub entirely alone by issuing commands; bots do it unless a player is on that station; more UI for the captain and more information for piloting, so a crew with no sub knowledge can do their jobs
-      *(Built, PR #44: in the nav room (the Typhoon's in her command bay); a panel with everything for piloting; a player on a post sees "CAPTAIN: come to 090: D, right rudder".)*
-- [ ] waypoints and places to travel to (click on the chart, a list of places, the PA); the boat steers there itself
-      *(Built, PR #44: N at the chart table where the pencil points, N in the captain's chair for the next place, or "take us to the wreck" / "list places" on the PA.)*
-- [ ] things to go to and explore on the ocean floor: shipwrecks, ruins, glowing vents and gardens, alien civilizations
-      *(Built, PR #44: a wreck, a drowned temple, black smokers, a glowing garden and a crystal city in every patrol, each with its event the first time you get there.)*
+- [x] the navigation room is mostly a giant hologram showing every piece of information needed for testing (everything, even unseen); the hologram leaves the captain's chair
+      *(Done, PR #44, Blaney played it: "very nice": in every boat, everything in the water with what it's doing; what the boat hasn't found flickers as dim ghosts, colder the deeper she goes. H in the captain's chair puts it on his screen.)*
+- [x] a captain's chair in every boat with its own keys to pilot the sub entirely alone by issuing commands; bots do it unless a player is on that station; more UI for the captain and more information for piloting, so a crew with no sub knowledge can do their jobs
+      *(Done, PR #44, Blaney played it: "very nice": in the nav room (the Typhoon's in her command bay); a panel with everything for piloting; a player on a post sees "CAPTAIN: come to 090: D, right rudder".)*
+- [x] waypoints and places to travel to (click on the chart, a list of places, the PA); the boat steers there itself
+      *(Done, PR #44, Blaney played it: "very nice": N at the chart table where the pencil points, N in the captain's chair for the next place, or "take us to the wreck" / "list places" on the PA.)*
+- [x] things to go to and explore on the ocean floor: shipwrecks, ruins, glowing vents and gardens, alien civilizations
+      *(Done, PR #44, Blaney played it: "very nice": a wreck, a drowned temple, black smokers, a glowing garden and a crystal city in every patrol, each with its event the first time you get there.)*
 
 ## M9 — Lando's list (2026-10-30)
 Added by lando. Direction: **more arcadey, not strict realism**. Every existing mechanic

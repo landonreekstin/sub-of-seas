@@ -26,7 +26,7 @@ Blaney's last five M8 items, in this order (his calls: style log, last row).
   under her reaches the floor; the pen has no floor; Ctrl dives under; `EscapeTrunk` (forward
   torpedo room); `Player._swim_flooded` (`FLOOD_SWIM` 1.25 m), `eye_under`, `Hud.set_underwater`;
   deeper fog in `ExteriorWorld.paint_water`, far-off groans for deep swimmers. `tests/swim_walk.gd`.
-- [next] Blaney plays it all; then tick the five, `gh pr ready 44`.
+- [done] Blaney played it: "very nice". All five ticked; `make test` clean (962 unit tests, 47 walkthroughs, now run side by side by `tests/walkthroughs.sh` in about 25 min instead of an hour); #44 ready.
 
 ## 2026-11-06 (latest, 2): the crew through the cave, the PA list
 

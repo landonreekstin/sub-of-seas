@@ -1,6 +1,6 @@
 #!/bin/sh
 # Every walkthrough (see "Test" in CLAUDE.md), several at once: one per core, up to $JOBS.
-# Each one's output goes to tests/logs/<name>.log; failures are listed at the end. Exit 1 on any.
+# Each gets its own port (TEST_PORT) and 20 minutes at most. Each one's output goes to tests/logs/<name>.log; failures are listed at the end. Exit 1 on any.
 cd "$(dirname "$0")/.." || exit 1
 JOBS=${JOBS:-$(nproc)}
 mkdir -p tests/logs
@@ -25,8 +25,10 @@ rm -f tests/logs/*.log
 	for s in gato typhoon; do echo "swim_walk.gd $s"; done
 	for s in gato s_boat typhoon; do echo "muffle_check.gd $s"; done
 	for s in gato s_boat narwhal typhoon; do echo "pastime_walkthrough.gd $s"; done
-} | xargs -P "$JOBS" -I{} sh -c '
+} | awk '{ print 7100 + NR, $0 }' | xargs -P "$JOBS" -I{} sh -c '
 	set -- {}
+	port=$1; shift
 	log="tests/logs/$(echo "$*" | tr " " "_").log"
-	if godot --headless --path . -s "tests/$1" -- $(echo "$*" | cut -s -d" " -f2-) >"$log" 2>&1; then echo "ok    $*"; else echo "FAIL  $*  (see $log)"; touch tests/logs/.failed; fi'
+	# Its own port (no two can clash), and never more than 20 minutes: a stuck one fails.
+	if TEST_PORT=$port timeout 1200 godot --headless --path . -s "tests/$1" -- $(echo "$*" | cut -s -d" " -f2-) >"$log" 2>&1; then echo "ok    $*"; else echo "FAIL  $*  (see $log)"; touch tests/logs/.failed; fi'
 if [ -e tests/logs/.failed ]; then rm -f tests/logs/.failed; exit 1; fi

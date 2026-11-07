@@ -18,7 +18,7 @@ func _initialize() -> void:
 	net.sub_key = args[0] if not args.is_empty() else "gato"
 	net.mission = "cw_convoy" if net.sub_key == "typhoon" else "convoy"
 	net.mode = 1
-	net.port = 7100 + OS.get_process_id() % 800
+	net.port = int(OS.get_environment("TEST_PORT")) if OS.has_environment("TEST_PORT") else 7100 + OS.get_process_id() % 2000 # tests/walkthroughs.sh gives each its own
 	Engine.time_scale = 4.0
 	change_scene_to_file.call_deferred("res://game/game.tscn")
 

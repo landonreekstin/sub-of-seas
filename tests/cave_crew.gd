@@ -16,7 +16,7 @@ func _initialize() -> void:
 	_how = args[1] if args.size() > 1 else "pa"
 	net.mission = "cw_cave" if net.sub_key == "typhoon" else ("titan_cave" if net.sub_key == "titan" else "cave")
 	net.mode = 1
-	net.port = 7100 + OS.get_process_id() % 800
+	net.port = int(OS.get_environment("TEST_PORT")) if OS.has_environment("TEST_PORT") else 7100 + OS.get_process_id() % 2000 # tests/walkthroughs.sh gives each its own
 	Engine.time_scale = 4.0
 	change_scene_to_file.call_deferred("res://game/game.tscn")
 

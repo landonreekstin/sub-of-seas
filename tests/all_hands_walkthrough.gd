@@ -18,7 +18,7 @@ func _initialize() -> void:
 	if args.size() > 1:
 		net.sub_key = args[1]
 	net.mode = 1
-	net.port = 7100 + OS.get_process_id() % 2000 # its own port, so tests can run side by side
+	net.port = int(OS.get_environment("TEST_PORT")) if OS.has_environment("TEST_PORT") else 7100 + OS.get_process_id() % 2000 # tests/walkthroughs.sh gives each its own
 	Engine.time_scale = 6.0
 	Engine.physics_ticks_per_second = 30
 	change_scene_to_file.call_deferred("res://game/game.tscn")

@@ -21,7 +21,7 @@ func _initialize() -> void:
 	net.debug_depth = 60.0
 	net.start_bots = PackedStringArray(["helm", "dive", "ballast"])
 	net.mode = 1
-	net.port = 7100 + OS.get_process_id() % 800
+	net.port = int(OS.get_environment("TEST_PORT")) if OS.has_environment("TEST_PORT") else 7100 + OS.get_process_id() % 2000 # tests/walkthroughs.sh gives each its own
 	Engine.time_scale = 2.0
 	change_scene_to_file.call_deferred("res://game/game.tscn")
 

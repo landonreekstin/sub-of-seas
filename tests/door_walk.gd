@@ -17,7 +17,7 @@ func _initialize() -> void:
 	net.mission = "cw_convoy" if sub == "typhoon" else "convoy"
 	net.sub_key = sub
 	net.mode = 1
-	net.port = 7100 + OS.get_process_id() % 2000 # its own port, so tests can run side by side
+	net.port = int(OS.get_environment("TEST_PORT")) if OS.has_environment("TEST_PORT") else 7100 + OS.get_process_id() % 2000 # tests/walkthroughs.sh gives each its own
 	Engine.time_scale = 4.0
 	change_scene_to_file.call_deferred("res://game/game.tscn")
 
