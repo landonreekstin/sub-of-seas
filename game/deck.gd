@@ -11,7 +11,7 @@ extends Node3D
 ## (Diving) stay out: they hold on at the grab rails, or let go and swim while she moves on
 ## past them, and come below only once she's surfaced.
 
-const ORIGIN := Vector3(0, 400, 0) ## where the deck's waterline sits in the interior's space
+const ORIGIN := Vector3(0, 6000, 0) ## where the deck's waterline sits in the interior's space: far enough up for the sea under her to reach the sea floor
 const SWIM_EYE := 0.35 ## m the eye rides above the water while swimming
 const IN_WATER := -0.6 ## local feet height below which a crewman is swimming
 const SEGMENTS := 48
@@ -30,6 +30,7 @@ var holding := -1 ## the grab rail the local diver holds, or -1
 var drift := Vector3.ZERO ## how the sea moves past the local diver (deck space, m/s), for his feet
 var strain := 0.0 ## 0..1 how near the local diver is to blacking out from the depth
 var blacked_out := false
+var _dread := 30.0 ## s until the next far-off groan for a swimmer deep down
 var _pen: Array[StaticBody3D] = [] ## the walls and floor round her that keep swimmers close, surfaced only
 var _last_depth := 0.0
 var _helmet: CanvasLayer ## the diver's view out of his helmet or mask
@@ -46,7 +47,7 @@ static func create(sub: SubClassData) -> Deck:
 
 ## Is this point (interior space) out on deck or in the sea around it?
 static func is_out(p: Vector3) -> bool:
-	return p.y > ORIGIN.y - 350.0 # the interior sits about y 0; under her is open sea down to here
+	return p.y > 100.0 # the interior sits about y 0; everything above it is the sea round her, down to the sea floor
 
 
 static func is_swimming(p: Vector3) -> bool:
@@ -94,12 +95,12 @@ func _ready() -> void:
 		for side in [-1.0, 1.0]:
 			var lz := z0 - 1.5
 			_solid(Vector3(0.6, 0.7, 1.4), Vector3(side * beam * 0.2, _deck_at(lz) + 0.35, lz))
-	# Nobody swims off over the horizon: a pen of sea round her, and a floor under it.
+	# Nobody swims off over the horizon on the surface: a pen of sea round her, all the way down
+	# (Blaney: swimming down to the sea floor, so no floor to it).
 	var pen := Vector2(beam * 0.5 + 40.0, l * 0.5 + 40.0)
 	for side in [-1.0, 1.0]:
-		_pen.append(_solid(Vector3(1.0, 30.0, pen.y * 2.0), Vector3(side * pen.x, 5.0, 0)))
-		_pen.append(_solid(Vector3(pen.x * 2.0, 30.0, 1.0), Vector3(0, 5.0, side * pen.y)))
-	_pen.append(_solid(Vector3(pen.x * 2.0, 1.0, pen.y * 2.0), Vector3(0, -14.0, 0)))
+		_pen.append(_solid(Vector3(1.0, 5910.0, pen.y * 2.0), Vector3(side * pen.x, -2935.0, 0)))
+		_pen.append(_solid(Vector3(pen.x * 2.0, 5910.0, 1.0), Vector3(0, -2935.0, side * pen.y)))
 	# The grab rails a diver holds on to (Blaney): either side of the bow, the fin and the after casing.
 	var bz := -l * 0.5 + l * 0.12
 	var bt := OwnBoat.t_of(dims, bz)
@@ -173,6 +174,12 @@ func _solid(size: Vector3, pos: Vector3) -> StaticBody3D:
 ## Where a crewman coming up the hatch stands (interior space), facing forward.
 func hatch_spot() -> Vector3:
 	return ORIGIN + Vector3(0, _deck_at(dims.hatch_z) + 0.05, float(dims.hatch_z) - 0.9)
+
+
+## Out of the escape trunk: on the casing well forward, facing the bow.
+func bow_spot() -> Vector3:
+	var z := -float(dims.length) * 0.32
+	return ORIGIN + Vector3(0, _deck_at(z) + 0.05, z)
 
 
 ## Can the crew go out? Any time, for now (Blaney: "make it so i can also exit the boat at any
@@ -251,8 +258,6 @@ func _dive(me: Player, on: bool, delta: float) -> void:
 		me.rotation.y += deg_to_rad(sub.turn_rate) * delta # he keeps facing the same way in the sea
 	else:
 		drift = Vector3.ZERO
-	if not dived and local.y < -13.0: # she came up under him: he bobs up beside her
-		me.global_position = ORIGIN + Vector3(local.x, 0.0, local.z)
 	# The depth on him: past the suit's depth he strains, then blacks out on his lifeline.
 	var deep := Diving.water_y() - (local.y + Player.EYE_HEIGHT)
 	var limit: float = INF if me.godly() else Diving.suit().depth
@@ -275,6 +280,12 @@ func _dive(me: Player, on: bool, delta: float) -> void:
 		haul_back(me)
 	if _lamp != null:
 		_lamp.visible = Diving.suited(me.peer_id) and deep > 12.0
+	# Deep down, out in the dark, now and then something far off groans (Blaney: the deeper, the
+	# more unsettling).
+	_dread -= delta
+	if deep > 60.0 and _dread <= 0.0:
+		_dread = randf_range(25.0, 50.0) * (1.0 if deep < 200.0 else 0.6)
+		Game.instance._monster_call(-26.0 + minf(deep / 40.0, 8.0), randf_range(0.22, 0.32))
 
 
 ## Holds on at grab rail `i` (or lets go with -1).

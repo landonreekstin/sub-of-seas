@@ -18,6 +18,7 @@ var _objective_text: Label
 var _smoke: ColorRect
 var _vignette: ColorRect
 var _blackout: ColorRect
+var _underwater: ColorRect ## your eye under the flood water in a room
 var _talk: Label
 var _captain: Label ## what the captain wants of the post you're on (CaptainStation.hint_for)
 
@@ -130,6 +131,18 @@ func _build_air_layers() -> void:
 
 
 ## `bad` 0..1 (1 = about to pass out), `smoke` 0..1 where you stand.
+## Murky green-blue over everything while your eye is under flood water, darker the deeper.
+func set_underwater(depth: float) -> void:
+	if _underwater == null:
+		_underwater = ColorRect.new()
+		_underwater.set_anchors_preset(Control.PRESET_FULL_RECT)
+		_underwater.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_root.add_child(_underwater)
+		_root.move_child(_underwater, 0)
+	_underwater.visible = depth > 0.0
+	_underwater.color = Color(0.04, 0.2, 0.22, clampf(0.5 + depth * 0.15, 0.5, 0.75))
+
+
 func set_air(bad: float, smoke: float, knocked: bool) -> void:
 	_smoke.color.a = clampf(smoke * 0.75, 0.0, 0.75)
 	(_vignette.material as ShaderMaterial).set_shader_parameter("amount", bad)

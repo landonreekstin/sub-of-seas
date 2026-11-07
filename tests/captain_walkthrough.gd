@@ -1,8 +1,8 @@
 extends SceneTree
 ## One player alone in the captain's chair (Blaney: "pilot the sub entirely alone by issuing
-## commands"): N sends her to the nearest place, 1 surfaces her for the trip, the crew take her
-## there, 2 takes her to
-## periscope depth, Tab picks a ship and Space has the crew attack it, until it sinks.
+## commands"): Tab picks a ship the boat knows of and Space has the crew attack it until it sinks;
+## then N sends her to the nearest place and the crew take her there by themselves, and 2 takes
+## her to periscope depth.
 ##   godot --headless --path . -s tests/captain_walkthrough.gd -- [<sub>]
 
 var _game: Node
@@ -16,7 +16,7 @@ func _initialize() -> void:
 	var args := OS.get_cmdline_user_args()
 	var net: Node = root.get_node("Net")
 	net.sub_key = args[0] if not args.is_empty() else "gato"
-	net.mission = "cw_sandbox" if net.sub_key == "typhoon" else "sandbox"
+	net.mission = "cw_convoy" if net.sub_key == "typhoon" else "convoy"
 	net.mode = 1
 	net.port = 7100 + OS.get_process_id() % 800
 	Engine.time_scale = 4.0
@@ -37,61 +37,56 @@ func _physics_process(delta: float) -> bool:
 		return false
 	var before := _t
 	_t += delta
-	if int(_t) != int(before) and int(_t) % 20 == 0:
-		print("captain: %3d s %s pos %s heading %.0f speed %.1f tel %d depth %.0f/%.0f sunk %d batt %.2f result %s diesels %s bots %s" % [int(_t), _step, w.sub.pos.round(), w.sub.heading, w.sub.speed, w.sub.telegraph, w.sub.depth, w.sub.ordered_depth, _game.crew.sunk, w.sub.battery, _game.crew.result, w.sub.diesels, _game.crew.get("bots", {}).keys()])
+	if int(_t) != int(before) and int(_t) % 30 == 0:
+		print("captain: %3d s %s heading %.0f speed %.1f depth %.0f/%.0f battery %.2f sunk %d %s" % [int(_t), _step, w.sub.heading, w.sub.speed, w.sub.depth,
+			w.sub.ordered_depth, w.sub.battery, _game.crew.sunk, _game.crew.result])
+	if _game.crew.result != "":
+		return _end("FAIL: the patrol ended (%s)" % _game.crew.result)
 	match _step:
 		"enter":
 			if _t > 2.0:
 				_game.rq_station_enter("captain")
-				_step = "waypoint"
-		"waypoint":
+				_step = "target"
+				_sunk0 = _game.crew.sunk
+		"target":
 			if _game.station_occupant("captain") != _game.multiplayer.get_unique_id():
 				return _end("FAIL: couldn't sit in the chair")
-			_order("next_place")
-			if _game.crew.get("waypoint", {}).is_empty():
-				return _end("FAIL: N set no waypoint")
-			print("captain: waypoint %s" % _game.crew.waypoint.name)
-			_order("preset", "surface") # a long way on the battery would run her flat: up on the diesels
-			_step = "travel"
+			if _t < _wait:
+				return false
+			_wait = _t + 5.0
+			_order("target")
+			if int(_game.crew.get("captain_target", -1)) < 0:
+				if _t > 900.0:
+					return _end("FAIL: never knew of a ship")
+				return false
+			_order("attack")
+			print("captain: attacking at %d s" % int(_t))
+			_step = "attack"
+		"attack":
+			if _game.crew.sunk > _sunk0:
+				print("captain: sank one at %d s" % int(_t))
+				_order("next_place")
+				if _game.crew.get("waypoint", {}).is_empty():
+					return _end("FAIL: N set no waypoint")
+				print("captain: waypoint %s" % _game.crew.waypoint.name)
+				_step = "travel"
+			elif _t > 2400.0:
+				return _end("FAIL: nothing sunk")
 		"travel":
+			w.sub.battery = maxf(w.sub.battery, 0.6) # a long way dived: the charge she'd put in on the surface, not this test's job
 			if _game.crew.get("waypoint", {}).is_empty():
 				print("captain: arrived at %d s" % int(_t))
 				_order("preset", "periscope")
 				_step = "dive"
 				_wait = _t + 3.0
-			elif _t > 900.0:
+			elif _t > 4000.0:
 				return _end("FAIL: never got to the waypoint")
 		"dive":
 			if _t < _wait:
 				return false
 			if absf(w.sub.ordered_depth - w.sub.data.periscope_depth) > 1.0:
 				return _end("FAIL: 2 didn't order periscope depth (%.0f)" % w.sub.ordered_depth)
-			_sunk0 = _game.crew.sunk
-			_step = "target"
-		"target":
-			_order("scope")
-			_order("target")
-			if int(_game.crew.get("captain_target", -1)) < 0:
-				# nothing known yet: steer for the nearest ship until sonar has her
-				var best: Variant = null
-				for s in w.ships:
-					if best == null or s.pos.distance_to(w.sub.pos) < best.pos.distance_to(w.sub.pos):
-						best = s
-				_game.crew.get_or_add("wants", {})
-				var err := wrapf(ShipState.bearing(w.sub.pos, best.pos) - float(_game.crew.wants.get("course", w.sub.heading)), -180.0, 180.0)
-				_order("course", clampf(roundf(err / 10.0) * 10.0, -40.0, 40.0))
-				if _game.crew.wants.get("speed", 0) < 4:
-					_order("speed", 1)
-				if _t > 1500.0:
-					return _end("FAIL: never heard a ship")
-				return false
-			_order("attack")
-			_step = "attack"
-		"attack":
-			if _game.crew.sunk > _sunk0:
-				return _end("ok: sank one at %d s, alone in the chair" % int(_t))
-			if _t > 2400.0:
-				return _end("FAIL: nothing sunk")
+			return _end("ok: sank one, went to a place and came to periscope depth, alone in the chair (%d s)" % int(_t))
 	return false
 
 

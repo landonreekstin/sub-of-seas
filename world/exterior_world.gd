@@ -348,7 +348,7 @@ static func paint_water(env: Environment, sky: ToonSky, depth: float, night: boo
 	sky.clouds = 0.0
 	env.fog_enabled = true
 	env.fog_light_color = mid
-	env.fog_density = 0.016
+	env.fog_density = 0.016 + 0.022 * clampf((depth - 60.0) / 300.0, 0.0, 1.0) # the dark closes in deeper (Blaney: more unsettling)
 	env.fog_sky_affect = 0.0
 
 

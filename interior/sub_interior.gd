@@ -350,6 +350,10 @@ func _torpedo_room(c: Dictionary, aft: bool) -> void:
 			x = -x
 		var y := 1.95 - (i / 2) * 0.7
 		_add_station(tube, Vector3(x, y, wall_z), PI if aft else 0.0)
+	if not aft: # the escape trunk overhead, aft of the tubes (Blaney: out of the sub while dived)
+		var trunk := EscapeTrunk.new()
+		trunk.position = Vector3(0, 0, c.z0 + 2.2)
+		_at.add_child(trunk)
 	# Reload torpedoes on racks along both sides.
 	var rz0: float = c.z0 + (2.5 if aft else 3.0)
 	var rz1: float = c.z1 - (3.0 if aft else 2.5)

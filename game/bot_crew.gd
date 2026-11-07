@@ -829,6 +829,8 @@ func _step_plan() -> void:
 	var lead := w.lead_bearing(target)
 	var course := ShipState.bearing(sub.pos, target.pos) if is_nan(lead) else lead
 	var speed := 4 if r > 4000.0 else (3 if r > 2000.0 else 2)
+	if not sub.is_surfaced() and not sub.data.nuclear and sub.battery < 0.5: # don't run the battery flat on the way in
+		speed = mini(speed, 2 if sub.battery > 0.2 else 1)
 	var want: Dictionary = game.crew.get_or_add("wants", {}) # a player at the helm steers the attack too
 	want.course = course
 	want.speed = speed
