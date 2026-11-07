@@ -54,9 +54,26 @@ and update "Current style" in the same commit.
   lock, off balance doubles how far you're driven. A panel at the bottom: the two names, the
   clinch on a SEA |----X----| SEA bar, the move keys, the last turn. Driven past your edge,
   you go over the side into the sea and swim back to a ladder.
-- **Navigation room** (Blaney): a compartment just aft of the control room in every boat.
-  The middle of the room is clear (the sand table was taken out, Blaney 2026-11-06: a giant
-  hologram is planned there). A chart locker in the starboard after corner.
+- **Navigation room** (Blaney): a compartment just aft of the control room in every boat,
+  mostly a giant hologram (Blaney 2026-11-06: "showing every piece of information needed for
+  testing, everything, even unseen"): a glowing blue disc of sea some 2.3 m across hanging
+  from a projector ring in the deckhead, the sea floor as a grid of glowing lines, our boat in
+  the middle bow-up, and every ship, sub, whale, monster, plane, torpedo and charge, the places
+  on the sea floor, the cave and the waypoint, each labelled with what it is and what it's
+  doing. What the boat hasn't found yet are dim ghosts that flicker and drift; the deeper she
+  goes, the colder and dimmer it runs. The outside cameras' console on the port side forward,
+  the captain's chair in the port after corner facing the hologram (the Typhoon's chair is in
+  her command bay), a chart locker in the starboard after corner.
+- **The captain's chair** (Blaney: pilot the sub alone by giving orders): a brown leather chair
+  with CAPTAIN on its back, in every boat but the Titan. Its keys are orders: W/S speed, A/D turn
+  10° (Shift 1°), R/F depth 10 m (Shift 1 m), 1-4 surface / periscope / dive / deep, C crash
+  dive, X twice emergency surface, Tab target, Space attack it, P periscope, N next place, M
+  clear the waypoint, H the hologram full on his screen, Enter the PA. A bot carries each out
+  unless a player has that post; then the player sees "CAPTAIN: come to 090: D, right rudder"
+  in brass at the top of his screen, so a crew who know nothing of subs can do their jobs. The
+  chair's panel: heading, speed and depth against what's ordered, the waypoint with bearing,
+  range and time, the sea floor under and ahead (SHOAL AHEAD! in amber), the target, tubes,
+  battery, air, the worst damage, and who has each post.
 - **Outside cameras** (Blaney: a viewing centre; both a wall of small screens and a big one):
   on the port side of the navigation room, a grey console under six small screens (bow, stern,
   port, starboard, bridge, keel), all live while you're in the room, and a big screen above;
@@ -304,12 +321,6 @@ and update "Current style" in the same commit.
   low round dais with a brass rail round the front and the scope, the attack scope beside it; the
   skipper's brown leather chair to port, sonar on the port wall, fire control to starboard.
   Bot crewmen sit in the chairs.
-- **The skipper's hologram** (Blaney: a 3D view of the water from what the boat knows, everyone
-  sees it; Typhoon only, blue glow): sit in the skipper's chair, H turns it on or off. It hangs in
-  front of the chair from a projector in the deckhead: a ring for the sea's surface, the sea floor
-  8 km round as glowing blue grid lines, our boat bright in the middle, bow ahead (heading-up),
-  ships the boat hears or sees as small blocks with a thin line up from a sub's depth and a name and
-  range, our torpedoes bright, theirs red. Past 8 km a contact sits on the rim on its bearing.
 - **Crash surface** (Blaney: emergency breaching): an emergency blow from depth (X twice on the
   ballast, or "crash surface" on the PA) brings her up so fast her bow leaps out: up to 28° bow up
   and thrown 6 m out of the sea, slammed back down with a great splash, rocking to rest. Inside,
@@ -443,8 +454,30 @@ and update "Current style" in the same commit.
   lower, ghosts of what we haven't found flickering in it, the sea-floor places stranger the
   deeper they lie (a bright garden shallow, a crystal city at test depth).
 - **Places to go** (Blaney): a wreck, a drowned temple, black smokers (glowing vents), a glowing
-  garden and a crystal city on the sea floor of every patrol, each island named; the boat steers
-  to a waypoint by herself (set on the chart, from the captain's list of places or on the PA).
+  garden and a crystal city on the sea floor of every patrol (not training), each island named;
+  the boat steers to a waypoint by herself (N on the chart where the pencil points, N in the
+  captain's chair for the next place, or the PA), on the surface on the diesels when nobody's
+  about, and stops 15 m over a sea-floor place to look. On the chart: blue squares, filled in
+  once found; the waypoint a green cross with a dashed line out to it.
+- **The places themselves**, low-poly and flat-coloured: the Kiyo Maru, a rust-red freighter
+  broken in two and lying over, her funnel knocked flat, crates and drums spilled; a drowned
+  temple of three steps, a ring of columns (some fallen) and a gate with a carved stone door;
+  black chimneys with glowing orange mouths, smoke and red-tipped tube worms on warm ground; a
+  garden of swaying kelp, glowing anemones in teal, pink, green, blue and yellow, and fan coral;
+  the crystal city (Blaney): tall six-sided spires of purple and teal glass with rings of white
+  light, see-through domes, strange glowing symbols round its edge, all slowly pulsing.
+- **Each place's event** (Blaney: "simple but still an event"), once, the first time she comes
+  within 450 m: "DISCOVERED: ..." then the wreck taps SOS on the hull and a bell tolls; the
+  temple's tremor shakes the boat and its door sinks open on a glow; the smokers' heat lifts
+  her and roars on the sonar; the garden's glowing fish swarm round the boat a minute; the
+  crystal city flickers our lights, a deep chord answers and a glowing orb rises out of it and
+  follows her for a minute before going back down. The debrief lists the places found.
+- **Swimming** (Blaney): Ctrl dives under from the surface, and anyone can swim all the way down
+  to the sea floor and stand on it (the suit's depth still knocks out a man in a suit; god mode
+  doesn't care); the dark closes in deeper and now and then something far off groans. The
+  escape trunk in the forward torpedo room's deckhead goes out at the bow, in the dive suit
+  when she's dived. Flood water over your chest and you swim in the room (Space up, Ctrl down,
+  or float with your eye clear), murky green-blue when your eye goes under.
 - **The sea** (Blaney: a larger area): islands, seamounts and shelves spread over some 30 km
   each way, with deep trenches far below any keel; the chart table zooms out to 80 km across;
   swimmers have 40 m of sea round the boat.

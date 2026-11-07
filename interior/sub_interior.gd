@@ -547,7 +547,7 @@ func _nav_room(c: Dictionary, chair := true) -> void:
 	var hz: float = mid + 0.6
 	var holo := HoloView.new()
 	holo.name = "nav_holo"
-	holo.radius = minf(1.35, (c.z1 - c.z0) * 0.5 - 0.6)
+	holo.radius = minf(1.15, (c.z1 - c.z0) * 0.5 - 0.8)
 	holo.height = 1.05
 	holo.position = Vector3(0, 1.8, hz)
 	_at.add_child(holo)

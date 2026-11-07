@@ -11,8 +11,22 @@ Blaney's last five M8 items, in this order (his calls: style log, last row).
   deeper than the ocean floor), `sim/places.gd`, `Game.set_waypoint`, `BotCrew.order_waypoint` /
   `waypoint_wants` / `_step_waypoint` (plan kind "waypoint"; `crew.wants` for players' hints),
   PA "goto"/"places"; `Seabed.clear_course` got `width` and `step`. `tests/test_waypoints.gd`.
-- [next] captain's chair (`CaptainStation`, the Typhoon's "holo" becomes "captain"), then the
-  nav-room hologram (`HoloView`), the sites' models and events, swimming.
+- [done, tests pass] captain's chair (`CaptainStation`, station "captain": the Typhoon's "holo" chair
+  replaced; every other boat's in the nav room's port after corner): keys are orders through
+  `BotCrew.captain` (`_from_chair`: no notices, a player sees `CaptainStation.hint_for` on the HUD from
+  `crew.wants`; the attack plan writes `wants` too). Waypoint and attack runs go easy on the battery
+  dived; a waypoint far off with no ship in 10 km runs surfaced on the diesels.
+  `tests/captain_walkthrough.gd`.
+- [done, looked at] nav room: `HoloView` (`world/holo_view.gd`, everything; unknown things are
+  flickering ghosts, colder deeper), `HoloView.screen()` for H in the chair. `stations/holo_station.gd`
+  is gone. Chart: places, found ones filled, the waypoint; N/M at the chart table.
+- [done, looked at] sea-floor places: `world/site_view.gd`, pictures with `tools/site_look.gd`;
+  events `Game._check_sites` / `site_event` (host: `crew.found`, the vents lift her); debrief count.
+- [done, tests pass] swimming: `Deck.ORIGIN` now y 6000 and `is_out` anything above y 100, so the sea
+  under her reaches the floor; the pen has no floor; Ctrl dives under; `EscapeTrunk` (forward
+  torpedo room); `Player._swim_flooded` (`FLOOD_SWIM` 1.25 m), `eye_under`, `Hud.set_underwater`;
+  deeper fog in `ExteriorWorld.paint_water`, far-off groans for deep swimmers. `tests/swim_walk.gd`.
+- [next] Blaney plays it all; then tick the five, `gh pr ready 44`.
 
 ## 2026-11-06 (latest, 2): the crew through the cave, the PA list
 
