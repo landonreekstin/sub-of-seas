@@ -137,7 +137,8 @@ O outer door, A/D gyro, Space fire. A crewmate standing by the tube (off station
 Engine (after end of the engine room): 1/2 start/stop a diesel (surfaced only; stop them before diving).
 Ship's band (rack in the rec room; the S-boat's in the navigation room): E takes an instrument, hold LMB to play your part of the song, G puts it back.
 Navigation room (aft of the control room): the sand table (E for a closer look) and the outside cameras' console (E, then 1-6 for the big screen: bow, stern, port, starboard, bridge, keel).
-Out on deck (surfaced): look up at the bridge hatch over the gun's ladder, E climbs out; E at the deck hatch goes below; off the side you swim, E at a side ladder climbs back aboard. No diving while anyone is out.
+Out on deck (any time, for now; dived you come out into the sea in the dive suit): look up at the bridge hatch over the gun's ladder, E climbs out; E at the deck hatch goes below; off the side you swim, E at a side ladder climbs back aboard. No diving while anyone is out without a suit.
+God mode: "god mode" on the PA (again or "god mode off" to stop), for whoever says it: 3x on foot, 8x swimming (Shift 16x), can't be knocked out (`crew.god`, `Player.godly()`).
 Wrestling (aft casing, the painted ring): two step in to start; 1 push, 2 arm drag, 3 body lock, 4 suplex (needs a lock), 5 brace; drive him off his edge.
 Ballast (control room, port aft): V vents (flood to dive), B blow (to surface), X twice emergency blow.
 Bilge pump (control room, forward bulkhead, port of the door): P start/stop. Drains the wettest compartment 4× a portable pump, off the battery; escorts can hear it.
@@ -147,7 +148,7 @@ Ammunition scuttle (in the deck of the crew's mess; S-boat: the wardroom): hold 
 T: the things-to-do card (every pastime aboard, where, its keys, the crew's records).
 Pastimes: arm wrestling (crew's mess forward table; S-boat: the wardroom table): tap Space. Blackjack (rec room card table; S-boat: wardroom): Space deals / hits, S stands. Galley range: Space flips in the green, three flips a meal. Fishing (out on deck, the stern rail): E, Space strikes, hold LMB to reel in the green, Q puts the rod down. B at an empty seat sits a bot down to play you.
 Rec room (Gato, Narwhal: aft of the mess): darts station (mouse aim, LMB/Space throw), E at the jukebox for the next record.
-PA microphone (control room, after bulkhead port of the door): E, type an order in plain English, Enter; the crew do it. J at any station hands it to a bot.
+PA microphone (control room, after bulkhead port of the door): E, type an order in plain English, Enter; the crew do it (every order: `docs/pa_commands.md`, `CrewCommand.HELP`; "take us through the cave" and they do). J at any station hands it to a bot.
 Titan pilot (aft, on the floor): W/S thrust, A/D turn, hold R up / F down (Shift gently), X twice drops the weights; with a game controller: left stick, triggers, B twice.
 Typhoon command bay: the helmsman's and planesman's yokes facing the bow (Tab between them). Planesman: hold W push down, S pull up (Shift gently), 1-4 presets; helmsman: A/D or mouse rudder, C centre, W/S engine order. Skipper's chair (port of the scope): H the hologram for everyone.
 Ballast X twice (emergency blow) from depth, or "crash surface" on the PA: she breaches.
@@ -164,6 +165,8 @@ godot --headless --path . -s tests/run_tests.gd     # unit tests, exit code 1 on
 godot --headless --path . -s tests/party_walkthrough.gd -- <sub>   # damage parties stay inside the boat, through shut doors
 godot --headless --path . -s tests/door_walk.gd -- typhoon         # a player walks through every door, both ways
 godot --headless --path . -s tests/breach_hatch.gd -- <sub> [pa | ballast | planesman]  # crash surface from 80 m with bots aboard: the hatch opens and stays open
+godot --headless --path . -s tests/god_out.gd -- <sub>             # out of the hatch dived, god mode: catch her up at flank, back below
+godot --headless --path . -s tests/cave_crew.gd -- <sub> [pa | all_hands]   # the bot crew take her through the cave alone
 godot --headless --path . -s tests/deck_walk.gd -- <sub>           # out of the hatch, along the deck, back down; swim and climb aboard
 godot --headless --path . -s tests/pastime_walkthrough.gd -- <sub> # bots play every pastime; the T card lists them
 godot --headless --path . -s tests/all_hands_walkthrough.gd [-- <mission> <sub>]  # "all hands on deck": the crew sink a ship on their own

@@ -19,6 +19,23 @@ const MONSTERS := {"monster": "", "monsters": "", "creature": "", "beast": "", "
 const ATTACK := ["sink", "attack", "torpedo", "kill", "destroy", "hit", "engage", "shoot", "blow", "fire", "get", "target", "take"]
 const SPEEDS := {"stop": 0, "halt": 0, "reverse": -1, "back": -1, "slow": 1, "quiet": 1, "half": 2, "standard": 3, "cruise": 3, "full": 4, "flank": 4, "fast": 4, "maximum": 4, "max": 4}
 
+## Every kind of order, with lines that say it (Blaney: "make a long list of all PA commands"):
+## shown on the PA panel, written out in docs/pa_commands.md, and each line is checked by the
+## tests to mean what it says here. Each: [heading, [[line, intent], ...]].
+const HELP := [
+	["Moving", [["full speed", "speed"], ["slow ahead", "speed"], ["stop", "speed"], ["back", "speed"], ["faster", "speed"], ["slower", "speed"],
+		["come to 090", "course"], ["head north", "course"], ["turn left", "course"], ["hard right", "course"], ["turn around", "course"], ["head for the island", "course"]]],
+	["Up and down", [["dive", "depth"], ["dive to 60", "depth"], ["periscope depth", "depth"], ["take her deep", "depth"], ["go deeper", "depth"], ["go up", "depth"],
+		["dive to the bottom", "depth"], ["surface", "depth"], ["crash surface", "depth"]]],
+	["Fighting", [["sink the ship to the east", "attack"], ["attack the carrier", "attack"], ["sink the destroyer to the north", "attack"], ["fire torpedoes", "attack"],
+		["reload", "reload"], ["open fire", "gun"], ["enemy sub", "enemy_sub"], ["attack the enemy sub", "enemy_sub"], ["belay that", "cancel"]]],
+	["Getting away", [["get us out of here", "evade"], ["evade", "evade"], ["silent running", "evade"]]],
+	["The crew", [["battle stations", "man_stations"], ["all hands on deck", "all_hands"], ["take us through the cave", "cave"], ["fix the damage", "fix"],
+		["pump out the water", "fix"], ["fresh air", "air"], ["stand down", "stand_down"]]],
+	["Asking", [["report", "report"], ["what's out there", "contacts"], ["what's our objective", "objective"]]],
+	["For fun", [["god mode", "god"], ["god mode off", "god"], ["band play", "band"], ["stop the music", "band"], ["spawn a kraken", "monster"], ["megalodon", "monster"], ["sea serpent", "monster"]]],
+]
+
 
 ## The orders in a line, in the order given. Each is {intent, ...}; a line we can make nothing of
 ## gives none, and the crew say so.
@@ -75,6 +92,10 @@ static func _direction(c: String) -> Dictionary:
 
 
 static func _clause(c: String) -> Dictionary:
+	if " god " in c or " godmode " in c: # "god mode" (Blaney): super speed, super swimming, can't be knocked out
+		return {"intent": "god", "off": _has(c, ["off", "stop", "end", "disable", "no"]), "toggle": not _has(c, ["on", "off", "stop", "end", "disable", "no", "enable"])}
+	if _has(c, ["cave", "caves", "tunnel"]): # "take us through the cave" (Blaney: be aboard while the crew do it)
+		return {"intent": "cave"}
 	if " all hands " in c and not _has(c, ["stand", "down"]): # "all hands on deck": fill the boat and work the objective
 		return {"intent": "all_hands"}
 	if " slow down " in c:
@@ -153,7 +174,7 @@ static func _depth(c: String) -> Dictionary:
 static func _course(c: String) -> Dictionary:
 	var dir := _direction(c)
 	var turning := _has(c, ["turn", "come", "head", "steer", "go", "course", "bear", "hard", "sail", "move", "around"])
-	if _has(c, ["around"]) and _has(c, ["turn", "come", "go", "head"]):
+	if _has(c, ["around"]) and _has(c, ["turn", "come", "go", "head"]) or " come about " in c:
 		return {"intent": "course", "rel": 180.0}
 	if _has(c, ["island", "land"]) and turning:
 		return {"intent": "course", "island": true}

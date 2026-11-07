@@ -1,9 +1,9 @@
 extends SceneTree
-## A diver outside while she dives (Blaney: dive suits and spots to hold on to; he can't get back
-## in until she surfaces; a button back to the boat when she's left him behind): a real player
-## climbs out, suits up at the locker, holds on at the bow, rides her down, lets go and is left
-## behind as she moves on, hauls himself back on his lifeline, finds the hatch shut, and once
-## she surfaces goes below and the suit goes back in the locker.
+## A diver outside while she dives (Blaney: dive suits and spots to hold on to; a button back to
+## the boat when she's left him behind; since then the hatch opens any time, tests/god_out.gd):
+## a real player climbs out, suits up at the locker, holds on at the bow, rides her down, lets go
+## and is left behind as she moves on, hauls himself back on his lifeline, and once she surfaces
+## goes below and the suit goes back in the locker.
 ##   godot --headless --path . -s tests/diver_walk.gd -- <sub>
 
 var _game: Node
@@ -92,11 +92,6 @@ func _physics_process(delta: float) -> bool:
 				_fail("holding on, he isn't at the rail: %s" % str(me.global_position - o))
 			if not _D.is_under(me.global_position):
 				_fail("dived, the diver isn't under water")
-			for n: Node in deck.get_children():
-				if n.get_class() == "Node3D" and n.has_method("get_prompt") and "Hatch" in str(n.get_prompt(me)):
-					n.interact(me)
-			if not _D.is_out(me.global_position):
-				_fail("he got back in through the hatch while she was dived")
 			if "shots" in OS.get_cmdline_user_args(): # under xvfb-run: what the lookout sees from the bow rail
 				me.rotation.y = 0.0
 				me.head.rotation.x = -0.25

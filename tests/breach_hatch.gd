@@ -54,8 +54,8 @@ func _physics_process(delta: float) -> bool:
 				_game.apply_order("dive", "depth", 0.0, -1)
 	var sub: Variant = w.sub
 	if int(_t) != int(before) and int(_t) % 5 == 0:
-		print("breach_hatch: %3d s depth %.1f ordered %.1f ballast %.2f vents %s blowing %d hatch %s" % [int(_t), sub.depth, sub.ordered_depth, sub.ballast, sub.vents_open, sub.blowing, _D.can_go_out()])
-	if _D.can_go_out():
+		print("breach_hatch: %3d s depth %.1f ordered %.1f ballast %.2f vents %s blowing %d hatch %s" % [int(_t), sub.depth, sub.ordered_depth, sub.ballast, sub.vents_open, sub.blowing, (sub.is_surfaced() and not sub.vents_open)])
+	if (sub.is_surfaced() and not sub.vents_open):
 		if _ok_since < 0.0:
 			_ok_since = _t
 	elif _ok_since >= 0.0:

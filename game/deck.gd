@@ -46,7 +46,7 @@ static func create(sub: SubClassData) -> Deck:
 
 ## Is this point (interior space) out on deck or in the sea around it?
 static func is_out(p: Vector3) -> bool:
-	return p.y > ORIGIN.y - 40.0
+	return p.y > ORIGIN.y - 350.0 # the interior sits about y 0; under her is open sea down to here
 
 
 static func is_swimming(p: Vector3) -> bool:
@@ -175,10 +175,10 @@ func hatch_spot() -> Vector3:
 	return ORIGIN + Vector3(0, _deck_at(dims.hatch_z) + 0.05, float(dims.hatch_z) - 0.9)
 
 
-## Can the crew go out? Surfaced, vents shut.
+## Can the crew go out? Any time, for now (Blaney: "make it so i can also exit the boat at any
+## time"): dived, you come out into the sea in the boat's dive suit (Player.go_on_deck).
 static func can_go_out() -> bool:
-	var sub := Sim.world.sub
-	return sub.is_surfaced() and not sub.vents_open
+	return Sim.world != null
 
 
 func _process(delta: float) -> void:
@@ -235,8 +235,8 @@ func _dive(me: Player, on: bool, delta: float) -> void:
 	var sink := (sub.depth - _last_depth) / maxf(delta, 0.001)
 	_last_depth = sub.depth
 	var dived := Diving.water_y() > 0.0
-	for b in _pen:
-		b.collision_layer = 0 if dived else 1
+	for b in _pen: # dived, or in god mode, the sea is open all round
+		b.collision_layer = 0 if dived or (me != null and me.godly()) else 1
 	if me == null or not on:
 		holding = -1
 		drift = Vector3.ZERO
@@ -255,7 +255,7 @@ func _dive(me: Player, on: bool, delta: float) -> void:
 		me.global_position = ORIGIN + Vector3(local.x, 0.0, local.z)
 	# The depth on him: past the suit's depth he strains, then blacks out on his lifeline.
 	var deep := Diving.water_y() - (local.y + Player.EYE_HEIGHT)
-	var limit: float = Diving.suit().depth
+	var limit: float = INF if me.godly() else Diving.suit().depth
 	var was := strain
 	strain = clampf(strain + delta * (1.0 / Diving.STRAIN_TIME if deep > limit else -0.25), 0.0, 1.0)
 	if was < 0.15 and strain >= 0.15:
@@ -565,11 +565,10 @@ func _figure(look: Dictionary, peer: int, suit := false) -> Node3D:
 ## The deck hatch: E goes back below, to the foot of the ladder by the gun.
 class Hatch extends Node3D:
 	func get_prompt(_player: Player) -> String:
-		return "Hatch shut: she's dived. Wait for her to surface" if Diving.water_y() > 0.0 else "[E] Go below"
+		return "[E] Go below"
 
 	func interact(player: Player) -> void:
-		if Diving.water_y() <= 0.0:
-			player.go_below()
+		player.go_below()
 
 
 ## A grab rail: E holds on (a diver rides along while she's dived), E or Space lets go.

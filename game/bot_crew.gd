@@ -17,6 +17,7 @@ var _timer := 0.0
 var _last_fire := -INF
 var _hunted_until := -INF
 var _quiet := false ## posting for a PA order: the reply speaks for them
+var _asker := 0 ## the peer whose PA order is being carried out
 var plan := {} ## what the crew are carrying out for the skipper: {kind: "attack", id, ...}
 
 
@@ -379,7 +380,8 @@ func _nearest_hunter() -> ShipState:
 # --- The skipper's PA (host) -------------------------------------------------------
 
 ## A line from the PA: says it to the boat, and the crew reply and get on with it.
-func skipper_order(text: String, who: String) -> void:
+func skipper_order(text: String, who: String, peer := 0) -> void:
+	_asker = peer
 	var orders := CrewCommand.parse(text)
 	game.pa_call.rpc(who, text)
 	if orders.is_empty():
@@ -472,6 +474,20 @@ func _carry_out(o: Dictionary) -> String:
 			return game.call_monster(o.get("kind", ""))
 		"band":
 			return game.call_band(o.get("off", false))
+		"cave":
+			return order_cave()
+		"god":
+			if _asker <= 0:
+				return "Aye."
+			if not game.crew.has("god"):
+				game.crew.god = {}
+			var on: bool = not o.get("off", false) and not (game.crew.god.has(_asker) and o.get("toggle", false))
+			if on:
+				game.crew.god[_asker] = true
+			else:
+				game.crew.god.erase(_asker)
+			game.crew.knocked.erase(_asker)
+			return ("God mode for %s: super speed, super swimming (Shift for more), nothing can knock him out." if on else "God mode off for %s.") % game.crew_name(_asker)
 	return "Aye."
 
 
@@ -648,6 +664,9 @@ func _plan_target() -> ShipState:
 
 ## Steers the attack: the bow on to the lead, then a spread of three, then again until she goes.
 func _step_plan() -> void:
+	if plan.get("kind", "") == "cave":
+		_step_cave()
+		return
 	if plan.get("kind", "") == "objective":
 		_work_objective()
 		return
@@ -728,6 +747,12 @@ func _work_objective() -> void:
 			plan = {"kind": "objective", "evading": true}
 			game.announce.rpc("Crew: They're on to us. " + reply)
 		return
+	if objectives.any(func(o: Dictionary) -> bool: return o.kind == "cave" and not o.get("done", false)):
+		if not plan.has("cave_dir"):
+			game.announce.rpc("Crew: " + order_cave())
+			plan.kind = "objective"
+		_step_cave()
+		return
 	var target: ShipState = null
 	for main in [true, false]: # the main objectives first, then the bonus ones
 		for o: Dictionary in objectives:
@@ -761,6 +786,86 @@ func _work_objective() -> void:
 	begin_attack(target)
 	plan.objective = true
 	game.announce.rpc("Crew: Going after the %s, bearing %03d, %.1f km." % [target.data.display_name.to_lower(), roundi(ShipState.bearing(sub.pos, target.pos)) % 360, r / 1000.0])
+
+
+const CAVE_FIND := 4000.0 ## m: how far off a cave the crew will go for it
+
+## "Take us through the cave" (Blaney: on board while the crew do it): the helmsman, planesman
+## and ballast man take her in at the near end and out of the far one on their own.
+func order_cave() -> String:
+	var w := Sim.world
+	var i := w.seabed.cave_near(w.sub.pos, CAVE_FIND)
+	if i < 0:
+		return "No cave on the chart near us, Skipper."
+	var f: Dictionary = w.seabed.features[i]
+	var c := Seabed.cave_local(f, w.sub.pos)
+	for sid: String in ["helm", "dive", "ballast"]:
+		if game.station_occupant(sid) == 0:
+			request(sid, "post", null)
+	var bots: Dictionary = game.crew.get("bots", {})
+	for sid: String in ["helm", "dive"]:
+		if bots.has(sid):
+			bots[sid].auto = false
+	if plan.get("kind", "") != "objective":
+		plan = {"kind": "cave"}
+	plan.cave_dir = -1.0 if c.x > 0.0 else 1.0 # in at the near end
+	plan.cave = i
+	game.crew.orders = "Through the cave"
+	return "Taking her through the cave, Skipper: slow ahead, holding her in the middle."
+
+
+## Each tick through a cave: the helm steers for the tunnel's middle line a couple of lengths
+## ahead, the planes hold her halfway between the roof and the floor over her whole length.
+func _step_cave() -> void:
+	var w := Sim.world
+	var sub := w.sub
+	var i: int = plan.get("cave", -1)
+	if i < 0 or i >= w.seabed.features.size() or w.seabed.features[i].kind != "cave":
+		plan.clear()
+		return
+	var f: Dictionary = w.seabed.features[i]
+	var dir: float = plan.cave_dir
+	var half := float(f.len) * 0.5
+	var u := Seabed.cave_local(f, sub.pos).x * dir # metres along her way through, in at -half
+	if u > half + sub.data.length + 60.0:
+		plan.clear()
+		game.crew.orders = ""
+		game.announce.rpc("Crew: Through and clear, Skipper.")
+		game.push_crew()
+		return
+	var l := sub.data.length
+	var c := Seabed.cave_local(f, sub.pos)
+	var course: float
+	if u < -half - 2.0 * l: # still on the way in: for the mouth's middle
+		course = ShipState.bearing(sub.pos, Seabed.cave_world(f, Vector2(-half * dir, Seabed.cave_centre(f, -half * dir))))
+	else:
+		# Along the middle line's own heading a little ahead (she's slow to answer the rudder),
+		# turned back towards the line by how far off it she is.
+		var at := clampf(u + maxf(30.0, absf(sub.speed) * 12.0), -half, half) * dir
+		var x0 := clampf(c.x, -half, half)
+		var tangent := (Seabed.cave_world(f, Vector2(at + dir * 5.0, Seabed.cave_centre(f, at + dir * 5.0))) \
+				- Seabed.cave_world(f, Vector2(at, Seabed.cave_centre(f, at)))).normalized() if absf(u) < half + l else Vector2.from_angle(float(f.ang)) * dir
+		var off := sub.pos - Seabed.cave_world(f, Vector2(x0, Seabed.cave_centre(f, x0)))
+		var want := tangent - off / 45.0
+		course = ShipState.bearing(sub.pos, sub.pos + want)
+	# Halfway between the lowest roof and the highest floor over her length and a bit ahead.
+	var roof := 0.0
+	var bottom := INF
+	for k in 7:
+		var s := clampf(u - l * 0.6 + k * l * 0.35, -half, half) * dir
+		roof = maxf(roof, Seabed.cave_roof(f, s))
+		bottom = minf(bottom, Seabed.cave_bottom(f, s))
+	var bots: Dictionary = game.crew.get("bots", {})
+	if bots.has("helm"):
+		bots.helm.auto = false
+		bots.helm.course = course
+		bots.helm.speed = 4 if l < 30.0 else (1 if u > -half - 3.0 * l else 2) # a little one turns on a sixpence: full ahead
+	var depth := (roof + sub.data.height + bottom) * 0.5
+	if bots.has("dive"):
+		bots.dive.auto = false
+		bots.dive.depth = depth
+	elif bots.has("helm") and sub.data.fragile and absf(sub.ordered_depth - depth) > 0.5: # the Titan's pilot has the depth too
+		_order("helm", bots.helm, "depth", depth)
 
 
 ## Away from whoever's after us: deep under the layer, slow and quiet.

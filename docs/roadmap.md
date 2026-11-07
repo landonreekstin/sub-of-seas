@@ -223,6 +223,17 @@ Added by Blaney after playing. In his words where it matters.
       *(Done, PR #43: every hat sized over the hair and sitting on it; curls and waves pressed flat under a hat.)*
 - [x] i cannot open the hatch even though i pressed 1 to surface
       *(Done, PR #43: an order to surface from the dive station (1, or W up to 0) blows main ballast too, so she comes right up and the hatch opens without anyone at the ballast.)*
+- [x] i want to be on board when the crew does the cave, add that to the PA, also make a long list of all PA commands
+      *(Done, PR #43: "take us through the cave" (or "all hands on deck" on a cave patrol): the bot helmsman, planesman and ballast man take her in at the near end and out of the far one, slow, in the middle; every boat. The PA panel lists every order by kind, and `docs/pa_commands.md` has the long list; the tests check each line.)*
+- [x] make it so i can also exit the boat at any time for now
+      *(Done, PR #43: the hatch opens at any depth; dived, you come out into the sea in the boat's dive suit, and go below again any time. The sea under her is open down 350 m.)*
+- [x] god mode as a command on the PA: superspeed, invincibility and super swim speed so i can catch up to subs and watch them from the outside
+      *(Done, PR #43: "god mode" on the PA, for whoever says it (again, or "god mode off", to stop): 3x on foot, 8x swimming, 16x with Shift, faster than any boat at flank; bad air and depth can't knock you out; the sea pen round her opens.)*
+- [ ] swimming: down to the sea floor, out of the sub while dived, and in flooded rooms
+- [ ] remove the sand table: the navigation room is mostly a giant hologram showing every piece of information needed for testing (everything, even unseen); the hologram leaves the captain's chair
+- [ ] a captain's chair in every boat with its own keys to pilot the sub entirely alone by issuing commands; bots do it unless a player is on that station; more UI for the captain and more information for piloting, so a crew with no sub knowledge can do their jobs
+- [ ] waypoints and places to travel to (click on the chart, a list of places, the PA); the boat steers there itself
+- [ ] things to go to and explore on the ocean floor: shipwrecks, ruins, glowing vents and gardens, alien civilizations
 
 ## M9 — Lando's list (2026-10-30)
 Added by lando. Direction: **more arcadey, not strict realism**. Every existing mechanic

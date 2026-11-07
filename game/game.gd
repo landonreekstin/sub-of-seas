@@ -181,7 +181,7 @@ func instrument_free(kind: String) -> bool:
 ## stay out while she dives: Diving.)
 func crew_on_deck() -> bool:
 	for p: Player in _players.get_children():
-		if Deck.is_out(p.global_position) and not Diving.suited(p.peer_id):
+		if Deck.is_out(p.global_position) and not Diving.suited(p.peer_id) and not p.godly():
 			return true
 	return false
 
@@ -842,7 +842,7 @@ func rq_station_enter(station_id: String) -> void:
 ## A crewman out on deck puts the dive suit on or takes it off, at the locker by the hatch (surfaced).
 @rpc("any_peer", "call_local", "reliable")
 func rq_suit(on: bool) -> void:
-	if not multiplayer.is_server() or Sim.world.sub.depth > 1.0:
+	if not multiplayer.is_server():
 		return
 	var peer := _sender()
 	if not crew.has("suits"):
@@ -882,7 +882,7 @@ func rq_bot(station_id: String, key: String, value: Variant) -> void:
 @rpc("any_peer", "call_local", "reliable")
 func rq_pa(text: String) -> void:
 	if multiplayer.is_server() and crew.get("result", "") == "":
-		bot_crew.skipper_order(text.left(160), crew_name(_sender()))
+		bot_crew.skipper_order(text.left(160), crew_name(_sender()), _sender())
 
 
 ## The skipper's words over the speakers, for everyone.
@@ -1379,7 +1379,7 @@ func _host_tick(delta: float) -> void:
 			push_crew()
 	if not sub.is_surfaced(): # going under anyway (flooding): everyone on deck without a suit down the hatch
 		for p: Player in _players.get_children():
-			if Deck.is_out(p.global_position) and not Diving.suited(p.peer_id):
+			if Deck.is_out(p.global_position) and not Diving.suited(p.peer_id) and not p.godly():
 				send_below.rpc_id(p.peer_id)
 	if station_occupant("gun") > 0 and not sub.is_surfaced():
 		crew.stations.erase("gun")
@@ -1469,6 +1469,8 @@ func _breathe(delta: float) -> void:
 	var changed := false
 	for p: Player in _players.get_children():
 		var peer := p.peer_id
+		if crew.get("god", {}).has(peer): # god mode: nothing knocks him out
+			continue
 		if crew.knocked.has(peer):
 			crew.knocked[peer] -= delta
 			if crew.knocked[peer] <= 0.0:

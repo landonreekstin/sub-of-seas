@@ -4,6 +4,21 @@ Where things stand, in plain English. The newest entry goes at the top. Update i
 Other docs: `roadmap.md` is the to-do list, `style.md` how it looks and feels, `design.md` the
 game's design, `credits.md` where every sound came from.
 
+## 2026-11-06 (latest, 2): the crew through the cave, the PA list
+
+- [done, tests pass] "take us through the cave" (`cave` intent; `BotCrew.order_cave` / `_step_cave`:
+  pure pursuit on the tunnel's centre line 1.5 lengths ahead, depth halfway between the lowest roof and
+  highest floor over her length, slow ahead); "all hands" on a cave objective does the same.
+  `tests/cave_crew.gd -- <sub> [pa | all_hands]`.
+- [done] `CrewCommand.HELP`: every order by kind, on the PA panel, checked by `test_the_help_list`;
+  `docs/pa_commands.md` the long list.
+- [done, tests pass] out of the boat any time (`Deck.can_go_out` true; dived, `go_on_deck` suits you
+  up; `Deck.is_out` now 350 m down) and "god mode" on the PA (`crew.god`, `Player.godly()`: GOD_RUN 3,
+  GOD_SWIM 8 / 16 with Shift; no passing out, no depth strain; the pen opens). `tests/god_out.gd`.
+  `breach_hatch` checks surfaced-and-vents-shut itself now, since the hatch always opens.
+- [next] Blaney rides the cave with the crew; then the plan in order: captain's chair, waypoints,
+  holo room, sea-floor sites, swimming (roadmap M8 list, his calls in the style log).
+
 ## 2026-11-06 (latest): the hatch after pressing 1
 
 Blaney: "i cannot open the hatch even though i pressed 1 to surface". With nobody at the ballast,

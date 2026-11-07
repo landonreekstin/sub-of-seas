@@ -11,6 +11,8 @@ const EYE_HEIGHT := 1.6
 const CROUCH_EYE := 1.05
 const CROUCH_SPEED := 0.5 ## of walking speed
 const SPRINT_SPEED := 2.1 ## of walking speed, running forward
+const GOD_RUN := 3.0 ## god mode: this many times as fast on his feet
+const GOD_SWIM := 8.0 ## and in the sea (twice that with Shift): fast enough to catch a boat at flank speed
 const SPRINT_FOV := 7.0 ## degrees the view widens at a run
 const REACH := 2.2
 ## Emotes: key -> name, and how long each plays (seconds).
@@ -332,8 +334,14 @@ func is_knocked_out() -> bool:
 
 
 ## How bad the air is where you stand (0..1), and the smoke there.
+## God mode (Blaney, on the PA): super speed and super swimming to catch the boats up and watch
+## them from outside, and nothing knocks him out.
+func godly() -> bool:
+	return Game.instance != null and Game.instance.crew.get("god", {}).has(peer_id)
+
+
 func breathing() -> Vector2:
-	if Sim.world == null:
+	if Sim.world == null or godly():
 		return Vector2.ZERO
 	if Deck.is_out(global_position): # outside, only a diver's depth weighs on him
 		return Vector2(Game.instance.deck.strain if is_local() else 0.0, 0.0)
@@ -430,6 +438,8 @@ func _physics_process(delta: float) -> void:
 	if sprinting:
 		speed *= lerpf(SPRINT_SPEED, 1.0, breathing().x)
 	var swim := Deck.is_swimming(global_position)
+	if godly():
+		speed *= GOD_SWIM * (2.0 if Input.is_action_pressed("sprint") else 1.0) if swim else GOD_RUN
 	if swim:
 		speed *= 0.55
 		sprinting = false
@@ -444,7 +454,7 @@ func _physics_process(delta: float) -> void:
 		if Game.instance.menu_open():
 			up = 0.0
 		var sink := -0.25 if Game.instance.sub_class.era == "ww2" else 0.0 # the hard hat's lead boots
-		velocity = look * speed + Vector3(0, up * 1.6 + sink, 0) + Game.instance.deck.drift
+		velocity = look * speed + Vector3(0, up * 1.6 * (GOD_RUN if godly() else 1.0) + sink, 0) + Game.instance.deck.drift
 		crouching = false
 		_swimming = true
 		move_and_slide()
@@ -717,6 +727,8 @@ func _pose_emote(t: float) -> void:
 func go_on_deck() -> void:
 	if station != null:
 		leave_station()
+	if Diving.water_y() > 0.0 and not Diving.suited(peer_id) and not godly(): # out into the sea: suited up in the trunk
+		Game.instance.rq_suit.rpc_id(1, true)
 	velocity = Vector3.ZERO
 	global_position = Game.instance.deck.hatch_spot()
 	rotation.y = 0.0

@@ -340,6 +340,12 @@ and update "Current style" in the same commit.
   standing their station with hands on the gear and a name tag with their job ("Sparks
   (planesman)", "— on orders" when following yours). They speak through the same announcements
   as everything else: "Stubby (sonar): contact bearing 270, warship, turns for 20 knots."
+- **Out any time, god mode** (Blaney): for now the hatch opens at any depth; dived, you climb out
+  into the sea in the dive suit. "God mode" on the PA is for the one who says it: super speed on
+  foot and in the sea (faster than any boat), and nothing knocks you out.
+- **The crew through the cave** (Blaney): "take us through the cave" on the PA, or "all hands" on a
+  cave patrol, and the bots take her through slow and in the middle while you ride along. The PA
+  panel shows every order it knows, by kind; `docs/pa_commands.md` is the long list.
 - **PA system** (Blaney): a grey 1MC speaker box with a hanging microphone on the control room's
   after bulkhead, to port of the door. E opens a typing box; Enter sends. The skipper's words show
   big for everyone with the bell, the crew's answer on the message line, and the order stays top
@@ -510,3 +516,6 @@ and update "Current style" in the same commit.
 | 2026-11-06 | Blaney | Add the OceanGate Titan, controlled with a game controller like the real one. (Asked: for deep exploring, no weapons, up to 5 crew; too deep she cracks and warns first, then implodes once she can't take any more.) |
 | 2026-11-06 | Blaney | Getting around with a full crew should be doable, and in arcade the boat should move faster: "I don't want the game to be a waiting simulator". (Asked: about twice as fast, speed, turning and diving; crewmates walk through each other.) |
 | 2026-11-06 | Blaney | The crew's hats go through their heads. |
+| 2026-11-06 | Blaney | "I do want to be on board when the crew does it": a PA order for the crew to take her through the cave on their own, and a long list of all the PA commands. |
+| 2026-11-06 | Blaney | Swimming to the sea floor, out of the sub while dived, and in flooded rooms. The sand table goes: the navigation room is mostly a giant hologram showing everything for testing (even what the boat hasn't found). A captain's chair in every boat, with the keys on its card (W/S speed, A/D turn, R/F depth, 1-4 presets, C crash dive, X emergency surface, Tab target, Space fire, P scope, N/M waypoints, H hologram, Q leave): bots carry out each order unless a player is on that station, so there is no interference. Waypoints the boat steers to itself, set on the chart, from a list of places or on the PA. Sea-floor places: shipwrecks, ruins, glowing vents and gardens, alien civilizations. |
+| 2026-11-06 | Blaney | "Make it so i can also exit the boat at any time for now", and "god mode" on the PA: "superspeed and invincibility and super swim speed so i can catch up to subs and watch them from the outside". |
