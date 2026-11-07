@@ -74,7 +74,7 @@ launcher, updates `main` from GitHub first; see "Playing with others"):
 ./play join [address]       # default 192.168.1.76: lando's gaming-pc over the homelab VPN
 ./play host -- --name Lando # anything after -- goes to the game
 ```
-`make test` runs the unit tests and the training walkthrough. Godot directly:
+`make test` runs the unit tests and then every walkthrough side by side (`tests/walkthroughs.sh`, one per core, `JOBS=n` to limit; each one's log in `tests/logs/`, failures listed at the end). Every test picks its own port from its process id, so they never collide. Godot directly:
 ```
 godot --path .                      # main menu
 godot --path . -- --host            # host straight away

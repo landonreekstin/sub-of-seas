@@ -17,3 +17,4 @@ __pycache__/
 screenshots/
 .direnv/
 build.txt
+tests/logs/

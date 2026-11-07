@@ -25,7 +25,7 @@ func _initialize() -> void:
 	net.realism = args[1] if args.size() > 1 else "arcade"
 	print("walkthrough: course %s (%s)" % [net.course, net.realism])
 	net.mode = 1 # Net.Mode.HOST
-	net.port = 7090
+	net.port = 7100 + OS.get_process_id() % 2000 # its own port, so tests can run side by side
 	Engine.time_scale = 6.0
 	Engine.physics_ticks_per_second = 30
 	change_scene_to_file.call_deferred("res://game/game.tscn")

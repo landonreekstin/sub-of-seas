@@ -18,7 +18,7 @@ func _initialize() -> void:
 	net.mission = "cw_convoy" if not args.is_empty() and args[0] == "typhoon" else "convoy"
 	net.sub_key = args[0] if not args.is_empty() else "gato"
 	net.mode = 1
-	net.port = 7094
+	net.port = 7100 + OS.get_process_id() % 2000 # its own port, so tests can run side by side
 	Engine.time_scale = 4.0
 	Engine.physics_ticks_per_second = 30
 	change_scene_to_file.call_deferred("res://game/game.tscn")

@@ -22,7 +22,7 @@ func _initialize() -> void:
 	net.sub_key = sub
 	net.debug_depth = 0.0
 	net.mode = 1
-	net.port = 7096
+	net.port = 7100 + OS.get_process_id() % 2000 # its own port, so tests can run side by side
 	Engine.time_scale = 2.0
 	change_scene_to_file.call_deferred("res://game/game.tscn")
 

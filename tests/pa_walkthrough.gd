@@ -20,7 +20,7 @@ func _initialize() -> void:
 	if args.size() > 2:
 		net.realism = args[2]
 	net.mode = 1
-	net.port = 7091
+	net.port = 7100 + OS.get_process_id() % 2000 # its own port, so tests can run side by side
 	Engine.time_scale = 6.0
 	Engine.physics_ticks_per_second = 30
 	change_scene_to_file.call_deferred("res://game/game.tscn")

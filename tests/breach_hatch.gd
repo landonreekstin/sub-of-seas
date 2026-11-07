@@ -23,7 +23,7 @@ func _initialize() -> void:
 	net.debug_depth = 80.0
 	net.start_bots = PackedStringArray(["helm"] if _how == "dive" else ["helm", "dive", "ballast"])
 	net.mode = 1
-	net.port = 7097
+	net.port = 7100 + OS.get_process_id() % 2000 # its own port, so tests can run side by side
 	Engine.time_scale = 2.0
 	change_scene_to_file.call_deferred("res://game/game.tscn")
 
