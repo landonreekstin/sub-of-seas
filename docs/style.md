@@ -438,6 +438,13 @@ and update "Current style" in the same commit.
   way to crush depth (Gato 150 m, Typhoon 500 m). The hull creaks more and louder the deeper she
   goes; near test depth frames bang, the boat jolts and water weeps from the seams; past it the
   lights waver. Outside the water is dim by 100 m and close to black by 300 m.
+- **More unsettling the deeper you go** (Blaney, the whole game): the deeper the boat or a
+  swimmer is, the darker, quieter and stranger it gets: the hologram's light colder and its hum
+  lower, ghosts of what we haven't found flickering in it, the sea-floor places stranger the
+  deeper they lie (a bright garden shallow, a crystal city at test depth).
+- **Places to go** (Blaney): a wreck, a drowned temple, black smokers (glowing vents), a glowing
+  garden and a crystal city on the sea floor of every patrol, each island named; the boat steers
+  to a waypoint by herself (set on the chart, from the captain's list of places or on the PA).
 - **The sea** (Blaney: a larger area): islands, seamounts and shelves spread over some 30 km
   each way, with deep trenches far below any keel; the chart table zooms out to 80 km across;
   swimmers have 40 m of sea round the boat.
@@ -521,3 +528,4 @@ and update "Current style" in the same commit.
 | 2026-11-06 | Blaney | "Lets also just turn the volume down, i think it is by default too loud." (Defaults now master 40%, effects 70%, music 50%; saved settings keep their own.) |
 | 2026-11-06 | Blaney | "The captains chair should have a PA button so that you can type from there." (Enter, from the chair; every captain's chair to come has it too.) |
 | 2026-11-06 | Blaney | "There are pipes in the way of the tv screen as well." (The outside cameras' console now stands out from the wall, its screens in front of the pipe runs.) |
+| 2026-11-06 | Blaney | (Asked about the captain's chair, the hologram and the sea floor.) H in the captain's chair puts the navigation room's giant hologram, everything, on his screen. What the boat hasn't found shows as dim ghosts, "but i want it to be a little unsettling, i think i want this game in general to get more unsettling the deeper you go". The alien civilization is a glowing crystal city. The sea-floor places "should each have an event linked to them, simple but still an event". |

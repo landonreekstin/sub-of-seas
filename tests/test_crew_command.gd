@@ -98,3 +98,13 @@ func test_god_mode() -> bool:
 	runner.check(_one("god mode off").off, "god mode off")
 	runner.check(_one("good speed").intent != "god", "good is not god")
 	return true
+
+
+func test_places() -> bool:
+	runner.check(_one("take us to the wreck").place == "wreck", "take us to the wreck")
+	runner.check(_one("go to the island").intent == "goto", "go to the island")
+	runner.check(_one("head for the nearest island").intent == "course", "head for the island stays a course")
+	runner.check(_one("take us through the cave").intent == "cave", "through the cave isn't a waypoint")
+	runner.check(_one("explore the crystal city").place == "alien", "the crystal city")
+	runner.check(_one("clear the waypoint").get("clear", false), "clear the waypoint")
+	return true

@@ -429,7 +429,27 @@ func _lay_seabed(islands_only := false) -> void:
 	elif m != null and m.sandbox: # Blaney: caves hidden in the open sea too
 		var at := w.sub.pos + Vector2.from_angle(w.rng.randf() * TAU) * w.rng.randf_range(7000.0, 14000.0)
 		w.seabed.add_cave(at, w.rng.randf() * TAU, size)
+	if not islands_only: # places on the sea floor to go and see (Blaney), in every patrol
+		w.seabed.add_sites(w.rng.randi(), w.sub.pos, sub_class.test_depth, keep, routes)
 	crew.seabed = w.seabed.to_array()
+
+
+## Host: sends the boat to `place` (Places: {name, kind, x, y, depth}); the crew steer there
+## themselves (BotCrew._step_waypoint). An empty place clears the waypoint.
+func set_waypoint(place: Dictionary) -> String:
+	if place.is_empty():
+		var had := crew.has("waypoint")
+		crew.erase("waypoint")
+		crew.erase("wants")
+		if bot_crew.plan.get("kind", "") == "waypoint":
+			bot_crew.plan.clear()
+			crew.orders = ""
+		push_crew()
+		return "Waypoint cleared." if had else "No waypoint set, Skipper."
+	crew.waypoint = {"name": str(place.name), "kind": str(place.get("kind", "mark")), "x": float(place.x), "y": float(place.y), "depth": float(place.get("depth", -1.0))}
+	var reply := bot_crew.order_waypoint()
+	push_crew()
+	return reply
 
 
 func _start_tutorial() -> void:
@@ -1123,11 +1143,15 @@ func apply_order(station_id: String, key: String, value: Variant, by: int) -> vo
 					crew.plot.pop_front()
 				announce.rpc("Sonar: contact bearing %03d — on the chart." % (roundi(fposmod(float(value), 360.0)) % 360))
 		"nav":
+			if key == "clear_waypoint":
+				announce.rpc(set_waypoint({}))
 			if key == "home" and sandbox != null:
 				end_patrol("complete", "Home with %d tons sunk." % crew.tonnage)
 			if value is Array and value.size() == 2:
 				var at := Vector2(float(value[0]), float(value[1]))
-				if key == "pencil" and crew.pencil.size() < 16:
+				if key == "waypoint": # set on the chart where the pencil points
+					announce.rpc("%s: waypoint on the chart. %s" % [crew_name(by), set_waypoint({"name": "the chart mark", "kind": "mark", "x": at.x, "y": at.y})])
+				elif key == "pencil" and crew.pencil.size() < 16:
 					crew.pencil.append({"x": at.x, "y": at.y})
 				elif key == "erase" and not crew.pencil.is_empty():
 					var best := 0

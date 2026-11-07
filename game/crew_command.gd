@@ -32,6 +32,8 @@ const HELP := [
 	["Getting away", [["get us out of here", "evade"], ["evade", "evade"], ["silent running", "evade"]]],
 	["The crew", [["battle stations", "man_stations"], ["all hands on deck", "all_hands"], ["take us through the cave", "cave"], ["fix the damage", "fix"],
 		["pump out the water", "fix"], ["fresh air", "air"], ["stand down", "stand_down"]]],
+	["Places to go", [["take us to the wreck", "goto"], ["go to the ruins", "goto"], ["explore the vents", "goto"], ["visit the garden", "goto"],
+		["take us to the crystal city", "goto"], ["go to the island", "goto"], ["take us to the cave", "goto"], ["list places", "places"], ["clear the waypoint", "goto"]]],
 	["Asking", [["report", "report"], ["what's out there", "contacts"], ["what's our objective", "objective"]]],
 	["For fun", [["god mode", "god"], ["god mode off", "god"], ["band play", "band"], ["stop the music", "band"], ["spawn a kraken", "monster"], ["megalodon", "monster"], ["sea serpent", "monster"]]],
 ]
@@ -70,6 +72,14 @@ static func _has(c: String, words: Array) -> bool:
 	return false
 
 
+## The kind of place a line names (Places.WORDS), or "".
+static func _place(c: String) -> String:
+	for w: String in Places.WORDS:
+		if " %s " % w in c:
+			return Places.WORDS[w]
+	return ""
+
+
 static func _number(c: String) -> int:
 	var m := RegEx.create_from_string("\\b(\\d{1,4})\\b").search(c)
 	return int(m.get_string(1)) if m != null else -1
@@ -94,6 +104,15 @@ static func _direction(c: String) -> Dictionary:
 static func _clause(c: String) -> Dictionary:
 	if " god " in c or " godmode " in c: # "god mode" (Blaney): super speed, super swimming, can't be knocked out
 		return {"intent": "god", "off": _has(c, ["off", "stop", "end", "disable", "no"]), "toggle": not _has(c, ["on", "off", "stop", "end", "disable", "no", "enable"])}
+	# Places to go (Blaney: waypoints from the PA): "take us to the wreck", "go to the island".
+	if _has(c, ["waypoint", "waypoints"]) and _has(c, ["clear", "cancel", "remove", "delete", "forget"]):
+		return {"intent": "goto", "clear": true}
+	if _has(c, ["places", "destinations", "sights"]) or " where can we go " in c:
+		return {"intent": "places"}
+	var place := _place(c)
+	if place != "" and not " through " in c and _has(c, ["go", "take", "travel", "navigate", "waypoint", "visit", "explore", "sail", "bring", "find", "see", "course", "head", "make"]) \
+			and not (place == "island" and _has(c, ["head", "course", "turn", "steer"]) and not _has(c, ["go", "take", "travel", "visit", "explore", "waypoint"])):
+		return {"intent": "goto", "place": place}
 	if _has(c, ["cave", "caves", "tunnel"]): # "take us through the cave" (Blaney: be aboard while the crew do it)
 		return {"intent": "cave"}
 	if " all hands " in c and not _has(c, ["stand", "down"]): # "all hands on deck": fill the boat and work the objective

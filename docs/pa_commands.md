@@ -27,6 +27,22 @@ panel in the game, and the tests check that every line here works (`CrewCommand.
 | "turn around", "come about" | Turn round the other way |
 | "head for the island", "go to land" | Steer for the nearest land |
 
+## Places to go
+The crew steer there themselves (round islands and shoals), full ahead when far off, slowing as
+they close, and say when they're there. A place on the sea floor: the planesman takes her down to
+look at it, 15 m above it, and she stops over it.
+| Say | What happens |
+|---|---|
+| "take us to the wreck", "go to the shipwreck" | The wreck of the Kiyo Maru |
+| "go to the ruins", "the temple" | The drowned temple |
+| "explore the vents", "the smokers" | The black smokers: glowing vents |
+| "visit the garden", "the coral" | The glowing garden |
+| "take us to the crystal city", "the aliens" | The crystal city, the deepest of them |
+| "go to the island" | The nearest island (each has a name on the chart) |
+| "take us to the cave" | The cave's near mouth (then "take us through the cave") |
+| "list places", "where can we go" | Every place on the chart, nearest first, its bearing and range |
+| "clear the waypoint" | Forget it |
+
 ## Up and down
 | Say | What happens |
 |---|---|

@@ -14,6 +14,15 @@ const KINDS: Array[String] = ["island", "seamount", "shelf", "trench"]
 ## above water, negative), foot (the floor at its cliffs).
 const CAVE_ROOF_SWING := 12.0 ## the roof rises and dips this much along the tunnel
 const CAVE_FLOOR_BUMPS := 6.0 ## and the floor comes up this much in places
+## Places on the sea floor to go and see (Blaney: "shipwrecks, ruins, glowing vents and gardens,
+## alien civilizations"), each on a rise of its own (or in a pit, deeper than the ocean floor) at
+## a depth the boat can reach: the garden shallow and bright, the stranger the deeper, the
+## crystal city at her test depth. Fields as any feature, plus type and name.
+const SITES: Array[String] = ["garden", "wreck", "ruins", "vents", "alien"]
+const SITE_DEPTH := {"garden": 0.35, "wreck": 0.6, "ruins": 0.75, "vents": 0.9, "alien": 1.0} ## of her test depth
+const SITE_NAMES := {"garden": "the glowing garden", "wreck": "the wreck of the Kiyo Maru", "ruins": "the drowned temple",
+	"vents": "the black smokers", "alien": "the crystal city"}
+const SITE_R := 280.0 ## m: the flat a site stands on
 
 ## Each: {kind, x, y, r (m), top (m: island height above water as a negative, or the depth of
 ## a seamount's peak / a shelf's flat), reef (island: depth of its reef flat), ang (rad),
@@ -28,12 +37,13 @@ var version := 0 ## goes up whenever the features change, so views know to rebui
 func floor_depth(p: Vector2, solid := false) -> float:
 	var depth := BASE
 	for f: Dictionary in features: # trenches first: they only ever deepen the open floor
-		if f.kind == "trench":
+		if f.kind == "trench" or _pit(f):
 			var d := _norm_dist(f, p)
-			if d < 1.2:
-				depth = maxf(depth, lerpf(float(f.top), BASE, smoothstep(0.2, 1.2, d)))
+			var flat := 0.85 if f.kind == "site" else 0.2 # a site's pit has a wide flat floor
+			if d < flat + 1.0:
+				depth = maxf(depth, lerpf(float(f.top), BASE, smoothstep(flat, flat + 1.0, d)))
 	for f: Dictionary in features:
-		if f.kind == "trench":
+		if f.kind == "trench" or _pit(f):
 			continue
 		if f.kind == "cave":
 			depth = minf(depth, _cave_floor(f, p, solid))
@@ -43,6 +53,39 @@ func floor_depth(p: Vector2, solid := false) -> float:
 			continue
 		depth = minf(depth, _profile(f, d))
 	return depth
+
+
+## A site deeper than the ocean floor sits in a pit of its own, like a short trench.
+static func _pit(f: Dictionary) -> bool:
+	return f.kind == "site" and float(f.top) > BASE - 50.0
+
+
+## Lays out the sea-floor sites, one of each, 3-14 km from `centre`, clear of the ships' tracks,
+## at depths for a boat with this test depth.
+func add_sites(seed_value: int, centre: Vector2, test_depth: float, keep_clear: Array[Vector2], routes: Array) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_value
+	var start := rng.randf() * TAU
+	for k in SITES.size():
+		var type := SITES[k]
+		for attempt in 60:
+			var ang := start + TAU * k / SITES.size() + rng.randf_range(-0.5, 0.5)
+			var at := centre + Vector2.from_angle(ang) * rng.randf_range(3000.0, 9000.0 + 1000.0 * k)
+			var f := {"kind": "site", "type": type, "name": SITE_NAMES[type], "x": at.x, "y": at.y, "r": SITE_R,
+				"top": maxf(25.0, test_depth * float(SITE_DEPTH[type])), "reef": 0.0, "ang": rng.randf() * TAU, "stretch": 1.0, "h": []}
+			if _fits(f, keep_clear, routes, 600.0) or attempt == 59:
+				features.append(f)
+				break
+	version += 1
+
+
+## The sites, in SITES order.
+func sites() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	for f in features:
+		if f.kind == "site":
+			out.append(f)
+	return out
 
 
 ## How far down a cave's roof is over `p`; 0 is open water above.
@@ -136,22 +179,27 @@ func is_land(p: Vector2) -> bool:
 
 
 ## A course clear of anything shallower than `draft` for `look` metres ahead: `course` itself
-## if it is clear, else the nearest one either side that is (or `course` if none is).
-func clear_course(pos: Vector2, course: float, draft: float, look: float) -> float:
+## if it is clear, else the nearest one either side that is (or `course` if none is). `width`
+## widens the lane checked to either side, and `step` is how far apart along it (default: five
+## looks along the way).
+func clear_course(pos: Vector2, course: float, draft: float, look: float, width := 0.0, step := 0.0) -> float:
 	for off in [0.0, 20.0, -20.0, 40.0, -40.0, 60.0, -60.0, 90.0, -90.0, 120.0, -120.0, 150.0, -150.0]:
 		var c := fposmod(course + off, 360.0)
-		if _clear(pos, c, draft, look):
+		if _clear(pos, c, draft, look, width, step):
 			return c
 	return course
 
 
-func _clear(pos: Vector2, course: float, draft: float, look: float) -> bool:
+func _clear(pos: Vector2, course: float, draft: float, look: float, width := 0.0, step := 0.0) -> bool:
 	var dir := Vector2(sin(deg_to_rad(course)), cos(deg_to_rad(course)))
-	var step := look / 5.0
-	for i in range(1, 6):
-		var q := pos + dir * step * i
-		if floor_depth(q) < draft or roof_depth(q) > 0.0:
-			return false
+	var side := Vector2(dir.y, -dir.x)
+	var n := 5 if step <= 0.0 else maxi(1, ceili(look / step))
+	for i in range(1, n + 1):
+		var q := pos + dir * look / n * i
+		for off in ([0.0] if width <= 0.0 else [0.0, width, -width]):
+			var at: Vector2 = q + side * float(off)
+			if floor_depth(at) < draft or roof_depth(at) > 0.0:
+				return false
 	return true
 
 

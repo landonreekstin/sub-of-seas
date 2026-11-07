@@ -98,6 +98,11 @@ func _process(delta: float) -> void:
 	_timer = 0.0
 	_step_news()
 	_step_party()
+	if plan.get("kind", "") == "waypoint": # steered even with players on every post: they get the word
+		_step_waypoint()
+	elif game.crew.has("waypoint"): # another order took over from it
+		game.crew.erase("waypoint")
+		game.crew.erase("wants")
 	var bots: Dictionary = game.crew.get("bots", {})
 	if bots.is_empty():
 		return
@@ -476,6 +481,18 @@ func _carry_out(o: Dictionary) -> String:
 			return game.call_band(o.get("off", false))
 		"cave":
 			return order_cave()
+		"goto":
+			if o.get("clear", false):
+				return game.set_waypoint({})
+			var place := Places.nearest(Sim.world.seabed, sub.pos, str(o.get("place", "")))
+			if place.is_empty():
+				return "There's no %s on the chart, Skipper." % ("such place" if str(o.get("place", "")) == "" else str(o.place))
+			return game.set_waypoint(place)
+		"places":
+			var out: Array[String] = []
+			for p: Dictionary in Places.by_distance(Sim.world.seabed, sub.pos).slice(0, 8):
+				out.append("%s %03d %.1f km" % [p.name, roundi(ShipState.bearing(sub.pos, Places.pos(p))) % 360, Places.pos(p).distance_to(sub.pos) / 1000.0])
+			return "On the chart: " + (", ".join(out) if not out.is_empty() else "nothing but open sea") + "."
 		"god":
 			if _asker <= 0:
 				return "Aye."
@@ -786,6 +803,78 @@ func _work_objective() -> void:
 	begin_attack(target)
 	plan.objective = true
 	game.announce.rpc("Crew: Going after the %s, bearing %03d, %.1f km." % [target.data.display_name.to_lower(), roundi(ShipState.bearing(sub.pos, target.pos)) % 360, r / 1000.0])
+
+
+const ARRIVE := 350.0 ## m: close enough to a waypoint to call it reached
+const SITE_LOOK := 15.0 ## m above a site's floor the planesman takes her to look at it
+
+## Off to the waypoint (crew.waypoint, Game.set_waypoint): the helmsman (and the planesman, for a
+## place on the sea floor) on it, steering clear of shoal water on the way.
+func order_waypoint() -> String:
+	var wp: Dictionary = game.crew.get("waypoint", {})
+	if wp.is_empty():
+		return "No waypoint, Skipper."
+	var sub := Sim.world.sub
+	var at := Vector2(wp.x, wp.y)
+	var reply := _hand("helm", func(b: Dictionary) -> void: b.auto = false)
+	if float(wp.depth) > 0.0 and not sub.data.fragile:
+		reply += _hand("dive", func(b: Dictionary) -> void: b.auto = false)
+		if game.interior.stations.has("ballast") and game.station_occupant("ballast") == 0:
+			request("ballast", "post", null)
+	plan = {"kind": "waypoint"}
+	game.crew.orders = "To " + str(wp.name)
+	_step_waypoint()
+	return reply + "Setting course for %s, bearing %03d, %.1f km." % [wp.name, roundi(ShipState.bearing(sub.pos, at)) % 360, at.distance_to(sub.pos) / 1000.0]
+
+
+## What the waypoint wants of the helm and the planes, this tick: {course, speed, depth}
+## (depth -1: leave it). Away from shoals; full ahead far off, slowing as she closes; over a
+## sea-floor site, down to just above it.
+static func waypoint_wants(w: OceanWorld, wp: Dictionary) -> Dictionary:
+	var sub := w.sub
+	var at := Vector2(wp.x, wp.y)
+	var d := at.distance_to(sub.pos)
+	var draft := maxf(sub.depth, SubState.AWASH_DEPTH) + 10.0
+	var course := w.seabed.clear_course(sub.pos, ShipState.bearing(sub.pos, at), draft, clampf(d, 300.0, 1500.0), sub.data.beam + 60.0, 80.0)
+	var speed := 4 if d > 3000.0 else (3 if d > 1200.0 else (2 if d > 600.0 else 1))
+	var depth := -1.0
+	if float(wp.get("depth", -1.0)) > 0.0 and d < 2000.0:
+		depth = clampf(float(wp.depth) - SITE_LOOK - sub.data.height, 0.0, sub.data.test_depth - 5.0)
+	return {"course": course, "speed": speed, "depth": depth, "range": d}
+
+
+func _step_waypoint() -> void:
+	var w := Sim.world
+	var wp: Dictionary = game.crew.get("waypoint", {})
+	if wp.is_empty():
+		plan.clear()
+		return
+	var want := waypoint_wants(w, wp)
+	var bots: Dictionary = game.crew.get("bots", {})
+	if float(want.range) < ARRIVE:
+		var site := float(wp.depth) > 0.0
+		game.crew.erase("waypoint")
+		game.crew.erase("wants")
+		game.crew.orders = ""
+		plan.clear()
+		if bots.has("helm"):
+			bots.helm.course = w.sub.heading
+			bots.helm.speed = 0 if site else 1 # stopped over a site, to look
+		var more := " Say \"take us through the cave\" to go on through." if wp.kind == "cave" else ""
+		game.announce.rpc("Crew: %s, Skipper.%s" % ["We're over " + str(wp.name) if site else "Arrived at " + str(wp.name), more])
+		game.push_crew()
+		return
+	game.crew.wants = {"course": want.course, "speed": want.speed, "depth": want.depth}
+	if bots.has("helm"):
+		bots.helm.auto = false
+		bots.helm.course = want.course
+		bots.helm.speed = want.speed
+	if float(want.depth) >= 0.0:
+		if bots.has("dive"):
+			bots.dive.auto = false
+			bots.dive.depth = want.depth
+		elif bots.has("helm") and w.sub.data.fragile and absf(w.sub.ordered_depth - float(want.depth)) > 0.5:
+			_order("helm", bots.helm, "depth", want.depth)
 
 
 const CAVE_FIND := 4000.0 ## m: how far off a cave the crew will go for it
