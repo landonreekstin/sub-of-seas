@@ -238,6 +238,8 @@ Added by Blaney after playing. In his words where it matters.
       *(Done, PR #43: Enter in the skipper's chair opens the PA; the captain's chair for every boat will have it too.)*
 - [x] there are pipes in the way of the tv screen as well
       *(Done, PR #43: the outside cameras' console stands 30 cm out from the wall in every boat, so the big screen is in front of the pipe runs.)*
+- [x] the music started playing then stopped in the typhoon
+      *(Done, PR #43: the menu music's fade-out was still running when the Typhoon's choir started on the same player, and its stop cut the choir off; a new fade now cancels the old one.)*
 - [ ] the navigation room is mostly a giant hologram showing every piece of information needed for testing (everything, even unseen); the hologram leaves the captain's chair
 - [ ] a captain's chair in every boat with its own keys to pilot the sub entirely alone by issuing commands; bots do it unless a player is on that station; more UI for the captain and more information for piloting, so a crew with no sub knowledge can do their jobs
 - [ ] waypoints and places to travel to (click on the chart, a list of places, the PA); the boat steers there itself

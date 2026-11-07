@@ -18,6 +18,8 @@ game's design, `credits.md` where every sound came from.
   `breach_hatch` checks surfaced-and-vents-shut itself now, since the hatch always opens.
 - [done] the sand table is gone (`NavTableStation` deleted; the nav room's middle is clear for the
   hologram to come); default volumes down (master 0.4, effects 0.7, music 0.5).
+- [done] the Typhoon's music stopping: `Music._fade` kills a player's running tween first (an old
+  fade-out's `stop` callback silenced the new track on the same player).
 - [next] Blaney rides the cave with the crew; then the plan in order: captain's chair, waypoints,
   holo room, sea-floor sites, swimming (roadmap M8 list, his calls in the style log).
 
