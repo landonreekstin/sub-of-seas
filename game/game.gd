@@ -929,7 +929,7 @@ func enemy_sub_class() -> String:
 	return "los_angeles" if sub_class.era == "cold_war" else "i_boat"
 
 
-## From now on the chart and sand table only show what the boat has seen.
+## From now on the chart only shows what the boat has seen.
 func _limit_map() -> void:
 	crew.limited_map = true
 	known.start(Sim.world.sub.pos)

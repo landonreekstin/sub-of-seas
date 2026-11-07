@@ -21,7 +21,7 @@ const KEYS: Array[String] = ["convoy", "tankers", "hunted", "carrier", "task_for
 @export var layer_depth := 0.0 ## thermocline depth in metres, 0 = none
 @export var deep_holes: Array[float] = [] ## floors this deep (m) dug into the sea floor: the first right under the start, the rest a few km off
 @export var cave := false ## the cave challenge: a cave dead ahead to take her through, timed
-@export var limited_map := false ## the chart and sand table only show what the boat has seen (ChartKnown)
+@export var limited_map := false ## the chart only shows what the boat has seen (ChartKnown)
 @export var squalls := -1 ## rain squalls kept about the patrol; -1 = by sea state (calm 1, moderate 2, rough 3), 0 = clear
 ## Each: {type: convoy | task_force | hunter_killer, ships: [class keys], escorts: [class keys],
 ## pos: Vector2, course, speed (kn), radius (hunter_killer)}.

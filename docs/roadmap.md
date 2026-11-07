@@ -230,7 +230,11 @@ Added by Blaney after playing. In his words where it matters.
 - [x] god mode as a command on the PA: superspeed, invincibility and super swim speed so i can catch up to subs and watch them from the outside
       *(Done, PR #43: "god mode" on the PA, for whoever says it (again, or "god mode off", to stop): 3x on foot, 8x swimming, 16x with Shift, faster than any boat at flank; bad air and depth can't knock you out; the sea pen round her opens.)*
 - [ ] swimming: down to the sea floor, out of the sub while dived, and in flooded rooms
-- [ ] remove the sand table: the navigation room is mostly a giant hologram showing every piece of information needed for testing (everything, even unseen); the hologram leaves the captain's chair
+- [x] lets get rid of the sand table
+      *(Done, PR #43: gone from every boat's navigation room; the middle of the room is clear. The cameras' console and the chart locker stay.)*
+- [x] lets also just turn the volume down, i think it is by default too loud
+      *(Done, PR #43: out of the box master 40% (was 80%), effects 70% (was 100%), music 50% (was 60%); anyone's saved settings keep their own.)*
+- [ ] the navigation room is mostly a giant hologram showing every piece of information needed for testing (everything, even unseen); the hologram leaves the captain's chair
 - [ ] a captain's chair in every boat with its own keys to pilot the sub entirely alone by issuing commands; bots do it unless a player is on that station; more UI for the captain and more information for piloting, so a crew with no sub knowledge can do their jobs
 - [ ] waypoints and places to travel to (click on the chart, a list of places, the PA); the boat steers there itself
 - [ ] things to go to and explore on the ocean floor: shipwrecks, ruins, glowing vents and gardens, alien civilizations

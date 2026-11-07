@@ -534,11 +534,11 @@ func _berthing(c: Dictionary, gap := {}) -> void:
 		Build.cyl(_at, 0.025, 1.95, Vector3(side * 1.22, 0.97, z1), PIPE)
 
 
-## The navigation room (Blaney): the sand table of the patrol area in the middle, and the
-## outside cameras' bank of screens on the port side, a chart locker to starboard.
+## The navigation room (Blaney): the outside cameras' bank of screens on the port side, a chart
+## locker to starboard; the middle kept clear (the sand table is gone: Blaney, "lets get rid of
+## the sand table").
 func _nav_room(c: Dictionary) -> void:
 	var mid: float = (c.z0 + c.z1) * 0.5
-	_add_station(NavTableStation.new().setup("sand_table", "Sand table"), Vector3(0.1, 0, mid))
 	_add_station(CameraStation.new().setup("cameras", "Outside cameras"), Vector3(-HALF_WIDTH + 1.0, 0, mid), PI / 2.0)
 	# A chart locker of wide flat drawers in the starboard after corner, clear of the walkway.
 	var lz: float = c.z1 - 0.75

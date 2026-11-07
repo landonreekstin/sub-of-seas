@@ -55,11 +55,8 @@ and update "Current style" in the same commit.
   clinch on a SEA |----X----| SEA bar, the move keys, the last turn. Driven past your edge,
   you go over the side into the sea and swim back to a ladder.
 - **Navigation room** (Blaney): a compartment just aft of the control room in every boat.
-  In the middle a wooden sand table: a raised model of the whole patrol area (at least 16 km
-  across) built from the sea floor, islands standing up green with rocky peaks and beaches,
-  pale reef shallows, the deep going dark blue, under a clear sheet of sea, with a little brass
-  boat that moves and turns with ours; "N ↑" and the scale on the rim. A chart locker in the
-  starboard after corner.
+  The middle of the room is clear (the sand table was taken out, Blaney 2026-11-06: a giant
+  hologram is planned there). A chart locker in the starboard after corner.
 - **Outside cameras** (Blaney: a viewing centre; both a wall of small screens and a big one):
   on the port side of the navigation room, a grey console under six small screens (bow, stern,
   port, starboard, bridge, keel), all live while you're in the room, and a big screen above;
@@ -263,7 +260,7 @@ and update "Current style" in the same commit.
 - **Enemy sub** (Blaney): a long dark cigar under the water with a conning tower, seen only through a
   porthole or camera if it comes close; never on a chart. Sonar hears "faint, steady screws —
   SUBMARINE" and roughly its depth; its torpedoes bring the alarm and "TORPEDO IN THE WATER". In the
-  fight the chart and sand table show only what we've seen: by eye (surfaced or scope up) the usual
+  fight the chart shows only what we've seen: by eye (surfaced or scope up) the usual
   chart colours; by sonar (the patch under us, further with a ping) grey-blue dots on the chart and
   grey-blue relief on the table; the rest shaded paper and flat dark sand. Starts as a patrol on the
   menu, or "enemy sub" on the PA on any patrol, when the whole map comes back once she's gone.
@@ -331,7 +328,7 @@ and update "Current style" in the same commit.
   green board dived), the HP air manifold's six wheels on the after bulkhead and phone handsets.
 - **Bot crewmen stand naturally** (Blaney: natural positions at every station): feet on the deck
   at a spot each station gives, held the way the job asks: hands on the wheel or yoke, both up on
-  the periscope handles, leaning over the chart and the sand table, one hand on the sonar wheel,
+  the periscope handles, leaning over the chart, one hand on the sonar wheel,
   watching the camera screens hands down, a dart up by his ear, a round held up at the scuttle,
   sitting on the arm rests in the skipper's chair. Torpedomen stand one behind another down their
   tubes' side of the room. Name tags half the size they were.
@@ -340,6 +337,7 @@ and update "Current style" in the same commit.
   standing their station with hands on the gear and a name tag with their job ("Sparks
   (planesman)", "— on orders" when following yours). They speak through the same announcements
   as everything else: "Stubby (sonar): contact bearing 270, warship, turns for 20 knots."
+- **Volume** (Blaney): quieter out of the box: master 40%, effects 70%, music 50%, voices 100%.
 - **Out any time, god mode** (Blaney): for now the hatch opens at any depth; dived, you climb out
   into the sea in the dive suit. "God mode" on the PA is for the one who says it: super speed on
   foot and in the sea (faster than any boat), and nothing knocks you out.
@@ -519,3 +517,5 @@ and update "Current style" in the same commit.
 | 2026-11-06 | Blaney | "I do want to be on board when the crew does it": a PA order for the crew to take her through the cave on their own, and a long list of all the PA commands. |
 | 2026-11-06 | Blaney | Swimming to the sea floor, out of the sub while dived, and in flooded rooms. The sand table goes: the navigation room is mostly a giant hologram showing everything for testing (even what the boat hasn't found). A captain's chair in every boat, with the keys on its card (W/S speed, A/D turn, R/F depth, 1-4 presets, C crash dive, X emergency surface, Tab target, Space fire, P scope, N/M waypoints, H hologram, Q leave): bots carry out each order unless a player is on that station, so there is no interference. Waypoints the boat steers to itself, set on the chart, from a list of places or on the PA. Sea-floor places: shipwrecks, ruins, glowing vents and gardens, alien civilizations. |
 | 2026-11-06 | Blaney | "Make it so i can also exit the boat at any time for now", and "god mode" on the PA: "superspeed and invincibility and super swim speed so i can catch up to subs and watch them from the outside". |
+| 2026-11-06 | Blaney | "Lets get rid of the sand table." |
+| 2026-11-06 | Blaney | "Lets also just turn the volume down, i think it is by default too loud." (Defaults now master 40%, effects 70%, music 50%; saved settings keep their own.) |

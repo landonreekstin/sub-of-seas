@@ -16,6 +16,8 @@ game's design, `credits.md` where every sound came from.
   up; `Deck.is_out` now 350 m down) and "god mode" on the PA (`crew.god`, `Player.godly()`: GOD_RUN 3,
   GOD_SWIM 8 / 16 with Shift; no passing out, no depth strain; the pen opens). `tests/god_out.gd`.
   `breach_hatch` checks surfaced-and-vents-shut itself now, since the hatch always opens.
+- [done] the sand table is gone (`NavTableStation` deleted; the nav room's middle is clear for the
+  hologram to come); default volumes down (master 0.4, effects 0.7, music 0.5).
 - [next] Blaney rides the cave with the crew; then the plan in order: captain's chair, waypoints,
   holo room, sea-floor sites, swimming (roadmap M8 list, his calls in the style log).
 
