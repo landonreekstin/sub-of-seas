@@ -32,7 +32,7 @@ All from Wikimedia Commons, marked public domain there.
 |---|---|---|---|
 | klaxon | [WWII submarine dive klaxon](https://commons.wikimedia.org/wiki/File:WWII_submarine_dive_klaxon.ogg) (Wikimedia Commons) | US Navy | Public domain |
 | sonar_ping | [Sonar_pings.ogg](https://freesound.org/s/12677/) | Peter_Gross | CC0 |
-| creak_1, creak_2, creak_3 | [grincements_helvetia.aif](https://freesound.org/s/59160/) | f_ilippo | CC0 |
+| creak_1 … creak_6 (creak_6 at half speed) | [grincements_helvetia.aif](https://freesound.org/s/59160/) | f_ilippo | CC0 |
 | lever | [Metal Lever 1.aif](https://freesound.org/s/151271/) | timgormly | CC0 |
 | whale_loop | [LowWhalesong.wav](https://freesound.org/s/171945/) | RebekahDay | CC0 |
 | deck_gun | [Cannon Shot](https://freesound.org/s/187767/) | qubodup | CC0 |

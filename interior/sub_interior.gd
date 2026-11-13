@@ -80,6 +80,16 @@ var _cull_timer := 0.0
 var _env: Environment
 const TYPHOON_LIGHT := Color("#D6E6FF") ## the Typhoon's cold blue-white strip lights, as in the film
 const BATTLE_RED := Color("#FF3A2A")
+## The mood inside (Blaney: "too happy and bright ... i like hunt for the red october and the sub
+## warfare scenes"; dim and warm): the lamps at this much of their old strength, falling off fast
+## so they light pools with dark between them, over a low ambient.
+const MOOD := 0.6
+const AMBIENT := 0.12
+const FALLOFF := 1.9 ## OmniLight3D attenuation: the higher, the tighter each lamp's pool
+const BATTLE_HOLD := 20.0 ## s the red stays on after the last sign of the enemy
+var battle_until := -INF ## sim time the battle-stations red lasts until
+var _last_depth := 0.0
+var _descent_timer := 3.0
 
 
 static func create(data: SubClassData) -> SubInterior:
@@ -197,6 +207,7 @@ func _finish_build() -> void:
 	for l in find_children("*", "OmniLight3D", true, false):
 		_lights.append(l)
 		l.set_meta("energy", l.light_energy)
+		l.omni_attenuation = FALLOFF
 
 
 func _build_environment() -> void:
@@ -205,8 +216,8 @@ func _build_environment() -> void:
 	env.background_mode = Environment.BG_COLOR
 	env.background_color = Color("#0A0C0A")
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color("#6E7F6A")
-	env.ambient_light_energy = 0.55
+	env.ambient_light_color = Color("#6E6450") # warm, and low: the lamps do the lighting
+	env.ambient_light_energy = AMBIENT
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	var we := WorldEnvironment.new()
 	we.environment = env
@@ -548,8 +559,8 @@ func _nav_room(c: Dictionary, chair := true) -> void:
 	var holo := HoloView.new()
 	holo.name = "nav_holo"
 	holo.radius = minf(1.15, (c.z1 - c.z0) * 0.5 - 0.8)
-	holo.height = 1.05
-	holo.position = Vector3(0, 1.8, hz)
+	holo.height = 0.85
+	holo.position = Vector3(0, 1.4, hz) # the surface below eye level: you look down onto it (Blaney: "give perspective")
 	_at.add_child(holo)
 	# The projector: a ring in the deckhead over it, and a glow on the deck under it.
 	Build.cyl(_at, holo.radius * 0.3, 0.06, Vector3(0, DECK_HEIGHT - 0.05, hz), Color("#2E3A44"), Vector3.UP)
@@ -983,14 +994,18 @@ func _process(delta: float) -> void:
 	# Rig for red: at night, submerged, the boat runs on red light so eyes stay dark-adapted.
 	var red := Sim.world.conditions.night and not sub.is_surfaced()
 	var typhoon := sub_class.key == "typhoon"
-	var battle := false # all hands only fills the boat; it doesn't change her mood (Blaney)
+	# Battle stations: red while the enemy is after us (all hands alone only fills the boat; it
+	# doesn't change her mood, Blaney).
+	if under_attack(Sim.world):
+		battle_until = Sim.world.time + BATTLE_HOLD
+	var battle := Sim.world.time < battle_until
 	var base := TYPHOON_LIGHT if typhoon else LIGHT
 	for l in _lights:
 		var on := _flicker == 0.0 or randf() > _flicker * 0.7
-		l.light_energy = l.get_meta("energy") * power * (1.0 if on else 0.08) * (0.8 if red or battle else 1.0)
+		l.light_energy = l.get_meta("energy") * MOOD * power * (1.0 if on else 0.08) * (0.8 if red or battle else 1.0)
 		l.light_color = BATTLE_RED if battle else (Color("#FF4A35") if red else base)
-	if typhoon and _env != null:
-		_env.ambient_light_color = Color("#5A2E2A") if battle or red else Color("#5E6E80")
+	if _env != null:
+		_env.ambient_light_color = Color("#5A2E2A") if battle or red else (Color("#5E6E80") if typhoon else Color("#6E6450"))
 	for i in _rockers.size():
 		var shake := 0.012 if sub.diesels[i] >= 1.0 else (0.006 if sub.diesels[i] > 0.0 else 0.0)
 		for r: MeshInstance3D in _rockers[i]:
@@ -1048,21 +1063,54 @@ func _sounds(sub: SubState, delta: float) -> void:
 ## past it the lights waver. `pitch` is the boat's voice (a Typhoon's is lower).
 func _deep(sub: SubState, delta: float, pitch: float) -> void:
 	var deep := sub.depth / float(sub.data.test_depth)
+	# On the way down she creaks and groans as the pressure comes on (Blaney: "more creaking
+	# noises as the sub descends"): the faster she goes down and the deeper she is, the more.
+	var sinking := (sub.depth - _last_depth) / maxf(delta, 0.001)
+	_last_depth = sub.depth
+	_descent_timer -= delta
+	if sinking > 0.25 and sub.depth > 8.0 and _descent_timer <= 0.0:
+		_descent_timer = randf_range(1.5, 4.5) / clampf(sinking * 0.7, 0.5, 2.5)
+		var c: Dictionary = compartments[randi() % compartments.size()]
+		var at := Vector3(c.get("x", 0.0) + randf_range(-1.8, 1.8), c.get("y", 0.0) + 2.0, randf_range(c.z0, c.z1))
+		var loud := lerpf(-15.0, -3.0, clampf(deep, 0.0, 1.0))
+		if randf() < 0.25: # the whole hull groaning, long and low
+			Sfx.play_at(self, "creak_6", at, loud + 2.0, randf_range(pitch * 0.8, pitch * 1.1))
+		elif randf() < 0.3: # a sharp tick of a frame settling
+			Sfx.play_at(self, "creak_%d" % randi_range(1, 5), at, loud - 4.0, randf_range(1.6, 2.1))
+		else:
+			Sfx.play_at(self, "creak_%d" % randi_range(1, 5), at, loud, randf_range(pitch, pitch + 0.35))
 	_creak_timer -= delta
 	if _creak_timer <= 0.0:
 		_creak_timer = randf_range(6.0, 14.0) / maxf(0.25, deep * deep * 2.0)
 		if deep > 0.3:
 			var c: Dictionary = compartments[randi() % compartments.size()]
 			var at := Vector3(c.get("x", 0.0) + randf_range(-1.8, 1.8), c.get("y", 0.0) + 2.0, randf_range(c.z0, c.z1))
-			Sfx.play_at(self, "creak_%d" % randi_range(1, 3), at, lerpf(-14.0, 2.0, clampf(deep - 0.3, 0.0, 1.0)), randf_range(pitch, pitch + 0.3))
+			Sfx.play_at(self, "creak_%d" % randi_range(1, 5), at, lerpf(-14.0, 2.0, clampf(deep - 0.3, 0.0, 1.0)), randf_range(pitch, pitch + 0.3))
 			if deep > 0.85 and randf() < clampf((deep - 0.85) * 3.0, 0.15, 0.8): # a frame takes the strain: bang
-				Sfx.play_at(self, "creak_%d" % randi_range(1, 3), at, 6.0, pitch * 0.55)
+				Sfx.play_at(self, "creak_%d" % randi_range(1, 5), at, 6.0, pitch * 0.55)
 				var me := Game.instance.local_player
 				if me != null:
 					me.trauma = maxf(me.trauma, 0.25 + 0.2 * clampf(deep - 1.0, 0.0, 1.0))
 				_weep(at)
 				if deep > 1.0:
 					flicker(0.3)
+
+
+## Battle stations: an escort attacking or hunting us, an enemy torpedo or depth charges in the
+## water, or something from the depths coming for us.
+static func under_attack(w: OceanWorld) -> bool:
+	if not w.charges.is_empty():
+		return true
+	for t in w.torpedoes:
+		if t.alive and t.enemy:
+			return true
+	for s in w.ships:
+		if not s.is_sinking() and s.mode >= 2 and s.pos.distance_to(w.sub.pos) < 8000.0: # hunting or attacking
+			return true
+	for m in w.monsters:
+		if m.state in ["attack", "hold"]:
+			return true
+	return false
 
 
 ## A thin spray of water weeping from a seam in the deckhead.

@@ -544,11 +544,11 @@ func site_event(type: String, _place: String) -> void:
 		"wreck": # tapping, the hull groaning in sympathy, a bell tolling once
 			for k in 9:
 				get_tree().create_timer(0.6 + k * (0.25 if k < 3 or k >= 6 else 0.6)).timeout.connect(func() -> void: Sfx.play("click", 2.0, 0.45))
-			Sfx.play("creak_%d" % randi_range(1, 3), 2.0, 0.5)
+			Sfx.play("creak_%d" % randi_range(1, 5), 2.0, 0.5)
 			get_tree().create_timer(6.0).timeout.connect(func() -> void: Sfx.play("clang", 0.0, 0.35))
 		"ruins": # a tremor
 			Sfx.play("depth_charge", -6.0, 0.35)
-			Sfx.play("creak_%d" % randi_range(1, 3), 2.0, 0.6)
+			Sfx.play("creak_%d" % randi_range(1, 5), 2.0, 0.6)
 			if local_player != null:
 				local_player.add_trauma(0.5)
 			interior.shake_loose(0.5)
@@ -1725,8 +1725,8 @@ func _monster_event(d: Dictionary) -> void:
 			if near or d.act == "charge":
 				_monster_call(-4.0 if d.act == "charge" else -12.0)
 		"grab", "squeeze":
-			Sfx.play("creak_%d" % randi_range(1, 3), 4.0, 0.4)
-			Sfx.play("creak_%d" % randi_range(1, 3), 0.0, 0.55)
+			Sfx.play("creak_%d" % randi_range(1, 5), 4.0, 0.4)
+			Sfx.play("creak_%d" % randi_range(1, 5), 0.0, 0.55)
 			trauma = 0.55 if d.act == "grab" else 0.3
 		"bite", "strike", "ram":
 			Sfx.play("torpedo_hit", 2.0, 0.45)
@@ -1822,14 +1822,14 @@ func _event_sound(kind: String, data: Dictionary) -> void:
 			Sfx.play("torpedo_hit")
 		"crack": # the carbon going: sharp cracks, louder each time
 			Sfx.play("clang", -6.0 + 4.0 * float(data.level), 1.6)
-			Sfx.play("creak_%d" % randi_range(1, 3), 2.0 * float(data.level), 1.3)
+			Sfx.play("creak_%d" % randi_range(1, 5), 2.0 * float(data.level), 1.3)
 		"implode":
 			Sfx.play("torpedo_hit", 8.0, 0.7)
 		"grounded":
 			Sfx.play("clang", 4.0 if data.hard else -2.0, 0.6)
-			Sfx.play("creak_%d" % randi_range(1, 3), 0.0, 0.7)
+			Sfx.play("creak_%d" % randi_range(1, 5), 0.0, 0.7)
 		"sunk":
-			Sfx.play("creak_%d" % randi_range(1, 3), -4.0, 0.5) # breaking up
+			Sfx.play("creak_%d" % randi_range(1, 5), -4.0, 0.5) # breaking up
 
 
 func _on_sim_event(kind: String, data: Dictionary) -> void:

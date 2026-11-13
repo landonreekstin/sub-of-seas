@@ -77,6 +77,11 @@ SOUNDS = {
     "creak_1": {"src": 59160, "start": 1.9, "len": 2.5, "fade_in": 0.2, "fade": 0.7, "lp": 3000, "rms": -18.6},
     "creak_2": {"src": 59160, "start": 16.5, "len": 2.5, "fade_in": 0.2, "fade": 0.7, "lp": 3000, "rms": -18.4},
     "creak_3": {"src": 59160, "start": 56.5, "len": 2.5, "fade_in": 0.2, "fade": 0.7, "lp": 3000, "rms": -19.0},
+    # More of them for the way down (Blaney: "more creaking noises as the sub descends"); the
+    # last one slowed to half speed, a long low groan of the whole hull taking the pressure.
+    "creak_4": {"src": 59160, "start": 77.0, "len": 2.5, "fade_in": 0.2, "fade": 0.7, "lp": 3000, "rms": -19.0},
+    "creak_5": {"src": 59160, "start": 9.5, "len": 2.5, "fade_in": 0.2, "fade": 0.7, "lp": 3000, "rms": -19.0},
+    "creak_6": {"src": 59160, "start": 86.0, "len": 4.0, "fade_in": 0.4, "fade": 1.2, "lp": 1600, "rate": 0.5, "rms": -19.0},
     "alarm": {"src": 678345, "start": 0.0, "len": 1.4, "fade": 0.3, "lp": 7000, "rms": -14.0},
     "telegraph_ding": {"src": 353232, "start": 0.25, "len": 1.8, "fade": 0.6, "rms": -13.0},
     "diesel_loop": {"src": 264864, "start": 1.5, "len": 8.0, "loop": 0.5, "lp": 4000, "rms": -13.3},
