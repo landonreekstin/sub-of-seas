@@ -21,7 +21,7 @@ Blaney: "looks great, i just need you to optimize it, we gotta save some frames"
 - [done] `HoloView`: the floor is built north-up and turned with her heading (rebuilt only after
   1.5 cells of travel); rings built once per range; monsters repainted only on change.
 - [done] `SeaFloorLife`: one kind of one tile a frame (`_pending`); marine snow 700, plankton 250.
-- [next] Blaney plays it; then the sound pass, then rafts to the beaches.
+- [done] Blaney played it: "smoother". Ticked; #46 ready. Next: the sound pass, then rafts to the beaches.
 
 ## 2026-11-13 (1): dark sea, sea life, cameras, monsters, hologram, dim boat (branch `blaney/dark-sea-and-hologram`, draft #45 on #44)
 

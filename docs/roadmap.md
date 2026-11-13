@@ -257,7 +257,8 @@ Added by Blaney after playing. In his words where it matters.
       *(Done, PR #45: they never caught a boat (too slow, too deep for a WWII boat); now one called on the PA comes up to any boat and keeps up, and every kind attacks. Blaney played it: "looks great".)*
 - [x] the giant hologram doesnt really give any perspective toward where the sub is relative to the different locations, that needs fixed, the hologram also is poorly designed and should be more detailed and clear and not difficult to see or understand. detailed images of the monsters should also show up and a close up view of around the ship should be an option to toggle
       *(Done, PR #45, Blaney played it: "looks great": range rings, compass, our boat with a beacon, lines to every place with bearing and range, a shaded sea floor, glowing monster models and the nearest one big, Z close-up from the captain's chair.)*
-- [ ] save some frames: optimize (Blaney after playing PR #45: "looks great, i just need you to optimize it, we gotta save some frames")
+- [x] save some frames: optimize (Blaney after playing PR #45: "looks great, i just need you to optimize it, we gotta save some frames")
+      *(Done, PR #46: far islands drawn coarse, under-water ground not drawn from afar, the cameras run only when looked at, the hologram turns instead of rebuilding: the camera wall draws 4.0M triangles a frame down to 1.2M, the captain's chair 3.5M down to 0.33M. Blaney played it: "smoother".)*
 - [ ] be critical of all the sounds in the game and make sure they are balanced properly
 - [ ] we should add some basic ability for people to get to land on inflatable rafts, there should be walkable beaches on land
 
