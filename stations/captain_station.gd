@@ -90,7 +90,7 @@ func _build_overlay(root: Control) -> void:
 		box.add_child(l)
 		_lines.append(l)
 	box.add_child(UiKit.label("W/S speed   A/D turn (Shift 1°)   R/F depth (Shift 1 m)   1-4 surface / periscope / dive / deep   C crash dive   X twice emergency surface", 14, UiKit.BRASS))
-	box.add_child(UiKit.label("Tab target   Space attack it   P periscope   N next place   M clear waypoint   H hologram   Enter PA", 14, UiKit.BRASS))
+	box.add_child(UiKit.label("Tab target   Space attack it   P periscope   N next place   M clear waypoint   H hologram   Z close-up   Enter PA", 14, UiKit.BRASS))
 	box.add_child(UiKit.label(footer(false), 14, UiKit.DIM))
 
 
@@ -191,6 +191,9 @@ func station_input(event: InputEvent) -> void:
 			order("clear_place")
 		KEY_H:
 			_show_holo(_holo_view == null)
+		KEY_Z: # the hologram close up round her, or the whole 12 km (every hologram aboard)
+			HoloView.close_up = not HoloView.close_up
+			Sfx.play_at(self, "click", Vector3(0, 1.0, 0), -6.0)
 		KEY_ENTER, KEY_KP_ENTER:
 			Game.instance.open_pa() # the PA from the chair (Blaney: "a PA button so that you can type from there")
 		_:

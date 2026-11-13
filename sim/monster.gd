@@ -17,6 +17,8 @@ const KINDS := {
 	"serpent": {"name": "sea serpent", "length": 90.0, "hp": 3, "speed": 8.0, "floor": 120.0, "act": "strike"},
 	"megalodon": {"name": "megalodon", "length": 45.0, "hp": 3, "speed": 9.0, "floor": 60.0, "act": "ram"},
 }
+const STATE_NAMES := {"lurk": "lurking deep", "stalk": "stalking us", "attack": "ATTACKING", "hold": "wrapped round the hull",
+	"retreat": "backing off", "dead": "dead"}
 const HEAR := 1500.0 ## m it hears even a quiet boat; a loud one much further
 const STALK_RANGE := 260.0 ## m it circles at before it comes in
 const HOLD_TIME := 18.0 ## s the squid holds on
