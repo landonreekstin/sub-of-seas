@@ -320,3 +320,188 @@ static func monster(kind: String, length: float) -> Node3D:
 		"megalodon":
 			return megalodon(length)
 	return squid(length)
+
+
+# --- Sea-floor life and the gentler creatures (Blaney: "make the ocean feel more alive") ----
+# Shapes for MultiMesh decor (SeaFloorLife): white or pale, tinted per instance, so one mesh
+# draws every colour in a single call.
+
+## A kelp frond, 1 m tall at scale 1 (scaled up to 6-14 m): a ribbon stalk with leaf blades
+## off either side, root at the origin; it sways in `sway.gdshader`.
+static func kelp_mesh() -> Mesh:
+	var st := _begin()
+	var segs := 8
+	for i in segs:
+		var y0 := float(i) / segs
+		var y1 := float(i + 1) / segs
+		var w := 0.012
+		var x0 := sin(y0 * 5.0) * 0.03
+		var x1 := sin(y1 * 5.0) * 0.03
+		_fin(st, [Vector3(x0 - w, y0, 0), Vector3(x0 + w, y0, 0), Vector3(x1 + w, y1, 0), Vector3(x1 - w, y1, 0)], Color(0.85, 0.85, 0.8))
+		if i > 0:
+			var side := 1.0 if i % 2 == 0 else -1.0
+			var c := Color(1, 1, 1)
+			_fin(st, [Vector3(x0, y0, 0), Vector3(x0 + side * 0.09, y0 + 0.05, 0.02), Vector3(x0 + side * 0.13, y0 + 0.12, 0.03), Vector3(x0 + side * 0.02, y0 + 0.1, 0)], c)
+	return _commit(st)
+
+
+## A tuft of sea grass, 1 m tall at scale 1: a handful of thin blades leaning out.
+static func grass_mesh() -> Mesh:
+	var st := _begin()
+	for k in 6:
+		var a := k * TAU / 6.0 + 0.4
+		var lean := Vector3(cos(a), 0, sin(a)) * 0.25
+		var side := Vector3(-sin(a), 0, cos(a)) * 0.02
+		var base := Vector3(cos(a), 0, sin(a)) * 0.04
+		_fin(st, [base - side, base + side, base + lean * 0.5 + Vector3(0, 0.55, 0) + side * 0.6, base + lean + Vector3(0, 1.0 - k * 0.05, 0)], Color.WHITE)
+	return _commit(st)
+
+
+## A starfish lying on the bottom, 1 m across at scale 1: five plump arms.
+static func starfish_mesh() -> Mesh:
+	var st := _begin()
+	for k in 5:
+		var a := k * TAU / 5.0
+		var b := a + TAU / 10.0
+		var c := a - TAU / 10.0
+		var tip := Vector3(cos(a), 0.02, sin(a)) * 0.5
+		var top := Vector3(0, 0.08, 0)
+		var l := Vector3(cos(b), 0.0, sin(b)) * 0.12
+		var r := Vector3(cos(c), 0.0, sin(c)) * 0.12
+		_ctri(st, [top, l, tip], [Color.WHITE, Color.WHITE, Color.WHITE], Vector3.UP)
+		_ctri(st, [top, tip, r], [Color.WHITE, Color.WHITE, Color.WHITE], Vector3.UP)
+	return _commit(st)
+
+
+## A crab, 1 m across at scale 1 (placed at a tenth of that): a flat round shell, legs, claws.
+static func crab_mesh() -> Mesh:
+	var st := _begin()
+	_spindle(st, 0.45, [[0.0, 0.0, 0.0], [0.2, 0.25, 0.08], [0.6, 0.28, 0.1], [1.0, 0.0, 0.0]], Vector3(0, 0.12, 0), Color(0.9, 0.9, 0.9), Color.WHITE, 0.0, false, 8)
+	for side in [-1.0, 1.0]:
+		for k in 3:
+			var z := -0.1 + k * 0.1
+			_fin(st, [Vector3(side * 0.2, 0.12, z), Vector3(side * 0.42, 0.18, z + 0.02), Vector3(side * 0.5, 0.0, z + 0.05), Vector3(side * 0.4, 0.15, z + 0.05)], Color(0.8, 0.8, 0.8))
+		_fin(st, [Vector3(side * 0.12, 0.12, -0.2), Vector3(side * 0.25, 0.16, -0.38), Vector3(side * 0.14, 0.14, -0.45), Vector3(side * 0.08, 0.1, -0.3)], Color.WHITE) # a claw
+	return _commit(st)
+
+
+## A tube sponge, 1 m tall at scale 1: a few open-topped tubes in a clump.
+static func sponge_mesh() -> Mesh:
+	var st := _begin()
+	for k in 3:
+		var at := Vector3(cos(k * 2.1) * 0.15, 0, sin(k * 2.1) * 0.15) * (0.0 if k == 0 else 1.0)
+		var h := 1.0 - k * 0.25
+		var r := 0.12 - k * 0.02
+		var n := 8
+		for i in n:
+			var a0 := i * TAU / n
+			var a1 := (i + 1) * TAU / n
+			var p0 := at + Vector3(cos(a0) * r, 0, sin(a0) * r)
+			var p1 := at + Vector3(cos(a1) * r, 0, sin(a1) * r)
+			var c := Color.WHITE
+			var d := Color(0.55, 0.55, 0.55) # dark inside
+			_ctri(st, [p0, p1, p1 + Vector3(0, h, 0)], [c, c, c], (p0 - at))
+			_ctri(st, [p0, p1 + Vector3(0, h, 0), p0 + Vector3(0, h, 0)], [c, c, c], (p0 - at))
+			_ctri(st, [p0, p1, p1 + Vector3(0, h, 0)], [d, d, d], -(p0 - at))
+			_ctri(st, [p0, p1 + Vector3(0, h, 0), p0 + Vector3(0, h, 0)], [d, d, d], -(p0 - at))
+	return _commit(st)
+
+
+## A jellyfish, 1 m across: a see-through glowing bell with frilly tentacles trailing down
+## ("Bell" pulses, SeaLifeView). It glows on its own, so in the black it's the only thing seen.
+static func jellyfish(glow: Color) -> Node3D:
+	var j := Node3D.new()
+	var bell := MeshInstance3D.new()
+	bell.name = "Bell"
+	var sm := SphereMesh.new()
+	sm.radius = 0.5
+	sm.height = 0.6
+	sm.is_hemisphere = true
+	sm.radial_segments = 12
+	sm.rings = 4
+	bell.mesh = sm
+	var m := StandardMaterial3D.new()
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	m.cull_mode = BaseMaterial3D.CULL_DISABLED
+	m.albedo_color = Color(glow, 0.55)
+	bell.material_override = m
+	j.add_child(bell)
+	var st := _begin()
+	for k in 8:
+		var a := k * TAU / 8.0
+		var r := 0.35
+		var p := Vector3(cos(a) * r, 0, sin(a) * r)
+		var w := Vector3(-sin(a), 0, cos(a)) * 0.03
+		_fin(st, [p - w, p + w, p * 0.8 + Vector3(0, -1.6 - k % 3 * 0.4, 0)], Color.WHITE)
+	var tails := MeshInstance3D.new()
+	tails.name = "Tails"
+	tails.mesh = _commit(st)
+	var tm := m.duplicate() as StandardMaterial3D
+	tm.albedo_color = Color(glow, 0.3)
+	tails.material_override = tm
+	j.add_child(tails)
+	return j
+
+
+## A manta ray, about 5 m across, nose to -Z: a flat dark diamond, pale below, with two wings
+## ("WingL"/"WingR", which flap) and a thin tail.
+static func manta() -> Node3D:
+	var r := Node3D.new()
+	var back := Color("#2B3138")
+	var belly := Color("#DDE2E4")
+	var st := _begin()
+	_spindle(st, 2.6, [[0.0, 0.0, 0.0], [0.15, 0.45, 0.18], [0.5, 0.6, 0.25], [0.85, 0.3, 0.12], [1.0, 0.05, 0.03]], Vector3.ZERO, back, belly, 0.0)
+	_fin(st, [Vector3(0, 0, 1.2), Vector3(0.03, 0, 3.4), Vector3(-0.03, 0, 3.4)], back) # tail
+	for side in [-1.0, 1.0]: # the horns by the mouth
+		_fin(st, [Vector3(side * 0.35, 0, -1.2), Vector3(side * 0.42, -0.05, -1.65), Vector3(side * 0.25, 0, -1.25)], back)
+	var body := MeshInstance3D.new()
+	body.mesh = _commit(st)
+	body.material_override = creature_mat()
+	r.add_child(body)
+	for side in [-1.0, 1.0]:
+		var wing := Node3D.new()
+		wing.name = "WingL" if side < 0.0 else "WingR"
+		wing.position = Vector3(side * 0.5, 0, -0.1)
+		r.add_child(wing)
+		var ws := _begin()
+		var tri := [Vector3(0, 0, -0.9), Vector3(side * 2.2, 0.05, 0.3), Vector3(0, 0, 0.9)]
+		_ctri(ws, tri, [back, back, back], Vector3.UP)
+		_ctri(ws, tri, [belly, belly, belly], Vector3.DOWN)
+		var wm := MeshInstance3D.new()
+		wm.mesh = _commit(ws)
+		wm.material_override = creature_mat()
+		wing.add_child(wm)
+	return r
+
+
+## A sea turtle, about 1.2 m, nose to -Z: a domed olive shell, a head, four flippers
+## ("Flip0".."Flip3": the front two row, the back two steer).
+static func turtle() -> Node3D:
+	var t := Node3D.new()
+	var shell := Color("#5E6B3A")
+	var skin := Color("#8D9A6A")
+	var st := _begin()
+	_spindle(st, 1.1, [[0.0, 0.0, 0.0], [0.15, 0.35, 0.18], [0.5, 0.45, 0.25], [0.85, 0.3, 0.14], [1.0, 0.0, 0.0]], Vector3.ZERO, shell, Color("#C9B98A"), -0.3)
+	var body := MeshInstance3D.new()
+	body.mesh = _commit(st)
+	body.material_override = creature_mat()
+	t.add_child(body)
+	var head := Build.sphere(t, 0.14, Vector3(0, 0.02, -0.66), skin)
+	head.scale = Vector3(1.0, 0.8, 1.3)
+	for k in 4:
+		var side := -1.0 if k % 2 == 0 else 1.0
+		var front := k < 2
+		var f := Node3D.new()
+		f.name = "Flip%d" % k
+		f.position = Vector3(side * 0.3, -0.02, -0.25 if front else 0.35)
+		t.add_child(f)
+		var fs := _begin()
+		var len := 0.7 if front else 0.3
+		_fin(fs, [Vector3(0, 0, -0.08), Vector3(side * len, 0, 0.1), Vector3(side * len * 0.8, 0, 0.2), Vector3(0, 0, 0.08)], skin)
+		var fm := MeshInstance3D.new()
+		fm.mesh = _commit(fs)
+		fm.material_override = creature_mat()
+		f.add_child(fm)
+	return t

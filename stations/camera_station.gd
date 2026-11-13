@@ -164,8 +164,10 @@ func _aim(cam: Camera3D, env: Environment, sky: ToonSky, t: Transform3D) -> void
 	if depth > 0.0:
 		ExteriorWorld.paint_water(env, sky, depth, Sim.world.conditions.night)
 		cam.environment = env
+		cam.far = ExteriorWorld.see_under(depth)
 	else:
 		cam.environment = null
+		cam.far = 4000.0
 
 
 func station_input(event: InputEvent) -> void:

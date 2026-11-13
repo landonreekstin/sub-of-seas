@@ -86,5 +86,6 @@ func _place(p: Porthole) -> void:
 	if depth > 0.0:
 		ExteriorWorld.paint_water(_env, _sky, depth, Sim.world.conditions.night)
 		camera.environment = _env
+		camera.far = ExteriorWorld.see_under(depth)
 	else:
 		camera.environment = null
