@@ -930,7 +930,8 @@ func _work_objective() -> void:
 
 
 const ARRIVE := 350.0 ## m: close enough to a waypoint to call it reached
-const SITE_LOOK := 15.0 ## m above a site's floor the planesman takes her to look at it
+const SITE_ARRIVE := 40.0 ## m: a sea-floor place is only reached right over it, so the cameras see it (Blaney: "very close")
+const SITE_LOOK := 10.0 ## m above a site's floor the planesman takes her to look at it
 
 ## Off to the waypoint (crew.waypoint, Game.set_waypoint): the helmsman (and the planesman, for a
 ## place on the sea floor) on it, steering clear of shoal water on the way.
@@ -964,6 +965,8 @@ static func waypoint_wants(w: OceanWorld, wp: Dictionary) -> Dictionary:
 	var speed := 4 if d > 3000.0 else (3 if d > 1200.0 else (2 if d > 600.0 else 1))
 	var depth := -1.0
 	var site := float(wp.get("depth", -1.0)) > 0.0
+	if site and d < 400.0: # the last of it straight in, slow, so she stops right over it
+		course = ShipState.bearing(sub.pos, at)
 	# A long way with nobody about: up on the diesels, as a real crew would (dived, the battery
 	# would run flat on the way), and down again for the last of it over a site.
 	var alone := not w.ships.any(func(s: ShipState) -> bool: return not s.is_sinking() and s.pos.distance_to(sub.pos) < 10000.0)
@@ -972,6 +975,8 @@ static func waypoint_wants(w: OceanWorld, wp: Dictionary) -> Dictionary:
 		speed = 4 if d > 1200.0 else speed
 	elif not sub.is_surfaced() and not sub.data.nuclear: # on the battery: easy on it, or she runs flat on the way
 		speed = mini(speed, 1 if sub.battery < 0.25 else 2)
+	if site and d < 400.0:
+		speed = 1
 	if site and d < 2000.0:
 		depth = clampf(maxf(float(wp.depth) - SITE_LOOK - sub.data.height, sub.data.periscope_depth), 0.0, minf(sub.data.test_depth - 5.0, float(wp.depth) - sub.data.height - 4.0))
 	return {"course": course, "speed": speed, "depth": depth, "range": d}
@@ -985,8 +990,8 @@ func _step_waypoint() -> void:
 		return
 	var want := waypoint_wants(w, wp)
 	var bots: Dictionary = game.crew.get("bots", {})
-	if float(want.range) < ARRIVE:
-		var site := float(wp.depth) > 0.0
+	var site := float(wp.depth) > 0.0
+	if float(want.range) < (SITE_ARRIVE if site else ARRIVE):
 		game.crew.erase("waypoint")
 		game.crew.erase("wants")
 		game.crew.orders = ""

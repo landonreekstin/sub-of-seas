@@ -558,7 +558,7 @@ func _nav_room(c: Dictionary, chair := true) -> void:
 	Build.sphere(_at, 0.05, Vector3(0, 0.05, hz), Color("#4FC3FF"), 2.0)
 	# Stood out from the wall so its screens are in front of the pipe runs (Blaney: "there are
 	# pipes in the way of the tv screen").
-	_add_station(CameraStation.new().setup("cameras", "Outside cameras"), Vector3(-HALF_WIDTH + 1.32, 0, c.z0 + 1.2), PI / 2.0)
+	_add_station(CameraStation.new().setup("cameras", "Outside cameras"), Vector3(-HALF_WIDTH + 1.32, 0, c.z0 + 1.8), PI / 2.0) # aft enough that the open door (1 m) hides no screen
 	if chair:
 		var at := Vector3(-1.05, 0, c.z1 - 0.75)
 		var cap := CaptainStation.new().setup("captain", "Captain's chair") as CaptainStation

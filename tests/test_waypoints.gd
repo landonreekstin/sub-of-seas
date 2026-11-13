@@ -71,6 +71,27 @@ func test_she_steers_round_an_island_to_the_waypoint() -> bool:
 	return true
 
 
+## To a sea-floor place she goes all the way, to stop right over it (Blaney: "very close to it
+## so that you can see what's going on from the outside cameras").
+func test_she_stops_right_over_a_site() -> bool:
+	var w := _world()
+	var wp := {"name": "the wreck", "x": 300.0, "y": 2500.0, "depth": 60.0}
+	w.sub.heading = 0.0
+	var arrived := false
+	for i in 8000:
+		var want := BotCrew.waypoint_wants(w, wp)
+		if float(want.range) < BotCrew.SITE_ARRIVE:
+			arrived = true
+			break
+		var err := wrapf(float(want.course) - w.sub.heading, -180.0, 180.0)
+		w.sub.rudder = 0 if absf(err) < 1.5 else clampi(int(signf(err)) * maxi(1, roundi(absf(err) / 8.0)), -3, 3)
+		w.sub.telegraph = int(want.speed)
+		w.sub.battery = 1.0
+		w.step(0.25)
+	runner.check(arrived, "she gets within %d m of it (%.0f m off)" % [roundi(BotCrew.SITE_ARRIVE), Vector2(wp.x, wp.y).distance_to(w.sub.pos)])
+	return true
+
+
 ## Over a sea-floor site, the planes take her down to just above it.
 func test_down_to_look_at_a_site() -> bool:
 	var w := _world()
