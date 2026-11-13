@@ -1045,7 +1045,7 @@ func _sounds(sub: SubState, delta: float) -> void:
 	_diesel_sound.volume_db = -80.0 if running == 0 else (-4.0 if running == 2 else -9.0)
 	var on_motors := running == 0 and absf(sub.speed) > 0.1
 	var flank := clampf(absf(sub.speed) / (sub.data.submerged_speed_kn * SubState.KNOT), 0.0, 1.0)
-	_motor_sound.volume_db = linear_to_db(lerpf(0.12, 1.0, flank * flank)) - 10.0 if on_motors else -80.0
+	_motor_sound.volume_db = linear_to_db(lerpf(0.3, 1.0, flank * flank)) - 10.0 if on_motors else -80.0
 	_motor_sound.pitch_scale = 0.85 + 0.3 * flank
 	# Rain drumming on the casing and the bridge, heard through the boat near the surface.
 	var shallow := clampf((sub.data.periscope_depth + 4.0 - sub.depth) / (sub.data.periscope_depth + 4.0 - SubState.AWASH_DEPTH), 0.0, 1.0)
@@ -1053,7 +1053,7 @@ func _sounds(sub: SubState, delta: float) -> void:
 	_rain_sound.volume_db = linear_to_db(maxf(rain, 0.0001)) - 2.0
 	_rain_sound.stream_paused = rain <= 0.01
 	if sub.vents_open and not _vents_were:
-		Sfx.play("klaxon")
+		Sfx.play("klaxon", -5.0)
 	_vents_were = sub.vents_open
 	_deep(sub, delta, 0.8)
 
@@ -1087,7 +1087,7 @@ func _deep(sub: SubState, delta: float, pitch: float) -> void:
 			var at := Vector3(c.get("x", 0.0) + randf_range(-1.8, 1.8), c.get("y", 0.0) + 2.0, randf_range(c.z0, c.z1))
 			Sfx.play_at(self, "creak_%d" % randi_range(1, 5), at, lerpf(-14.0, 2.0, clampf(deep - 0.3, 0.0, 1.0)), randf_range(pitch, pitch + 0.3))
 			if deep > 0.85 and randf() < clampf((deep - 0.85) * 3.0, 0.15, 0.8): # a frame takes the strain: bang
-				Sfx.play_at(self, "creak_%d" % randi_range(1, 5), at, 6.0, pitch * 0.55)
+				Sfx.play_at(self, "creak_%d" % randi_range(1, 5), at, Sfx.CAP_DB, pitch * 0.55)
 				var me := Game.instance.local_player
 				if me != null:
 					me.trauma = maxf(me.trauma, 0.25 + 0.2 * clampf(deep - 1.0, 0.0, 1.0))
@@ -1126,10 +1126,10 @@ func _typhoon_sounds(sub: SubState, delta: float) -> void:
 	if _motor_sound == null:
 		return
 	var flank := clampf(absf(sub.speed) / (sub.data.submerged_speed_kn * SubState.KNOT), 0.0, 1.0)
-	_motor_sound.volume_db = linear_to_db(lerpf(0.12, 1.0, flank * flank)) - 10.0
+	_motor_sound.volume_db = linear_to_db(lerpf(0.3, 1.0, flank * flank)) - 10.0
 	_motor_sound.pitch_scale = 0.7 + 0.25 * flank
 	if sub.vents_open and not _vents_were:
-		Sfx.play("klaxon", 0.0, 0.8)
+		Sfx.play("klaxon", -5.0, 0.8)
 	_vents_were = sub.vents_open
 	_deep(sub, delta, 0.6)
 
@@ -1202,7 +1202,7 @@ func _muffle(delta: float) -> void:
 		if not shut.is_empty() and not Deck.is_out(p.global_position):
 			doors_between = int(shut.get(Sim.world.hull.comp_at_pos(p.global_position), 0))
 		p.bus = Sfx.MUFFLED if doors_between > 0 else &"Effects"
-		p.max_db = 3.0 if doors_between == 0 else -12.0 - 8.0 * (doors_between - 1)
+		p.max_db = Sfx.CAP_DB if doors_between == 0 else -12.0 - 8.0 * (doors_between - 1)
 
 
 ## Apply host crew state: doors.

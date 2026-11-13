@@ -267,6 +267,16 @@ and update "Current style" in the same commit.
   **Shut doors keep the noise in** (Blaney): a sound from beyond a shut watertight door comes
   through dull (low-passed) and much quieter, quieter again for each more door; open doors and
   hatches let it straight through. Crew voices are not muffled.
+  **The mix** (Blaney's sound pass, 2026-11-13: "be critical of all the sounds ... balanced
+  properly"; the levels are mine to judge): nothing is louder than +3 dB at a call
+  (`Sfx.CAP_DB`; louder would be cut silently), the klaxon sits 5 dB under the rest (it is the
+  loudest recording), every sound at a place fades out to nothing 15 unit sizes off
+  (`Sfx.REACH`: a lever in the bow isn't heard in the stern), a gentle compressor on the
+  effects and a limiter on everything so a depth-charge pattern never clips, the oldest flat
+  one-shot gives way when 32 play at once (never an alarm), a roar that passes (`Sfx.play_for`)
+  fades out instead of looping forever. Quiet things made audible: the motors at slow, the
+  air-bleed hiss, the wheels, the pencil, the galley, the sea out on deck, the second footstep
+  (it was 7 dB under the other two). New sounds are made to these levels.
 - **Handling** (Blaney): livelier than the real boat but still heavy and submarine-like, not a
   rocket ship. Speed changes are twice as quick, turns 1.6× and dives 1.5× (a Gato: 0 to 9 kn
   in about 15 s, a full circle in about 75 s, periscope depth to 45 m in about 28 s).
@@ -606,3 +616,4 @@ and update "Current style" in the same commit.
 | 2026-11-13 | Blaney | "Im not sure that the giant enemy creatures work quite yet so check on that." (Asked: ones called on the PA come up to any boat; wild ones stay deep.) |
 | 2026-11-13 | Blaney | "The giant hologram doesnt really give any perspective toward where the sub is relative to the different locations ... should be more detailed and clear and not difficult to see or understand. Detailed images of the monsters should also show up and a close up view of around the ship should be an option to toggle." |
 | 2026-11-13 | Blaney | (After playing the dark sea, sea life, cameras, monsters, hologram and dim boat: "looks great, i just need you to optimize it, we gotta save some frames".) |
+| 2026-11-13 | Blaney | "Be critical of all the sounds in the game and make sure they are balanced properly." Anything in particular? "Nothing specific, you judge." |

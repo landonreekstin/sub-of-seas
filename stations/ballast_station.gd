@@ -52,7 +52,7 @@ func _process(delta: float) -> void:
 	if sound_on_change("vents", sub.vents_open, "lever") and sub.vents_open:
 		Sfx.play_at(self, "vent_rush", Vector3(0, 2.0, 0), 2.0)
 	sound_on_change("blow", sub.blowing, "lever")
-	sound_while("blow", "blow_loop", [0.0, 0.6, 1.0][clampi(sub.blowing, 0, 2)], Vector3(0, 1.8, 0), 4.0)
+	sound_while("blow", "blow_loop", [0.0, 0.6, 1.0][clampi(sub.blowing, 0, 2)], Vector3(0, 1.8, 0), Sfx.CAP_DB)
 	if sub.blowing > 0:
 		_blow_wheel.rotate_object_local(Vector3.FORWARD, delta * (8.0 if sub.blowing == 2 else 3.0))
 	if overlay != null:

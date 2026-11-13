@@ -99,7 +99,7 @@ func _throw() -> void:
 	Build.cyl(dart, 0.004, 0.09, Vector3(0, 0, 0.045), Color("#C9C9C9"), Vector3.BACK)
 	Build.box(dart, Vector3(0.03, 0.03, 0.002), Vector3(0, 0, 0.09), Color("#C93A2E"), false)
 	_stuck.append(dart)
-	Sfx.play_at(_board, "click", Vector3(hit.x, hit.y, 0.0), 6.0, 0.6)
+	Sfx.play_at(_board, "click", Vector3(hit.x, hit.y, 0.0), Sfx.CAP_DB, 0.6)
 	if _darts.size() == 3:
 		var total := 0
 		for d in _darts:
