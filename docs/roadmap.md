@@ -249,6 +249,10 @@ Added by Blaney after playing. In his words where it matters.
       *(Done, PR #44, Blaney played it: "very nice": N at the chart table where the pencil points, N in the captain's chair for the next place, or "take us to the wreck" / "list places" on the PA.)*
 - [x] things to go to and explore on the ocean floor: shipwrecks, ruins, glowing vents and gardens, alien civilizations
       *(Done, PR #44, Blaney played it: "very nice": a wreck, a drowned temple, black smokers, a glowing garden and a crystal city in every patrol, each with its event the first time you get there.)*
+- [ ] hey lets make this seafloor more interesting and the ocean feel more alive. also the way fog works in this game from a distance kind of reveals things before they should be revealed as the ocean is very dark. make the ocean realistically dark and less dark if you get close enough to shore. also when the crew takes you to a certain location make sure that the crew takes you very close to it so that you can see what's going on from the outside cameras. there should also be more outside cameras from a variety of angles but laid out in an intuitive way. if you click on the screen it should show what part of the sub that particular video screen is on
+- [ ] make more creaking noises as the sub decends, dimming the lights and making more things dark in the subs would be a good add, its too happy and bright. i dont think thats the theme im looking for. i like hunt for the red october and the sub warfare scenes with the torpedos and stuff
+- [ ] im not sure that the giant enemy creatures work quite yet so check on that
+- [ ] the giant hologram doesnt really give any perspective toward where the sub is relative to the different locations, that needs fixed, the hologram also is poorly designed and should be more detailed and clear and not difficult to see or understand. detailed images of the monsters should also show up and a close up view of around the ship should be an option to toggle
 
 ## M9 — Lando's list (2026-10-30)
 Added by lando. Direction: **more arcadey, not strict realism**. Every existing mechanic
