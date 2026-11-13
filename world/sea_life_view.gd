@@ -69,12 +69,12 @@ func _ready() -> void:
 		add_child(t)
 		_turtles.append(t)
 	# Marine snow: lit (it glints in the floodlights, unseen in the dark beyond); plankton glows.
-	_snow = _drift(1400, 0.05, Color(0.85, 0.9, 0.9), false, 22.0)
-	_plankton = _drift(500, 0.07, Color(0.45, 1.0, 0.95), true, 8.0)
+	_snow = _drift(700, 0.06, Color(0.85, 0.9, 0.9), false, 22.0)
+	_plankton = _drift(250, 0.08, Color(0.45, 1.0, 0.95), true, 8.0)
 
 
 const JELLIES := 6
-const DRIFT_BOX := Vector3(70.0, 36.0, 70.0) ## m round the boat the specks fill
+const DRIFT_BOX := Vector3(50.0, 26.0, 50.0) ## m round the boat the specks fill
 
 
 ## Specks drifting slowly down in a box round the boat, left behind in the water as she moves.

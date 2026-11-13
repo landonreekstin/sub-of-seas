@@ -89,8 +89,8 @@ func _ready() -> void:
 	_ocean_near = MeshInstance3D.new()
 	var near := PlaneMesh.new()
 	near.size = Vector2(NEAR_OCEAN_SIZE, NEAR_OCEAN_SIZE)
-	near.subdivide_width = 400
-	near.subdivide_depth = 400
+	near.subdivide_width = 300 # 13 m cells: the ripples are in the shader; 400 cost every view 140k more triangles (Blaney: save frames)
+	near.subdivide_depth = 300
 	_ocean_near.mesh = near
 	_ocean_near.material_override = mat
 	add_child(_ocean_near)
@@ -169,6 +169,7 @@ func _light_under(sub: SubState) -> void:
 	var day := (0.25 if Sim.world.conditions.night else 1.2) * lerpf(1.0, 0.35, snappedf(_weather.rain_here, 0.05))
 	var dived := sub.depth > sub.data.periscope_depth * 0.5
 	_sun.light_energy = day * (water_light(maxf(sub.depth - 4.0, 0.0), shore, false) if dived else 1.0)
+	_sun.shadow_enabled = not dived # down there the sun is too dim to cast them: a shadow pass saved in every view
 	if _floods.is_empty() and _own != null:
 		var d := ShipModels.own_dims(sub.data)
 		for f: Array in [[Vector3(0, float(d.deck) - 0.5, -float(d.length) * 0.5 + 2.0), Vector3(0, -0.35, -1)], # bow, ahead and a little down

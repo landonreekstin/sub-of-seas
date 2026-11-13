@@ -4,7 +4,26 @@ Where things stand, in plain English. The newest entry goes at the top. Update i
 Other docs: `roadmap.md` is the to-do list, `style.md` how it looks and feels, `design.md` the
 game's design, `credits.md` where every sound came from.
 
-## 2026-11-13 (latest): dark sea, sea life, cameras, monsters, hologram, dim boat (branch `blaney/dark-sea-and-hologram`, draft #45 on #44)
+## 2026-11-13 (latest, 2): saving frames (branch `blaney/save-frames`, on #45)
+
+Blaney: "looks great, i just need you to optimize it, we gotta save some frames". Measured with
+`--perf` under xvfb (fps there means nothing, software rendering; triangles and draws do):
+- the camera wall by a reef: 4.0M triangles a frame before, 1.2M after; the captain's chair with
+  the hologram up: 3.5M before, 0.33M after (the cameras no longer run there). Script time headless
+  ~5 ms either way.
+- [done] `TerrainView`: under-water features, sites and coral not drawn past `UNDER_SEEN` (700 m
+  past their edge); islands and their jungle coarse past `ISLAND_FINE` (2.5 km past the edge:
+  cells/4 ground, one blob a tree, no trunks), boulders to 2.5 km. The cave's ridge is above water,
+  so it is left alone. `test_terrain_far_off_is_coarse_without_gaps`.
+- [done] ocean near plane 300x300 (was 400); the sun casts no shadows dived.
+- [done] `CameraStation`: live only manned or looked at (`_looked_at`, within 50°); one view a
+  frame (the big screen every other frame).
+- [done] `HoloView`: the floor is built north-up and turned with her heading (rebuilt only after
+  1.5 cells of travel); rings built once per range; monsters repainted only on change.
+- [done] `SeaFloorLife`: one kind of one tile a frame (`_pending`); marine snow 700, plankton 250.
+- [next] Blaney plays it; then the sound pass, then rafts to the beaches.
+
+## 2026-11-13 (1): dark sea, sea life, cameras, monsters, hologram, dim boat (branch `blaney/dark-sea-and-hologram`, draft #45 on #44)
 
 Blaney's four new M8 items (his calls: style log, last six rows). Next after this: he asked for a
 critical pass over every sound in the game and their balance (its own branch and PR).

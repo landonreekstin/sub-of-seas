@@ -29,6 +29,7 @@ var _meshes := {}
 var _mats := {}
 var built := 0 ## tiles built so far (tests)
 var _version := -1
+var _pending: Array = [] ## [tile, kind]: what's left to build, one a frame (no hitch when she moves on)
 
 
 func _ready() -> void:
@@ -69,6 +70,11 @@ func sync(sub_pos: Vector2, seabed: Seabed) -> void:
 		if absi(t.x - here.x) > KEEP + 1 or absi(t.y - here.y) > KEEP + 1: # a tile of slack, so she can wander on an edge
 			_tiles[t].queue_free()
 			_tiles.erase(t)
+	while not _pending.is_empty():
+		var job: Array = _pending.pop_front()
+		if _tiles.has(job[0]) and is_instance_valid(_tiles[job[0]]):
+			_build_kind(_tiles[job[0]], job[0], job[1], seabed)
+			return
 	for r in KEEP + 1:
 		for dx in range(-r, r + 1):
 			for dy in range(-r, r + 1):
@@ -76,8 +82,16 @@ func sync(sub_pos: Vector2, seabed: Seabed) -> void:
 					continue
 				var t := here + Vector2i(dx, dy)
 				if not _tiles.has(t):
-					_tiles[t] = _build(t, seabed)
+					var node := Node3D.new()
+					add_child(node)
+					_tiles[t] = node
 					built += 1
+					var origin := Vector2(t) * TILE
+					# Open ocean far below anything drawn has nothing.
+					if seabed.floor_depth(origin + Vector2.ONE * TILE * 0.5) > DRAWN + 120.0 and seabed.floor_depth(origin) > DRAWN + 120.0:
+						return
+					for kind: String in KINDS:
+						_pending.append([t, kind])
 					return
 
 
@@ -85,63 +99,58 @@ func clear() -> void:
 	for t: Vector2i in _tiles:
 		_tiles[t].queue_free()
 	_tiles.clear()
+	_pending.clear()
 
 
-func _build(t: Vector2i, seabed: Seabed) -> Node3D:
-	var node := Node3D.new()
-	add_child(node)
+## One kind of thing in tile `t`, as one MultiMesh under `node`.
+func _build_kind(node: Node3D, t: Vector2i, kind: String, seabed: Seabed) -> void:
 	var rng := RandomNumberGenerator.new()
-	rng.seed = hash([t.x, t.y, seabed.version])
+	rng.seed = hash([t.x, t.y, seabed.version, kind])
 	var origin := Vector2(t) * TILE
-	# One look at the floor in the middle: open ocean far below anything drawn has nothing.
-	if seabed.floor_depth(origin + Vector2.ONE * TILE * 0.5) > DRAWN + 120.0 and seabed.floor_depth(origin) > DRAWN + 120.0:
-		return node
-	for kind: String in KINDS:
-		var k: Array = KINDS[kind]
-		var xforms: Array[Transform3D] = []
-		var colours: Array[Color] = []
-		var cols: Array = k[5]
-		for i in int(k[0]):
-			var p := origin + Vector2(rng.randf(), rng.randf()) * TILE
-			var d := seabed.floor_depth(p, true)
-			var s := rng.randf_range(k[3], k[4])
-			var tint := rng.randf_range(-0.06, 0.06)
-			var c: Color = cols[rng.randi() % cols.size()]
-			if d < float(k[1]) or d > float(k[2]) or d < 0.5:
-				continue
-			var b := Basis(Vector3.UP, rng.randf() * TAU)
-			match kind:
-				"rock":
-					b = b.scaled(Vector3(s * rng.randf_range(0.8, 1.4), s * rng.randf_range(0.5, 0.9), s * rng.randf_range(0.8, 1.4)))
-				"kelp": # a tall frond, a little wider than deep so the blades read
-					b = b.scaled(Vector3(s * 0.9, s, s * 0.9))
-				_:
-					b = b.scaled(Vector3.ONE * s)
-			var y := -d - (s * 0.15 if kind == "rock" else 0.05)
-			xforms.append(Transform3D(b, Vector3(p.x, y, -p.y)))
-			colours.append(Color(c.r + tint, c.g + tint, c.b + tint * 0.5))
-			if kind == "kelp" and rng.randf() < 0.7: # kelp grows in stands
-				for j in rng.randi_range(2, 5):
-					var q := p + Vector2(rng.randf_range(-2.5, 2.5), rng.randf_range(-2.5, 2.5))
-					var dq := seabed.floor_depth(q, true)
-					var sq := rng.randf_range(k[3], k[4])
-					xforms.append(Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3(sq * 0.9, sq, sq * 0.9)), Vector3(q.x, -dq - 0.05, -q.y)))
-					colours.append(c.darkened(rng.randf() * 0.15))
-		if xforms.is_empty():
+	var k: Array = KINDS[kind]
+	var xforms: Array[Transform3D] = []
+	var colours: Array[Color] = []
+	var cols: Array = k[5]
+	for i in int(k[0]):
+		var p := origin + Vector2(rng.randf(), rng.randf()) * TILE
+		var d := seabed.floor_depth(p, true)
+		var s := rng.randf_range(k[3], k[4])
+		var tint := rng.randf_range(-0.06, 0.06)
+		var c: Color = cols[rng.randi() % cols.size()]
+		if d < float(k[1]) or d > float(k[2]) or d < 0.5:
 			continue
-		var mm := MultiMesh.new()
-		mm.transform_format = MultiMesh.TRANSFORM_3D
-		mm.use_colors = true
-		mm.mesh = _meshes[kind]
-		mm.instance_count = xforms.size()
-		for i in xforms.size():
-			mm.set_instance_transform(i, xforms[i])
-			mm.set_instance_color(i, colours[i])
-		var mi := MultiMeshInstance3D.new()
-		mi.multimesh = mm
-		mi.material_override = _mats[kind]
-		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		mi.visibility_range_end = SEE + TILE * 0.71 # from the tile's middle: past what any water shows
-		mi.name = kind
-		node.add_child(mi)
-	return node
+		var b := Basis(Vector3.UP, rng.randf() * TAU)
+		match kind:
+			"rock":
+				b = b.scaled(Vector3(s * rng.randf_range(0.8, 1.4), s * rng.randf_range(0.5, 0.9), s * rng.randf_range(0.8, 1.4)))
+			"kelp": # a tall frond, a little wider than deep so the blades read
+				b = b.scaled(Vector3(s * 0.9, s, s * 0.9))
+			_:
+				b = b.scaled(Vector3.ONE * s)
+		var y := -d - (s * 0.15 if kind == "rock" else 0.05)
+		xforms.append(Transform3D(b, Vector3(p.x, y, -p.y)))
+		colours.append(Color(c.r + tint, c.g + tint, c.b + tint * 0.5))
+		if kind == "kelp" and rng.randf() < 0.7: # kelp grows in stands
+			for j in rng.randi_range(2, 5):
+				var q := p + Vector2(rng.randf_range(-2.5, 2.5), rng.randf_range(-2.5, 2.5))
+				var dq := seabed.floor_depth(q, true)
+				var sq := rng.randf_range(k[3], k[4])
+				xforms.append(Transform3D(Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3(sq * 0.9, sq, sq * 0.9)), Vector3(q.x, -dq - 0.05, -q.y)))
+				colours.append(c.darkened(rng.randf() * 0.15))
+	if xforms.is_empty():
+		return
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.use_colors = true
+	mm.mesh = _meshes[kind]
+	mm.instance_count = xforms.size()
+	for i in xforms.size():
+		mm.set_instance_transform(i, xforms[i])
+		mm.set_instance_color(i, colours[i])
+	var mi := MultiMeshInstance3D.new()
+	mi.multimesh = mm
+	mi.material_override = _mats[kind]
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.visibility_range_end = SEE + TILE * 0.71 # from the tile's middle: past what any water shows
+	mi.name = kind
+	node.add_child(mi)

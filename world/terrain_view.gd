@@ -8,6 +8,19 @@ extends Node3D
 
 const DEEPEST_DRAWN := 260.0 ## floor deeper than this is never seen, so isn't built
 const PALMS_PER_ISLAND := 24
+## Saving frames (Blaney: "we gotta save some frames"): what's under water is only ever seen
+## from down there, a few hundred metres at most (ExteriorWorld.see_under), so it isn't drawn
+## from further; an island is drawn coarse and its jungle as one blob a tree from far off.
+const UNDER_SEEN := 700.0 ## m past a feature's edge
+const ISLAND_FINE := 2500.0 ## m past an island's edge it goes coarse
+
+
+## Every mesh under `n` hidden from `dist` metres off.
+static func _hide_past(n: Node, dist: float) -> void:
+	for g in n.find_children("*", "GeometryInstance3D", true, false):
+		(g as GeometryInstance3D).visibility_range_end = dist
+	if n is GeometryInstance3D:
+		(n as GeometryInstance3D).visibility_range_end = dist
 
 var _built_version := -1
 
@@ -25,16 +38,26 @@ func sync(seabed: Seabed) -> void:
 			continue
 		rng.seed = hash([f.x, f.y])
 		if f.kind == "cave":
-			add_child(CaveView.build(f, rng))
+			add_child(CaveView.build(f, rng)) # its ridge stands out of the water: seen from afar
 			continue
 		var site: bool = f.kind == "site"
 		var reach := float(f.r) * float(f.stretch) * (1.25 if f.kind == "island" else (1.2 if site else 1.7))
 		var cells := 110 if f.kind == "island" else 60
 		var mesh := _build(seabed, Vector2(f.x, f.y), reach, cells, rng, INF if site else DEEPEST_DRAWN) # a site is seen however deep
 		if site:
-			add_child(SiteView.build(f, rng))
+			var sv := SiteView.build(f, rng)
+			add_child(sv)
+			_hide_past(sv, reach + UNDER_SEEN) # only ever seen from down there
 		if mesh != null:
 			add_child(mesh)
+			if f.kind == "island" or float(f.top) < 2.0: # out of the water: from far off (the periscope at 10 km) a coarse one does
+				mesh.visibility_range_end = reach + ISLAND_FINE
+				var far := _build(seabed, Vector2(f.x, f.y), reach, cells / 4, rng, DEEPEST_DRAWN)
+				if far != null:
+					far.visibility_range_begin = reach + ISLAND_FINE
+					add_child(far)
+			else: # all under water: never seen from further than the water lets you
+				mesh.visibility_range_end = reach + UNDER_SEEN
 		if f.kind == "island":
 			_palms(seabed, f, rng)
 			_jungle(seabed, f, rng)
@@ -143,6 +166,7 @@ func _coral(seabed: Seabed, f: Dictionary, rng: RandomNumberGenerator) -> void:
 			mat.rim_enabled = true
 			mat.rim = 0.4
 			(m as MeshInstance3D).material_override = mat
+		_hide_past(piece, 350.0) # a reef 2-14 m down: only seen close, from under the water
 		if rng.randf() < 0.12:
 			var bubbles := Build.particles(piece, Color(0.85, 1.0, 1.0, 0.7), 12, 6.0, Vector3.UP, 1.2, 8.0, Vector3(0, 0.4, 0), 0.25)
 			bubbles.position.y = s
@@ -224,17 +248,37 @@ func _jungle(seabed: Seabed, f: Dictionary, rng: RandomNumberGenerator) -> void:
 			colours.append(col.lerp(Color("#6FAE4A"), k * 0.12))
 	if trunks.is_empty():
 		return
-	var trunk_mesh := Build.lathe_mesh([Vector2(0, -0.5), Vector2(1.0, -0.5), Vector2(0.7, 0.5), Vector2(0, 0.5)], 8)
-	add_child(_multi(trunk_mesh, trunks, [], Build.mat(Color("#5A4632"))))
+	var reach := float(f.r) * float(f.stretch)
+	var trunk_mesh := Build.lathe_mesh([Vector2(0, -0.5), Vector2(1.0, -0.5), Vector2(0.7, 0.5), Vector2(0, 0.5)], 6)
+	var t := _multi(trunk_mesh, trunks, [], Build.mat(Color("#5A4632")))
+	t.visibility_range_end = reach + ISLAND_FINE * 0.6 # trunks don't show from far off at all
+	add_child(t)
 	var blob := SphereMesh.new()
 	blob.radius = 1.0
 	blob.height = 2.0
-	blob.radial_segments = 10
-	blob.rings = 6
+	blob.radial_segments = 8
+	blob.rings = 5
 	var leaf := (Build.mat(Color.WHITE) as ShaderMaterial).duplicate() as ShaderMaterial
 	leaf.set_shader_parameter("vertex_color", true)
 	leaf.set_shader_parameter("paint_scale", 0.3)
-	add_child(_multi(blob, blobs, colours, leaf))
+	var near := _multi(blob, blobs, colours, leaf)
+	near.visibility_range_end = reach + ISLAND_FINE
+	add_child(near)
+	# From far off: one bigger, plainer blob a tree.
+	var lump := SphereMesh.new()
+	lump.radius = 1.0
+	lump.height = 1.7
+	lump.radial_segments = 6
+	lump.rings = 3
+	var far_x: Array[Transform3D] = []
+	var far_c: Array[Color] = []
+	for i in trunks.size():
+		var b := blobs[i * 3]
+		far_x.append(Transform3D(b.basis.scaled(Vector3.ONE * 1.35), b.origin))
+		far_c.append(colours[i * 3])
+	var far := _multi(lump, far_x, far_c, leaf)
+	far.visibility_range_begin = reach + ISLAND_FINE
+	add_child(far)
 
 
 func _multi(mesh: Mesh, xforms: Array[Transform3D], colours: Array[Color], material: Material) -> MultiMeshInstance3D:
@@ -275,6 +319,7 @@ func _boulders(seabed: Seabed, f: Dictionary, rng: RandomNumberGenerator) -> voi
 		b.position = _to_3d(p, y + s * 0.2)
 		b.scale = Vector3(s * rng.randf_range(0.8, 1.3), s * rng.randf_range(0.5, 0.8), s * rng.randf_range(0.8, 1.3))
 		b.rotation = Vector3(rng.randf() * 0.4, rng.randf() * TAU, rng.randf() * 0.4)
+		b.visibility_range_end = 2500.0
 		add_child(b)
 		placed += 1
 

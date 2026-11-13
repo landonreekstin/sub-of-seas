@@ -150,3 +150,31 @@ func test_wide_area_and_trenches() -> bool:
 			far = maxf(far, Vector2(f.x, f.y).length())
 	runner.check(far > 15000.0, "features spread well beyond 15 km (%d m)" % roundi(far))
 	return true
+
+
+## Saving frames (Blaney): an island hands over from its fine ground and jungle to the coarse
+## ones far off with no gap (each far piece starts where the near one stops); what's all under
+## water isn't drawn from further than the water shows.
+func test_terrain_far_off_is_coarse_without_gaps() -> bool:
+	var w := _world()
+	w.seabed.features = [_island(3000.0), {"kind": "seamount", "x": -3000.0, "y": 0.0, "r": 600.0, "top": 60.0, "reef": 0.0, "ang": 0.0, "stretch": 1.0, "h": []}]
+	var tv := TerrainView.new()
+	tv.sync(w.seabed)
+	var ends := {}
+	var begins := {}
+	var under := 0
+	for g in tv.find_children("*", "GeometryInstance3D", true, false):
+		var gi := g as GeometryInstance3D
+		if is_equal_approx(gi.visibility_range_end, 600.0 * 1.7 + TerrainView.UNDER_SEEN) and gi.get_parent() == tv:
+			under += 1
+		if gi.get_parent() == tv:
+			if gi.visibility_range_begin > 0.0:
+				begins[snappedf(gi.visibility_range_begin, 1.0)] = begins.get(snappedf(gi.visibility_range_begin, 1.0), 0) + 1
+			elif gi.visibility_range_end > 2000.0:
+				ends[snappedf(gi.visibility_range_end, 1.0)] = ends.get(snappedf(gi.visibility_range_end, 1.0), 0) + 1
+	var handed := begins.keys().all(func(b: float) -> bool: return ends.has(b))
+	runner.check(begins.size() >= 1 and handed, "every coarse piece starts where a fine one stops (begins %s, ends %s)" % [begins, ends])
+	runner.check(int(begins.values().reduce(func(a: int, b: int) -> int: return a + b, 0)) >= 2, "the island's ground and its jungle both have far versions")
+	runner.check(under >= 1, "the seamount isn't drawn from far off (%d)" % under)
+	tv.free()
+	return true

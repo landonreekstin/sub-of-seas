@@ -316,9 +316,14 @@ func _process(delta: float) -> void:
 	# Colder and dimmer the deeper she is.
 	var dread := clampf(sub.depth / maxf(sub.data.test_depth, 50.0), 0.0, 1.0)
 	_rim.material_override = _mat(BLUE.lerp(Color(0.25, 0.35, 0.8, 0.35), dread))
-	if sub.pos.distance_to(_floor_at) > range_m / 30.0 or absf(wrapf(sub.heading - _floor_heading, -180.0, 180.0)) > 4.0 \
-			or w.seabed.version != _floor_version or _floor_range != range_m:
+	# The floor is built north-up round where she was and turned with her heading, so turning
+	# costs nothing; it's only built again once she's moved a cell (Blaney: save frames).
+	if sub.pos.distance_to(_floor_at) > range_m / float(cells) * 1.5 or w.seabed.version != _floor_version or _floor_range != range_m:
 		_build_floor(w, dread)
+	var off := place(_floor_at, 0.0, sub)
+	for n: Node3D in [_floor, _floor_lines]:
+		n.rotation.y = deg_to_rad(sub.heading)
+		n.position = Vector3(off.x, 0.0, off.z)
 	_draw_frame(sub)
 	var at := place(sub.pos, sub.depth, sub)
 	_own.position = at
@@ -386,8 +391,10 @@ func _process(delta: float) -> void:
 			b.position = p
 			b.rotation.y = mark.rotation.y
 			b.visible = not (not seen and fmod(_wobble * 3.0 + i, 3.0) < 0.4)
-			for mi in b.find_children("*", "MeshInstance3D", true, false):
-				(mi as MeshInstance3D).material_override = _mat(col)
+			if b.get_meta("col", Color.BLACK) != col: # repainted only when it changes, not every tick
+				b.set_meta("col", col)
+				for mi in b.find_children("*", "MeshInstance3D", true, false):
+					(mi as MeshInstance3D).material_override = _mat(col)
 			if nearest == null or m.pos.distance_to(sub.pos) < nearest.pos.distance_to(sub.pos):
 				nearest = m
 		mark.material_override = _mat(col)
@@ -447,6 +454,10 @@ func _feature(m: Monster, sub: SubState) -> void:
 ## Range rings on the surface with their distances, the bow line, and the compass round the rim.
 func _draw_frame(sub: SubState) -> void:
 	var step := range_m / 4.0
+	_compass_turn(sub)
+	if _rings.mesh != null and _rings.get_meta("range", 0.0) == range_m:
+		return
+	_rings.set_meta("range", range_m)
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_LINES)
 	for k in range(1, 4):
@@ -464,6 +475,9 @@ func _draw_frame(sub: SubState) -> void:
 		_ring_tags[k].text = (("%d km" if is_equal_approx(d / 1000.0, roundf(d / 1000.0)) else "%.1f km") % (d / 1000.0)) if d >= 1000.0 else ("%d m" % roundi(d))
 		_ring_tags[k].pixel_size = label_size * 0.9
 		_ring_tags[k].position = Vector3(0.7071, 0, 0.7071) * radius * (k + 1) / 4.0 + Vector3(0, 0.02, 0)
+
+
+func _compass_turn(sub: SubState) -> void:
 	var h := deg_to_rad(sub.heading)
 	for k in 4: # N E S W: a true bearing k * 90 drawn heading-up
 		var b := deg_to_rad(k * 90.0) - h
@@ -515,9 +529,8 @@ func _build_floor(w: OceanWorld, dread: float) -> void:
 	_floor_heading = sub.heading
 	_floor_version = w.seabed.version
 	_floor_range = range_m
-	var h := deg_to_rad(sub.heading)
-	var fwd := Vector2(sin(h), cos(h))
-	var right := Vector2(cos(h), -sin(h))
+	var fwd := Vector2(0, 1) # north-up: the node is turned to her heading
+	var right := Vector2(1, 0)
 	var n := cells
 	var pts := []
 	var cols := []

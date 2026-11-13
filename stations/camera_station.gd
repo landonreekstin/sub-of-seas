@@ -255,8 +255,10 @@ static func _looking(from: Vector3, to: Vector3) -> Transform3D:
 
 func _process(_delta: float) -> void:
 	var me := Game.instance.local_player
+	# Saving frames (Blaney): every screen is a view of the whole ocean, so they only run while
+	# someone is at the console or close by looking at it.
 	var live := me != null and Sim.world != null and me.global_position.distance_to(global_position) < NEAR \
-			and not Game.instance.menu_open()
+			and not Game.instance.menu_open() and (me.station == self or _looked_at(me))
 	if live != _live:
 		_live = live
 		for i in _screens.size():
@@ -278,12 +280,24 @@ func _process(_delta: float) -> void:
 		_dims = d
 		_show_big()
 	_frame += 1
-	# Small screens take turns (one a frame), the big one every frame.
-	var turn := _frame % _views.size()
-	_aim(_cams[turn], _envs[turn], _skies[turn], own.global_transform * _mount(CAMS[turn][1], d))
-	_views[turn].render_target_update_mode = SubViewport.UPDATE_ONCE
-	_aim(_big_cam, _big_env, _big_sky, own.global_transform * _mount(CAMS[big][1], d))
-	_big_view.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	# One view a frame: the big screen every other frame, the small ones taking turns between.
+	_big_view.render_target_update_mode = SubViewport.UPDATE_DISABLED
+	if _frame % 2 == 0:
+		_aim(_big_cam, _big_env, _big_sky, own.global_transform * _mount(CAMS[big][1], d))
+		_big_view.render_target_update_mode = SubViewport.UPDATE_ONCE
+	else:
+		var turn := (_frame / 2) % _views.size()
+		_aim(_cams[turn], _envs[turn], _skies[turn], own.global_transform * _mount(CAMS[turn][1], d))
+		_views[turn].render_target_update_mode = SubViewport.UPDATE_ONCE
+
+
+## The local player's eye turned toward the screens (within 50° of them).
+func _looked_at(_me: Node) -> bool:
+	var cam := get_viewport().get_camera_3d()
+	if cam == null:
+		return false
+	var to := (global_transform * Vector3(0, 1.66, PANEL_Z)) - cam.global_position
+	return (-cam.global_basis.z).dot(to.normalized()) > 0.64
 
 
 ## The big screen's title, its red dot on the outline, and the chosen screen's dot and frame lit.
