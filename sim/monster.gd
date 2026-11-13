@@ -7,6 +7,9 @@ extends RefCounted
 ## squeezes, the anglerfish bites, the serpent strikes again and again, the megalodon rams. Then
 ## it backs off into the dark and comes again. Take her up above its depth and it gives up; a
 ## torpedo hurts it, enough of them kill it. Creepy dread, no gore (Blaney).
+## One called up on the PA (`hunting`) comes up to any boat, a WWII boat at periscope depth
+## too (Blaney); only surfacing shakes it off. They always swim faster than the boat, so
+## running away at slow ahead doesn't leave them behind.
 
 const KINDS := {
 	"squid": {"name": "giant squid", "length": 40.0, "hp": 2, "speed": 5.0, "floor": 200.0, "act": "grab"},
@@ -19,6 +22,8 @@ const STALK_RANGE := 260.0 ## m it circles at before it comes in
 const HOLD_TIME := 18.0 ## s the squid holds on
 const SQUEEZE_EVERY := 5.0
 const STRIKES := 3 ## the serpent's strikes in one attack
+const HUNT_FLOOR := 15.0 ## m: how shallow one called up on the PA comes
+const EDGE := 2.0 ## m/s it stalks faster than the boat; attacking, EDGE * 2.5
 
 var id := 0
 var kind := "squid"
@@ -52,7 +57,7 @@ func length() -> float:
 
 ## The shallowest it will come: below this it lives, above it gives up the chase.
 func floor_depth() -> float:
-	return float(info().floor)
+	return HUNT_FLOOR if hunting else float(info().floor)
 
 
 func is_dead() -> bool:
@@ -65,7 +70,7 @@ func think(dt: float, w: OceanWorld) -> void:
 	var rng := w.rng
 	var to_sub := sub.pos - pos
 	var dist := maxf(0.0, Vector3(to_sub.x, sub.depth - depth, to_sub.y).length() - sub.data.length * 0.4)
-	var reachable := sub.depth > floor_depth() - 20.0
+	var reachable := sub.depth > floor_depth() - 20.0 and not (hunting and sub.is_surfaced())
 	_timer -= dt
 	_call -= dt
 	var want_depth := depth
@@ -89,14 +94,14 @@ func think(dt: float, w: OceanWorld) -> void:
 				return
 			var round := Vector2(-to_sub.y, to_sub.x).normalized() * (1.0 if id % 2 == 0 else -1.0)
 			var closing := to_sub.normalized() * (1.0 if dist > STALK_RANGE else -0.3)
-			_course = _bearing(closing + round * 0.8)
+			_course = _bearing(closing + round * (0.8 if dist < STALK_RANGE * 2.0 else 0.25)) # far off it comes straight on
 			want_depth = clampf(sub.depth + 25.0, floor_depth(), 3000.0)
-			want_speed = float(info().speed) * 0.6
+			want_speed = maxf(float(info().speed) * 0.6, absf(sub.speed) + EDGE)
 			if _call <= 0.0:
 				_call = rng.randf_range(12.0, 25.0)
 				_emit(w, "call", {})
 			if _timer <= 0.0 and dist < STALK_RANGE * 1.6:
-				_go("attack", 40.0)
+				_go("attack", 60.0)
 				_emit(w, "charge", {})
 		"attack": # straight in, fast
 			if not reachable:
@@ -104,8 +109,8 @@ func think(dt: float, w: OceanWorld) -> void:
 				return
 			_course = _bearing(to_sub)
 			want_depth = sub.depth
-			want_speed = float(info().speed) * 2.0
-			if dist < length() * 0.25:
+			want_speed = maxf(float(info().speed) * 2.0, absf(sub.speed) + EDGE * 2.5)
+			if dist < maxf(length() * 0.25, 10.0):
 				_strike(w, to_sub)
 			elif _timer <= 0.0:
 				_go("stalk", 20.0)
@@ -124,7 +129,7 @@ func think(dt: float, w: OceanWorld) -> void:
 		"retreat": # off into the dark, then back
 			_course = _bearing(-to_sub)
 			want_depth = sub.depth + 80.0
-			want_speed = float(info().speed)
+			want_speed = maxf(float(info().speed), absf(sub.speed) + EDGE)
 			if _timer <= 0.0:
 				_go("stalk" if reachable else "lurk", rng.randf_range(20.0, 40.0))
 	want_depth = minf(want_depth, maxf(floor_depth(), w.seabed.floor_depth(pos) - 10.0))

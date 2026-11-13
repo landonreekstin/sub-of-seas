@@ -121,6 +121,8 @@ func _ready() -> void:
 			_debug_win.call_deferred()
 		if Net.debug_torpedo:
 			_debug_torpedo.call_deferred()
+		if Net.debug_monster != "":
+			_debug_monster.call_deferred()
 		if Net.debug_breach:
 			_debug_breach.call_deferred()
 		for sid in Net.start_bots:
@@ -478,6 +480,14 @@ func _debug_torpedo() -> void:
 	await get_tree().create_timer(3.0).timeout
 	for gyro in [-6.0, 0.0, 6.0]:
 		Sim.world.fire_torpedo(gyro)
+
+
+## Testing aid (--monster <kind>): one called up close by 3 s in, to watch it come.
+func _debug_monster() -> void:
+	await get_tree().create_timer(3.0).timeout
+	var m := Sim.world.add_monster(Net.debug_monster, 150.0, true)
+	m.depth = Sim.world.sub.depth + 20.0
+	print("debug monster %s at %s, %.0f m" % [m.kind, m.pos, m.depth])
 
 
 # --- Places on the sea floor (host) --------------------------------------------------------
@@ -1019,8 +1029,8 @@ func call_monster(kind: String) -> String:
 		if not m.is_dead() and m.pos.distance_to(w.sub.pos) < 4000.0:
 			return "There's already something out there, Skipper. The %s. Listen." % m.info().name
 	var m := w.add_monster(kind, 900.0, true)
-	if w.sub.depth < m.floor_depth() - 20.0:
-		return "Something's down there, Skipper... a %s, deep. It won't come above %d metres: take her down if you want it." % [m.info().name, roundi(m.floor_depth())]
+	if w.sub.is_surfaced():
+		return "Something's down there, Skipper... a %s, deep. It won't come for us on the surface: take her down if you want it." % m.info().name
 	return "Sonar: something's moving down there, Skipper. Something big. A %s... and it's coming for us." % m.info().name
 
 

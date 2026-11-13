@@ -52,13 +52,53 @@ func test_it_gives_up_when_she_goes_shallow() -> bool:
 	w.event.connect(func(k: String, d: Dictionary) -> void:
 		if k == "monster":
 			acts.append(d.act))
-	var m := w.add_monster("angler", 900.0, true)
+	var m := w.add_monster("angler", 900.0) # a wild one, that heard her
 	_run(w, 5.0)
 	w.sub.depth = 80.0
 	w.sub.ordered_depth = 80.0
 	_run(w, 60.0)
 	runner.check(acts.has("give_up") and m.state == "lurk", "it gave up below its depth: %s %s" % [m.state, str(acts)])
 	runner.check(not acts.has("bite"), "and never reached her")
+	return true
+
+
+## Blaney: "im not sure that the giant enemy creatures work": every one called up on the PA
+## comes up to a WWII boat at periscope-ish depth, catches her running at a few knots, and hurts her.
+func test_a_called_one_reaches_a_wwii_boat() -> bool:
+	for kind: String in Monster.KINDS:
+		var w := OceanWorld.new(preload("res://data/subs/gato.tres"), 7)
+		w.hull.setup(COMPS, {"fwd": [0, 1], "aft": [1, 2]}, {"helm": 1, "dive": 1})
+		w.sub.depth = 60.0
+		w.sub.ordered_depth = 60.0
+		w.sub.ballast = 1.0
+		w.sub.telegraph = 2
+		w.deep_life = false
+		var hits: Array[String] = []
+		w.event.connect(func(k: String, d: Dictionary) -> void:
+			if k == "monster" and d.act in ["grab", "bite", "strike", "ram"]:
+				hits.append(d.act))
+		w.add_monster(kind, 900.0, true)
+		_run(w, 400.0, func() -> bool:
+			w.sub.battery = 1.0
+			return not hits.is_empty())
+		runner.check(not hits.is_empty(), "the %s came up to a Gato at 60 m running at half ahead and got her" % kind)
+	return true
+
+
+## Surfacing is the one way to shake off one that was called up.
+func test_a_called_one_gives_up_when_she_surfaces() -> bool:
+	var w := _world(60.0)
+	var acts: Array[String] = []
+	w.event.connect(func(k: String, d: Dictionary) -> void:
+		if k == "monster":
+			acts.append(d.act))
+	var m := w.add_monster("squid", 900.0, true)
+	_run(w, 5.0)
+	w.sub.depth = 0.0
+	w.sub.ordered_depth = 0.0
+	w.sub.ballast = 0.0
+	_run(w, 10.0)
+	runner.check(acts.has("give_up") and not m.hunting, "it went back down: %s" % str(acts))
 	return true
 
 

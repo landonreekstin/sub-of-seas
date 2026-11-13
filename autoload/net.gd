@@ -35,6 +35,7 @@ var debug_depth := -1.0 ## --depth <m>: the host's patrol starts at this keel de
 var debug_station := "" ## --station <id>: man this station as soon as you are aboard (testing)
 var debug_look := 0.0 ## --look <deg>: turn the spawned player this far right (testing)
 var debug_breach := false ## --test-breach: the host blows emergency a few seconds in (crash surface; start deep)
+var debug_monster := "" ## --monster <kind>: the host calls one up (as "spawn a kraken" on the PA) 3 s in, 150 m off
 var debug_torpedo := false ## --test-torpedo: the host fires a spread of three a few seconds in (tracks)
 var debug_win := false ## --test-win: the host sinks everything a few seconds in (objectives, debrief)
 var debug_voice := false ## --test-voice: this player "talks" a 440 Hz tone the whole time
@@ -90,6 +91,8 @@ func _ready() -> void:
 				debug_win = true
 			"--test-torpedo":
 				debug_torpedo = true
+			"--monster":
+				debug_monster = args[i + 1] if i + 1 < args.size() and not args[i + 1].begins_with("--") else "squid"
 			"--test-breach":
 				debug_breach = true
 			"--bots":
