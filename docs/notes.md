@@ -4,7 +4,22 @@ Where things stand, in plain English. The newest entry goes at the top. Update i
 Other docs: `roadmap.md` is the to-do list, `style.md` how it looks and feels, `design.md` the
 game's design, `credits.md` where every sound came from.
 
-## 2026-11-13 (latest, 2): saving frames (branch `blaney/save-frames`, on #45)
+## 2026-11-13 (latest, 3): sound pass (branch `blaney/sound-balance`, #47 on #46)
+
+- [done] #46 save frames: Blaney played it, "smoother"; ticked, ready.
+- [done] sound pass: `Sfx.CAP_DB` (+3, the muffling's cap; `test_no_call_is_louder_than_the_cap`),
+  `Sfx.REACH` (3D sounds fade out at 15 unit sizes), compressor on Effects + limiter on Master,
+  pool of 32 that steals the oldest non-alarm, `Sfx.play_for` (the vents event's blow_loop
+  played forever through `play`), klaxon -5, implosion/grounding/grab trimmed, motor floor up,
+  re-cut louder in `make_recorded.py`: step_2, pencil, hiss, galley, sea, wheel. Unit tests and
+  the training walkthrough pass. Blaney listened: "sounds good". #47 ready.
+- [next] **Rafts and beaches**, not started (he asked to stop here). His calls are in the style
+  log (2026-11-13 rows). The plan: `sim/raft.gd` on the host in `OceanWorld`; seated view
+  anchored on the raft (generalise `ExteriorWorld.deck_eye`); `game/ashore.gd`, a third frame with
+  a `HeightMapShape3D` from `floor_depth` round the landing beach; the rocket to 112 m/s with
+  skipping on wave crests; tests `test_raft.gd` and `raft_walk.gd`.
+
+## 2026-11-13 (2): saving frames (branch `blaney/save-frames`, on #45)
 
 Blaney: "looks great, i just need you to optimize it, we gotta save some frames". Measured with
 `--perf` under xvfb (fps there means nothing, software rendering; triangles and draws do):

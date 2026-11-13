@@ -259,7 +259,8 @@ Added by Blaney after playing. In his words where it matters.
       *(Done, PR #45, Blaney played it: "looks great": range rings, compass, our boat with a beacon, lines to every place with bearing and range, a shaded sea floor, glowing monster models and the nearest one big, Z close-up from the captain's chair.)*
 - [x] save some frames: optimize (Blaney after playing PR #45: "looks great, i just need you to optimize it, we gotta save some frames")
       *(Done, PR #46: far islands drawn coarse, under-water ground not drawn from afar, the cameras run only when looked at, the hologram turns instead of rebuilding: the camera wall draws 4.0M triangles a frame down to 1.2M, the captain's chair 3.5M down to 0.33M. Blaney played it: "smoother".)*
-- [ ] be critical of all the sounds in the game and make sure they are balanced properly
+- [x] be critical of all the sounds in the game and make sure they are balanced properly
+      *(Done, PR #47: one loudness cap for every sound, sounds fade out with distance instead of being faintly heard all through the boat, a compressor and limiter so a depth-charge attack never distorts, the klaxon brought down, quiet ones (motors at slow, air hiss, wheels, pencil, galley, sea on deck, one footstep) made audible, and a roar at the black smokers that never stopped now fades. Blaney listened: "sounds good".)*
 - [ ] we should add some basic ability for people to get to land on inflatable rafts, there should be walkable beaches on land
 
 ## M9 — Lando's list (2026-10-30)
