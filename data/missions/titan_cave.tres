@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="MissionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/mission_data.gd" id="1_m"]
+
+[resource]
+script = ExtResource("1_m")
+key = "titan_cave"
+era = "modern"
+title = "The Cave"
+briefing = "A cave runs right through the rock ridge ahead, out of sight under the water: a tight S-bend, its roof rising and dipping, its floor coming up in places. Take her through and out the far end, as fast as you can. She's small but slow, and the pilot can't see the walls: the crew at the viewport have to talk him through. Every scrape counts against you."
+difficulty = 2
+start_heading = 0.0
+start_depth = 30.0
+start_speed = 0
+battery = 1.0
+groups = Array[Dictionary]([])
+objectives = Array[Dictionary]([{"kind": "cave", "text": "Through the cave and out the other end"}])
+sea_state = 0
+squalls = 0
+cave = true

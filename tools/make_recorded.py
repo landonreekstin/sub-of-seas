@@ -77,6 +77,11 @@ SOUNDS = {
     "creak_1": {"src": 59160, "start": 1.9, "len": 2.5, "fade_in": 0.2, "fade": 0.7, "lp": 3000, "rms": -18.6},
     "creak_2": {"src": 59160, "start": 16.5, "len": 2.5, "fade_in": 0.2, "fade": 0.7, "lp": 3000, "rms": -18.4},
     "creak_3": {"src": 59160, "start": 56.5, "len": 2.5, "fade_in": 0.2, "fade": 0.7, "lp": 3000, "rms": -19.0},
+    # More of them for the way down (Blaney: "more creaking noises as the sub descends"); the
+    # last one slowed to half speed, a long low groan of the whole hull taking the pressure.
+    "creak_4": {"src": 59160, "start": 77.0, "len": 2.5, "fade_in": 0.2, "fade": 0.7, "lp": 3000, "rms": -19.0},
+    "creak_5": {"src": 59160, "start": 9.5, "len": 2.5, "fade_in": 0.2, "fade": 0.7, "lp": 3000, "rms": -19.0},
+    "creak_6": {"src": 59160, "start": 86.0, "len": 4.0, "fade_in": 0.4, "fade": 1.2, "lp": 1600, "rate": 0.5, "rms": -19.0},
     "alarm": {"src": 678345, "start": 0.0, "len": 1.4, "fade": 0.3, "lp": 7000, "rms": -14.0},
     "telegraph_ding": {"src": 353232, "start": 0.25, "len": 1.8, "fade": 0.6, "rms": -13.0},
     "diesel_loop": {"src": 264864, "start": 1.5, "len": 8.0, "loop": 0.5, "lp": 4000, "rms": -13.3},
@@ -103,6 +108,7 @@ SOUNDS = {
     "tool": {"src": 835169, "start": 0.55, "len": 0.45, "fade": 0.12, "rms": -22.6},
     "sea_loop": {"src": 504641, "start": 8.0, "len": 8.0, "loop": 1.0, "hp": 60, "lp": 2500, "rms": -32.9},
     "rain_loop": {"src": 521773, "start": 76.0, "len": 6.0, "loop": 0.6, "rms": -25.3},
+    "galley_loop": {"src": 521773, "start": 30.0, "len": 5.0, "loop": 0.5, "hp": 1800, "rms": -26.0},  # rain on tin, high only: a pan frying
     "whale_loop": {"src": 171945, "start": 0.0, "len": 15.0, "loop": 1.0, "rms": -17.6},
     "sonar_ping": {"src": 12677, "start": 0.0, "len": 1.9, "fade": 0.4, "rms": -8.4},
     "deck_gun": {"src": 187767, "start": 0.15, "len": 3.0, "fade": 1.2, "rms": -12.5},

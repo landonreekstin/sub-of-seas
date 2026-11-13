@@ -29,9 +29,13 @@ var _sky: ToonSky
 var _sun: DirectionalLight3D
 var _look := "" ## the conditions last applied to the sky, sun and sea
 var _terrain: TerrainView
+var _floor_life: SeaFloorLife
 var _life: SeaLifeView
 var _weather: WeatherView
 var _under := false ## the eye is under the surface (the sky shows the water's light instead)
+var _floods: Array[SpotLight3D] = [] ## our boat's floodlights, on while she's dived
+static var shore := 0.0 ## 0 open ocean .. 1 shallow water by an island: the light the sea lets down near the boat (paint_water)
+static var _shore_at := Vector2(INF, INF)
 
 
 static func to_3d(p: Vector2, y := 0.0) -> Vector3:
@@ -100,6 +104,8 @@ func _ready() -> void:
 
 	_terrain = TerrainView.new()
 	add_child(_terrain)
+	_floor_life = SeaFloorLife.new()
+	add_child(_floor_life)
 	_life = SeaLifeView.new()
 	add_child(_life)
 	_weather = WeatherView.new()
@@ -139,6 +145,7 @@ func _process(delta: float) -> void:
 	_ocean_near.position = snap
 	_ocean_far.position = Vector3(snap.x, -0.3, snap.z)
 	_terrain.sync(Sim.world.seabed)
+	_floor_life.sync(sub.pos, Sim.world.seabed)
 	_life.sync(delta)
 	_sync_ships()
 	_sync_torpedoes()
@@ -147,10 +154,39 @@ func _process(delta: float) -> void:
 	_weather.sync(Sim.world.conditions, camera.position)
 	_feed_squalls(Sim.world.conditions)
 	_apply_conditions(Sim.world.conditions)
+	_update_shore(sub, delta)
+	_light_under(sub)
 	if eye_mode == "deck":
 		_underwater(maxf(-camera.position.y, 0.01) if camera.position.y < 0.0 else 0.0)
 	else:
 		_underwater(maxf(-camera.position.y, 0.01) if h <= 0.0 and eye_mode != "gun" else 0.0)
+
+
+## The sun is one light for the whole ocean, and every eye under water is round our boat: it
+## dims with her depth so what's down there is lit no brighter than the water lets it be.
+## Her floodlights come on once she's dived.
+func _light_under(sub: SubState) -> void:
+	var day := (0.25 if Sim.world.conditions.night else 1.2) * lerpf(1.0, 0.35, snappedf(_weather.rain_here, 0.05))
+	var dived := sub.depth > sub.data.periscope_depth * 0.5
+	_sun.light_energy = day * (water_light(maxf(sub.depth - 4.0, 0.0), shore, false) if dived else 1.0)
+	if _floods.is_empty() and _own != null:
+		var d := ShipModels.own_dims(sub.data)
+		for f: Array in [[Vector3(0, float(d.deck) - 0.5, -float(d.length) * 0.5 + 2.0), Vector3(0, -0.35, -1)], # bow, ahead and a little down
+				[Vector3(0, -3.0, -float(d.length) * 0.15), Vector3(0, -1, -0.25)]]: # under the keel, down on the floor
+			var l := SpotLight3D.new()
+			l.light_color = Color("#E8F4FF")
+			l.light_energy = 6.0
+			l.spot_range = 70.0
+			l.spot_angle = 32.0
+			l.spot_attenuation = 1.2
+			l.shadow_enabled = false
+			l.position = f[0]
+			var aim := (f[1] as Vector3).normalized()
+			l.basis = Basis.looking_at(aim, Vector3.UP if absf(aim.y) < 0.9 else Vector3.FORWARD)
+			_own.add_child(l)
+			_floods.append(l)
+	for l in _floods:
+		l.visible = dived
 
 
 ## Puts everything drawn under `n` on our own boat's render layer.
@@ -302,9 +338,9 @@ func _apply_conditions(c: Conditions) -> void:
 	_sky.clouds = lerpf([0.3, 0.5, 0.8][c.sea_state], 1.0, rain) # calm and clear .. rough and overcast
 	_sun.light_energy = (0.25 if c.night else 1.2) * lerpf(1.0, 0.35, rain)
 	_sun.light_color = Color("#9DB4D8") if c.night else Color.WHITE
-	_env.ambient_light_color = Color("#2A3A55") if c.night else Color("#8FA8BF").lerp(Color("#8A939B"), rain)
-	_env.ambient_light_energy = 0.35 if c.night else 0.55
 	if not _under:
+		_env.ambient_light_color = Color("#2A3A55") if c.night else Color("#8FA8BF").lerp(Color("#8A939B"), rain)
+		_env.ambient_light_energy = 0.35 if c.night else 0.55
 		_env.fog_light_color = _sky.sky_horizon_color
 		_env.fog_density = lerpf(0.00002, 0.0011, rain)
 		_env.fog_sky_affect = rain * 0.9 # the horizon closes in grey
@@ -315,9 +351,10 @@ func _apply_conditions(c: Conditions) -> void:
 	m.set_shader_parameter("crest_color", Color(0.05, 0.16, 0.2) if c.night else Color(0.25, 0.85, 0.80))
 
 
-## Under the surface: clear, well-lit turquoise water like Sea of Thieves (lando), bright from
-## above and deeper blue below, darkening slowly with depth and at night. The sky's colours
-## become the water's light; `depth` is the eye's depth in metres (0 = above water).
+## Under the surface: realistically dark (Blaney: "the ocean is very dark", things shouldn't show
+## through the fog before they should): a few tens of metres of murky blue in open water, black
+## deeper; shallow water by an island (`shore`) lets the light down, clear turquoise again.
+## `depth` is the eye's depth in metres (0 = above water).
 func _underwater(depth: float) -> void:
 	if depth <= 0.0:
 		if _under:
@@ -326,9 +363,39 @@ func _underwater(depth: float) -> void:
 			_env.fog_density = 0.00002
 			_env.fog_sky_affect = 0.0
 			_apply_conditions(Sim.world.conditions)
+			camera.far = 30000.0
 		return
 	_under = true
 	paint_water(_env, _sky, depth, Sim.world.conditions.night)
+	camera.far = see_under(depth)
+
+
+## How far an eye `depth` m down can see anything at all: past this the fog is solid, so
+## nothing further is drawn (saves the cameras drawing what can't be seen).
+static func see_under(depth: float) -> float:
+	return clampf(5.0 / water_fog(depth, shore), 60.0, 400.0)
+
+
+## The water's fog density at `depth`: thick in open water, thinner by a shore, thicker deeper.
+static func water_fog(depth: float, by_shore: float) -> float:
+	var open := 0.05 + 0.03 * clampf((depth - 40.0) / 200.0, 0.0, 1.0) # gone in ~60 m, ~40 m deep down
+	return lerpf(open, 0.022, by_shore) # ~150 m of clear shallow water
+
+
+## How much light reaches `depth` m (1 at the surface): fast in open water, slow by a shore.
+static func water_light(depth: float, by_shore: float, night: bool) -> float:
+	var l := exp(-depth / lerpf(28.0, 70.0, by_shore))
+	return l * (0.18 if night else 1.0)
+
+
+## Host or client: how shallow the water is round the boat (0 open .. 1 a shallow shelf),
+## eased so the light changes smoothly as she comes in to an island.
+func _update_shore(sub: SubState, delta: float) -> void:
+	if sub.pos.distance_to(_shore_at) > 25.0:
+		_shore_at = sub.pos
+		var f := Sim.world.seabed.floor_depth(sub.pos)
+		set_meta("shore_want", clampf((90.0 - f) / 60.0, 0.0, 1.0)) # under 30 m of water: full shallows; 90 m+: open ocean
+	shore = move_toward(shore, float(get_meta("shore_want", 0.0)), delta * 0.25)
 
 
 func environment() -> Environment:
@@ -336,19 +403,26 @@ func environment() -> Environment:
 
 
 ## Sets `env` and its `sky` up for an eye `depth` metres under the surface (the periscope's,
-## or a porthole's own environment).
+## a camera's or a porthole's own environment). The ambient light falls with the light let
+## down, so an unlit thing out in the fog is as dark as the water round it and stays hidden;
+## our floodlights and anything glowing still show.
 static func paint_water(env: Environment, sky: ToonSky, depth: float, night: bool) -> void:
-	var dark := clampf(clampf(depth / 150.0, 0.0, 0.7) + (0.55 if night else 0.0), 0.0, 0.9)
-	var mid := Color("#2FB3C4").lerp(Color("#04182A"), dark)
-	sky.sky_top_color = Color("#B4F2F2").lerp(Color("#0A2A40"), dark)
+	var light := water_light(depth, shore, night)
+	var lit := Color("#2FB3C4").lerp(Color("#0E5A72"), 1.0 - shore) # shallows turquoise, open sea a deep blue
+	var mid := Color("#01060B").lerp(lit, clampf(light * 1.15, 0.0, 1.0))
+	sky.sky_top_color = Color("#020A12").lerp(Color("#B4F2F2").lerp(Color("#4FA9C4"), 1.0 - shore), light)
 	sky.sky_horizon_color = mid
 	sky.ground_horizon_color = mid
-	sky.ground_bottom_color = Color("#0D5878").lerp(Color("#020A14"), dark)
+	sky.ground_bottom_color = mid # below the horizon the fog and the water are one colour: nothing stands out against it
 	sky.clouds = 0.0
 	env.fog_enabled = true
 	env.fog_light_color = mid
-	env.fog_density = 0.016
+	env.fog_light_energy = 1.0
+	env.fog_density = water_fog(depth, shore)
 	env.fog_sky_affect = 0.0
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.ambient_light_color = mid.lerp(Color("#5E8FA8"), 0.35)
+	env.ambient_light_energy = lerpf(0.04, 0.55, light)
 
 
 func _sync_planes() -> void:

@@ -203,7 +203,7 @@ class BridgeHatch extends Node3D:
 	func get_prompt(_player: Player) -> String:
 		if not Deck.can_go_out():
 			return "Bridge hatch — shut while she's dived"
-		return "[E] Climb out on deck"
+		return "[E] Climb out on deck" if Diving.water_y() <= 0.0 else "[E] Climb out into the sea (in a dive suit)"
 
 	func interact(player: Player) -> void:
 		if Deck.can_go_out():

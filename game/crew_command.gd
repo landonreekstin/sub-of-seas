@@ -12,8 +12,31 @@ const TARGETS := {"freighter": "freighter", "freighters": "freighter", "cargo": 
 	"tanker": "tanker", "oiler": "tanker", "carrier": "carrier", "flattop": "carrier", "battleship": "battleship", "cruiser": "cruiser",
 	"destroyer": "destroyer", "tincan": "destroyer", "escort": "escort", "frigate": "frigate", "kaibokan": "kaibokan", "chaser": "subchaser", "subchaser": "subchaser",
 	"sub": "sub", "submarine": "sub", "boat": "sub"}
+## Words for the things in the depths (Monster.KINDS); "" is any of them.
+const MONSTERS := {"monster": "", "monsters": "", "creature": "", "beast": "", "leviathan": "", "kraken": "squid", "squid": "squid",
+	"anglerfish": "angler", "angler": "angler", "serpent": "serpent", "eel": "serpent", "megalodon": "megalodon", "megladon": "megalodon",
+	"meg": "megalodon", "shark": "megalodon"}
 const ATTACK := ["sink", "attack", "torpedo", "kill", "destroy", "hit", "engage", "shoot", "blow", "fire", "get", "target", "take"]
 const SPEEDS := {"stop": 0, "halt": 0, "reverse": -1, "back": -1, "slow": 1, "quiet": 1, "half": 2, "standard": 3, "cruise": 3, "full": 4, "flank": 4, "fast": 4, "maximum": 4, "max": 4}
+
+## Every kind of order, with lines that say it (Blaney: "make a long list of all PA commands"):
+## shown on the PA panel, written out in docs/pa_commands.md, and each line is checked by the
+## tests to mean what it says here. Each: [heading, [[line, intent], ...]].
+const HELP := [
+	["Moving", [["full speed", "speed"], ["slow ahead", "speed"], ["stop", "speed"], ["back", "speed"], ["faster", "speed"], ["slower", "speed"],
+		["come to 090", "course"], ["head north", "course"], ["turn left", "course"], ["hard right", "course"], ["turn around", "course"], ["head for the island", "course"]]],
+	["Up and down", [["dive", "depth"], ["dive to 60", "depth"], ["periscope depth", "depth"], ["take her deep", "depth"], ["go deeper", "depth"], ["go up", "depth"],
+		["dive to the bottom", "depth"], ["surface", "depth"], ["crash surface", "depth"]]],
+	["Fighting", [["sink the ship to the east", "attack"], ["attack the carrier", "attack"], ["sink the destroyer to the north", "attack"], ["fire torpedoes", "attack"],
+		["reload", "reload"], ["open fire", "gun"], ["enemy sub", "enemy_sub"], ["attack the enemy sub", "enemy_sub"], ["belay that", "cancel"]]],
+	["Getting away", [["get us out of here", "evade"], ["evade", "evade"], ["silent running", "evade"]]],
+	["The crew", [["battle stations", "man_stations"], ["all hands on deck", "all_hands"], ["take us through the cave", "cave"], ["fix the damage", "fix"],
+		["pump out the water", "fix"], ["fresh air", "air"], ["stand down", "stand_down"]]],
+	["Places to go", [["take us to the wreck", "goto"], ["go to the ruins", "goto"], ["explore the vents", "goto"], ["visit the garden", "goto"],
+		["take us to the crystal city", "goto"], ["go to the island", "goto"], ["take us to the cave", "goto"], ["list places", "places"], ["clear the waypoint", "goto"]]],
+	["Asking", [["report", "report"], ["what's out there", "contacts"], ["what's our objective", "objective"]]],
+	["For fun", [["god mode", "god"], ["god mode off", "god"], ["band play", "band"], ["stop the music", "band"], ["spawn a kraken", "monster"], ["megalodon", "monster"], ["sea serpent", "monster"]]],
+]
 
 
 ## The orders in a line, in the order given. Each is {intent, ...}; a line we can make nothing of
@@ -49,6 +72,14 @@ static func _has(c: String, words: Array) -> bool:
 	return false
 
 
+## The kind of place a line names (Places.WORDS), or "".
+static func _place(c: String) -> String:
+	for w: String in Places.WORDS:
+		if " %s " % w in c:
+			return Places.WORDS[w]
+	return ""
+
+
 static func _number(c: String) -> int:
 	var m := RegEx.create_from_string("\\b(\\d{1,4})\\b").search(c)
 	return int(m.get_string(1)) if m != null else -1
@@ -71,6 +102,19 @@ static func _direction(c: String) -> Dictionary:
 
 
 static func _clause(c: String) -> Dictionary:
+	if " god " in c or " godmode " in c: # "god mode" (Blaney): super speed, super swimming, can't be knocked out
+		return {"intent": "god", "off": _has(c, ["off", "stop", "end", "disable", "no"]), "toggle": not _has(c, ["on", "off", "stop", "end", "disable", "no", "enable"])}
+	# Places to go (Blaney: waypoints from the PA): "take us to the wreck", "go to the island".
+	if _has(c, ["waypoint", "waypoints"]) and _has(c, ["clear", "cancel", "remove", "delete", "forget"]):
+		return {"intent": "goto", "clear": true}
+	if _has(c, ["places", "destinations", "sights"]) or " where can we go " in c:
+		return {"intent": "places"}
+	var place := _place(c)
+	if place != "" and not " through " in c and _has(c, ["go", "take", "travel", "navigate", "waypoint", "visit", "explore", "sail", "bring", "find", "see", "course", "head", "make"]) \
+			and not (place == "island" and _has(c, ["head", "course", "turn", "steer"]) and not _has(c, ["go", "take", "travel", "visit", "explore", "waypoint"])):
+		return {"intent": "goto", "place": place}
+	if _has(c, ["cave", "caves", "tunnel"]): # "take us through the cave" (Blaney: be aboard while the crew do it)
+		return {"intent": "cave"}
 	if " all hands " in c and not _has(c, ["stand", "down"]): # "all hands on deck": fill the boat and work the objective
 		return {"intent": "all_hands"}
 	if " slow down " in c:
@@ -79,6 +123,9 @@ static func _clause(c: String) -> Dictionary:
 		return {"intent": "evade"}
 	if " enemy sub " in c or " enemy submarine " in c:
 		return {"intent": "enemy_sub", "attack": _has(c, ATTACK)}
+	for w: String in MONSTERS: # "spawn a kraken": something comes up out of the deep for us (Blaney)
+		if " %s " % w in c:
+			return {"intent": "monster", "kind": MONSTERS[w]}
 	if _has(c, ["play", "music", "song", "band", "concert"]):
 		return {"intent": "band", "off": _has(c, ["stop", "quit", "enough"])}
 	if _has(c, ["cease", "cancel", "belay", "abort", "nevermind"]):
@@ -146,7 +193,7 @@ static func _depth(c: String) -> Dictionary:
 static func _course(c: String) -> Dictionary:
 	var dir := _direction(c)
 	var turning := _has(c, ["turn", "come", "head", "steer", "go", "course", "bear", "hard", "sail", "move", "around"])
-	if _has(c, ["around"]) and _has(c, ["turn", "come", "go", "head"]):
+	if _has(c, ["around"]) and _has(c, ["turn", "come", "go", "head"]) or " come about " in c:
 		return {"intent": "course", "rel": 180.0}
 	if _has(c, ["island", "land"]) and turning:
 		return {"intent": "course", "island": true}
