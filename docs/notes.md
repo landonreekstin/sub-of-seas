@@ -4,7 +4,36 @@ Where things stand, in plain English. The newest entry goes at the top. Update i
 Other docs: `roadmap.md` is the to-do list, `style.md` how it looks and feels, `design.md` the
 game's design, `credits.md` where every sound came from.
 
-## 2026-11-06 (latest, 3): captain's chair, waypoints, hologram, sea floor, swimming (branch `blaney/captain-and-sea-floor`, draft #44 on #43)
+## 2026-11-13 (latest): dark sea, sea life, cameras, monsters, hologram, dim boat (branch `blaney/dark-sea-and-hologram`, draft #45 on #44)
+
+Blaney's four new M8 items (his calls: style log, last six rows). Next after this: he asked for a
+critical pass over every sound in the game and their balance (its own branch and PR).
+- [done, looked at] dark water: `ExteriorWorld.paint_water` / `water_fog` / `water_light` /
+  `see_under`, `ExteriorWorld.shore` (0 open .. 1 shallow, eased, from the floor under her);
+  the sun and the env ambient dim with depth (`_light_under`), the background is the fog's
+  colour, cameras' `far` cut to where the fog is solid. Floodlights (`_floods`) on our boat dived.
+- [done, looked at] `world/sea_floor_life.gd` (`SeaFloorLife`: 100 m tiles round the boat, one
+  MultiMesh per kind per tile, one tile built a frame, `sway.gdshader` for kelp and grass);
+  `SeaLifeView`: marine snow and plankton (`GPUParticles3D` boxes round the boat), jellyfish,
+  mantas, turtles; their shapes in `Creatures`.
+- [done, tests pass] `BotCrew.SITE_ARRIVE` 40 m (straight in, slow, the last 400 m),
+  `SITE_LOOK` 10 m. `test_she_stops_right_over_a_site`.
+- [done, looked at] `CameraStation`: 12 cameras (`CAMS`: label, kind, key, column, row), a map of
+  her from above (bow right, port top), click (`screen_at`) or 1-9 0 - =; red dot on the big
+  screen. Console moved aft (z0 + 1.8) so the open door hides no screen.
+- [done, tests pass] monsters: they never caught a boat (stalk speed below her slow ahead; the
+  squid and anglerfish too deep for a WWII boat). Now `hunting` ones use `HUNT_FLOOR` 15 m, all
+  swim `EDGE` faster than her, attack within max(length/4, 10) m. `--monster <kind>` testing aid.
+  `test_a_called_one_reaches_a_wwii_boat`, `test_a_called_one_gives_up_when_she_surfaces`.
+- [done, looked at] `HoloView` rewritten: rings, compass, beacon, spokes to places, shaded floor,
+  arrow ships, monster models (`_beast`), the nearest big (`_feature`); `HoloView.close_up` (Z in
+  the chair). The room's hologram lowered to 1.4 m.
+- [done, looked at] interior: `SubInterior.MOOD` 0.6, `AMBIENT` 0.12, `FALLOFF` 1.9; battle
+  stations red from `SubInterior.under_attack`; descent creaks in `_deep`; creak_4..6 cut by
+  `tools/make_recorded.py` (6 is a half-speed groan).
+- [next] Blaney plays it; then tick the four items and mark #45 ready.
+
+## 2026-11-06 (3): captain's chair, waypoints, hologram, sea floor, swimming (branch `blaney/captain-and-sea-floor`, draft #44 on #43)
 
 Blaney's last five M8 items, in this order (his calls: style log, last row).
 - [done, tests pass] places and waypoints: `Seabed.add_sites` (kind "site": type, name; a pit when

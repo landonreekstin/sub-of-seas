@@ -253,6 +253,7 @@ Added by Blaney after playing. In his words where it matters.
 - [ ] make more creaking noises as the sub decends, dimming the lights and making more things dark in the subs would be a good add, its too happy and bright. i dont think thats the theme im looking for. i like hunt for the red october and the sub warfare scenes with the torpedos and stuff
 - [ ] im not sure that the giant enemy creatures work quite yet so check on that
 - [ ] the giant hologram doesnt really give any perspective toward where the sub is relative to the different locations, that needs fixed, the hologram also is poorly designed and should be more detailed and clear and not difficult to see or understand. detailed images of the monsters should also show up and a close up view of around the ship should be an option to toggle
+- [ ] be critical of all the sounds in the game and make sure they are balanced properly
 
 ## M9 — Lando's list (2026-10-30)
 Added by lando. Direction: **more arcadey, not strict realism**. Every existing mechanic
