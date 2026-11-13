@@ -554,7 +554,7 @@ func site_event(type: String, _place: String) -> void:
 			interior.shake_loose(0.5)
 			get_tree().create_timer(3.0).timeout.connect(func() -> void: Sfx.play("clang", -4.0, 0.5))
 		"vents": # a roar of rising water, the hull ticking as it warms
-			Sfx.play("blow_loop", 0.0, 0.5)
+			Sfx.play_for("blow_loop", 5.0, -2.0, 0.5)
 			for k in 6:
 				get_tree().create_timer(2.0 + k * 1.7).timeout.connect(func() -> void: Sfx.play("click", -2.0, 1.6))
 			if local_player != null:
@@ -1593,7 +1593,7 @@ func _weather_calls() -> void:
 
 @rpc("authority", "call_local", "reliable")
 func alarm() -> void:
-	Sfx.play("klaxon")
+	Sfx.play("klaxon", -5.0)
 
 
 ## Bad air or thick smoke where a crewman stands knocks him out for a while; he comes round
@@ -1745,7 +1745,7 @@ func _monster_event(d: Dictionary) -> void:
 			if near or d.act == "charge":
 				_monster_call(-4.0 if d.act == "charge" else -12.0)
 		"grab", "squeeze":
-			Sfx.play("creak_%d" % randi_range(1, 5), 4.0, 0.4)
+			Sfx.play("creak_%d" % randi_range(1, 5), 2.0, 0.4)
 			Sfx.play("creak_%d" % randi_range(1, 5), 0.0, 0.55)
 			trauma = 0.55 if d.act == "grab" else 0.3
 		"bite", "strike", "ram":
@@ -1841,12 +1841,12 @@ func _event_sound(kind: String, data: Dictionary) -> void:
 		"hit", "beached":
 			Sfx.play("torpedo_hit")
 		"crack": # the carbon going: sharp cracks, louder each time
-			Sfx.play("clang", -6.0 + 4.0 * float(data.level), 1.6)
-			Sfx.play("creak_%d" % randi_range(1, 5), 2.0 * float(data.level), 1.3)
+			Sfx.play("clang", minf(-6.0 + 4.0 * float(data.level), 2.0), 1.6)
+			Sfx.play("creak_%d" % randi_range(1, 5), minf(2.0 * float(data.level), 2.0), 1.3)
 		"implode":
-			Sfx.play("torpedo_hit", 8.0, 0.7)
+			Sfx.play("torpedo_hit", 2.0, 0.7)
 		"grounded":
-			Sfx.play("clang", 4.0 if data.hard else -2.0, 0.6)
+			Sfx.play("clang", 1.0 if data.hard else -3.0, 0.6)
 			Sfx.play("creak_%d" % randi_range(1, 5), 0.0, 0.7)
 		"sunk":
 			Sfx.play("creak_%d" % randi_range(1, 5), -4.0, 0.5) # breaking up
