@@ -586,7 +586,27 @@ func _fit_exterior() -> void:
 	exterior.viewport.size = get_viewport().get_visible_rect().size
 
 
+var _perf_t := 0.0
+var _perf_worst := 0.0
+
+
+## Testing aid (--perf): what a frame costs, every 5 s.
+func _perf(delta: float) -> void:
+	_perf_t += delta
+	_perf_worst = maxf(_perf_worst, delta)
+	if _perf_t < 5.0:
+		return
+	_perf_t = 0.0
+	print("perf fps %d  process %.1f ms  worst frame %.0f ms  draws %d  prims %dk  objects %d" % [Engine.get_frames_per_second(),
+		Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0, _perf_worst * 1000.0,
+		Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME), int(Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME) / 1000.0),
+		Performance.get_monitor(Performance.RENDER_TOTAL_OBJECTS_IN_FRAME)])
+	_perf_worst = 0.0
+
+
 func _process(delta: float) -> void:
+	if Net.debug_perf:
+		_perf(delta)
 	if Input.is_action_just_pressed("quit_to_menu") and not Net.dedicated:
 		_quit("")
 	if Net.dedicated and multiplayer.is_server() and not crew.is_empty():

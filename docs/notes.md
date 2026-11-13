@@ -31,7 +31,23 @@ critical pass over every sound in the game and their balance (its own branch and
 - [done, looked at] interior: `SubInterior.MOOD` 0.6, `AMBIENT` 0.12, `FALLOFF` 1.9; battle
   stations red from `SubInterior.under_attack`; descent creaks in `_deep`; creak_4..6 cut by
   `tools/make_recorded.py` (6 is a half-speed groan).
-- [next] Blaney plays it; then tick the four items and mark #45 ready.
+- [done] Blaney played it: "looks great". `make test` clean (969 unit tests, 47 walkthroughs). All four ticked; #45 ready.
+
+## Next, in this order (Blaney's, roadmap M8 list; one branch and PR each)
+1. **Save frames** ("we gotta save some frames"). Stopped before measuring. `--perf` (new) prints
+   fps, process ms, worst frame and draw calls every 5 s; measure before and after under xvfb,
+   e.g. `--reef --depth 12 --station cameras` and `--depth 40 --station captain` then H.
+   Suspects, biggest first: `HoloView._build_floor` (41x41 `floor_depth` calls, rebuilt every 4°
+   of turn and in two holograms at once: build it north-up once per position and turn the node
+   instead); the sun's shadow pass still on dived (`ExteriorWorld._light_under`: switch it off);
+   the camera wall renders the big screen every frame plus a small one (alternate them);
+   `SeaFloorLife._build` all in one frame (spread it a kind a frame); `HoloView` re-setting
+   materials on every monster part every tick, `_draw_frame` rebuilding the rings each tick;
+   marine snow 1400 and plankton 500 particles (halve with a smaller box).
+2. **Sound pass**: "be critical of all the sounds in the game and make sure they are balanced
+   properly".
+3. **Rafts and beaches**: "some basic ability for people to get to land on inflatable rafts,
+   there should be walkable beaches on land" (ask him how they look first).
 
 ## 2026-11-06 (3): captain's chair, waypoints, hologram, sea floor, swimming (branch `blaney/captain-and-sea-floor`, draft #44 on #43)
 
