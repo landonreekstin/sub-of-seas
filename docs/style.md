@@ -54,17 +54,46 @@ and update "Current style" in the same commit.
   lock, off balance doubles how far you're driven. A panel at the bottom: the two names, the
   clinch on a SEA |----X----| SEA bar, the move keys, the last turn. Driven past your edge,
   you go over the side into the sea and swim back to a ladder.
-- **Navigation room** (Blaney): a compartment just aft of the control room in every boat.
-  In the middle a wooden sand table: a raised model of the whole patrol area (at least 16 km
-  across) built from the sea floor, islands standing up green with rocky peaks and beaches,
-  pale reef shallows, the deep going dark blue, under a clear sheet of sea, with a little brass
-  boat that moves and turns with ours; "N ↑" and the scale on the rim. A chart locker in the
-  starboard after corner.
-- **Outside cameras** (Blaney: a viewing centre; both a wall of small screens and a big one):
-  on the port side of the navigation room, a grey console under six small screens (bow, stern,
-  port, starboard, bridge, keel), all live while you're in the room, and a big screen above;
-  man the console and 1-6 picks the big one. The cameras ride on our own boat: on the surface
-  you see her decks and the sea, dived the blue water and the hull.
+- **Navigation room** (Blaney): a compartment just aft of the control room in every boat,
+  mostly a giant hologram (Blaney 2026-11-06: "showing every piece of information needed for
+  testing, everything, even unseen"; 2026-11-13: "should give perspective toward where the sub is
+  relative to the different locations ... more detailed and clear"): a glowing blue disc of sea
+  some 2.3 m across at chest height under a projector ring, so you look down onto it. Our boat in
+  the middle bow-up as a bright green-white little submarine with a beacon up through the
+  surface and a pulsing ring round her ("US 60 m"); range rings across the surface marked in km
+  (m close up), the bow line, N E S W round the rim; a dashed line out from her to every place
+  and the waypoint, each labelled with its name, depth, bearing and range; the sea floor a
+  see-through shaded relief, shallow green to deep blue, islands standing up as peaks, under a
+  sparse glowing grid. Ships are arrowheads pointing where they steam; every monster is a small
+  glowing orange copy of its own body, and the nearest turns slowly, big, off the port beam with
+  its name, length, what it's doing and how far. Far-off things sit on the rim on their bearing,
+  only places labelled there. Z in the captain's chair: close-up, the 600 m round her, a monster
+  at its real size against her. What the boat hasn't found yet are dim ghosts that flicker and
+  drift (no labels for ghost whales); the deeper she goes, the colder and dimmer it runs. The outside cameras' console on the port side forward,
+  the captain's chair in the port after corner facing the hologram (the Typhoon's chair is in
+  her command bay), a chart locker in the starboard after corner.
+- **The captain's chair** (Blaney: pilot the sub alone by giving orders): a brown leather chair
+  with CAPTAIN on its back, in every boat but the Titan. Its keys are orders: W/S speed, A/D turn
+  10° (Shift 1°), R/F depth 10 m (Shift 1 m), 1-4 surface / periscope / dive / deep, C crash
+  dive, X twice emergency surface, Tab target, Space attack it, P periscope, N next place, M
+  clear the waypoint, H the hologram full on his screen, Enter the PA. A bot carries each out
+  unless a player has that post; then the player sees "CAPTAIN: come to 090: D, right rudder"
+  in brass at the top of his screen, so a crew who know nothing of subs can do their jobs. The
+  chair's panel: heading, speed and depth against what's ordered, the waypoint with bearing,
+  range and time, the sea floor under and ahead (SHOAL AHEAD! in amber), the target, tubes,
+  battery, air, the worst damage, and who has each post.
+- **Outside cameras** (Blaney: a viewing centre; both a wall of small screens and a big one;
+  2026-11-13: more angles "laid out in an intuitive way", click one to see where on her it is):
+  on the port side of the navigation room, aft of the door, twelve small screens laid out like
+  a map of the boat seen from above as you face them: bow to the right as she really lies, a
+  pale green outline of her across the middle with a dot where each camera sits, joined by a
+  thin line to its screen; port cameras along the top (bridge aft, port aft, port, port fwd,
+  bridge), stern and bow at the ends of the middle row, starboard along the bottom (keel, stbd
+  aft, starboard, stbd fwd, sea floor straight down). A big screen above. Man the console and
+  click a screen (or 1-9 0 - =): it goes big, its frame and dot light up (the dot red), and the
+  big screen's corner shows her outline with a red dot where that camera is. The cameras ride
+  on our own boat: on the surface you see her decks and the sea, dived the dark water lit by
+  her floodlights.
 - **Ship's band** (Blaney: instruments of all types that each play a part of a shanty, like
   Sea of Thieves; a mix of modern and traditional; take one and play anywhere): a wall board
   "SHIP'S BAND — THE FOGGY DEW" in the rec room (the S-boat's in the navigation room) with
@@ -85,6 +114,35 @@ and update "Current style" in the same commit.
   of shot is a tall thin white splash; a hit is an orange flash and a puff of black smoke on
   her side. Inside: a ladder up to a hatch ring in the deckhead marked DECK GUN; the
   ammunition scuttle is a hatch flush in the deck with brass rounds showing down the hole.
+- **Divers** (Blaney): a grey DIVING GEAR locker by the deck hatch; the suit goes with the boat's
+  era (WWII: brass hard hat with a round face window and side ports, tan canvas dress; Typhoon:
+  black drysuit, full mask, twin tanks; modern: scuba). The view out is framed by the helmet's
+  round brass window (a mask's dark edge on the Typhoon); a lamp lights the water deep down.
+  Steel grab rails either side of the bow, the fin and the after casing.
+- **The cave** (Blaney): a grey-green rock ridge standing some 45 m out of the water, sheer cliffs
+  down to its foot, a square-ish mouth low in each end face. Inside, an S-bend tunnel of dark rough
+  rock, its roof rising and dipping and its floor humped in places, lit only by soft glowing spots
+  (blue-green, sea-blue, pale green) on the walls and roof. Every boat fits, with room to spare
+  only if she's held straight and level. Scrapes clang and judder the crew; the time and the
+  scrapes show on the objective.
+- **The Titan** (Blaney: like the real one, game controller and all): inside, one dark carbon tube
+  with flat titanium ends bolted round, floor mats and five cushions, cold white LED strips, the
+  viewport low in the bow end, the scrubber on the starboard wall; a little roomier than the real
+  tube so the crew can stand. The pilot sits on the floor aft holding a dark grey game controller
+  with coloured buttons, a black screen on the wall ahead to starboard (depth, speed, battery,
+  HULL MONITOR, red when the strain passes half). Past 4,000 m the carbon cracks: sharp cracks
+  louder each time, lights flicker, three warnings, then a single deep bang. No gore. Outside: a
+  white fairing, black frame and skids, four black thrusters; no maker's name.
+- **Things from the depths** (Blaney: creepy dread, no gore): dark shapes with eyes that catch the
+  light. A dark red giant squid, a black anglerfish with needle teeth and a glowing green lure, a
+  long dark green serpent with a frill and yellow eyes, a dark grey megalodon as long as a boat.
+  Their call is a whale's song slowed to a groan; a grab creaks the frames, a strike thumps and
+  flickers the lights. Wild ones keep to their own depths; one called up on the PA comes up to
+  any boat, a WWII boat at periscope depth too, keeps up with her however she runs, and only
+  surfacing shakes it off (Blaney 2026-11-13).
+- **Pace** (Blaney: not a waiting simulator): in arcade the boat moves, speeds up, turns and
+  dives twice as fast as standard; noise and battery go by her real speed. Crewmates never block
+  each other.
 - **Sprint:** hold Shift running forward: 2.1× walking speed (Blaney: a bit faster, for the long walks on the bigger boats), the view widens a few degrees
   and the head bobs, footsteps a little louder and further apart (crewmates hear it). Not while
   crouched; foul air takes it away.
@@ -93,13 +151,32 @@ and update "Current style" in the same commit.
   valves on the white pipe runs, wire cages round the bulbs, a red extinguisher by each
   after door; a coffee urn, mugs and a menu board in the mess, books over the wardroom table,
   a brass clock in the control room.
+- **Lived in, but tidy** (Blaney): a galley in every boat (the Gato's and Narwhal's on the
+  mess's port side, the S-boat's aft in the battery room, the Typhoon's in her mess): black iron
+  range with pots steaming and a pan frying you can hear, a hood over it, maple work counter with
+  loaves, a steel sink, rows of tins on shelves behind fiddle rails, ladles on a rail, and the
+  cook in whites and a toque stirring. Mess and wardroom tables laid (plates, knives and forks,
+  mugs, salt, pepper, ketchup, bread), cushioned benches, a cribbage board, photos and letters
+  pinned over the table, the cool room and freezer hatches in the deck. Bunks: family photos,
+  painted 1940s pin-ups (fully dressed; Soviet film posters on the Typhoon), letters, curtains
+  drawn part way, sea bags, books, shoes under the bottom bunk, a towel on a stanchion, and two
+  off-watch men asleep in each crew's quarters. Fold-down bunks over the reload torpedoes. Things
+  are stowed, not strewn.
+- **Full and working, the walkway clear** (Blaney): a ventilation trunk with grilles along every
+  deckhead; in the control room pipe risers up all four corners and valve manifolds overhead
+  either side of the walkway, their handwheels on reach rods; gauge needles tremble as she runs,
+  more with the diesels going.
 - **Planned for Phase 2:** Hand-painted feel via procedural textures
   (riveted steel, brass, painted pipes, chipped paint, rust streaks, wood decking), toon-ish
   shading with soft rim light, stylised ocean with foam and big readable waves.
 - **Interior palette:** pale institutional green walls (`#9DB59A`), grey-green deck
   (`#5E6B5C`), brass fittings (`#C9A04A`), red valve wheels (`#B23A2E`), black gauge faces
-  with cream numerals, warm incandescent lights (`#FFD9A0`). Red "rig for red" lighting when
-  submerged at night / battle stations.
+  with cream numerals, warm incandescent lights (`#FFD9A0`). Dim and tense, not happy and
+  bright (Blaney 2026-11-13: "hunt for the red october"; dim and warm): each lamp lights a warm
+  pool that falls off fast, the ends of rooms and the corners dark, a low warm ambient; the
+  bulbs, screens and gauges glow in the gloom. Red "rig for red" lighting when submerged at
+  night; red battle stations while the enemy is after us (escorts hunting or attacking within
+  8 km, enemy torpedoes or depth charges in the water, a monster attacking), for 20 s after.
 - **Exterior palette:** deep Pacific blue (`#1F4E79`) to turquoise shallows, warm sky, IJN
   ships in dark grey (`#5A5F66`), wooden-deck tan.
 - **Readability:** water in compartments is clearly blue and wavy, fire is bright orange with
@@ -146,10 +223,24 @@ and update "Current style" in the same commit.
   bright flecks; soft toon bands on the swell. Noise-broken foam on the crests, white wakes astern of ships and a bow wave;
   a torpedo leaves a thin white bubble track from the tube to where it is, brightest at the
   head, breaking up and spreading behind and gone about a minute later (lando);
-  the open water a brighter teal toward Sea of Thieves. Under the surface it is clear and well
-  lit like Sea of Thieves (lando): bright turquoise, light from above and deeper blue below,
-  about 60 m of visibility, darkening slowly with depth and at night, and the surface overhead
-  a glowing, rippling ceiling with wakes showing white.
+  the open water a brighter teal toward Sea of Thieves. Under the surface (Blaney 2026-11-13,
+  over lando's clear Sea of Thieves water: "make the ocean realistically dark and less dark if
+  you get close enough to shore"; things mustn't show through the fog before they should): in
+  open water a murky deep blue, things gone in some 60 m, near black by 100 m, the light
+  dimming fast with depth; over a shallow shelf by an island (under ~90 m of water, fully by
+  30 m) it opens up to clear turquoise with some 150 m of visibility. The water's colour behind
+  everything is the fog's colour, so nothing unlit stands out against it; our own floodlights
+  (bow, and down from the keel) light what's close, and anything that glows (sites, jellyfish,
+  plankton, a lure) shows first in the dark. The surface overhead a glowing, rippling ceiling
+  with wakes showing white.
+- **Life in the sea** (Blaney 2026-11-13: "make this seafloor more interesting and the ocean feel
+  more alive"; all four kinds; "this game cant be laggy"): on the bottom, grey rocks, tube
+  sponges (orange, yellow, violet, pale), starfish (orange, red, blue), pale shells and small red
+  crabs; sea grass in the shallows and tall olive kelp in stands from 8 to 45 m, both swaying;
+  marine snow drifting down everywhere, glinting in the floodlights; glowing cyan plankton that
+  twinkles deep down or at night; glowing see-through jellyfish (cyan, violet, pink) pulsing,
+  more the deeper; manta rays and sea turtles gliding over shallow water. All laid out round the
+  boat in cheap batches so the frame rate doesn't suffer.
 - **Crew:** WWII US submariners at sea in ordinary human proportions (Blaney, see Crewmen):
   slim, a head in proportion, small plain features; faded chambray work shirt (only a hint of
   the crewman's own colour) with an open collar and sleeves to the elbow, belt and buckle,
@@ -173,6 +264,9 @@ and update "Current style" in the same commit.
   Blaney found the first version sounded like knocking on his door and the second annoying and
   clanky; half as loud again now: your own barely there, a crewmate's just audible when close), a clang per ladder rung, a clink
   picking up or putting down a tool.
+  **Shut doors keep the noise in** (Blaney): a sound from beyond a shut watertight door comes
+  through dull (low-passed) and much quieter, quieter again for each more door; open doors and
+  hatches let it straight through. Crew voices are not muffled.
 - **Handling** (Blaney): livelier than the real boat but still heavy and submarine-like, not a
   rocket ship. Speed changes are twice as quick, turns 1.6× and dives 1.5× (a Gato: 0 to 9 kn
   in about 15 s, a full circle in about 75 s, periscope depth to 45 m in about 28 s).
@@ -218,7 +312,7 @@ and update "Current style" in the same commit.
 - **Enemy sub** (Blaney): a long dark cigar under the water with a conning tower, seen only through a
   porthole or camera if it comes close; never on a chart. Sonar hears "faint, steady screws —
   SUBMARINE" and roughly its depth; its torpedoes bring the alarm and "TORPEDO IN THE WATER". In the
-  fight the chart and sand table show only what we've seen: by eye (surfaced or scope up) the usual
+  fight the chart shows only what we've seen: by eye (surfaced or scope up) the usual
   chart colours; by sonar (the patch under us, further with a ping) grey-blue dots on the chart and
   grey-blue relief on the table; the rest shaded paper and flat dark sand. Starts as a patrol on the
   menu, or "enemy sub" on the PA on any patrol, when the whole map comes back once she's gone.
@@ -262,12 +356,6 @@ and update "Current style" in the same commit.
   low round dais with a brass rail round the front and the scope, the attack scope beside it; the
   skipper's brown leather chair to port, sonar on the port wall, fire control to starboard.
   Bot crewmen sit in the chairs.
-- **The skipper's hologram** (Blaney: a 3D view of the water from what the boat knows, everyone
-  sees it; Typhoon only, blue glow): sit in the skipper's chair, H turns it on or off. It hangs in
-  front of the chair from a projector in the deckhead: a ring for the sea's surface, the sea floor
-  8 km round as glowing blue grid lines, our boat bright in the middle, bow ahead (heading-up),
-  ships the boat hears or sees as small blocks with a thin line up from a sub's depth and a name and
-  range, our torpedoes bright, theirs red. Past 8 km a contact sits on the rim on its bearing.
 - **Crash surface** (Blaney: emergency breaching): an emergency blow from depth (X twice on the
   ballast, or "crash surface" on the PA) brings her up so fast her bow leaps out: up to 28° bow up
   and thrown 6 m out of the sea, slammed back down with a great splash, rocking to rest. Inside,
@@ -286,7 +374,7 @@ and update "Current style" in the same commit.
   green board dived), the HP air manifold's six wheels on the after bulkhead and phone handsets.
 - **Bot crewmen stand naturally** (Blaney: natural positions at every station): feet on the deck
   at a spot each station gives, held the way the job asks: hands on the wheel or yoke, both up on
-  the periscope handles, leaning over the chart and the sand table, one hand on the sonar wheel,
+  the periscope handles, leaning over the chart, one hand on the sonar wheel,
   watching the camera screens hands down, a dart up by his ear, a round held up at the scuttle,
   sitting on the arm rests in the skipper's chair. Torpedomen stand one behind another down their
   tubes' side of the room. Name tags half the size they were.
@@ -295,6 +383,13 @@ and update "Current style" in the same commit.
   standing their station with hands on the gear and a name tag with their job ("Sparks
   (planesman)", "— on orders" when following yours). They speak through the same announcements
   as everything else: "Stubby (sonar): contact bearing 270, warship, turns for 20 knots."
+- **Volume** (Blaney): quieter out of the box: master 40%, effects 70%, music 50%, voices 100%.
+- **Out any time, god mode** (Blaney): for now the hatch opens at any depth; dived, you climb out
+  into the sea in the dive suit. "God mode" on the PA is for the one who says it: super speed on
+  foot and in the sea (faster than any boat), and nothing knocks you out.
+- **The crew through the cave** (Blaney): "take us through the cave" on the PA, or "all hands" on a
+  cave patrol, and the bots take her through slow and in the middle while you ride along. The PA
+  panel shows every order it knows, by kind; `docs/pa_commands.md` is the long list.
 - **PA system** (Blaney): a grey 1MC speaker box with a hanging microphone on the control room's
   after bulkhead, to port of the door. E opens a typing box; Enter sends. The skipper's words show
   big for everyone with the bell, the crew's answer on the message line, and the order stays top
@@ -351,6 +446,14 @@ and update "Current style" in the same commit.
   that show the water and nearby hulls; reefs,
   undersea mountains and shelves; sharks, whales, octopus and fish; music (menu, patrol,
   combat); emotes seen in third person; a rec room for whimsical fun and mini games.
+- **Pastimes (Blaney):** arm wrestling across the mess table (tap Space, the locked fists swing
+  toward the loser), blackjack against the house at the card table (cards face up on the baize),
+  the cook's special at the galley range (a swinging heat needle, flip in the green, three flips
+  make a meal called out to the boat), fishing off the stern rail (strike, then reel keeping the
+  line's tension in the green). A bot takes on all comers at any empty seat. Each fun spot glows
+  warm with its name in cream caps when you walk within a few metres. **T** opens the "things to
+  do aboard" card: every pastime on this boat, its room, its keys, what needs her surfaced, and
+  the crew's records; "[T] things to do" sits small in brass in the bottom-left corner.
 - **Training crew calls (Blaney):** in the short per-job courses, the crewmates you would
   hear are played for you: a big line near the top, the speaker in brass caps and the words
   in cream quotes ("CAPTAIN: "Come to course zero-niner-zero.""), with a short bell like an
@@ -363,6 +466,57 @@ and update "Current style" in the same commit.
   call shows with their name and job in place of the scripted voice.
 - **UI:** typewriter / stencil feel, cream on dark panels, minimal HUD (crosshair, carried
   tool, interaction prompt).
+
+- **Our boat from outside** (Blaney: real details, smoother hull, weathered paint, every boat
+  as far as real life has them, the Typhoon most; `world/own_boat.gd`): a round lofted hull cut
+  flat by the casing, a streamlined fin with a rounded top edge. WWII boats: dark grey streaked
+  with rust down from the casing and fin, salt at the waterline, black below; teak deck,
+  limber holes, stanchions and lifelines, bow and stern planes, rudder and twin bronze screws,
+  anchor, bridge with windscreen, periscope shears, SJ radar and SD mast, a 20 mm on the
+  cigarette deck (not the S-boat), the hull number in white on the fin (S-44, SS-212, SS-167),
+  torpedo loading hatches; the Narwhal's second 6-inch gun aft. Typhoon: matte black rubber
+  tiles with some torn off, a wide flat deck, twenty missile hatches forward of the sail,
+  bridge windows, masts drawn down, white rescue-buoy frames, white draught marks, bow planes
+  folded low, stern planes with end plates, the tall upper rudder and two shrouded screws.
+  The deck hatch sits clear forward of the fin on every boat; what you walk and swim against
+  is the same shape as what you see.
+- **Deep down** (Blaney: scary deep; Typhoon very deep, WWII boats realistic): orders go all the
+  way to crush depth (Gato 150 m, Typhoon 500 m). Going down she creaks, ticks and groans all the
+  way, more the faster she dives and louder the deeper (Blaney 2026-11-13). The hull creaks more and louder the deeper she
+  goes; near test depth frames bang, the boat jolts and water weeps from the seams; past it the
+  lights waver. Outside the water is dim by 100 m and close to black by 300 m.
+- **More unsettling the deeper you go** (Blaney, the whole game): the deeper the boat or a
+  swimmer is, the darker, quieter and stranger it gets: the hologram's light colder and its hum
+  lower, ghosts of what we haven't found flickering in it, the sea-floor places stranger the
+  deeper they lie (a bright garden shallow, a crystal city at test depth).
+- **Places to go** (Blaney): a wreck, a drowned temple, black smokers (glowing vents), a glowing
+  garden and a crystal city on the sea floor of every patrol (not training), each island named;
+  the boat steers to a waypoint by herself (N on the chart where the pencil points, N in the
+  captain's chair for the next place, or the PA), on the surface on the diesels when nobody's
+  about, and stops 15 m over a sea-floor place to look. On the chart: blue squares, filled in
+  once found; the waypoint a green cross with a dashed line out to it.
+- **The places themselves**, low-poly and flat-coloured: the Kiyo Maru, a rust-red freighter
+  broken in two and lying over, her funnel knocked flat, crates and drums spilled; a drowned
+  temple of three steps, a ring of columns (some fallen) and a gate with a carved stone door;
+  black chimneys with glowing orange mouths, smoke and red-tipped tube worms on warm ground; a
+  garden of swaying kelp, glowing anemones in teal, pink, green, blue and yellow, and fan coral;
+  the crystal city (Blaney): tall six-sided spires of purple and teal glass with rings of white
+  light, see-through domes, strange glowing symbols round its edge, all slowly pulsing.
+- **Each place's event** (Blaney: "simple but still an event"), once, the first time she comes
+  within 450 m: "DISCOVERED: ..." then the wreck taps SOS on the hull and a bell tolls; the
+  temple's tremor shakes the boat and its door sinks open on a glow; the smokers' heat lifts
+  her and roars on the sonar; the garden's glowing fish swarm round the boat a minute; the
+  crystal city flickers our lights, a deep chord answers and a glowing orb rises out of it and
+  follows her for a minute before going back down. The debrief lists the places found.
+- **Swimming** (Blaney): Ctrl dives under from the surface, and anyone can swim all the way down
+  to the sea floor and stand on it (the suit's depth still knocks out a man in a suit; god mode
+  doesn't care); the dark closes in deeper and now and then something far off groans. The
+  escape trunk in the forward torpedo room's deckhead goes out at the bow, in the dive suit
+  when she's dived. Flood water over your chest and you swim in the room (Space up, Ctrl down,
+  or float with your eye clear), murky green-blue when your eye goes under.
+- **The sea** (Blaney: a larger area): islands, seamounts and shelves spread over some 30 km
+  each way, with deep trenches far below any keel; the chart table zooms out to 80 km across;
+  swimmers have 40 m of sea round the boat.
 
 ## Direction log
 
@@ -424,3 +578,31 @@ and update "Current style" in the same commit.
 | 2026-11-05 | Blaney | A control panel where the skipper sees a 3D view of what is happening in the water from all the information the sub has, in front of him when he takes a position on the bridge; everyone sees the hologram when he toggles it on. (Then: Typhoon only, blue glow.) |
 | 2026-11-05 | Blaney | (After playing the bay, hologram, all hands and crash surface: "very good".) The Typhoon is empty: fill it up, more pipes, and make it accurate to a real Typhoon that's in service. |
 | 2026-11-05 | Blaney | Overhaul the other sub types as well; in all the sub types the characters should be in natural positions at their stations; all hands on deck mustn't change the vibe to stressful, it's only to fill places. (Undoes his own red light at all hands.) |
+| 2026-11-05 | Blaney | Even more filled up: the control room easy to move around, but more pipes and stuff so the subs feel full and working underway; accurate kitchen and living areas; the sub should look lived in. (Asked: lived in but tidy, not cluttered; both family photos and 1940s pin-ups; a busy galley with steam, a sizzling pan and a cook; all four boats, the Typhoon too.) |
+| 2026-11-05 | Blaney | (After playing the lived-in Gato: "the gato feels good".) Doors should insulate noise, like the engine. |
+| 2026-11-05 | Blaney | More fun things to do in the game, clearer ways to access them, and a list of the things we can do. (Asked: all four of cards in the mess, fishing off the deck, cooking in the galley and arm wrestling; the list on a key easier for a casual player to hit than F1; each fun spot glows softly with its name when you're close.) |
+| 2026-11-06 | Blaney | We need this sub to get scary deep: the Typhoon class should be able to get very deep, the WWII ones realistic. A better outside of the sub: real details, smoother hull shape, weathered paint; good, working outsides of all the subs as far as they exist in real life, the Typhoon most (he tests on it a lot). |
+| 2026-11-06 | Blaney | A larger area that the sub can go (he hadn't checked how far it went: "that takes a while"). |
+| 2026-11-06 | Blaney | (After playing the new outsides, hatch, deep dive and the T list on the Typhoon: "great, thanks".) |
+| 2026-11-06 | Blaney | An underwater navigation challenge: a short cave to go through and out the other end; every boat can do it, but an inexperienced crew needs coordination. (Asked: both its own timed challenge on the menu and caves hidden in the open sea.) |
+| 2026-11-06 | Blaney | Dive suits and spots to hold on to, so the boat can dive with someone outside as a lookout telling us where we're going; he can't get back in until she surfaces. (Asked: the suit depends on the boat's era: "the game should no longer be only a WWII sub game, the time period will change with the type of sub you board". Letting go or going deep: "there will be ocean floor exploration later so dont have it be instant death but make there be a button to return to the sub if the sub gets too far away".) |
+| 2026-11-06 | Blaney | Terrifying sea creatures that live in the depths, that can be hunted or hunt us, and a PA command to spawn one. (Asked: giant squid, giant anglerfish, sea serpent and megalodon, all four; creepy dread: strange sounds, shapes in the dark, the hull groaning when one grabs you, no gore.) |
+| 2026-11-06 | Blaney | Add the OceanGate Titan, controlled with a game controller like the real one. (Asked: for deep exploring, no weapons, up to 5 crew; too deep she cracks and warns first, then implodes once she can't take any more.) |
+| 2026-11-06 | Blaney | Getting around with a full crew should be doable, and in arcade the boat should move faster: "I don't want the game to be a waiting simulator". (Asked: about twice as fast, speed, turning and diving; crewmates walk through each other.) |
+| 2026-11-06 | Blaney | The crew's hats go through their heads. |
+| 2026-11-06 | Blaney | "I do want to be on board when the crew does it": a PA order for the crew to take her through the cave on their own, and a long list of all the PA commands. |
+| 2026-11-06 | Blaney | Swimming to the sea floor, out of the sub while dived, and in flooded rooms. The sand table goes: the navigation room is mostly a giant hologram showing everything for testing (even what the boat hasn't found). A captain's chair in every boat, with the keys on its card (W/S speed, A/D turn, R/F depth, 1-4 presets, C crash dive, X emergency surface, Tab target, Space fire, P scope, N/M waypoints, H hologram, Q leave): bots carry out each order unless a player is on that station, so there is no interference. Waypoints the boat steers to itself, set on the chart, from a list of places or on the PA. Sea-floor places: shipwrecks, ruins, glowing vents and gardens, alien civilizations. |
+| 2026-11-06 | Blaney | "Make it so i can also exit the boat at any time for now", and "god mode" on the PA: "superspeed and invincibility and super swim speed so i can catch up to subs and watch them from the outside". |
+| 2026-11-06 | Blaney | "Lets get rid of the sand table." |
+| 2026-11-06 | Blaney | "Lets also just turn the volume down, i think it is by default too loud." (Defaults now master 40%, effects 70%, music 50%; saved settings keep their own.) |
+| 2026-11-06 | Blaney | "The captains chair should have a PA button so that you can type from there." (Enter, from the chair; every captain's chair to come has it too.) |
+| 2026-11-06 | Blaney | "There are pipes in the way of the tv screen as well." (The outside cameras' console now stands out from the wall, its screens in front of the pipe runs.) |
+| 2026-11-06 | Blaney | (Asked about the captain's chair, the hologram and the sea floor.) H in the captain's chair puts the navigation room's giant hologram, everything, on his screen. What the boat hasn't found shows as dim ghosts, "but i want it to be a little unsettling, i think i want this game in general to get more unsettling the deeper you go". The alien civilization is a glowing crystal city. The sea-floor places "should each have an event linked to them, simple but still an event". |
+| 2026-11-06 | Blaney | (After trying the captain's chair, the hologram, the places and swimming: "very nice".) |
+| 2026-11-13 | Blaney | "Make this seafloor more interesting and the ocean feel more alive." (Asked: all of kelp and sea grass, drifting specks and glow, more creatures, a busy bottom: "just make sure that we do a good job of optimization because this game cant be laggy".) |
+| 2026-11-13 | Blaney | "The way fog works in this game from a distance kind of reveals things before they should be revealed as the ocean is very dark. Make the ocean realistically dark and less dark if you get close enough to shore." (Overrides lando's clear, well-lit Sea of Thieves water under the surface.) |
+| 2026-11-13 | Blaney | "When the crew takes you to a certain location make sure that the crew takes you very close to it so that you can see what's going on from the outside cameras. There should also be more outside cameras from a variety of angles but laid out in an intuitive way. If you click on the screen it should show what part of the sub that particular video screen is on." (Asked: laid out like a map of the sub.) |
+| 2026-11-13 | Blaney | "Make more creaking noises as the sub descends, dimming the lights and making more things dark in the subs would be a good add, its too happy and bright. I dont think thats the theme im looking for. I like hunt for the red october and the sub warfare scenes with the torpedos and stuff." (Asked: dim and warm, red at battle stations.) |
+| 2026-11-13 | Blaney | "Im not sure that the giant enemy creatures work quite yet so check on that." (Asked: ones called on the PA come up to any boat; wild ones stay deep.) |
+| 2026-11-13 | Blaney | "The giant hologram doesnt really give any perspective toward where the sub is relative to the different locations ... should be more detailed and clear and not difficult to see or understand. Detailed images of the monsters should also show up and a close up view of around the ship should be an option to toggle." |
+| 2026-11-13 | Blaney | (After playing the dark sea, sea life, cameras, monsters, hologram and dim boat: "looks great, i just need you to optimize it, we gotta save some frames".) |

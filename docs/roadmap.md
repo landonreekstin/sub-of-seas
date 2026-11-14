@@ -196,6 +196,71 @@ Added by Blaney after playing. In his words where it matters.
       *(Done, PR #37: pipe banks, cabinets, reactor and turbine pipework, missile tube fittings, the real boat's sauna, pool, gym and aviary.)*
 - [x] lets overhault the other sub types now as well, make sure that in all the sub types the characters are in natural positions when they go to their stations, dont make all hands on deck change the vibe to stressful (its only to full places)
       *(Done, PR #38: every WWII boat packed like the Typhoon, the Christmas tree board and HP air manifold; bots stand naturally at every station; all hands keeps the lights as they were.)*
+- [x] i want the subs even more filled up, the control room should be easy to move around but i want more pipes and stuff to make the subs feel full and funtional as they are underway. accurate kitchen quarters and living areas as well. the sub should look lived in
+      *(Done, PR #39: a galley with its cook, laid tables, lived-in bunks, photos and pin-ups, more pipes, on all four boats; shut doors now muffle the engines and every other sound.)*
+- [ ] youve done a good job on the feeling of movement in the game but we need more of it, every axis of movement should be felt and the sub should be realistically stable when still (it would still have some roll and pitch)
+- [x] lets add more fun things to do in the game and clearer ways to access them and see a list the things we can do
+      *(Done, PR #41: arm wrestling, blackjack, the galley, fishing, glowing spots and the T list.)*
+- [x] we need this sub to get scary deep (the typhoon class should be able to get very deep but the WWII ones should be realistic)
+      *(Done, PR #42: orders down to crush depth (Typhoon 500 m, WWII boats their real limits); creaks, bangs, weeping seams and wavering lights deep down; black water.)*
+- [x] we need a larger area that the sub can go
+      *(Done, PR #42: islands, seamounts, shelves and deep trenches over some 30 km each way; the chart zooms to 80 km; 40 m of sea for swimmers.)*
+- [x] we need a better outside of the sub (real details, smoother hull shape, weathered paint; good functioning outsides of all the subs to the extent that they exist in real life, the typhoon most)
+      *(Done, PR #42: new outsides for all four boats: round hull, rounded fin, real gear, weathered paint; the Typhoon's missile hatches, rudder and shrouded screws.)*
+- [x] the sub doesnt let you get back in, and you have to clip through the sub to even see the non functioning hatch
+      *(Done, PR #42: the hatch sits clear of the fin on every boat and works; the deck you walk on is the boat you see.)*
+- [x] there is going to be an underwater navigation challenge where you have to go through a short underwater cave and come out the other end, all subs should be able to do it but for an inexperienced crew it is going to take some coordination
+      *(Done, PR #43: "The Cave" on the menu for every era: an S-bend tunnel through a rock ridge, sized to the boat, its roof and floor rising and dipping; timed, scrapes counted; hit the roof, walls or floor and she's stopped or shoved, hard knocks open a leak. One hidden in the open patrol too. Not played yet.)*
+- [x] there should be dive suits and spots you can "hold on" to because we are going to make it so that the sub can dive without everyone inside, if we need a visual then we need a guy that can physically look out to tell us where we are going for fun, he cannot get back in until we are surfaced
+      *(Done, PR #43: a diving locker by the deck hatch, suits by era; six grab rails; she dives with suited divers out; let go and she leaves you behind, R hauls you back; the hatch stays shut till she surfaces; too deep you black out, never die; the helmet phone to the helm. Not played yet.)*
+- [x] make terrifying sea creatures that live in the depths that can be hunted, or that can hunt us. there should be a command in the PA to spawn one
+      *(Done, PR #43: giant squid, anglerfish, sea serpent, megalodon below their own depths; they stalk, grab, bite, strike, ram; go shallow and they give up; torpedoes kill them; "spawn a kraken" on the PA. Not played yet.)*
+- [x] add the oceangate sub, there is a ton of information on how it was made after its incident including that it was controlled with an XBOX controller
+      *(Done, PR #43: the Titan, up to 5 crew, no weapons: one carbon tube, the bow viewport, the pilot on the floor aft with a game controller (a real one works if plugged in, else the keyboard) and the screen; rated 4,000 m, past it the hull monitor calls cracks three times, then she implodes. Missions: The Deep Dive (3,800 m and back) and The Cave. Not played yet.)*
+- [x] getting around in the sub with a full crew should be doable and make the sub move around faster in arcade mode, i dont want the game to be a waiting simulator
+      *(Done, PR #43: in arcade she goes, speeds up, turns and dives twice as fast, as quiet and as easy on the battery as before; crewmates and bots already walk through each other.)*
+- [x] the crew member hats go through their heads
+      *(Done, PR #43: every hat sized over the hair and sitting on it; curls and waves pressed flat under a hat.)*
+- [x] i cannot open the hatch even though i pressed 1 to surface
+      *(Done, PR #43: an order to surface from the dive station (1, or W up to 0) blows main ballast too, so she comes right up and the hatch opens without anyone at the ballast.)*
+- [x] i want to be on board when the crew does the cave, add that to the PA, also make a long list of all PA commands
+      *(Done, PR #43: "take us through the cave" (or "all hands on deck" on a cave patrol): the bot helmsman, planesman and ballast man take her in at the near end and out of the far one, slow, in the middle; every boat. The PA panel lists every order by kind, and `docs/pa_commands.md` has the long list; the tests check each line.)*
+- [x] make it so i can also exit the boat at any time for now
+      *(Done, PR #43: the hatch opens at any depth; dived, you come out into the sea in the boat's dive suit, and go below again any time. The sea under her is open down 350 m.)*
+- [x] god mode as a command on the PA: superspeed, invincibility and super swim speed so i can catch up to subs and watch them from the outside
+      *(Done, PR #43: "god mode" on the PA, for whoever says it (again, or "god mode off", to stop): 3x on foot, 8x swimming, 16x with Shift, faster than any boat at flank; bad air and depth can't knock you out; the sea pen round her opens.)*
+- [x] swimming: down to the sea floor, out of the sub while dived, and in flooded rooms
+      *(Done, PR #44, Blaney played it: "very nice": Ctrl dives under from the surface and you can swim right down to the sea floor and stand on it; the escape trunk in the forward torpedo room goes out at the bow; flood water over your chest and you swim in the room, murky when your eye goes under.)*
+- [x] lets get rid of the sand table
+      *(Done, PR #43: gone from every boat's navigation room; the middle of the room is clear. The cameras' console and the chart locker stay.)*
+- [x] lets also just turn the volume down, i think it is by default too loud
+      *(Done, PR #43: out of the box master 40% (was 80%), effects 70% (was 100%), music 50% (was 60%); anyone's saved settings keep their own.)*
+- [x] the captains chair should have a PA button so that you can type from there
+      *(Done, PR #43: Enter in the skipper's chair opens the PA; the captain's chair for every boat will have it too.)*
+- [x] there are pipes in the way of the tv screen as well
+      *(Done, PR #43: the outside cameras' console stands 30 cm out from the wall in every boat, so the big screen is in front of the pipe runs.)*
+- [x] the music started playing then stopped in the typhoon
+      *(Done, PR #43: the menu music's fade-out was still running when the Typhoon's choir started on the same player, and its stop cut the choir off; a new fade now cancels the old one.)*
+- [x] the navigation room is mostly a giant hologram showing every piece of information needed for testing (everything, even unseen); the hologram leaves the captain's chair
+      *(Done, PR #44, Blaney played it: "very nice": in every boat, everything in the water with what it's doing; what the boat hasn't found flickers as dim ghosts, colder the deeper she goes. H in the captain's chair puts it on his screen.)*
+- [x] a captain's chair in every boat with its own keys to pilot the sub entirely alone by issuing commands; bots do it unless a player is on that station; more UI for the captain and more information for piloting, so a crew with no sub knowledge can do their jobs
+      *(Done, PR #44, Blaney played it: "very nice": in the nav room (the Typhoon's in her command bay); a panel with everything for piloting; a player on a post sees "CAPTAIN: come to 090: D, right rudder".)*
+- [x] waypoints and places to travel to (click on the chart, a list of places, the PA); the boat steers there itself
+      *(Done, PR #44, Blaney played it: "very nice": N at the chart table where the pencil points, N in the captain's chair for the next place, or "take us to the wreck" / "list places" on the PA.)*
+- [x] things to go to and explore on the ocean floor: shipwrecks, ruins, glowing vents and gardens, alien civilizations
+      *(Done, PR #44, Blaney played it: "very nice": a wreck, a drowned temple, black smokers, a glowing garden and a crystal city in every patrol, each with its event the first time you get there.)*
+- [x] hey lets make this seafloor more interesting and the ocean feel more alive. also the way fog works in this game from a distance kind of reveals things before they should be revealed as the ocean is very dark. make the ocean realistically dark and less dark if you get close enough to shore. also when the crew takes you to a certain location make sure that the crew takes you very close to it so that you can see what's going on from the outside cameras. there should also be more outside cameras from a variety of angles but laid out in an intuitive way. if you click on the screen it should show what part of the sub that particular video screen is on
+      *(Done, PR #45, Blaney played it: "looks great": realistically dark water, clear by the shore; kelp, sea grass, rocks, sponges, starfish, crabs, marine snow, glowing plankton, jellyfish, rays, turtles; the crew stop right over a place; twelve outside cameras laid out like a map of the boat, click one and a red dot shows where it is.)*
+- [x] make more creaking noises as the sub decends, dimming the lights and making more things dark in the subs would be a good add, its too happy and bright. i dont think thats the theme im looking for. i like hunt for the red october and the sub warfare scenes with the torpedos and stuff
+      *(Done, PR #45, Blaney played it: "looks great": dim warm lamps in pools with dark corners, red at battle stations, creaks, ticks and groans all the way down.)*
+- [x] im not sure that the giant enemy creatures work quite yet so check on that
+      *(Done, PR #45: they never caught a boat (too slow, too deep for a WWII boat); now one called on the PA comes up to any boat and keeps up, and every kind attacks. Blaney played it: "looks great".)*
+- [x] the giant hologram doesnt really give any perspective toward where the sub is relative to the different locations, that needs fixed, the hologram also is poorly designed and should be more detailed and clear and not difficult to see or understand. detailed images of the monsters should also show up and a close up view of around the ship should be an option to toggle
+      *(Done, PR #45, Blaney played it: "looks great": range rings, compass, our boat with a beacon, lines to every place with bearing and range, a shaded sea floor, glowing monster models and the nearest one big, Z close-up from the captain's chair.)*
+- [x] save some frames: optimize (Blaney after playing PR #45: "looks great, i just need you to optimize it, we gotta save some frames")
+      *(Done, PR #46: far islands drawn coarse, under-water ground not drawn from afar, the cameras run only when looked at, the hologram turns instead of rebuilding: the camera wall draws 4.0M triangles a frame down to 1.2M, the captain's chair 3.5M down to 0.33M. Blaney played it: "smoother".)*
+- [ ] be critical of all the sounds in the game and make sure they are balanced properly
+- [ ] we should add some basic ability for people to get to land on inflatable rafts, there should be walkable beaches on land
 
 ## M9 — Lando's list (2026-10-30)
 Added by lando. Direction: **more arcadey, not strict realism**. Every existing mechanic

@@ -32,7 +32,7 @@ All from Wikimedia Commons, marked public domain there.
 |---|---|---|---|
 | klaxon | [WWII submarine dive klaxon](https://commons.wikimedia.org/wiki/File:WWII_submarine_dive_klaxon.ogg) (Wikimedia Commons) | US Navy | Public domain |
 | sonar_ping | [Sonar_pings.ogg](https://freesound.org/s/12677/) | Peter_Gross | CC0 |
-| creak_1, creak_2, creak_3 | [grincements_helvetia.aif](https://freesound.org/s/59160/) | f_ilippo | CC0 |
+| creak_1 … creak_6 (creak_6 at half speed) | [grincements_helvetia.aif](https://freesound.org/s/59160/) | f_ilippo | CC0 |
 | lever | [Metal Lever 1.aif](https://freesound.org/s/151271/) | timgormly | CC0 |
 | whale_loop | [LowWhalesong.wav](https://freesound.org/s/171945/) | RebekahDay | CC0 |
 | deck_gun | [Cannon Shot](https://freesound.org/s/187767/) | qubodup | CC0 |
@@ -53,6 +53,7 @@ All from Wikimedia Commons, marked public domain there.
 | vent_rush, blow_loop | [Air (or steam) pressure release](https://freesound.org/s/457294/) | brunoboselli | CC0 |
 | sea_loop | [Underwater Ambience](https://freesound.org/s/504641/) | Fission9 | CC0 |
 | rain_loop | [Indoors_Shed_RainOnTinRoof_01.wav](https://freesound.org/s/521773/) | MrFossy | CC0 |
+| galley_loop | [Indoors_Shed_RainOnTinRoof_01.wav](https://freesound.org/s/521773/), high end only, as a pan frying | MrFossy | CC0 |
 | step_1, step_2, step_3 | [walk carpet.wav](https://freesound.org/s/575321/) | taure | CC0 |
 | canister | [Metal Canister Impact Hard](https://freesound.org/s/650573/) | h2p34 | CC0 |
 | alarm | [fire alarm bell](https://freesound.org/s/678345/) | msx2plus | CC0 |

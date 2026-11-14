@@ -2,7 +2,6 @@ class_name PaPanel
 extends Control
 ## The PA microphone: type what you want and press Enter; the host's crew carry it out (BotCrew).
 
-const EXAMPLES := "\"sink the ship to the east\"   \"dive to the bottom of the ocean\"   \"come to 090, full speed\"\n\"battle stations\"   \"fix the damage\"   \"what's our objective\"   \"get us out of here\"   \"enemy sub\""
 
 var _edit: LineEdit
 
@@ -19,7 +18,21 @@ func _ready() -> void:
 	_edit.custom_minimum_size = Vector2(760, 0)
 	_edit.text_submitted.connect(_send)
 	box.add_child(_edit)
-	box.add_child(UiKit.label(EXAMPLES, 15, UiKit.DIM))
+	# Every order the crew know, by kind (CrewCommand.HELP); say them your own way, or join
+	# several with "and" / "then".
+	var cols := GridContainer.new()
+	cols.columns = 4 # two rows: it fits a small screen
+	cols.add_theme_constant_override("h_separation", 28)
+	cols.add_theme_constant_override("v_separation", 8)
+	box.add_child(cols)
+	for group: Array in CrewCommand.HELP:
+		var col := VBoxContainer.new()
+		col.add_theme_constant_override("separation", 0)
+		cols.add_child(col)
+		col.add_child(UiKit.label(group[0].to_upper(), 14, UiKit.BRASS))
+		for pair: Array in group[1]:
+			col.add_child(UiKit.label("\"%s\"" % pair[0], 13, UiKit.DIM))
+	box.add_child(UiKit.label("Say it your own way, or join orders: \"come to 090 and full speed\".", 14, UiKit.DIM))
 	box.add_child(UiKit.label("[Enter] send    [Esc] put the mic back", 14, UiKit.DIM))
 	_edit.grab_focus.call_deferred()
 

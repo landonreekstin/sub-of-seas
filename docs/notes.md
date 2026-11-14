@@ -4,6 +4,219 @@ Where things stand, in plain English. The newest entry goes at the top. Update i
 Other docs: `roadmap.md` is the to-do list, `style.md` how it looks and feels, `design.md` the
 game's design, `credits.md` where every sound came from.
 
+## 2026-11-13 (latest, 2): saving frames (branch `blaney/save-frames`, on #45)
+
+Blaney: "looks great, i just need you to optimize it, we gotta save some frames". Measured with
+`--perf` under xvfb (fps there means nothing, software rendering; triangles and draws do):
+- the camera wall by a reef: 4.0M triangles a frame before, 1.2M after; the captain's chair with
+  the hologram up: 3.5M before, 0.33M after (the cameras no longer run there). Script time headless
+  ~5 ms either way.
+- [done] `TerrainView`: under-water features, sites and coral not drawn past `UNDER_SEEN` (700 m
+  past their edge); islands and their jungle coarse past `ISLAND_FINE` (2.5 km past the edge:
+  cells/4 ground, one blob a tree, no trunks), boulders to 2.5 km. The cave's ridge is above water,
+  so it is left alone. `test_terrain_far_off_is_coarse_without_gaps`.
+- [done] ocean near plane 300x300 (was 400); the sun casts no shadows dived.
+- [done] `CameraStation`: live only manned or looked at (`_looked_at`, within 50°); one view a
+  frame (the big screen every other frame).
+- [done] `HoloView`: the floor is built north-up and turned with her heading (rebuilt only after
+  1.5 cells of travel); rings built once per range; monsters repainted only on change.
+- [done] `SeaFloorLife`: one kind of one tile a frame (`_pending`); marine snow 700, plankton 250.
+- [done] Blaney played it: "smoother". Ticked; #46 ready. Next: the sound pass, then rafts to the beaches.
+
+## 2026-11-13 (1): dark sea, sea life, cameras, monsters, hologram, dim boat (branch `blaney/dark-sea-and-hologram`, draft #45 on #44)
+
+Blaney's four new M8 items (his calls: style log, last six rows). Next after this: he asked for a
+critical pass over every sound in the game and their balance (its own branch and PR).
+- [done, looked at] dark water: `ExteriorWorld.paint_water` / `water_fog` / `water_light` /
+  `see_under`, `ExteriorWorld.shore` (0 open .. 1 shallow, eased, from the floor under her);
+  the sun and the env ambient dim with depth (`_light_under`), the background is the fog's
+  colour, cameras' `far` cut to where the fog is solid. Floodlights (`_floods`) on our boat dived.
+- [done, looked at] `world/sea_floor_life.gd` (`SeaFloorLife`: 100 m tiles round the boat, one
+  MultiMesh per kind per tile, one tile built a frame, `sway.gdshader` for kelp and grass);
+  `SeaLifeView`: marine snow and plankton (`GPUParticles3D` boxes round the boat), jellyfish,
+  mantas, turtles; their shapes in `Creatures`.
+- [done, tests pass] `BotCrew.SITE_ARRIVE` 40 m (straight in, slow, the last 400 m),
+  `SITE_LOOK` 10 m. `test_she_stops_right_over_a_site`.
+- [done, looked at] `CameraStation`: 12 cameras (`CAMS`: label, kind, key, column, row), a map of
+  her from above (bow right, port top), click (`screen_at`) or 1-9 0 - =; red dot on the big
+  screen. Console moved aft (z0 + 1.8) so the open door hides no screen.
+- [done, tests pass] monsters: they never caught a boat (stalk speed below her slow ahead; the
+  squid and anglerfish too deep for a WWII boat). Now `hunting` ones use `HUNT_FLOOR` 15 m, all
+  swim `EDGE` faster than her, attack within max(length/4, 10) m. `--monster <kind>` testing aid.
+  `test_a_called_one_reaches_a_wwii_boat`, `test_a_called_one_gives_up_when_she_surfaces`.
+- [done, looked at] `HoloView` rewritten: rings, compass, beacon, spokes to places, shaded floor,
+  arrow ships, monster models (`_beast`), the nearest big (`_feature`); `HoloView.close_up` (Z in
+  the chair). The room's hologram lowered to 1.4 m.
+- [done, looked at] interior: `SubInterior.MOOD` 0.6, `AMBIENT` 0.12, `FALLOFF` 1.9; battle
+  stations red from `SubInterior.under_attack`; descent creaks in `_deep`; creak_4..6 cut by
+  `tools/make_recorded.py` (6 is a half-speed groan).
+- [done] Blaney played it: "looks great". `make test` clean (969 unit tests, 47 walkthroughs). All four ticked; #45 ready.
+
+## Next, in this order (Blaney's, roadmap M8 list; one branch and PR each)
+1. **Save frames** ("we gotta save some frames"). Stopped before measuring. `--perf` (new) prints
+   fps, process ms, worst frame and draw calls every 5 s; measure before and after under xvfb,
+   e.g. `--reef --depth 12 --station cameras` and `--depth 40 --station captain` then H.
+   Suspects, biggest first: `HoloView._build_floor` (41x41 `floor_depth` calls, rebuilt every 4°
+   of turn and in two holograms at once: build it north-up once per position and turn the node
+   instead); the sun's shadow pass still on dived (`ExteriorWorld._light_under`: switch it off);
+   the camera wall renders the big screen every frame plus a small one (alternate them);
+   `SeaFloorLife._build` all in one frame (spread it a kind a frame); `HoloView` re-setting
+   materials on every monster part every tick, `_draw_frame` rebuilding the rings each tick;
+   marine snow 1400 and plankton 500 particles (halve with a smaller box).
+2. **Sound pass**: "be critical of all the sounds in the game and make sure they are balanced
+   properly".
+3. **Rafts and beaches**: "some basic ability for people to get to land on inflatable rafts,
+   there should be walkable beaches on land" (ask him how they look first).
+
+## 2026-11-06 (3): captain's chair, waypoints, hologram, sea floor, swimming (branch `blaney/captain-and-sea-floor`, draft #44 on #43)
+
+Blaney's last five M8 items, in this order (his calls: style log, last row).
+- [done, tests pass] places and waypoints: `Seabed.add_sites` (kind "site": type, name; a pit when
+  deeper than the ocean floor), `sim/places.gd`, `Game.set_waypoint`, `BotCrew.order_waypoint` /
+  `waypoint_wants` / `_step_waypoint` (plan kind "waypoint"; `crew.wants` for players' hints),
+  PA "goto"/"places"; `Seabed.clear_course` got `width` and `step`. `tests/test_waypoints.gd`.
+- [done, tests pass] captain's chair (`CaptainStation`, station "captain": the Typhoon's "holo" chair
+  replaced; every other boat's in the nav room's port after corner): keys are orders through
+  `BotCrew.captain` (`_from_chair`: no notices, a player sees `CaptainStation.hint_for` on the HUD from
+  `crew.wants`; the attack plan writes `wants` too). Waypoint and attack runs go easy on the battery
+  dived; a waypoint far off with no ship in 10 km runs surfaced on the diesels.
+  `tests/captain_walkthrough.gd`.
+- [done, looked at] nav room: `HoloView` (`world/holo_view.gd`, everything; unknown things are
+  flickering ghosts, colder deeper), `HoloView.screen()` for H in the chair. `stations/holo_station.gd`
+  is gone. Chart: places, found ones filled, the waypoint; N/M at the chart table.
+- [done, looked at] sea-floor places: `world/site_view.gd`, pictures with `tools/site_look.gd`;
+  events `Game._check_sites` / `site_event` (host: `crew.found`, the vents lift her); debrief count.
+- [done, tests pass] swimming: `Deck.ORIGIN` now y 6000 and `is_out` anything above y 100, so the sea
+  under her reaches the floor; the pen has no floor; Ctrl dives under; `EscapeTrunk` (forward
+  torpedo room); `Player._swim_flooded` (`FLOOD_SWIM` 1.25 m), `eye_under`, `Hud.set_underwater`;
+  deeper fog in `ExteriorWorld.paint_water`, far-off groans for deep swimmers. `tests/swim_walk.gd`.
+- [done] Blaney played it: "very nice". All five ticked; `make test` clean (962 unit tests, 47 walkthroughs, now run side by side by `tests/walkthroughs.sh` in about 25 min instead of an hour); #44 ready.
+
+## 2026-11-06 (latest, 2): the crew through the cave, the PA list
+
+- [done, tests pass] "take us through the cave" (`cave` intent; `BotCrew.order_cave` / `_step_cave`:
+  pure pursuit on the tunnel's centre line 1.5 lengths ahead, depth halfway between the lowest roof and
+  highest floor over her length, slow ahead); "all hands" on a cave objective does the same.
+  `tests/cave_crew.gd -- <sub> [pa | all_hands]`.
+- [done] `CrewCommand.HELP`: every order by kind, on the PA panel, checked by `test_the_help_list`;
+  `docs/pa_commands.md` the long list.
+- [done, tests pass] out of the boat any time (`Deck.can_go_out` true; dived, `go_on_deck` suits you
+  up; `Deck.is_out` now 350 m down) and "god mode" on the PA (`crew.god`, `Player.godly()`: GOD_RUN 3,
+  GOD_SWIM 8 / 16 with Shift; no passing out, no depth strain; the pen opens). `tests/god_out.gd`.
+  `breach_hatch` checks surfaced-and-vents-shut itself now, since the hatch always opens.
+- [done] the sand table is gone (`NavTableStation` deleted; the nav room's middle is clear for the
+  hologram to come); default volumes down (master 0.4, effects 0.7, music 0.5).
+- [done] the Typhoon's music stopping: `Music._fade` kills a player's running tween first (an old
+  fade-out's `stop` callback silenced the new track on the same player).
+- [next] Blaney rides the cave with the crew; then the plan in order: captain's chair, waypoints,
+  holo room, sea-floor sites, swimming (roadmap M8 list, his calls in the style log).
+
+## 2026-11-06 (latest): the hatch after pressing 1
+
+Blaney: "i cannot open the hatch even though i pressed 1 to surface". With nobody at the ballast,
+an ordered depth of 0 only brought her up to awash (4.5 m, tanks full), and the hatch needs her
+surfaced (<1 m). Now `apply_order("dive", "depth", 0)` also blows main ballast (not the Titan).
+`tests/breach_hatch.gd -- <sub> dive` (no bots but the helm) in `make test`.
+
+## 2026-11-06 (later still): the hatch after a crash surface
+
+Blaney: after an emergency breach "it was staying locked even though we were surfaced". X twice on
+the ballast blew her up, but the ordered depth stayed deep: the bot planesman (on his own
+initiative: periscope depth) took her back down and the ballast bot flooded the tanks again, vents
+open, hatch shut. Now any blow (and the Titan's weights) is an order to surface:
+`Game._surface_order()` sets the ordered depth and the bot planesman's to 0, off his own
+initiative. `tests/breach_hatch.gd` (PA, ballast, planesman; in `make test`).
+
+## 2026-11-06 (late night): the cave and the Titan (branch `blaney/deep-sea`, draft #43)
+
+All six of #43's items built and ticked; none played by Blaney yet.
+- [built, tests pass, looked at] the cave: `Seabed` kind "cave" (`add_cave`, `cave_size` from the
+  boat's new `beam`/`height`, `roof_depth`, `floor_depth(p, solid)`), `OceanWorld._check_cave`
+  (bow/middle/stern x port/centre/starboard samples; a wall, a pinch or >3 m into rock stops her),
+  `world/cave_view.gd` (`tools/cave_look.gd -- <sub> out.png air|mouth|inside` pictures it),
+  missions `cave`, `cw_cave`, `titan_cave`; one hidden in the open patrol. `tests/test_cave.gd`.
+- [built, tests pass, looked at] the Titan: `data/subs/titan.tres` (era "modern", `fragile`),
+  `interior/titan_layout.gd`, `stations/pilot_station.gd` (gamepad or keyboard; the host takes
+  depth and "weights" on "helm" for a fragile boat), `OceanWorld.hull_strain` / `_carbon_hull`
+  (in the snapshot), `OwnBoat._titan`, missions `titan_dive` (`deep_holes` 3,800 m and 4,800 m)
+  and `titan_cave`; `deep`/`surface` objectives.
+- `pastime_walkthrough` typhoon once failed "nobody won at arm wrestling" and passed on a rerun:
+  it's down to the bots' luck.
+- [next] Blaney plays the cave and the Titan; then `gh pr ready 43`.
+
+## 2026-11-06 (night): divers, deep monsters, faster arcade, hats (branch `blaney/deep-sea`, draft #43 on #42)
+
+Blaney's six items and his calls are in the style log. Stopped here when he ran low on tokens.
+- [done, looked at] hats fit over the hair (`Crewman.make_hat`); arcade pace x2 (`SubState.pace()`).
+- [done, tests pass, not played] divers (`game/diving.gd`, `Deck._dive`, `tests/diver_walk.gd`), monsters
+  (`sim/monster.gd`, `Creatures.squid/angler/serpent/megalodon`, `tests/test_monsters.gd`, PA "kraken").
+- [not checked] the diver's-eye view under xvfb (`tests/diver_walk.gd -- gato shots`) was too slow; never seen.
+- [next] the cave (plan: a "cave" seabed feature: S-bend tunnel ~700 m, 70 m wide, roof 30-45 m,
+  50 m high, in a rock ridge above water; `floor_depth` plus a new `roof_depth`, a hull-ends scrape
+  check in `OceanWorld`, `world/cave_view.gd` a lofted rock tube with glowing wall spots, a timed
+  "cave" mission for every era plus one cave in the sandbox); then the Titan (era "modern", crew 5,
+  no weapons, gamepad pilot, creaks then implodes at crush); then Blaney plays it all, `make test`.
+
+## 2026-11-06 (later): built, waiting on Blaney's play (branch `blaney/sub-outsides`, #42 on #41)
+
+- [built, looked at in xvfb] `world/own_boat.gd`: new outsides for all four boats; `Deck`
+  collision is the same shape (convex slices); the hatch clear of the fin on every boat.
+  `tests/deck_walk.gd -- <sub>` passes on all four (out, walk, hatch, swim, rungs, below).
+- [built, unit-tested] depth orders to crush depth (yoke + host), `SubInterior._deep` (creaks,
+  bangs, weeping seams, wavering lights), black water deep (`ExteriorWorld.paint_water`).
+- [built, unit-tested] seabed over ~30 km with trenches (`Seabed`), chart zoom to 80 km, swim pen 40 m.
+- [next] Blaney plays the Typhoon (on his screen), then tick the four items + #41's, mark
+  #41 and #42 ready, `vibenote --collect-usage`.
+
+## 2026-11-06: deep, bigger sea, better outsides, the hatch (branch `blaney/sub-outsides`, on #41)
+
+Done first: the motion's "little push" taken out (Blaney: "the sliding around should not be a
+thing"); he played it, "feels good"; both motion items ticked, **#40 ready**. #41 (fun things)
+is still unplayed by him: put it on his screen when this is done.
+New items (roadmap, style log). His calls: Typhoon very deep, WWII boats realistic depths;
+real outside details, smoother hull, weathered paint, on every boat as far as real life has
+them, the Typhoon most; the bigger area he hasn't checked (assume the open sea).
+Found, not fixed yet:
+- **Hatch**: `ShipModels.own_dims` puts `hatch_z` 2.6 m ahead of the fin's front, but the
+  Typhoon's fin nose solid (`game/deck.gd` _ready, `beam*0.3` square) is 6.9 m wide, so the hatch
+  and `hatch_spot()` sit inside it: you clip in to see it and can't go below. Fix: place it clear
+  of the fin's nose (`- beam*0.15 - 1.5`), and a headless test that climbs out and goes below.
+- **Depth**: the yoke (`stations/yoke_station.gd:76`) and the host (`game/game.gd:982`) cap the
+  ordered depth at 200 m; use `sub.data.crush_depth`. Typhoon creaks
+  (`SubInterior._typhoon_sounds`) don't grow with depth; add scary deep (more and louder
+  groans, bangs, drips past test depth) for every boat.
+- **Outsides** (pictures: `tools/ship_gallery.gd -- own_typhoon out.png x,y,z,tx,ty,tz`, camera
+  option just added): boxy hull, plain box fin. Plan: new `world/own_boat.gd` with per-boat
+  builders (round lofted hull + casing; Gato/S-boat/Narwhal: limber holes, teak, rails,
+  bow/stern planes, screws, shears + radar, hull number, rust streaks; Typhoon: wide blunt hull,
+  20 missile hatches forward of the sail, rounded sail, ducted screws, tall rudder, tile
+  patches, white draught marks). `game/deck.gd` collision, `camera_station.gd` and the ring/
+  fishing spots read `own_dims`/`hull_half`/`hull_deck`: keep them matching the new shapes.
+- **Area**: no hard edge found yet; check the sandbox/missions for one.
+
+## 2026-11-05 (late night): more things to do (branch `blaney/fun-things`, draft #41, on #39)
+
+Blaney's item: "more fun things to do, clearer ways to access them and see a list". His calls:
+all four of cards, fishing, cooking, arm wrestling; the list on an easy key (T); glow when close.
+- [built, looked at in xvfb, tests pass] `Pastimes` rules, arm/cards/galley stations, `Fishing`,
+  `FunSpot` glow, `ThingsToDo` card; `tests/pastime_walkthrough.gd` on all four boats.
+- [next] Blaney plays it (and #40, the boat's motion, still unplayed), then tick both and mark
+  #40 and #41 ready. #39 (lived-in, door muffling) is ticked and waiting on Lando.
+
+## 2026-11-05 (evening): lived-in boats (branch `blaney/lived-in`)
+
+Blaney: "even more filled up, control room easy to move around, more pipes, accurate kitchen and
+living areas, lived in". His calls: lived in but tidy; family photos and 1940s pin-ups (fully
+dressed); a busy galley with steam, sizzle and a cook; all four boats.
+- [built, looked at, all tests pass] `interior/living.gd` (`Living`): galley on the mess's port side (S-boat: aft in
+  the battery room) with range, pots steaming, a frying pan (`galley_loop`, cut from the rain
+  recording), tins on fiddled shelves, sink, the cook stirring; benches and laid places in mess
+  and wardroom; photos, pin-ups, curtains, sea bags, shoes, towels and two sleepers per crew's
+  quarters; fold-down bunks over the reload torpedoes; vent trunk along every deckhead; control
+  room corner risers and overhead manifolds; gauge needles tremble (more with diesels on).
+  `tools/look_at.gd` pictures chosen spots.
+- [next] Blaney plays it (Gato on his screen), then tick, `gh pr ready 39`.
+
 ## 2026-11-05 (later): the other boats overhauled, natural bot poses (branch `blaney/subs-overhaul`, on #37)
 
 Built and looked at (xvfb): every WWII boat (S-boat included) gets the Typhoon's pipe density in
