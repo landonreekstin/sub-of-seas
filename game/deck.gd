@@ -47,16 +47,31 @@ static func create(sub: SubClassData) -> Deck:
 
 ## Is this point (interior space) out on deck or in the sea around it?
 static func is_out(p: Vector3) -> bool:
-	return p.y > 100.0 # the interior sits about y 0; everything above it is the sea round her, down to the sea floor
+	return p.y > 100.0 and p.y < 9000.0 # the interior sits about y 0; above it the sea round her, down to the sea floor; above that, Away
+
+
+## Out of the boat at all: on deck, in the sea, in a raft or ashore (Away).
+static func is_outside(p: Vector3) -> bool:
+	return p.y > 100.0
 
 
 static func is_swimming(p: Vector3) -> bool:
 	return is_out(p) and p.y - ORIGIN.y < Diving.water_y() + IN_WATER
 
 
-## Under the water altogether, the eye too: a diver while she's dived.
+## Under the water altogether, the eye too: a diver while she's dived. (A swimmer's head down
+## in a wave's trough is not.)
 static func is_under(p: Vector3) -> bool:
-	return is_out(p) and p.y - ORIGIN.y + Player.EYE_HEIGHT < Diving.water_y() - 0.2
+	return is_out(p) and p.y - ORIGIN.y + Player.EYE_HEIGHT < Diving.water_y() - 0.2 + minf(wave_at(p), 0.0)
+
+
+## The waves' height over the still sea at this point (interior space) round her, as drawn; 0
+## while she's dived.
+static func wave_at(p: Vector3) -> float:
+	if Sim.world == null or Diving.water_y() > 0.0:
+		return 0.0
+	var w := Diving.world_of(Sim.world.sub, p - ORIGIN)
+	return Waves.height(w.x, -w.y)
 
 
 ## The sea floor under this point (interior space), as a height in the interior's space.
@@ -122,6 +137,12 @@ func _ready() -> void:
 	locker.position = Vector3(1.6, _deck_at(dims.hatch_z), dims.hatch_z)
 	add_child(locker)
 	Build.area(locker, Vector3(1.0, 1.4, 1.0), Vector3(0, 0.6, 0))
+	# The raft locker (Blaney: the yellow life rafts), across the hatch from the diving locker.
+	var raft_locker := RaftLocker.new()
+	var rz := OwnBoat.raft_locker_z(dims)
+	raft_locker.position = Vector3(-1.6, _deck_at(rz), rz)
+	add_child(raft_locker)
+	Build.area(raft_locker, Vector3(1.2, 1.4, 1.2), Vector3(0, 0.6, 0))
 	# The hatch back down, and a ladder from the water up each side.
 	var hatch := Hatch.new()
 	hatch.position = Vector3(0, _deck_at(dims.hatch_z), dims.hatch_z)
@@ -484,8 +505,9 @@ func _sync_bout(on: bool) -> void:
 func _switch_view(on: bool) -> void:
 	_was_on = on
 	var ext := Game.instance.exterior
-	ext.eye_mode = "deck" if on else "scope"
-	ext.set_active(on)
+	if on or ext.eye_mode == "deck": # off the deck into a raft, Away has the eye now
+		ext.eye_mode = "deck" if on else "scope"
+		ext.set_active(on)
 	if on:
 		_view = CanvasLayer.new()
 		_view.layer = -1
@@ -607,6 +629,19 @@ class SuitLocker extends Node3D:
 	func interact(player: Player) -> void:
 		if Diving.water_y() <= 0.0:
 			Game.instance.rq_suit.rpc_id(1, not Diving.suited(player.peer_id))
+
+
+## The life-raft locker: E puts a raft over the side, filling with a hiss (Away).
+class RaftLocker extends Node3D:
+	func get_prompt(_player: Player) -> String:
+		if Diving.water_y() > 0.0:
+			return ""
+		var out := Sim.world.rafts.size() if Sim.world != null else 0
+		return "Raft locker (both rafts are out)" if out >= Away.MAX_RAFTS else "[E] Put a life raft over the side"
+
+	func interact(_player: Player) -> void:
+		if Diving.water_y() <= 0.0:
+			Game.instance.rq_raft_launch.rpc_id(1)
 
 
 ## The stern rail: E takes up a rod and fishes (Fishing), E again puts it down.

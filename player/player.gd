@@ -344,6 +344,8 @@ func godly() -> bool:
 func breathing() -> Vector2:
 	if Sim.world == null or godly():
 		return Vector2.ZERO
+	if Away.is_away(global_position): # in a raft or ashore: fresh air
+		return Vector2.ZERO
 	if Deck.is_out(global_position): # outside, only a diver's depth weighs on him
 		return Vector2(Game.instance.deck.strain if is_local() else 0.0, 0.0)
 	var c := Sim.world.hull.comp_at_pos(global_position)
@@ -391,6 +393,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		var target := _interact_target()
 		if target != null:
 			target.interact(self)
+		elif Game.instance.away != null and Game.instance.away.prompt_for(self) != "":
+			Game.instance.away.interact(self)
 	elif event.is_action_pressed("bot") and not climbing:
 		var target := _interact_target()
 		if target is Station:
@@ -418,8 +422,8 @@ func _pose_sprint(delta: float) -> void:
 func _physics_process(delta: float) -> void:
 	if not is_local() or climbing:
 		return
-	if station != null or (Game.instance.deck != null and Game.instance.deck.pinned(self)):
-		velocity = Vector3.ZERO
+	if station != null or (Game.instance.deck != null and Game.instance.deck.pinned(self)) or Away.is_rafting(global_position):
+		velocity = Vector3.ZERO # in a raft: seated, Away drives
 		return
 	var input := Input.get_vector("move_left", "move_right", "move_forward", "move_back")
 	if is_knocked_out() or Game.instance.menu_open():
@@ -429,7 +433,7 @@ func _physics_process(delta: float) -> void:
 	# flooded rooms).
 	var wade := 0.0
 	var flood := 0.0
-	if Game.instance.interior != null and not Deck.is_out(global_position):
+	if Game.instance.interior != null and not Deck.is_outside(global_position):
 		flood = Game.instance.interior.damage.water_height_at(position) - position.y
 		wade = clampf(flood, 0.0, 1.2) / 1.2
 	if flood > FLOOD_SWIM:
@@ -445,6 +449,9 @@ func _physics_process(delta: float) -> void:
 	if sprinting:
 		speed *= lerpf(SPRINT_SPEED, 1.0, breathing().x)
 	var swim := Deck.is_swimming(global_position)
+	# Treading water up on a wave's crest is still swimming.
+	if not swim and _swimming and Deck.is_out(global_position) and not is_on_floor() and Diving.water_y() <= 0.0:
+		swim = global_position.y - Deck.ORIGIN.y < Deck.wave_at(global_position) + Deck.IN_WATER + 0.3
 	if godly():
 		speed *= GOD_SWIM * (2.0 if Input.is_action_pressed("sprint") else 1.0) if swim else GOD_RUN
 	if swim:
@@ -474,6 +481,10 @@ func _physics_process(delta: float) -> void:
 		# dives under (Blaney: swimming down to the sea floor).
 		var float_y := Deck.ORIGIN.y + Diving.water_y() + Deck.SWIM_EYE - EYE_HEIGHT
 		velocity.y = clampf((float_y - global_position.y) * 3.0, -4.0, 2.5)
+		if Input.is_action_pressed("jump") and not Game.instance.menu_open():
+			# Space treads water: the head rides the waves, never under them (Blaney).
+			float_y += Deck.wave_at(global_position)
+			velocity.y = clampf((float_y - global_position.y) * 8.0, -6.0, 6.0)
 		if Input.is_action_pressed("crouch") and not Game.instance.menu_open():
 			velocity.y = -2.0
 		velocity += Game.instance.deck.drift
@@ -547,15 +558,19 @@ func _process(delta: float) -> void:
 	var air := breathing()
 	var blacked := Game.instance.deck != null and Game.instance.deck.blacked_out
 	hud.set_air(air.x, air.y, is_knocked_out() or blacked)
-	hud.set_underwater(eye_under() if not Deck.is_out(global_position) else -1.0) # outside, the sea itself is drawn
+	hud.set_underwater(eye_under() if not Deck.is_outside(global_position) else -1.0) # outside, the sea itself is drawn
 	if is_knocked_out() or blacked:
 		hud.set_prompt("")
 		return
 	if station != null or climbing:
 		hud.set_prompt("THIS STATION IS BROKEN — get a wrench on it" if station != null and station.broken else "")
 		return
+	if Away.is_rafting(global_position): # the raft's own keys are shown (Away)
+		return
 	var target := _interact_target()
 	var prompt: String = target.get_prompt(self) if target != null else ""
+	if prompt == "" and Game.instance.away != null:
+		prompt = Game.instance.away.prompt_for(self)
 	var deck := Game.instance.deck
 	if prompt == "" and deck != null and Deck.is_out(global_position):
 		if deck.holding >= 0:
@@ -618,7 +633,7 @@ func _apply_shake(delta: float) -> void:
 func _apply_hull_tilt() -> void:
 	if Sim.world == null or station != null or camera.top_level: # a station's or an emote's view
 		return
-	if Deck.is_out(global_position): # out on deck the boat's own roll is in the view
+	if Deck.is_outside(global_position): # out on deck the boat's own roll is in the view
 		camera.basis = Basis.IDENTITY
 		return
 	var sub := Sim.world.sub

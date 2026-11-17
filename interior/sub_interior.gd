@@ -1147,7 +1147,7 @@ func _cull_rooms(delta: float) -> void:
 	if me == null:
 		return
 	var seen := {}
-	if not Deck.is_out(me.global_position):
+	if not Deck.is_outside(me.global_position):
 		var here := Sim.world.hull.comp_at_pos(me.camera.global_position)
 		seen[here] = true
 		var doors_now: Dictionary = Game.instance.crew.get("doors", {})
@@ -1181,7 +1181,7 @@ func _muffle(delta: float) -> void:
 	_muffle_timer = 0.2
 	var me: Player = Game.instance.local_player if Game.instance != null else null
 	var shut := {} # room -> closed doors between it and us
-	if me != null and not Deck.is_out(me.global_position):
+	if me != null and not Deck.is_outside(me.global_position):
 		var doors_now: Dictionary = Game.instance.crew.get("doors", {})
 		shut[Sim.world.hull.comp_at_pos(me.camera.global_position)] = 0
 		var edge: Array = shut.keys()

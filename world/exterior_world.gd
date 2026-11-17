@@ -13,6 +13,7 @@ var scope_bearing := 0.0 ## relative bearing, set by the periscope station
 var scope_fov := 32.0
 var eye_mode := "scope" ## "scope": the periscope's eye; "gun": the deck gun's sight, set by the gun station; "deck": a crewman out on deck (Deck)
 var deck_eye := Transform3D.IDENTITY ## the deck crewman's eye in our boat's own space, set by Deck
+var world_eye := Transform3D.IDENTITY ## "world": an eye anywhere on the sea, in a raft or ashore (Away), in this world's space
 var deck_fov := 75.0
 var gun_bearing := 0.0 ## the gun's training, relative to the bow
 var gun_fov := 45.0
@@ -128,8 +129,12 @@ func _process(delta: float) -> void:
 	var sub := Sim.world.sub
 	var h := sub.scope_height()
 	_place_own(sub)
-	camera.cull_mask = 0xFFFFF if eye_mode in ["deck", "gun"] else 0xFFFFF & ~OWN_LAYER
-	if eye_mode == "deck":
+	camera.cull_mask = 0xFFFFF if eye_mode in ["deck", "gun", "world"] else 0xFFFFF & ~OWN_LAYER
+	camera.near = 0.1 if eye_mode == "world" else 1.0 # in a raft your shipmates sit an arm's length off
+	if eye_mode == "world":
+		camera.global_transform = world_eye
+		camera.fov = deck_fov
+	elif eye_mode == "deck":
 		camera.global_transform = _own.global_transform * deck_eye
 		camera.fov = deck_fov
 	elif eye_mode == "gun":
@@ -143,6 +148,8 @@ func _process(delta: float) -> void:
 		camera.fov = scope_fov
 	var snap := Vector3(snappedf(camera.position.x, GRID_SNAP), 0.0, snappedf(camera.position.z, GRID_SNAP))
 	_ocean_near.position = snap
+	Waves.grid_origin = Vector2(snap.x, snap.z)
+	Waves.still = Sim.world.sub.depth > 1.0
 	_ocean_far.position = Vector3(snap.x, -0.3, snap.z)
 	_terrain.sync(Sim.world.seabed)
 	_floor_life.sync(sub.pos, Sim.world.seabed)
@@ -156,8 +163,9 @@ func _process(delta: float) -> void:
 	_apply_conditions(Sim.world.conditions)
 	_update_shore(sub, delta)
 	_light_under(sub)
-	if eye_mode == "deck":
-		_underwater(maxf(-camera.position.y, 0.01) if camera.position.y < 0.0 else 0.0)
+	if eye_mode in ["deck", "world"]: # under the waves as drawn, not the still sea
+		var sea := Waves.height(camera.position.x, camera.position.z)
+		_underwater(maxf(sea - camera.position.y, 0.01) if camera.position.y < sea else 0.0)
 	else:
 		_underwater(maxf(-camera.position.y, 0.01) if h <= 0.0 and eye_mode != "gun" else 0.0)
 
@@ -346,7 +354,8 @@ func _apply_conditions(c: Conditions) -> void:
 		_env.fog_density = lerpf(0.00002, 0.0011, rain)
 		_env.fog_sky_affect = rain * 0.9 # the horizon closes in grey
 	var m := _ocean_near.material_override as ShaderMaterial
-	m.set_shader_parameter("amplitude", lerpf([0.3, 0.5, 0.9][c.sea_state], [0.6, 0.9, 1.2][c.sea_state], rain))
+	Waves.amplitude = lerpf([0.3, 0.5, 0.9][c.sea_state], [0.6, 0.9, 1.2][c.sea_state], rain)
+	m.set_shader_parameter("amplitude", Waves.amplitude)
 	m.set_shader_parameter("horizon_color", Color(0.12, 0.17, 0.26) if c.night else Color(0.55, 0.70, 0.82))
 	m.set_shader_parameter("shallow_color", Color(0.02, 0.08, 0.12) if c.night else Color(0.05, 0.44, 0.50))
 	m.set_shader_parameter("crest_color", Color(0.05, 0.16, 0.2) if c.night else Color(0.25, 0.85, 0.80))

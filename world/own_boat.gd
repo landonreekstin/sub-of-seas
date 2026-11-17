@@ -473,6 +473,16 @@ static func _wwii_gear(root: Node3D, kit: Dictionary, d: Dictionary) -> void:
 	if d.guns:
 		for side: float in [-1.0, 1.0]:
 			_bx(kit, STEEL, Vector3(0.6, 0.7, 1.4), Vector3(side * float(d.beam) * 0.2, deck_y(d, t_of(d, front - 1.5)) + 0.35, front - 1.5))
+	# The life-raft locker (Away), to port ahead of the deck hatch: a grey chest with a yellow band.
+	var lk_z := raft_locker_z(d)
+	var lk_y := deck_y(d, t_of(d, lk_z))
+	_bx(kit, STEEL, Vector3(0.8, 0.55, 1.0), Vector3(-1.6, lk_y + 0.28, lk_z))
+	_bx(kit, Color("#F2C230"), Vector3(0.82, 0.08, 1.02), Vector3(-1.6, lk_y + 0.42, lk_z))
+
+
+## Where the raft locker stands on the casing (z, our own boat's space).
+static func raft_locker_z(d: Dictionary) -> float:
+	return float(d.hatch_z) - 1.4
 
 
 ## A screw: a hub and `blades` blades, facing aft.

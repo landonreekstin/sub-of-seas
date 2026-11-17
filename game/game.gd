@@ -23,6 +23,7 @@ static var instance: Game
 var _fun_rng := RandomNumberGenerator.new() ## the pastimes' cards
 var _arm_push_timer := 0.0
 var deck: Deck ## the casing out on deck (built with the boat)
+var away: Away ## the life rafts and the crew ashore (built with the boat)
 var _deck_notice := -INF ## when "crew on deck" was last announced
 var _ring_free_at := 0.0 ## sim time the wrestling ring takes a new bout
 var interior: SubInterior ## built once we know the boat: at once on the host, on the first crew state on a client
@@ -168,6 +169,9 @@ func _build_boat(key: String) -> void:
 	Sim.world.air.setup(interior.compartments.size(), sub_class.co2_canisters)
 	deck = Deck.create(sub_class)
 	add_child(deck)
+	away = Away.new()
+	away.name = "Away"
+	add_child(away)
 
 
 func players() -> Array[Node]:
@@ -179,10 +183,12 @@ func instrument_free(kind: String) -> bool:
 	return not crew.get("tools", {}).values().has(kind)
 
 
-## Host: is anyone out on deck or in the sea round her without a dive suit? (Divers in suits
-## stay out while she dives: Diving.)
+## Host: is anyone out on deck or in the sea round her without a dive suit, or away in a raft
+## or ashore? (Divers in suits stay out while she dives: Diving.)
 func crew_on_deck() -> bool:
 	for p: Player in _players.get_children():
+		if Away.is_away(p.global_position) or Sim.world.raft_of(p.peer_id) != null:
+			return true
 		if Deck.is_out(p.global_position) and not Diving.suited(p.peer_id) and not p.godly():
 			return true
 	return false
@@ -194,7 +200,7 @@ func _deck_blocks_dive() -> bool:
 		return false
 	if Sim.world.time - _deck_notice > 6.0:
 		_deck_notice = Sim.world.time
-		announce.rpc("Can't dive: there's crew out on deck without a dive suit! Get them below or suited up first.")
+		announce.rpc("Can't dive: there's crew out on deck without a dive suit, or away in a raft or ashore! Get them below first.")
 	return true
 
 
@@ -707,6 +713,7 @@ func _on_peer_disconnected(id: int) -> void:
 		print("server: %s left (%d aboard)" % [crew_name(id), crew.names.size() - 1])
 	crew.names.erase(id)
 	crew.tools.erase(id)
+	crew.get("ashore", {}).erase(id)
 	_clear_stations_of(id)
 	push_crew()
 
@@ -981,6 +988,106 @@ func rq_suit(on: bool) -> void:
 	else:
 		crew.suits.erase(peer)
 	push_crew()
+
+
+## The life rafts (Away, Raft). E at the raft locker on deck: one out of it, inflated, over the
+## side nearest him. Surfaced only, two at most.
+@rpc("any_peer", "call_local", "reliable")
+func rq_raft_launch() -> void:
+	if not multiplayer.is_server() or Sim.world == null:
+		return
+	var peer := _sender()
+	if not Sim.world.sub.is_surfaced() or Sim.world.sub.depth > 1.0:
+		notice.rpc_id(peer, "She has to be surfaced to put a raft over the side.")
+		return
+	if Sim.world.rafts.size() >= Away.MAX_RAFTS:
+		notice.rpc_id(peer, "Both rafts are already out.")
+		return
+	var p := _players.get_node_or_null(str(peer)) as Player
+	var side := 1.0
+	if p != null and Deck.is_out(p.global_position) and p.global_position.x < Deck.ORIGIN.x:
+		side = -1.0
+	var r := Sim.world.launch_raft(side)
+	raft_launched.rpc(r.id)
+
+
+## Every peer: a raft just came out of the locker (the hiss as she fills).
+@rpc("authority", "call_local", "reliable")
+func raft_launched(_id: int) -> void:
+	if local_player != null and Deck.is_outside(local_player.global_position):
+		Sfx.play_for("hiss_loop", 1.8, -4.0, 1.3)
+
+
+@rpc("any_peer", "call_local", "reliable")
+func rq_raft_board(id: int) -> void:
+	if not multiplayer.is_server() or Sim.world == null:
+		return
+	var peer := _sender()
+	var r := Sim.world.find_raft(id)
+	if r == null or Sim.world.raft_of(peer) != null:
+		return
+	var seat := r.free_seat()
+	if seat < 0:
+		notice.rpc_id(peer, "The raft's full.")
+		return
+	r.crew[seat] = peer
+	if crew.get("ashore", {}).has(peer):
+		crew.ashore.erase(peer)
+		push_crew()
+
+
+## Out of the raft: ashore on `island` (a feature index), or into the sea round the boat (-1).
+@rpc("any_peer", "call_local", "reliable")
+func rq_raft_leave(id: int, island: int) -> void:
+	if not multiplayer.is_server() or Sim.world == null:
+		return
+	var peer := _sender()
+	var r := Sim.world.find_raft(id)
+	if r == null or r.seat_of(peer) < 0:
+		return
+	var seat := r.seat_of(peer)
+	r.crew[seat] = 0
+	r.paddles[seat] = 0.0
+	if seat == 0:
+		r.steer = 0.0
+		r.throttle = 0.0
+	if not crew.has("ashore"):
+		crew.ashore = {}
+	if island >= 0 and island < Sim.world.seabed.features.size():
+		crew.ashore[peer] = island
+	else:
+		crew.ashore.erase(peer)
+	push_crew()
+
+
+## A seat's W/S and A/D: paddling, and the driver's tiller and rocket throttle.
+@rpc("any_peer", "call_local", "unreliable_ordered")
+func rq_raft_input(id: int, fwd: float, steer: float) -> void:
+	if not multiplayer.is_server() or Sim.world == null:
+		return
+	var r := Sim.world.find_raft(id)
+	var seat := r.seat_of(_sender()) if r != null else -1
+	if seat < 0:
+		return
+	fwd = clampf(fwd, -1.0, 1.0)
+	r.paddles[seat] = fwd
+	if seat == 0 or r.crew[0] == 0:
+		r.steer = clampf(steer, -1.0, 1.0)
+	if seat == 0:
+		r.throttle = (fwd if fwd > 0.0 else fwd * 0.4) if r.rocket else 0.0
+
+
+## The driver: the rocket out of its compartment onto the stern, or back in.
+@rpc("any_peer", "call_local", "reliable")
+func rq_raft_rocket(id: int) -> void:
+	if not multiplayer.is_server() or Sim.world == null:
+		return
+	var r := Sim.world.find_raft(id)
+	if r == null or r.seat_of(_sender()) != 0 or r.hop > 0.0:
+		return
+	r.rocket = not r.rocket
+	r.throttle = 0.0
+	notice.rpc_id(_sender(), "Rocket fitted! W to light it." if r.rocket else "Rocket stowed in its compartment.")
 
 
 @rpc("any_peer", "call_local", "reliable")
@@ -1520,6 +1627,7 @@ func _host_tick(delta: float) -> void:
 		announce.rpc("Clear the deck! The gun crew tumbles down the hatch.")
 		push_crew()
 	_breathe(delta)
+	away.host_tick()
 	_tdc_follow()
 	_lookouts()
 	_weather_calls()
