@@ -12,7 +12,7 @@ const YELLOW := Color("#F2C230")
 const YELLOW_DARK := Color("#C99A1E")
 ## Where each seat's man sits (raft space, his hips): the driver aft to starboard of the engine,
 ## one in the bow, one each side amidships.
-const SEATS: Array[Vector3] = [Vector3(0.42, 0.2, 0.95), Vector3(0.0, 0.2, -0.95), Vector3(-0.5, 0.2, 0.05), Vector3(0.5, 0.2, -0.1)]
+const SEATS: Array[Vector3] = [Vector3(0.42, 0.2, 0.95), Vector3(0.0, 0.2, -0.45), Vector3(-0.5, 0.2, 0.35), Vector3(0.5, 0.2, 0.15)]
 const SEAT_FACING: Array[float] = [0.0, 0.0, 0.0, 0.0] ## yaw each one faces (all forward)
 const EYE := 0.82 ## his eye over his hips, sitting
 

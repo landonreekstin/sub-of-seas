@@ -4,7 +4,25 @@ Where things stand, in plain English. The newest entry goes at the top. Update i
 Other docs: `roadmap.md` is the to-do list, `style.md` how it looks and feels, `design.md` the
 game's design, `credits.md` where every sound came from.
 
-## 2026-11-13 (latest, 3): sound pass (branch `blaney/sound-balance`, #47 on #46)
+## 2026-11-17 (latest): rafts and beaches (branch `blaney/rafts`, draft #48 on #47)
+
+Blaney's answers (log them in style.md when finishing): raft from a locker on deck (E, inflates
+with a hiss, surfaced only); 4 to a raft; full speed into a beach: bounce, skid, stop, all fine.
+New item he added: swimming, holding Space keeps the head above the waves.
+- [done, tests pass] `sim/raft.gd` (paddle, rocket to 250 mph, skipping, up the beach),
+  `OceanWorld.rafts` + snapshot; `tests/test_raft.gd`.
+- [done, looked at] `game/away.gd` (seats, view from the raft, getting out ashore or into the
+  sea by her, the island's ground as collision round `Away.ASHORE`, figures, rocket sound),
+  `world/raft_model.gd`, `world/waves.gd` (CPU copy of the shader's waves), raft locker on deck
+  (`Deck.RaftLocker`, drawn in `OwnBoat`), RPCs `rq_raft_*` in game.gd, no diving while anyone is
+  in a raft or ashore, `--raft [sea|rocket|beach]` testing aid, `ship_gallery.gd -- raft|raft_rocket`.
+- [done] Space treads water on the waves (`Deck.wave_at`); `tests/raft_walk.gd` passes (gato, s_boat).
+- [next] client view check (was mid-screenshot: host `--raft rocket`, client `--deck --look 100`);
+  paddles not showing in the model; run `make test`; docs (style.md log + current style, CLAUDE.md
+  controls/layout/tests, roadmap: tick rafts and add+tick the treading-water line, credits for
+  the synthesised rocket sounds); Blaney plays it; mark #48 ready; `vibenote --collect-usage`.
+
+## 2026-11-13 (3): sound pass (branch `blaney/sound-balance`, #47 on #46)
 
 - [done] #46 save frames: Blaney played it, "smoother"; ticked, ready.
 - [done] sound pass: `Sfx.CAP_DB` (+3, the muffling's cap; `test_no_call_is_louder_than_the_cap`),

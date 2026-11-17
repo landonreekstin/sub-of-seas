@@ -229,6 +229,7 @@ func _deck_on_spawn() -> void:
 	await get_tree().create_timer(1.5).timeout
 	if Game.instance.deck != null:
 		go_on_deck()
+		rotation.y = -deg_to_rad(Net.debug_look) # --look turns him on deck too
 
 
 func set_display_name(n: String) -> void:

@@ -108,6 +108,38 @@ func _initialize() -> void:
 		if args.size() > 1:
 			_save(args[1])
 		return
+	if k == "raft" or k == "raft_rocket": # the life raft (Away), with crewmen in her; raft_rocket: the rocket fitted and lit
+		var r := Raft.new()
+		r.crew = [1, 2, 3, 0] as Array[int]
+		r.rocket = k == "raft_rocket"
+		r.throttle = 1.0 if r.rocket else 0.0
+		r.steer = 0.4
+		var m := RaftModel.new()
+		m.rotation.y = -PI / 2.0 # bow to the right
+		root3d.add_child(m)
+		m.show_state.call_deferred(r) # once it's built (its _ready runs on the first frame here)
+		for i in 3:
+			var n := Node3D.new()
+			var body := Node3D.new()
+			n.add_child(body)
+			var limbs := Crewman.build_body(body, {"build": i % 3, "skin": i}, Color.from_hsv(i * 0.3, 0.45, 0.85))
+			var face := Node3D.new()
+			face.position.y = 1.62
+			n.add_child(face)
+			Crewman.build_face(face, {"skin": i, "beard": i})
+			limbs.leg_l.rotation.x = 1.45
+			limbs.leg_r.rotation.x = 1.45
+			limbs.arm_l.rotation.x = 0.7 if i != 0 or not r.rocket else 0.4
+			limbs.arm_r.rotation.x = 0.9 if i != 0 or not r.rocket else 1.1
+			n.position = RaftModel.SEATS[i] - Vector3(0, 0.88, 0)
+			m.add_child(n)
+		var c := Camera3D.new()
+		c.fov = 45.0
+		root3d.add_child(c)
+		c.look_at_from_position(Vector3(-3.2, 2.4, 4.2), Vector3(0.4, 0.4, 0))
+		if args.size() > 1:
+			_save(args[1])
+		return
 	if k == "plane": # the patrol plane, in the air
 		var p := ShipModels.plane()
 		p.position.y = 3.0

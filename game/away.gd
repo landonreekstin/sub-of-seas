@@ -87,10 +87,51 @@ static func world_pos(player: Player) -> Vector2:
 	return r.pos if r != null else Vector2.INF
 
 
+var _debug_t := 0.0
+
+
+## Testing aid (--raft [sea|rocket|beach]): the host, surfaced, in a raft alongside her; with the
+## rocket fitted; or on a beach, out of the raft.
+func _debug(me: Player, delta: float) -> void:
+	_debug_t += delta
+	var g := Game.instance
+	var w := Sim.world
+	if _debug_t < 1.0:
+		return
+	if w.rafts.is_empty():
+		w.sub.depth = 0.0
+		w.sub.ordered_depth = 0.0
+		g.rq_raft_launch()
+		return
+	var r := w.rafts[0]
+	if r.seat_of(me.peer_id) < 0 and not is_ashore(me.global_position):
+		g.rq_raft_board(r.id)
+		if Net.debug_raft == "rocket":
+			g.rq_raft_rocket(r.id)
+		elif Net.debug_raft == "beach":
+			var island := nearest_island(w.seabed, r.pos)
+			var f: Dictionary = w.seabed.features[island]
+			var c := Vector2(f.x, f.y)
+			var out := (w.sub.pos - c).normalized()
+			var p := c
+			while w.seabed.floor_depth(p) < 0.0:
+				p += out * 2.0
+			r.pos = p - out * 4.0
+			r.heading = fposmod(rad_to_deg(atan2(-out.x, -out.y)), 360.0)
+		return
+	if Net.debug_raft == "beach" and _debug_t > 2.5 and _mode == "raft":
+		get_out(r)
+		me.rotation.y += PI # looking back out to sea, the raft on the sand
+	if _debug_t > 3.0:
+		Net.debug_raft = ""
+
+
 func _process(delta: float) -> void:
 	if Sim.world == null or Game.instance.exterior == null:
 		return
 	var me := Game.instance.local_player
+	if Net.debug_raft != "" and me != null and multiplayer.is_server():
+		_debug(me, delta)
 	_sync_models(delta, me)
 	if me == null:
 		return

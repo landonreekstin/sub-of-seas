@@ -13,6 +13,7 @@ var player_name := "Sailor"
 var last_error := "" ## shown by the main menu after a session ends badly
 var cli_start := Mode.NONE ## set from the command line, consumed by the main menu once
 var profile := Profile.load_or_new() ## this player's career and look, saved on this machine
+var debug_raft := "" ## --raft [sea|rocket|beach]: host, in a raft once aboard (the rocket fitted; or ashore on a beach)
 var debug_deck := false ## --deck: climb out on deck once aboard (testing; the boat must be surfaced: --depth 0)
 var debug_spawn: Variant = null ## --spawn x,y,z: start this player there (testing)
 var port := DEFAULT_PORT ## --port n (the packaged game uses 7845, forwarded over the homelab VPN)
@@ -103,6 +104,10 @@ func _ready() -> void:
 					start_bots = args[i + 1].split(",", false)
 			"--deck":
 				debug_deck = true
+			"--raft": # --raft [sea|rocket|beach]
+				debug_raft = "sea"
+				if i + 1 < args.size() and not args[i + 1].begins_with("--"):
+					debug_raft = args[i + 1]
 			"--reef":
 				debug_reef = true
 			"--squall": # --squall [over|ahead]
