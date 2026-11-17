@@ -37,6 +37,7 @@ var shells: Array[Dictionary] = []
 var planes: Array[Aircraft] = []
 var whales: Array[Whale] = []
 var monsters: Array[Monster] = [] ## things from the depths (Monster)
+var rafts: Array[Raft] = [] ## the crew's life rafts out on the water (Raft)
 var deep_life := true ## host: monsters turn up now and then when the boat goes deep
 var _deep_rng := RandomNumberGenerator.new() ## their comings, apart from the patrol's own dice
 var _deep_timer := 300.0
@@ -182,6 +183,33 @@ func raise_alarm(pos: Vector2, error: float, awareness := 0.6) -> void:
 			ship.alert()
 
 
+## Host: a raft launched from the locker, in the water alongside her (`side`: +1 starboard).
+func launch_raft(side := 1.0) -> Raft:
+	var r := Raft.new()
+	r.id = _take_id()
+	var h := deg_to_rad(sub.heading)
+	var right := Vector2(cos(h), -sin(h))
+	r.pos = sub.pos + right * side * (sub.data.beam * 0.5 + 3.0)
+	r.heading = sub.heading
+	rafts.append(r)
+	return r
+
+
+func find_raft(id: int) -> Raft:
+	for r in rafts:
+		if r.id == id:
+			return r
+	return null
+
+
+## The raft this crewman sits in, or null.
+func raft_of(peer: int) -> Raft:
+	for r in rafts:
+		if r.seat_of(peer) >= 0:
+			return r
+	return null
+
+
 func find_ship(id: int) -> ShipState:
 	for ship in ships:
 		if ship.id == id:
@@ -278,6 +306,8 @@ func step(dt: float, authoritative := true) -> void:
 		ship.step(dt, rng if authoritative else null, seabed)
 	for wh in whales:
 		wh.step(dt, rng if authoritative else null)
+	for r in rafts:
+		r.step(dt, seabed, rng if authoritative else null)
 	for m in monsters:
 		if authoritative:
 			m.think(dt, self)
@@ -778,6 +808,7 @@ func to_snapshot() -> Dictionary:
 		"pl": planes.map(func(p: Aircraft) -> Array: return p.to_snapshot()),
 		"wh": whales.map(func(wh: Whale) -> Array: return wh.to_snapshot()),
 		"mo": monsters.map(func(m: Monster) -> Array: return m.to_snapshot()),
+		"rf": rafts.map(func(r: Raft) -> Array: return r.to_snapshot()),
 		"hull": hull.to_snapshot(),
 		"air": air.to_snapshot(),
 		"cd": conditions.to_snapshot(),
@@ -845,6 +876,14 @@ func apply_snapshot(s: Dictionary) -> void:
 		m.apply_snapshot(a)
 		mos.append(m)
 	monsters = mos
+	var rfs: Array[Raft] = []
+	for a: Array in s.get("rf", []):
+		var r: Raft = find_raft(a[0])
+		if r == null:
+			r = Raft.new()
+		r.apply_snapshot(a)
+		rfs.append(r)
+	rafts = rfs
 	hull.apply_snapshot(s.hull)
 	air.apply_snapshot(s.air)
 	conditions.apply_snapshot(s.cd)
