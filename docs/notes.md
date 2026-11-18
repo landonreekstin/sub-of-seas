@@ -22,7 +22,7 @@ New item he added: swimming, holding Space keeps the head above the waves.
   roadmap ticked. Unit tests: all pass but the monster-catch one, which was flaky before this.
   Walkthroughs: all pass (raft_walk on gato, s_boat, typhoon, titan); captain_walkthrough failed
   twice under the full parallel load but passes alone.
-- [next] Blaney plays it, then mark #48 ready.
+- [done] Blaney played it: "feels good". #48 marked ready.
 
 ## 2026-11-13 (3): sound pass (branch `blaney/sound-balance`, #47 on #46)
 
