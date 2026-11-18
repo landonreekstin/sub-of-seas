@@ -101,6 +101,8 @@ func _debug(me: Player, delta: float) -> void:
 	if w.rafts.is_empty():
 		w.sub.depth = 0.0
 		w.sub.ordered_depth = 0.0
+		w.sub.telegraph = 0 # stopped, so she doesn't sail off and leave the raft behind
+		w.sub.speed = 0.0
 		g.rq_raft_launch()
 		return
 	var r := w.rafts[0]

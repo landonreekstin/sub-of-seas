@@ -67,7 +67,8 @@ func _ready() -> void:
 	# Two paddles lashed inside the tube, port side; held up by a paddler while he paddles.
 	for side in [-1.0, 1.0]:
 		var paddle := Node3D.new()
-		paddle.position = Vector3(-0.45 if side < 0.0 else 0.45, 0.25, 0.0)
+		var seat := SEATS[2 if side < 0.0 else 3]
+		paddle.position = Vector3(side * 0.8, 0.6, seat.z - 0.1) # in his hands, out over the side
 		add_child(paddle)
 		Build.cyl(paddle, 0.025, 1.3, Vector3.ZERO, Color("#B08850"), Vector3.FORWARD)
 		Build.box(paddle, Vector3(0.18, 0.03, 0.34), Vector3(0, 0, -0.75), Color("#B08850"), false)
@@ -122,8 +123,11 @@ func show_state(r: Raft) -> void:
 	_flame.scale = Vector3(1.0 + burn * 0.5, 0.5 + burn * 2.5 * randf_range(0.8, 1.15), 1.0 + burn * 0.5)
 	_flame.position.z = 0.75 + _flame.scale.y * 0.5
 	_tiller.rotation.y = -r.steer * 0.6
+	var t := Time.get_ticks_msec() / 1000.0
 	for i in _paddles.size():
 		_paddles[i].visible = not r.rocket and (r.crew[2 + i] != 0)
+		var pulling := absf(r.speed) > 0.3
+		_paddles[i].rotation.x = -0.9 + (sin(t * 4.5 + i * PI) * 0.35 if pulling else 0.0) # the blade in the water, stroking
 
 
 ## The eye of whoever sits in `seat`, in raft space, looking `yaw` / `pitch` (radians) off ahead.
