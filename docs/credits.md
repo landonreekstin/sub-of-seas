@@ -70,4 +70,5 @@ page was checked when the sound was chosen (2026-11-03). The game uses Freesound
 previews, cut, filtered and levelled by `tools/make_recorded.py`.
 
 Still synthesised, because no recording suited (`tools/make_sounds.sh`): echo_ranging, motor_loop,
-hoist_loop, screws_capital_loop, screws_merchant_loop, screws_warship_loop, shrimp_loop.
+hoist_loop, screws_capital_loop, screws_merchant_loop, screws_warship_loop, shrimp_loop, and the
+raft's rocket: rocket_loop and rocket_start.

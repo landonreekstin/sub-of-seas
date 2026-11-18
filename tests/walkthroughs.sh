@@ -23,6 +23,7 @@ rm -f tests/logs/*.log
 	for s in gato typhoon; do echo "god_out.gd $s"; done
 	for s in gato s_boat typhoon; do echo "captain_walkthrough.gd $s"; done
 	for s in gato typhoon; do echo "swim_walk.gd $s"; done
+	for s in gato s_boat typhoon titan; do echo "raft_walk.gd $s"; done
 	for s in gato s_boat typhoon; do echo "muffle_check.gd $s"; done
 	for s in gato s_boat narwhal typhoon; do echo "pastime_walkthrough.gd $s"; done
 } | awk '{ print 7100 + NR, $0 }' | xargs -P "$JOBS" -I{} sh -c '

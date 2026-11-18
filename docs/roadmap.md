@@ -261,7 +261,10 @@ Added by Blaney after playing. In his words where it matters.
       *(Done, PR #46: far islands drawn coarse, under-water ground not drawn from afar, the cameras run only when looked at, the hologram turns instead of rebuilding: the camera wall draws 4.0M triangles a frame down to 1.2M, the captain's chair 3.5M down to 0.33M. Blaney played it: "smoother".)*
 - [x] be critical of all the sounds in the game and make sure they are balanced properly
       *(Done, PR #47: one loudness cap for every sound, sounds fade out with distance instead of being faintly heard all through the boat, a compressor and limiter so a depth-charge attack never distorts, the klaxon brought down, quiet ones (motors at slow, air hiss, wheels, pencil, galley, sea on deck, one footstep) made audible, and a roar at the black smokers that never stopped now fades. Blaney listened: "sounds good".)*
-- [ ] we should add some basic ability for people to get to land on inflatable rafts, there should be walkable beaches on land
+- [x] we should add some basic ability for people to get to land on inflatable rafts, there should be walkable beaches on land
+      *(Done, PR #48: a raft locker on deck, two yellow four-man rafts; paddle, or the driver fits the rocket from its pouch and goes up to 250 mph, skipping off the waves; full speed into a beach skids her up the sand; get out and walk the island's beaches, wade to the waist; back alongside, into the sea, and the empty raft is stowed. A second player sees the raft and who's in it.)*
+- [x] also when people swim and hold space their heads stay above the waves
+      *(Done, PR #48: Space treads water, the head riding the waves as drawn, never under.)*
 
 ## M9 — Lando's list (2026-10-30)
 Added by lando. Direction: **more arcadey, not strict realism**. Every existing mechanic

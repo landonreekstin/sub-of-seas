@@ -17,10 +17,12 @@ New item he added: swimming, holding Space keeps the head above the waves.
   (`Deck.RaftLocker`, drawn in `OwnBoat`), RPCs `rq_raft_*` in game.gd, no diving while anyone is
   in a raft or ashore, `--raft [sea|rocket|beach]` testing aid, `ship_gallery.gd -- raft|raft_rocket`.
 - [done] Space treads water on the waves (`Deck.wave_at`); `tests/raft_walk.gd` passes (gato, s_boat).
-- [next] client view check (was mid-screenshot: host `--raft rocket`, client `--deck --look 100`);
-  paddles not showing in the model; run `make test`; docs (style.md log + current style, CLAUDE.md
-  controls/layout/tests, roadmap: tick rafts and add+tick the treading-water line, credits for
-  the synthesised rocket sounds); Blaney plays it; mark #48 ready; `vibenote --collect-usage`.
+- [done] a second player sees the raft and who's in it (client screenshot); paddles in the
+  paddlers' hands; `--raft` stops the boat. Docs: style log + current style, CLAUDE.md, credits,
+  roadmap ticked. Unit tests: all pass but the monster-catch one, which was flaky before this.
+  Walkthroughs: all pass (raft_walk on gato, s_boat, typhoon, titan); captain_walkthrough failed
+  twice under the full parallel load but passes alone.
+- [next] Blaney plays it, then mark #48 ready.
 
 ## 2026-11-13 (3): sound pass (branch `blaney/sound-balance`, #47 on #46)
 

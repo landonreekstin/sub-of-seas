@@ -523,7 +523,27 @@ and update "Current style" in the same commit.
   doesn't care); the dark closes in deeper and now and then something far off groans. The
   escape trunk in the forward torpedo room's deckhead goes out at the bow, in the dive suit
   when she's dived. Flood water over your chest and you swim in the room (Space up, Ctrl down,
-  or float with your eye clear), murky green-blue when your eye goes under.
+  or float with your eye clear), murky green-blue when your eye goes under. Out in the sea,
+  holding Space treads water: the head rides up and down with the waves as drawn and never goes
+  under them.
+- **Life rafts** (Blaney: a yellow rubber WWII-style raft, to get ashore): a grey locker with a
+  yellow band on the casing, to port ahead of the deck hatch; E puts a raft over the side, filling
+  with a hiss (surfaced only, two out at most). A yellow oval tube with darker seams, a grey
+  lifeline looped round it, an olive canvas pouch on the starboard tube marked ROCKET. Four sit
+  in her: the driver aft, beside the engine, one in the bow and one each side with wooden
+  paddles. W/S paddle (slow, about walking pace), A/D steer. The funny bit: the driver takes the
+  rocket out of its pouch (R) and fits it on the stern, a fat red rocket with a white nose and
+  fins on a bracket, steered by hand on a tiller like a small outboard; W lights it, a long
+  orange flame, a warm rounded roar with a soft putter in it (never hissy or grating, under the
+  sea's own sound when you're further off), up to 250 mph, skipping off the waves with a slap
+  each time she comes down, nose up in the air. Full speed into a beach or a rock: she bounces,
+  skids up the sand and stops, everyone fine. Q gets out: onto the sand in the shallows or on
+  the beach, into the sea beside the boat when she's close, and anywhere else it's too far to
+  swim. An empty raft left alongside is stowed back in the locker. Nobody dives while anyone is
+  in a raft or ashore.
+- **Beaches** (Blaney: walk the beach, nothing more for now): ashore you walk the very ground
+  the islands are drawn with, the pale sand beach and up into the green behind it; you can wade
+  to your waist, no deeper. Back to the raft and E gets in.
 - **The sea** (Blaney: a larger area): islands, seamounts and shelves spread over some 30 km
   each way, with deep trenches far below any keel; the chart table zooms out to 80 km across;
   swimmers have 40 m of sea round the boat.
@@ -619,3 +639,5 @@ and update "Current style" in the same commit.
 | 2026-11-13 | Blaney | "Be critical of all the sounds in the game and make sure they are balanced properly." Anything in particular? "Nothing specific, you judge." |
 | 2026-11-13 | Blaney | Rafts (not built yet): a yellow rubber WWII-style raft; "paddle it or you can also attach a rocket engine to the back of it to go up to 250mph. it should be fun feeling physics with the boat skipping, make sure the audio sounds good and is balanced and not grating. i want the rocket engine to kind of be a funny thing that is in a compartment in the life raft and you can attach it to the back of the life raft to supercharge it. the driver is going to sit next to the engine and hand turn it like a small motor boat". On land: just walk the beach for now. |
 | 2026-11-13 | Blaney | (After the sound pass) "Sounds good." |
+| 2026-11-17 | Blaney | Rafts, asked: where from? "Locker on deck": E, it inflates with a hiss and drops beside her, surfaced only. How many? Four (driver by the engine and three paddlers). Into a beach at full speed? It bounces, skids up the sand and stops, everyone fine. |
+| 2026-11-17 | Blaney | "When people swim and hold space their heads stay above the waves." (Asked: yes, keep the head above: Space treads water, bobbing with the waves, never under.) |
