@@ -24,7 +24,7 @@ Look: Peak-like low-poly flat colours now, textures toward Sea of Thieves later.
 ## How it is built
 
 Godot **4.7.2**, GDScript, Jolt 3D physics. Repo: github.com/landonreekstin/sub-of-seas
-(private; lando's, Blaney works on it too — see "Working together" below).
+(private; lando's, Blaney works on it too and commits to `main` as well — see "Working together" below).
 
 ### Architecture
 - **Two spaces.** The sub interior is a static first-person level that never moves. The ocean
@@ -186,7 +186,7 @@ Then run it in xvfb and look at screenshots (see `../CLAUDE.md`).
 - Commit messages `type(scope): description`. Commit whenever the game is playable.
 - Keep `docs/roadmap.md` ticked and this file current when the architecture changes.
 
-## Working together: git and PRs
+## Working together: git
 
 sub-of-seas is **lando's** repo (`github.com/landonreekstin/sub-of-seas`, private).
 **Blaney** (`insideabush` on his PC, `cblaney00` on GitHub) works on it too, from his own
@@ -197,25 +197,45 @@ to every session in every clone.
 `~/gamedev/sub-of-seas` on lando's machine, and Blaney when it is
 `/home/insideabush/projects/sub-of-seas` (`.vibe-project` there has `shared=`).
 
+**Both of us commit to `main`.** lando, 2026-11-19: "change it so that blaney can merge to
+main without prs and allow him to just do that instead of making prs". Before that, Blaney
+worked through `blaney/` branches and PRs that lando merged; that is over. `vibe` stops
+putting the hooks that refused `main` in his clone (nixos-config `blaneyCommitsToMain`,
+PR #329) once blaney-pc is rebuilt with it.
+
 ### Every session, before anything else
 
 1. `git fetch origin`. Read `git log --oneline HEAD..origin/main` to see what the other
    person pushed since last time.
-2. `gh pr list --repo landonreekstin/sub-of-seas` shows what is open. Read the comments and
-   reviews on the open `blaney/` PRs (`gh pr view <n> --comments`).
-   - In **Blaney's** sessions: lando's comments come first. Make the changes he asks for
-     on that PR's branch, push, and reply on the PR (`gh pr comment`) saying what changed.
-   - In **lando's** sessions: if a PR from Blaney is waiting, say so in one line.
-3. Start from an up-to-date `main`. On `main`, run `git merge --ff-only origin/main`. On a
+2. Start from an up-to-date `main`. On `main`, run `git pull --rebase origin main`. On a
    branch, run `git rebase origin/main`, then `git push --force-with-lease` if the branch
    is already on GitHub. Never pull other people's work in any other way.
-4. See what the other person has **in progress**: `git branch -r --no-merged origin/main`
+3. See what the other person has **in progress**: `git branch -r --no-merged origin/main`
    and `git log --oneline origin/main..origin/<branch>` for each (`wip(...)` commits are
-   unfinished work), plus draft PRs in `gh pr list`. Before starting something, check it
-   isn't already being built there; if it touches the same code, say so and build on it
-   rather than alongside it.
+   unfinished work), plus anything open in `gh pr list --repo landonreekstin/sub-of-seas`.
+   Before starting something, check it isn't already being built there; if it touches the
+   same code, say so and build on it rather than alongside it.
+4. Delete any merged branches left over (`git branch --merged origin/main`,
+   `git branch -r --merged origin/main`). Never delete a branch that isn't merged.
 
-### For both: push work in progress as you go
+### Committing and pushing (both of us)
+
+- Commit straight to `main` once the change is verified (below). Run
+  `git pull --rebase origin main` again right before every push, so neither of us
+  overwrites the other. A conflict you can't sort out cleanly: stop and ask the person
+  you're working for. Never force-push `main`, and never use `--no-verify`.
+- Bigger or riskier work, or anything that will take more than one session, goes on a
+  branch first: `feat/`/`fix/`/`tweak/` for lando, `blaney/<what>` for Blaney. When it is
+  finished and verified, whoever made it merges it themselves: `git rebase origin/main` on
+  the branch, test again, then `git checkout main`, `git merge --ff-only <branch>` and push.
+  No PR is needed. Then delete the branch, locally and on GitHub (`git branch -d <b>`,
+  `git push origin --delete <b>`, `git fetch --prune`).
+- In Blaney's sessions, push **as him** (`sudo -u insideabush -H git push`): his GitHub
+  login is `cblaney00`.
+- Only lando runs `tools/publish.sh`, and only from a tested `main`, so the pack Blaney
+  plays is code that is on GitHub.
+
+### Push work in progress as you go
 
 lando: "commit and push to a branch as wip so his Claude can see what's being done". It
 applies to **both** of us, in every session:
@@ -223,41 +243,12 @@ applies to **both** of us, in every session:
   each natural pause, before a long test run, and when the session ends or is paused),
   commit it on its branch as `wip(<scope>): <what so far>` (for example
   `wip(sonar): waterfall draws, no scrolling yet`) and push. `wip` commits never go on
-  `main`: lando's work in progress goes on a `feat/`/`fix/`/`tweak/` branch, Blaney's on its
-  `blaney/` branch.
-- A branch with `wip` commits gets a **draft** PR right away (`gh pr create --draft`), whose
-  description says what's done and what's still to do. Mark it ready
-  (`gh pr ready <n>`) once the work is finished and verified (below); never merge a draft.
+  `main`: they go on that person's branch (above). Squash or reword them into proper
+  commits before the branch is merged if you like; the branch on GitHub is what the other
+  person's sessions look at.
 - `wip` commits are the one exception to "verify before you commit": they may be
   unfinished, but they must still parse (`godot --headless --path . --quit-after 120`), so
   the other person can check the branch out and run it.
-
-### Blaney's changes: always a `blaney/` branch and a PR
-
-- **Never commit to `main`, never push to `main`, never merge anything into `main`.** His
-  clone has git hooks that refuse it. Never get around them with `--no-verify`.
-- One branch per change he asks for, named `blaney/<what>` (for example
-  `blaney/sonar-waterfall`). Branch from an up-to-date `origin/main`. If he carries on with
-  something that already has a PR open, use that PR's branch.
-- Open the PR with `gh pr create --base main` and **stop there**. Lando reviews and merges
-  it. The PR description says in plain English what changed and how to try it.
-- Push after every commit. The branch on GitHub is what lando reviews and his backup.
-- Never run `tools/publish.sh`: only lando publishes builds to the NAS drop.
-
-### Lando's changes
-
-- Lando may commit straight to `main`. Bigger or riskier work goes on a
-  `feat/`/`fix/`/`tweak/` branch with a PR, the same as in the NixOS config.
-- **Merge Blaney's PRs only when lando asks**, after the game has been run on that branch:
-  `gh pr checkout <n>`, run the tests (see "Test"), play it. Merge with
-  `gh pr merge <n> --merge --delete-branch`.
-- **Always delete a branch once it is merged**, locally and on GitHub
-  (`git branch -d <b>`, `git push origin --delete <b>`, then `git fetch --prune`). At the
-  start of a session, delete any merged branches left over
-  (`git branch --merged origin/main`, `git branch -r --merged origin/main`). Never delete
-  a branch that isn't merged.
-- Publish (`tools/publish.sh`) only from a tested `main`, so the pack Blaney plays is code
-  that is on GitHub.
 
 ### Look and feel: `docs/style.md`
 
@@ -272,18 +263,16 @@ where they live.
   given in passing while playtesting ("the water looks too green", "the periscope should
   turn slower"). Add a row to its direction log in their words with the date and who said
   it. Then update "Current style" to match, in the **same commit** as the change it caused.
-  A PR that changes how the game looks or feels without touching `docs/style.md` is
-  incomplete.
+  A change to how the game looks or feels without touching `docs/style.md` is incomplete.
 - Ask a short follow-up when a direction is vague, so the logged rule can be followed by
   someone who wasn't there. For example: "too green: the flood water, or the walls?"
-- If it contradicts an earlier direction from the *other* person, follow the new one on the
-  branch, log it, and add a **"Style conflict"** heading to the PR description. Don't
-  quietly overrule either of you.
-- In a PR, a separate **"Look and feel"** heading lists the directions it added.
+- If it contradicts an earlier direction from the *other* person, follow the new one, log
+  it with **"Style conflict:"** at the start of its row, saying which earlier row it
+  overrides, and tell the person you're working for. Don't quietly overrule either of you.
 
 ### For both: verify before you commit
 
-**Never commit to `main`, or mark a PR ready or merge it, with a change you haven't seen
+**Never commit to `main`, or merge a branch into it, with a change you haven't seen
 working.** (WIP commits on a branch are fine, see above.) Passing tests is not enough.
 - The unit tests and the training walkthrough must pass (see "Test").
 - Run the game and look at it: screenshot it under `xvfb-run` (see `../CLAUDE.md`) and open

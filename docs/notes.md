@@ -4,7 +4,18 @@ Where things stand, in plain English. The newest entry goes at the top. Update i
 Other docs: `roadmap.md` is the to-do list, `style.md` how it looks and feels, `design.md` the
 game's design, `credits.md` where every sound came from.
 
-## 2026-11-17 (latest): rafts and beaches (branch `blaney/rafts`, draft #48 on #47)
+## 2026-11-19 (latest): everything merged; Blaney commits to main now
+
+lando merged every open PR (#39-#48 in one stack, and #40, the boat's motion, with its
+roadmap/style/test-list conflicts sorted). `main` has it all: 1096 unit tests and all 51
+walkthroughs pass. One unit test failed once in five runs and never again (flaky, not found
+which). `blaney/nimble-boat` (one old arcade-speed commit, no PR) is left alone: #43's
+faster arcade covers it.
+
+From now on Blaney commits to `main` like lando, no PRs (CLAUDE.md "Working together").
+The nixos-config side is PR #329 (`blaneyCommitsToMain` for sub-of-seas).
+
+## 2026-11-17: rafts and beaches (branch `blaney/rafts`, draft #48 on #47)
 
 Blaney's answers (log them in style.md when finishing): raft from a locker on deck (E, inflates
 with a hiss, surfaced only); 4 to a raft; full speed into a beach: bounce, skid, stop, all fine.
