@@ -37,6 +37,23 @@ func _ready() -> void:
 		_playback = _out.get_stream_playback()
 
 
+## The diver's helmet telephone (Diving): a diver out in the sea is heard over the phone at the
+## helm, and whoever talks near the helm is heard in his helmet.
+func _phone() -> void:
+	var me: Player = Game.instance.local_player if Game.instance != null else null
+	if _out == null or me == null or Game.instance.interior == null:
+		return
+	var phone := Diving.phone_point()
+	var him_out := Deck.is_out(player.global_position)
+	var me_out := Deck.is_out(me.global_position)
+	if him_out and not me_out and Diving.suited(player.peer_id):
+		_out.global_position = phone
+	elif me_out and not him_out and Diving.suited(me.peer_id) and player.global_position.distance_to(phone) < 6.0:
+		_out.global_position = me.camera.global_position
+	else:
+		_out.position = Vector3.ZERO
+
+
 ## A muted bus with a capture effect: the microphone plays into it, we read it back.
 static func _mic_bus() -> AudioEffectCapture:
 	var i := AudioServer.get_bus_index(BUS)
@@ -51,6 +68,7 @@ static func _mic_bus() -> AudioEffectCapture:
 
 func _process(delta: float) -> void:
 	if not player.is_local():
+		_phone()
 		return
 	var want := test_tone or (Input.is_action_pressed("voice") and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED)
 	if want != talking:

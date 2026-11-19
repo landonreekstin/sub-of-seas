@@ -73,7 +73,7 @@ func _process(delta: float) -> void:
 		if overlay != null and not broken:
 			want = _held()
 			if want != 0.0:
-				var to := clampf(sub.ordered_depth + want * DIVE_RATE * delta, 0.0, 200.0)
+				var to := clampf(sub.ordered_depth + want * DIVE_RATE * delta, 0.0, sub.data.crush_depth)
 				sub.ordered_depth = to # shown at once, confirmed by the host
 				_sent += delta
 				if _sent >= 0.2:

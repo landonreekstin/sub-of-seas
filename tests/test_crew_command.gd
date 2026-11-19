@@ -74,3 +74,37 @@ func test_confused() -> bool:
 	for text in ["banana", "", "what is the meaning of life", "lets get pizza"]:
 		runner.check(CrewCommand.parse(text).is_empty(), "\"%s\" confuses the crew" % text)
 	return true
+
+
+## Every line on the PA's list of orders means what the list says (Blaney: a list of all PA commands).
+func test_the_help_list() -> bool:
+	for group: Array in CrewCommand.HELP:
+		for pair: Array in group[1]:
+			runner.check(_one(pair[0]).intent == pair[1], "\"%s\" is %s (got %s)" % [pair[0], pair[1], _one(pair[0]).intent])
+	return true
+
+
+func test_the_cave() -> bool:
+	runner.check(_one("take us through the cave").intent == "cave", "take us through the cave")
+	runner.check(_one("go through the tunnel").intent == "cave", "go through the tunnel")
+	runner.check(_one("come about").rel == 180.0, "come about")
+	runner.check(_one("turn to port").rel == -45.0, "turn to port")
+	return true
+
+
+func test_god_mode() -> bool:
+	runner.check(_one("god mode").intent == "god" and _one("god mode").toggle, "god mode toggles")
+	runner.check(_one("god mode on").intent == "god" and not _one("god mode on").off and not _one("god mode on").toggle, "god mode on")
+	runner.check(_one("god mode off").off, "god mode off")
+	runner.check(_one("good speed").intent != "god", "good is not god")
+	return true
+
+
+func test_places() -> bool:
+	runner.check(_one("take us to the wreck").place == "wreck", "take us to the wreck")
+	runner.check(_one("go to the island").intent == "goto", "go to the island")
+	runner.check(_one("head for the nearest island").intent == "course", "head for the island stays a course")
+	runner.check(_one("take us through the cave").intent == "cave", "through the cave isn't a waypoint")
+	runner.check(_one("explore the crystal city").place == "alien", "the crystal city")
+	runner.check(_one("clear the waypoint").get("clear", false), "clear the waypoint")
+	return true

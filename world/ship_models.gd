@@ -67,21 +67,7 @@ const RUBBER_DECK := Color("#232527") ## and her deck, worn a shade lighter by f
 
 
 static func own_dims(sub: SubClassData) -> Dictionary:
-	var l := sub.length
-	var d := {"length": l, "beam": clampf(l * 0.088, 6.0, 10.0), "deck": clampf(l * 0.028, 2.2, 3.2),
-		"ct_z": -l * 0.06, "ct_len": l * 0.16, "ct_h": 4.2}
-	if sub.key == "typhoon": # a very wide flat casing, the fin well aft of the missile tubes
-		d.beam = 23.0
-		d.deck = 5.0
-		d.ct_z = l * 0.12
-		d.ct_len = l * 0.16
-		d.ct_h = 12.0
-	d.gun_z = d.ct_z - d.ct_len * 0.5 - 6.0
-	d.hatch_z = d.ct_z - d.ct_len * 0.5 - 2.6 # the deck hatch, between the gun and the fairwater
-	d.ladder_z = d.ct_z + d.ct_len * 0.5 + 3.0 # rungs up the side from the water, both sides
-	d.ring_z = d.ladder_z + 6.0 # the wrestling ring painted across the aft casing (Wrestling)
-	d.ring_edge = hull_half((d.ring_z + l * 0.5) / l, d.beam) - 0.15 # where the deck ends, each side
-	return d
+	return OwnBoat.dims(sub)
 
 
 static func _hull(root: Node3D, length: float, beam: float, freeboard: float, draft: float, color: Color,
@@ -210,90 +196,9 @@ static func _hull(root: Node3D, length: float, beam: float, freeboard: float, dr
 	root.add_child(rm)
 
 
-## Our own boat on the surface, as the gun crew sees her from the casing: the lofted hull in
-## black with a teak deck, the conning-tower fairwater with its periscope shears, and the deck
-## gun forward of it. The gun is the node "Gun" (it trains about y), its barrel "Gun/Barrel"
-## (recoils along +z), the muzzle "Gun/Barrel/Muzzle" and the gunlayer's eye "Gun/Eye".
+## Our own boat on the surface (OwnBoat).
 static func own_boat(sub: SubClassData) -> Node3D:
-	var root := Node3D.new()
-	root.name = "OwnBoat"
-	var d := own_dims(sub)
-	var l: float = d.length
-	var beam: float = d.beam
-	var fb: float = d.deck
-	var rubber := sub.key == "typhoon" # a Typhoon is clad all over in black rubber tiles, no wood (Blaney: as real as we can get)
-	var hull_col := RUBBER if rubber else Color("#2C3034")
-	var fin_col := RUBBER if rubber else Color("#33373C")
-	_hull(root, l, beam, fb, 4.5, hull_col, [], RUBBER_DECK if rubber else DECK)
-	var deck_y := fb
-	# The fairwater round the conning tower and bridge, a little forward of amidships.
-	var ct_z: float = d.ct_z
-	var ct_len: float = d.ct_len
-	var ct_h: float = d.ct_h
-	Build.box(root, Vector3(beam * 0.32, ct_h, ct_len), Vector3(0, deck_y + ct_h * 0.5, ct_z), fin_col)
-	Build.cyl(root, beam * 0.16, ct_h, Vector3(0, deck_y + ct_h * 0.5, ct_z - ct_len * 0.5), fin_col)
-	Build.box(root, Vector3(beam * 0.34, 0.15, ct_len + 0.6), Vector3(0, deck_y + ct_h, ct_z), BLACK) # bridge rail
-	for z in [ct_z - ct_len * 0.1, ct_z + ct_len * 0.15]:
-		Build.cyl(root, 0.22, 6.5, Vector3(0, deck_y + ct_h + 3.2, z), fin_col)
-	Build.box(root, Vector3(0.12, 0.9, ct_len * 0.5), Vector3(0, deck_y + ct_h + 6.0, ct_z + 0.5), fin_col)
-	# The gun on the casing forward of the fairwater.
-	var gun := Node3D.new()
-	gun.name = "Gun"
-	gun.position = Vector3(0, deck_y, d.gun_z)
-	root.add_child(gun)
-	var bore := 0.06 + sub.gun_damage * 0.12 # bigger guns, fatter barrels
-	if sub.gun_rounds == 0: # a missile boat: the tubes' hatches in two rows instead
-		gun.visible = false
-		for k in 10:
-			for side in [-1.0, 1.0]:
-				Build.cyl(root, 1.1, 0.25, Vector3(side * 3.2, deck_y + 0.12, -l * 0.38 + k * l * 0.04), Color("#2A2E31"))
-	else:
-		Build.lathe(root, [Vector2(0, 0), Vector2(0.75, 0), Vector2(0.55, 0.25), Vector2(0.4, 0.9), Vector2(0, 0.9)],
-			gun.position, Color("#3A3F44"), Vector3.UP, 16) # pedestal
-	Build.box(gun, Vector3(1.0, 0.6, 1.3), Vector3(0, 1.15, 0.1), Color("#3A3F44"), false) # carriage
-	for side in [-1.0, 1.0]:
-		Build.box(gun, Vector3(0.12, 0.7, 0.9), Vector3(side * 0.55, 1.3, 0.0), Color("#3A3F44"), false) # trunnion cheeks
-		Build.box(gun, Vector3(0.45, 0.08, 0.35), Vector3(side * 0.95, 0.95, 0.55), BLACK, false) # layer's seats
-	var barrel := Node3D.new()
-	barrel.name = "Barrel"
-	barrel.position = Vector3(0, 1.35, 0)
-	gun.add_child(barrel)
-	var bl := 3.2 + sub.gun_damage * 6.0
-	Build.box(barrel, Vector3(0.5, 0.5, 0.9), Vector3(0, 0, 0.35), Color("#2E3236"), false) # breech
-	Build.lathe(barrel, [Vector2(0, 0), Vector2(bore * 2.2, 0), Vector2(bore * 2.0, bl * 0.3), Vector2(bore * 1.4, bl * 0.97),
-		Vector2(bore * 1.7, bl * 0.97), Vector2(bore * 1.7, bl), Vector2(0, bl)], Vector3.ZERO, Color("#2E3236"), Vector3.FORWARD, 14)
-	var muzzle := Node3D.new()
-	muzzle.name = "Muzzle"
-	muzzle.position = Vector3(0, 0, -bl - 0.2)
-	barrel.add_child(muzzle)
-	var eye := Node3D.new()
-	eye.name = "Eye"
-	eye.position = Vector3(-1.0, 2.2, 3.6) # the pointer's seat, left of and behind the breech
-	eye.rotation.x = deg_to_rad(-3.0)
-	gun.add_child(eye)
-	# Ready-use ammunition lockers by the fairwater.
-	for side in ([-1.0, 1.0] if sub.gun_rounds > 0 else []):
-		Build.box(root, Vector3(0.6, 0.7, 1.4), Vector3(side * beam * 0.22, deck_y + 0.35, ct_z - ct_len * 0.5 - 1.5), Color("#3A3F44"))
-	# The deck hatch the crew climb out of, and rungs up the side from the water.
-	var hz: float = d.hatch_z
-	Build.cyl(root, 0.48, 0.16, Vector3(0, deck_y + 0.08, hz), Color("#3A3F44"))
-	Build.cyl(root, 0.42, 0.06, Vector3(0, deck_y + 0.19, hz), Color("#2E3236"))
-	Build.box(root, Vector3(0.5, 0.05, 0.06), Vector3(0, deck_y + 0.24, hz), Color("#B23A2E"), false) # dogging bar
-	# The wrestling ring: two white lines right across the casing and a centre mark.
-	var rz: float = d.ring_z
-	var rw: float = float(d.ring_edge) * 2.0
-	var paint := Color("#E8E4DA")
-	for dz in [-1.0, 1.0]:
-		Build.box(root, Vector3(rw, 0.02, 0.1), Vector3(0, hull_deck(0.6, fb) + 0.01, rz + dz), paint, false)
-	Build.box(root, Vector3(0.1, 0.02, 1.9), Vector3(0, hull_deck(0.6, fb) + 0.01, rz), paint, false)
-	var lt: float = (float(d.ladder_z) + l * 0.5) / l
-	for side in [-1.0, 1.0]:
-		var x: float = side * (hull_half(lt, beam) + 0.12)
-		for rail in [-0.25, 0.25]:
-			Build.box(root, Vector3(0.06, deck_y + 1.6, 0.06), Vector3(x, deck_y * 0.5 - 0.8 + 0.1, d.ladder_z + rail), Color("#8A8F86"), false)
-		for k in int((deck_y + 1.4) / 0.35):
-			Build.box(root, Vector3(0.06, 0.05, 0.5), Vector3(x, -1.4 + k * 0.35, d.ladder_z), Color("#8A8F86"), false)
-	return root
+	return OwnBoat.build(sub)
 
 
 ## A triangle facing roughly `hint` (Godot's front faces wind clockwise).

@@ -15,7 +15,7 @@ func _initialize() -> void:
 	net.mission = "cw_convoy"
 	net.sub_key = "typhoon"
 	net.mode = 1
-	net.port = 7093
+	net.port = int(OS.get_environment("TEST_PORT")) if OS.has_environment("TEST_PORT") else 7100 + OS.get_process_id() % 2000 # tests/walkthroughs.sh gives each its own
 	Engine.time_scale = 6.0
 	Engine.physics_ticks_per_second = 30
 	change_scene_to_file.call_deferred("res://game/game.tscn")

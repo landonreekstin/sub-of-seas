@@ -144,3 +144,13 @@ sox -n $R $T/g1.wav synth 0.06 whitenoise lowpass 5000 fade q 0.001 0.06 0.05
 sox -n $R $T/g2.wav synth 1.6 brownnoise lowpass 300 fade q 0.003 1.6 1.4 gain -2
 sox -n $R $T/g3.wav synth 0.35 sine 55 fade q 0.002 0.35 0.3 gain -3
 sox -m $T/g1.wav $T/g2.wav $T/g3.wav $R $A/deck_gun.wav reverb 60 40 100 pad 0 0.6 gain -n -1
+
+# The raft's rocket (Blaney: funny, fun, "not grating"): a warm, rounded roar with a soft putter
+# in it, low-passed so it never hisses; and a whump as it lights.
+sox -n $R $T/r1.wav synth 2.0 brownnoise lowpass 700 gain -n -4
+sox -n $R $T/r2.wav synth 2.0 pinknoise bandpass 260 200 tremolo 21 45 gain -n -10
+sox -n $R $T/r3.wav synth 2.0 sine 58 tremolo 21 60 gain -n -14
+sox -m $T/r1.wav $T/r2.wav $T/r3.wav $R $A/rocket_loop.wav lowpass 1400 gain -n -10
+sox -n $R $T/w1.wav synth 0.6 brownnoise lowpass 800 fade q 0.01 0.6 0.45 gain -n -2
+sox -n $R $T/w2.wav synth 0.3 sine 90-45 fade q 0.005 0.3 0.25 gain -n -6
+sox -m $T/w1.wav $T/w2.wav $R $A/rocket_start.wav gain -n -3

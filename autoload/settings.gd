@@ -14,7 +14,7 @@ const QUALITIES := [["Low", 0.67, Viewport.MSAA_DISABLED], ["Medium", 0.85, View
 const FPS_CAPS: Array[int] = [0, 60, 120, 144]
 const BASE_LOOK := 0.0025 ## radians per pixel at sensitivity 1
 const DEFAULTS := {
-	"master": 0.8, "effects": 1.0, "music": 0.6, "voice": 1.0,
+	"master": 0.4, "effects": 0.7, "music": 0.5, "voice": 1.0, # quieter out of the box (Blaney: "by default too loud")
 	"window": 0, "resolution": 0, "vsync": true, "quality": 2, "fps_cap": 0, "fov": 75.0,
 	"sensitivity": 1.0, "invert_y": false,
 }

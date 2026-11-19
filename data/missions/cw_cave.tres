@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="MissionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/mission_data.gd" id="1_m"]
+
+[resource]
+script = ExtResource("1_m")
+key = "cw_cave"
+era = "cold_war"
+title = "The Cave"
+briefing = "A cave runs right through the rock ridge ahead, out of sight under the water: a tight S-bend, its roof rising and dipping, its floor coming up in places. Take her through and out the far end, as fast as you can. Helm keeps her in the middle, the planes keep her off the roof and the floor, and someone has to call out what's coming. Every scrape counts against you."
+difficulty = 2
+start_heading = 0.0
+start_depth = 30.0
+start_speed = 0
+battery = 1.0
+groups = Array[Dictionary]([])
+objectives = Array[Dictionary]([{"kind": "cave", "text": "Through the cave and out the other end"}])
+sea_state = 0
+squalls = 0
+cave = true

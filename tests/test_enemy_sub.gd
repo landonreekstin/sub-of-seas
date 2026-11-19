@@ -93,7 +93,7 @@ func test_the_typhoon_is_laid_out() -> bool:
 	runner.check(i.compartments[-1].z1 - i.compartments[0].z0 >= 170.0 or i.comp("steering").z1 - i.comp("sonar").z0 == 175.0, "175 m stem to stern")
 	runner.check(i.doors.size() == i.door_links.size(), "a door for every link (%d, %d)" % [i.doors.size(), i.door_links.size()])
 	runner.check(i.station_compartments().size() == i.stations.size(), "every station in a compartment")
-	for sid in ["helm", "dive", "sonar", "ballast", "bilge", "periscope", "tdc", "nav", "engine", "air", "tube_1", "tube_6", "first_mate", "skipper", "sand_table", "cameras", "darts"]:
+	for sid in ["helm", "dive", "sonar", "ballast", "bilge", "periscope", "tdc", "nav", "engine", "air", "tube_1", "tube_6", "first_mate", "skipper", "cameras", "darts"]:
 		runner.check(i.stations.has(sid), "has %s" % sid)
 	runner.check(not i.stations.has("gun") and not i.stations.has("ammo"), "no deck gun")
 	var hull := HullState.new().setup(i.compartments, i.door_links, i.station_compartments())

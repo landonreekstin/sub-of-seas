@@ -61,9 +61,6 @@ func _process(_delta: float) -> bool:
 	if _game.interior == null or _game.local_player == null:
 		return false
 	_i += 1
-	if _i == -20:
-		_game.crew.holo = true # the skipper's hologram on, for its look
-		_game.push_crew()
 	if _i == -15 and not _calm:
 		_game.rq_pa("all hands")
 	if _i == -2 and not _calm:

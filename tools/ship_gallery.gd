@@ -1,6 +1,6 @@
 extends SceneTree
 ## A ship model on a flat sea, three-quarter view, for checking how it looks:
-##   godot --path . --rendering-driver opengl3 -s tools/ship_gallery.gd -- <class | plane | crew | sealife | own[_<sub>]> [out.png] [eye]
+##   godot --path . --rendering-driver opengl3 -s tools/ship_gallery.gd -- <class | plane | crew | sealife | squid | angler | serpent | megalodon | own[_<sub>]> [out.png] [eye | x,y,z,tx,ty,tz]
 ## (under xvfb-run, add a screenshot). Bow points right.
 
 const CLASSES := ["subchaser", "kaibokan", "destroyer", "freighter", "tanker", "cruiser", "battleship", "carrier"]
@@ -39,11 +39,29 @@ func _initialize() -> void:
 			face.position.y = 1.6 # Player.EYE_HEIGHT (Player needs the autoloads)
 			m.add_child(face)
 			Crewman.build_face(face, look)
+			if args.size() > 2 and args[2].begins_with("diver_"): # e.g. diver_ww2: in the dive suit
+				Crewman.dress_diver(m, face, args[2].trim_prefix("diver_"))
+			elif args.size() > 2 and args[2] != "eye":
+				Crewman.make_hat(face, args[2])
 		var cc := Camera3D.new()
 		cc.fov = 35.0
 		root3d.add_child(cc)
-		cc.look_at_from_position(Vector3(0.2, 1.55, -2.6), Vector3(0, 1.4, 0))
+		cc.look_at_from_position(Vector3(0.2, 1.55, -2.6) if args.size() < 3 else (Vector3(0.6, 1.7, -1.4) if not args[2].begins_with("diver_") else Vector3(1.0, 1.5, -3.2)), Vector3(0, 1.4, 0) if args.size() < 3 else Vector3(0, 1.62 if not args[2].begins_with("diver_") else 1.1, 0))
 		env.background_color = Color("#14324F")
+		if args.size() > 1:
+			_save(args[1])
+		return
+	if k in Monster.KINDS: # one of the things from the depths, side on, lit like a diver's lamp
+		var mo := Creatures.monster(k, float(Monster.KINDS[k].length))
+		mo.rotation.y = PI * 0.5
+		mo.position = Vector3(0, 10, 0)
+		root3d.add_child(mo)
+		env.background_color = Color("#06121C")
+		var cm := Camera3D.new()
+		cm.far = 2000.0
+		root3d.add_child(cm)
+		var L: float = Monster.KINDS[k].length
+		cm.look_at_from_position(Vector3(L * 0.25, 10.0 + L * 0.2, L * 1.05), Vector3(0, 10, 0))
 		if args.size() > 1:
 			_save(args[1])
 		return
@@ -82,8 +100,43 @@ func _initialize() -> void:
 		root3d.add_child(co)
 		if args.size() > 2 and args[2] == "eye": # what the gunlayer sees
 			co.transform = gun.transform * (gun.get_node("Eye") as Node3D).transform
+		elif args.size() > 2 and args[2].count(",") == 5: # "x,y,z,tx,ty,tz": from there, looking at that
+			var v := args[2].split_floats(",")
+			co.look_at_from_position(Vector3(v[0], v[1], v[2]), Vector3(v[3], v[4], v[5]))
 		else:
 			co.look_at_from_position(Vector3(sd.length * 0.35, sd.length * 0.12, -sd.length * 0.25), Vector3(0, 2, -sd.length * 0.15))
+		if args.size() > 1:
+			_save(args[1])
+		return
+	if k == "raft" or k == "raft_rocket": # the life raft (Away), with crewmen in her; raft_rocket: the rocket fitted and lit
+		var r := Raft.new()
+		r.crew = [1, 2, 3, 0] as Array[int]
+		r.rocket = k == "raft_rocket"
+		r.throttle = 1.0 if r.rocket else 0.0
+		r.steer = 0.4
+		var m := RaftModel.new()
+		m.rotation.y = -PI / 2.0 # bow to the right
+		root3d.add_child(m)
+		m.show_state.call_deferred(r) # once it's built (its _ready runs on the first frame here)
+		for i in 3:
+			var n := Node3D.new()
+			var body := Node3D.new()
+			n.add_child(body)
+			var limbs := Crewman.build_body(body, {"build": i % 3, "skin": i}, Color.from_hsv(i * 0.3, 0.45, 0.85))
+			var face := Node3D.new()
+			face.position.y = 1.62
+			n.add_child(face)
+			Crewman.build_face(face, {"skin": i, "beard": i})
+			limbs.leg_l.rotation.x = 1.45
+			limbs.leg_r.rotation.x = 1.45
+			limbs.arm_l.rotation.x = 0.7 if i != 0 or not r.rocket else 0.4
+			limbs.arm_r.rotation.x = 0.9 if i != 0 or not r.rocket else 1.1
+			n.position = RaftModel.SEATS[i] - Vector3(0, 0.88, 0)
+			m.add_child(n)
+		var c := Camera3D.new()
+		c.fov = 45.0
+		root3d.add_child(c)
+		c.look_at_from_position(Vector3(-3.2, 2.4, 4.2), Vector3(0.4, 0.4, 0))
 		if args.size() > 1:
 			_save(args[1])
 		return

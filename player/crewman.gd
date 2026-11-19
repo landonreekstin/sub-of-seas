@@ -138,18 +138,22 @@ static func _hair(face: Node3D, kind: int, c: Color) -> void:
 			cap.call(0.045, 0.028, 1.0)
 		"Side parting":
 			cap.call(0.045, 0.02, 1.0)
-			Build.sphere(face, 0.04, Vector3(0.045, 0.1, -0.05), c).scale = Vector3(1.4, 0.55, 1.1) # the swept side
+			var swept := Build.sphere(face, 0.04, Vector3(0.045, 0.1, -0.05), c) # the swept side
+			swept.scale = Vector3(1.4, 0.55, 1.1)
+			swept.add_to_group("hair_top")
 		"Wavy":
 			cap.call(0.045, 0.02, 1.0)
 			for k in 3:
-				Build.sphere(face, 0.034, Vector3(-0.04 + k * 0.04, 0.11, -0.045 + k * 0.01), c).scale = Vector3(1.2, 0.6, 1.0)
+				var wave := Build.sphere(face, 0.034, Vector3(-0.04 + k * 0.04, 0.11, -0.045 + k * 0.01), c)
+				wave.scale = Vector3(1.2, 0.6, 1.0)
+				wave.add_to_group("hair_top")
 		"Short back and sides":
 			cap.call(0.06, 0.015, 0.92)
 		"Curly":
 			cap.call(0.045, 0.02, 1.0)
 			for k in 7:
 				var a := k * TAU / 7.0
-				Build.sphere(face, 0.032, Vector3(cos(a) * 0.065, 0.115, sin(a) * 0.065 + 0.015), c)
+				Build.sphere(face, 0.032, Vector3(cos(a) * 0.065, 0.115, sin(a) * 0.065 + 0.015), c).add_to_group("hair_top")
 		_: # cropped
 			cap.call(0.045, 0.022, 1.0)
 
@@ -200,3 +204,76 @@ static func _extra(face: Node3D, kind: int, skin: Color) -> void:
 		"Bandage":
 			var band := Build.box(face, Vector3(0.05, 0.022, 0.01), Vector3(-0.045, 0.06, -0.098), Color("#EDE8DC"), false)
 			band.rotation.z = 0.3
+
+
+## The hat over the hair on `face`. Every hat is sized to the hair's cap (centred 2 cm back,
+## 0.103 m to the side, up to 0.16 m over the head's centre), so no hair or skull shows through.
+static func make_hat(face: Node3D, kind: String) -> Node3D:
+	for m in face.get_children():
+		if m.is_in_group("hair_top"): # curls and waves are pressed flat under any hat
+			m.visible = false
+	var h := Node3D.new()
+	h.position.z = 0.02
+	face.add_child(h)
+	var white := Color("#F2F0E8")
+	var navy := Color("#2B3A55")
+	match kind:
+		"watch": # navy knit watch cap, its cuff rolled just over the brows
+			var cap := Build.sphere(h, 0.117, Vector3(0, 0.09, 0), navy)
+			cap.scale = Vector3(0.97, 0.7, 1.0)
+			Build.cyl(h, 0.118, 0.04, Vector3(0, 0.068, 0), Color("#24304A"))
+			Build.sphere(h, 0.014, Vector3(0, 0.167, 0), Color("#24304A")) # the knot where the knit gathers
+		"ball": # ball cap, the peak out over the brows
+			var crown := Build.sphere(h, 0.115, Vector3(0, 0.08, 0), navy)
+			crown.scale = Vector3(0.97, 0.75, 1.0)
+			Build.cyl(h, 0.116, 0.03, Vector3(0, 0.06, 0), navy)
+			Build.sphere(h, 0.012, Vector3(0, 0.162, 0), navy) # the button
+			var peak := Build.box(h, Vector3(0.13, 0.012, 0.085), Vector3(0, 0.058, -0.15), navy, false)
+			peak.rotation.x = -0.12
+		"officer", "skipper": # peaked cap, white top; the skipper's is weathered grey
+			var top := Color("#C9C3B0") if kind == "skipper" else white
+			Build.cyl(h, 0.135, 0.04, Vector3(0, 0.155, 0), top)
+			Build.cyl(h, 0.118, 0.07, Vector3(0, 0.11, 0), Color("#1E1E20"))
+			var visor := Build.box(h, Vector3(0.14, 0.01, 0.07), Vector3(0, 0.08, -0.14), Color("#1E1E20"), false)
+			visor.rotation.x = 0.2
+			Build.box(h, Vector3(0.04, 0.025, 0.008), Vector3(0, 0.12, -0.12), Color("#C9A04A"), false) # badge
+		_: # white Dixie cup, the rolled brim round the crown
+			Build.cyl(h, 0.112, 0.085, Vector3(0, 0.125, 0), white)
+			Build.cyl(h, 0.113, 0.02, Vector3(0, 0.168, 0), white) # the flat top's edge
+			var brim := Build.cyl(h, 0.13, 0.035, Vector3(0, 0.09, 0), white)
+			brim.rotation.x = 0.1
+	return h
+
+
+## A crewman in the boat's dive suit (Diving): the WWII boats' Mark V hard hat (a round brass
+## helmet with a face window and two side ports on a brass breastplate, grey-tan canvas dress), the Typhoon's black rubber drysuit with a full mask and twin tanks, or modern
+## scuba (a dark wetsuit, mask, one tank).
+static func dress_diver(body: Node3D, face: Node3D, era: String) -> void:
+	var canvas := Color("#8C7B5A") if era == "ww2" else Color("#1E2124")
+	for m in face.get_children():
+		if m.is_in_group("hair_top"):
+			m.visible = false
+	for m in body.find_children("*", "MeshInstance3D", true, false):
+		(m as MeshInstance3D).material_override = Build.mat(canvas, 0.0, "cloth")
+	var brass := Color("#C9A04A")
+	match era:
+		"ww2":
+			var helmet := Build.sphere(face, 0.2, Vector3(0, 0.02, 0.0), brass)
+			helmet.scale = Vector3(1.0, 1.05, 1.0)
+			Build.cyl(face, 0.26, 0.06, Vector3(0, -0.2, 0.0), brass) # the breastplate's rim
+			var plate := Build.sphere(face, 0.26, Vector3(0, -0.26, 0.0), brass)
+			plate.scale = Vector3(1.0, 0.35, 0.9)
+			var glass := Color("#1C2A30")
+			Build.cyl(face, 0.105, 0.035, Vector3(0, 0.02, -0.2), brass.darkened(0.2), Vector3.BACK) # the face window's rim
+			Build.cyl(face, 0.085, 0.03, Vector3(0, 0.02, -0.215), glass, Vector3.BACK)
+			for side in [-1.0, 1.0]:
+				Build.cyl(face, 0.06, 0.04, Vector3(side * 0.2, 0.04, 0.0), glass, Vector3.RIGHT)
+			Build.cyl(face, 0.03, 0.08, Vector3(0.05, 0.1, 0.17), brass, Vector3.BACK) # the air hose's gooseneck
+		_:
+			var hood := Build.sphere(face, 0.128, Vector3(0, 0.03, 0.02), canvas)
+			hood.material_override = Build.mat(canvas, 0.0, "cloth")
+			var mask := Build.box(face, Vector3(0.16, 0.11, 0.05), Vector3(0, 0.005, -0.1), Color("#1A2830"), false)
+			mask.material_override = Build.mat(Color("#2A4450"), 0.3)
+			Build.box(face, Vector3(0.18, 0.13, 0.03), Vector3(0, 0.005, -0.085), Color("#101214"), false)
+			for side in ([-1.0, 1.0] if era == "cold_war" else [0.0]):
+				Build.cyl(face, 0.075, 0.6, Vector3(side * 0.09, -0.4, 0.22), Color("#D8D2C0") if era == "cold_war" else Color("#E0B020"))

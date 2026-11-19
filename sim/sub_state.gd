@@ -29,6 +29,9 @@ const COMPRESSOR_MINUTES := 10.0 ## surfaced on diesels, empty banks to full
 const ARCADE_ACCEL := 2.0
 const ARCADE_TURN := 1.6
 const ARCADE_DIVE := 1.5
+## Arcade alone moves this much faster again: speed, acceleration, turning and diving (Blaney: "I
+## don't want the game to be a waiting simulator"). Noise and battery go by the real speed.
+const ARCADE_PACE := 2.0
 
 var data: SubClassData
 var pos := Vector2.ZERO
@@ -97,6 +100,11 @@ func battery_drain(spd: float) -> float:
 	return load / (data.battery_endurance_min * 60.0)
 
 
+## How much faster than her real self she moves: ARCADE_PACE in arcade, 1 in standard and realistic.
+func pace() -> float:
+	return lerpf(1.0, ARCADE_PACE, maxf(0.0, handling * 2.0 - 1.0))
+
+
 func rudder_angle() -> float:
 	return signf(rudder) * RUDDER_DEGREES[absi(rudder)]
 
@@ -118,18 +126,18 @@ func scope_height() -> float:
 
 func step(dt: float) -> void:
 	_step_power(dt)
-	var target_speed: float = max_speed() * TELEGRAPH[telegraph]
-	speed = move_toward(speed, target_speed, data.acceleration * lerpf(1.0, ARCADE_ACCEL, handling) * dt)
+	var target_speed: float = max_speed() * TELEGRAPH[telegraph] * pace()
+	speed = move_toward(speed, target_speed, data.acceleration * lerpf(1.0, ARCADE_ACCEL, handling) * pace() * dt)
 
 	# Rudder and planes need water flowing over them.
-	var flow := clampf(absf(speed) / (4.0 * KNOT), 0.0, 1.0)
-	turn_rate = rudder_angle() / 35.0 * data.max_turn_rate * lerpf(1.0, ARCADE_TURN, handling) * flow * signf(speed)
+	var flow := clampf(absf(speed) / pace() / (4.0 * KNOT), 0.0, 1.0)
+	turn_rate = rudder_angle() / 35.0 * data.max_turn_rate * lerpf(1.0, ARCADE_TURN, handling) * pace() * flow * signf(speed)
 	heading = fposmod(heading + turn_rate * dt, 360.0)
 	pos += direction() * speed * dt
 
 	var before := depth
 	_step_ballast(dt)
-	var dive_rate := data.max_dive_rate * lerpf(1.0, ARCADE_DIVE, handling) * lerpf(0.35, 1.0, flow)
+	var dive_rate := data.max_dive_rate * lerpf(1.0, ARCADE_DIVE, handling) * pace() * lerpf(0.35, 1.0, flow)
 	# With the tanks flooded the planes can take her anywhere below awash; while they are
 	# (partly) blown she floats up to wherever her buoyancy puts her.
 	var target := maxf(ordered_depth, AWASH_DEPTH)
@@ -177,10 +185,10 @@ func _step_power(dt: float) -> void:
 	var running := diesels_running()
 	if is_surfaced() and running > 0:
 		# What the screws don't take goes into the battery.
-		var load := absf(speed) / (data.surface_speed_kn * KNOT)
+		var load := absf(speed) / pace() / (data.surface_speed_kn * KNOT)
 		charge_rate = running * (1.0 - 0.8 * load) / (2.0 * data.charge_minutes * 60.0)
 	else:
-		charge_rate = -battery_drain(absf(speed))
+		charge_rate = -battery_drain(absf(speed) / pace())
 	battery = clampf(battery + charge_rate * dt, 0.0, 1.0)
 
 

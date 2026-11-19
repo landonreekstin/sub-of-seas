@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="MissionData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://data/mission_data.gd" id="1_m"]
+
+[resource]
+script = ExtResource("1_m")
+key = "titan_dive"
+era = "modern"
+title = "The Deep Dive"
+briefing = "Straight down, 3,800 metres to the floor of the abyss, and back up again. She's rated for 4,000. Hold her there and she'll bring you home. Past it, the hull monitor will start to crack, and she doesn't forget it. There's a deeper hole a few kilometres off, for anyone who wants to find out. Things live down there."
+difficulty = 3
+start_heading = 0.0
+start_depth = 10.0
+start_speed = 0
+battery = 1.0
+deep_holes = Array[float]([3800.0, 4800.0])
+groups = Array[Dictionary]([])
+objectives = Array[Dictionary]([{"kind": "deep", "value": 3800.0, "text": "Down to the bottom, 3,800 m"}, {"kind": "surface", "text": "Back up to the surface"}])
+sea_state = 0
+squalls = 0

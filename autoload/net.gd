@@ -13,6 +13,7 @@ var player_name := "Sailor"
 var last_error := "" ## shown by the main menu after a session ends badly
 var cli_start := Mode.NONE ## set from the command line, consumed by the main menu once
 var profile := Profile.load_or_new() ## this player's career and look, saved on this machine
+var debug_raft := "" ## --raft [sea|rocket|beach]: host, in a raft once aboard (the rocket fitted; or ashore on a beach)
 var debug_deck := false ## --deck: climb out on deck once aboard (testing; the boat must be surfaced: --depth 0)
 var debug_spawn: Variant = null ## --spawn x,y,z: start this player there (testing)
 var port := DEFAULT_PORT ## --port n (the packaged game uses 7845, forwarded over the homelab VPN)
@@ -35,7 +36,9 @@ var debug_depth := -1.0 ## --depth <m>: the host's patrol starts at this keel de
 var debug_station := "" ## --station <id>: man this station as soon as you are aboard (testing)
 var debug_look := 0.0 ## --look <deg>: turn the spawned player this far right (testing)
 var debug_breach := false ## --test-breach: the host blows emergency a few seconds in (crash surface; start deep)
+var debug_monster := "" ## --monster <kind>: the host calls one up (as "spawn a kraken" on the PA) 3 s in, 150 m off
 var debug_torpedo := false ## --test-torpedo: the host fires a spread of three a few seconds in (tracks)
+var debug_perf := false ## --perf: prints frames a second, frame time and draw calls every 5 s
 var debug_win := false ## --test-win: the host sinks everything a few seconds in (objectives, debrief)
 var debug_voice := false ## --test-voice: this player "talks" a 440 Hz tone the whole time
 var debug_air := false ## --test-air: the host starts with foul air, and a fire and thick smoke in the shut-in control room
@@ -88,8 +91,12 @@ func _ready() -> void:
 				debug_voice = true
 			"--test-win":
 				debug_win = true
+			"--perf":
+				debug_perf = true
 			"--test-torpedo":
 				debug_torpedo = true
+			"--monster":
+				debug_monster = args[i + 1] if i + 1 < args.size() and not args[i + 1].begins_with("--") else "squid"
 			"--test-breach":
 				debug_breach = true
 			"--bots":
@@ -97,6 +104,10 @@ func _ready() -> void:
 					start_bots = args[i + 1].split(",", false)
 			"--deck":
 				debug_deck = true
+			"--raft": # --raft [sea|rocket|beach]
+				debug_raft = "sea"
+				if i + 1 < args.size() and not args[i + 1].begins_with("--"):
+					debug_raft = args[i + 1]
 			"--reef":
 				debug_reef = true
 			"--squall": # --squall [over|ahead]

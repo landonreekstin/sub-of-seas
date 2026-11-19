@@ -7,6 +7,8 @@ extends Resource
 @export var crew_min := 3
 @export var crew_max := 4
 @export var length := 95.0
+@export var beam := 8.4 ## m, her widest
+@export var height := 12.0 ## m, keel to the top of the fin (the shears down): what a cave roof scrapes
 @export var surface_speed_kn := 20.0
 @export var submerged_speed_kn := 9.0
 @export var acceleration := 0.15 ## m/s²
@@ -33,5 +35,6 @@ extends Resource
 @export_group("")
 ## Suggested jobs, most important first: player N is offered roles[N-1]. Not locks.
 @export var nuclear := false ## reactors: no battery, no diesels, the same speed wherever she is
+@export var fragile := false ## a carbon hull (the Titan): no leaks, it cracks past test depth, warns, then implodes
 @export var era := "ww2" ## which patrols she sails on (MissionData.era)
 @export var roles: Array[String] = []
