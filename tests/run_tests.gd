@@ -19,6 +19,7 @@ const TEST_FILES: Array[String] = [
 	"res://tests/test_monsters.gd",
 	"res://tests/test_waypoints.gd",
 	"res://tests/test_raft.gd",
+	"res://tests/test_motion.gd",
 ]
 
 var passed := 0

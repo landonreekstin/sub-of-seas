@@ -443,6 +443,14 @@ and update "Current style" in the same commit.
 - **Hits:** camera shake, lights stutter, paint flakes shake down from the deckhead.
 - **Night:** a deep blue-black sky, cold dim moonlight, black water with silver foam; inside,
   submerged, the boat rigs for red (`#FF4A35` light). Rough seas are big rolling waves.
+- **The boat's motion** (Blaney: every axis felt, realistically stable when still; strong but
+  playable; no sliding around): inside, the view rolls, pitches, yaws and heaves with the
+  swell, about 1° calm, 3.5° moderate, 7° rough on the surface, a third of that at periscope
+  depth and a slow drift of a fraction of a degree deep and stopped (never quite still). She
+  heels in turns, trims with dive angle and way on, you are pressed back as she gathers way
+  and swing outward in a turn, and the deck plates hum under the diesels. The motion is only
+  in the view: it never slides or pushes you about. Our boat seen
+  from outside moves the same way (`sim/motion.gd`).
 - **Aircraft:** low-wing carrier planes, green-grey with red roundels.
 - **Hats by rank:** white Dixie cup (Seaman), navy watch cap, ball cap, officer's peaked
   cap with a brass badge, and a salt-stained grey skipper's cap for a Commander.
@@ -611,6 +619,9 @@ and update "Current style" in the same commit.
 | 2026-11-05 | Blaney | Even more filled up: the control room easy to move around, but more pipes and stuff so the subs feel full and working underway; accurate kitchen and living areas; the sub should look lived in. (Asked: lived in but tidy, not cluttered; both family photos and 1940s pin-ups; a busy galley with steam, a sizzling pan and a cook; all four boats, the Typhoon too.) |
 | 2026-11-05 | Blaney | (After playing the lived-in Gato: "the gato feels good".) Doors should insulate noise, like the engine. |
 | 2026-11-05 | Blaney | More fun things to do in the game, clearer ways to access them, and a list of the things we can do. (Asked: all four of cards in the mess, fishing off the deck, cooking in the galley and arm wrestling; the list on a key easier for a casual player to hit than F1; each fun spot glows softly with its name when you're close.) |
+| 2026-11-05 | Blaney | Good job on the feeling of movement but more of it: every axis of movement should be felt, and the sub realistically stable when still (still some roll and pitch). (Asked: strong but playable in rough seas, about 7°; yes, the motion pushes you a little when you walk.) |
+| 2026-11-06 | Blaney | "The sliding around should not be a thing actually." (The motion no longer pushes you when you walk; it is only felt in the view.) |
+| 2026-11-06 | Blaney | (After playing the boat's motion with the push taken out: "feels good".) |
 | 2026-11-06 | Blaney | We need this sub to get scary deep: the Typhoon class should be able to get very deep, the WWII ones realistic. A better outside of the sub: real details, smoother hull shape, weathered paint; good, working outsides of all the subs as far as they exist in real life, the Typhoon most (he tests on it a lot). |
 | 2026-11-06 | Blaney | A larger area that the sub can go (he hadn't checked how far it went: "that takes a while"). |
 | 2026-11-06 | Blaney | (After playing the new outsides, hatch, deep dive and the T list on the Typhoon: "great, thanks".) |
