@@ -198,7 +198,10 @@ Added by Blaney after playing. In his words where it matters.
       *(Done, PR #38: every WWII boat packed like the Typhoon, the Christmas tree board and HP air manifold; bots stand naturally at every station; all hands keeps the lights as they were.)*
 - [x] i want the subs even more filled up, the control room should be easy to move around but i want more pipes and stuff to make the subs feel full and funtional as they are underway. accurate kitchen quarters and living areas as well. the sub should look lived in
       *(Done, PR #39: a galley with its cook, laid tables, lived-in bunks, photos and pin-ups, more pipes, on all four boats; shut doors now muffle the engines and every other sound.)*
-- [ ] youve done a good job on the feeling of movement in the game but we need more of it, every axis of movement should be felt and the sub should be realistically stable when still (it would still have some roll and pitch)
+- [x] youve done a good job on the feeling of movement in the game but we need more of it, every axis of movement should be felt and the sub should be realistically stable when still (it would still have some roll and pitch)
+      *(Done, PR #40: the view rolls, pitches, yaws and heaves with the swell, heels in turns, presses you back as she gathers way; steady but never quite still when stopped.)*
+- [x] the sliding around around should not be a thing actually
+      *(Done, PR #40: the motion is only in the view; it never slides or pushes you about.)*
 - [x] lets add more fun things to do in the game and clearer ways to access them and see a list the things we can do
       *(Done, PR #41: arm wrestling, blackjack, the galley, fishing, glowing spots and the T list.)*
 - [x] we need this sub to get scary deep (the typhoon class should be able to get very deep but the WWII ones should be realistic)
